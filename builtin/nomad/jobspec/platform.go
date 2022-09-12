@@ -19,7 +19,6 @@ import (
 	"github.com/hashicorp/waypoint-plugin-sdk/framework/resource"
 	sdk "github.com/hashicorp/waypoint-plugin-sdk/proto/gen"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
-
 	"github.com/hashicorp/waypoint/builtin/docker"
 	"github.com/hashicorp/waypoint/builtin/nomad"
 )
@@ -358,8 +357,6 @@ func (p *Platform) Destroy(
 	log hclog.Logger,
 	deployment *Deployment,
 	ui terminal.UI,
-	dcr *component.DeclaredResourcesResp,
-	dtr *component.DestroyedResourcesResp,
 ) error {
 	sg := ui.StepGroup()
 	defer sg.Wait()
