@@ -3803,6 +3803,9 @@ message Release {
   // A platform resource that this release has created, depends on, or manages.
   repeated DeclaredResource declared_resources = 19;
 
+  // Resources that a destroy operation has destroyed
+  repeated DestroyedResource destroyed_resources = 20;
+
   // This is the populated preload data. Most of this data can be retrieved
   // through additional API calls or manually computed, but certain API
   // calls will pre-populate some of these fields for convenience. The exact

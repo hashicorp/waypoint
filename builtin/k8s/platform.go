@@ -10,7 +10,6 @@ import (
 	"github.com/docker/distribution/reference"
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/hashicorp/go-hclog"
-	"github.com/hashicorp/waypoint/builtin/aws/utils"
 	"github.com/mitchellh/copystructure"
 	"github.com/mitchellh/mapstructure"
 	"google.golang.org/grpc/codes"
@@ -32,6 +31,7 @@ import (
 	"github.com/hashicorp/waypoint-plugin-sdk/framework/resource"
 	sdk "github.com/hashicorp/waypoint-plugin-sdk/proto/gen"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
+	"github.com/hashicorp/waypoint/builtin/aws/utils"
 	"github.com/hashicorp/waypoint/builtin/docker"
 )
 
