@@ -124,6 +124,7 @@ func (c *PipelineRunCommand) Run(args []string) int {
 		step.Done()
 
 		successful := steps
+
 		for _, jobId := range resp.AllJobIds {
 			job, err := c.project.Client().GetJob(c.Ctx, &pb.GetJobRequest{
 				JobId: jobId,
@@ -131,6 +132,14 @@ func (c *PipelineRunCommand) Run(args []string) int {
 			if err != nil {
 				return err
 			}
+			// NOTE(briancain): We intentionally skip Noop type jobs because currently
+			// we make step Refs for pipelines run a Noop job to make dependency tracking
+			// for pipeline step refs easier. We don't stream a noop output job because
+			// there's nothing to stream.
+			if _, ok := job.Operation.(*pb.Job_Noop_); ok {
+				continue
+			}
+
 			ws := "default"
 			if job.Workspace != nil {
 				ws = job.Workspace.Workspace
