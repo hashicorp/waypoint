@@ -267,7 +267,6 @@ func (s *Service) buildStepJobs(
 				return nil, nil, nil, status.Errorf(codes.Internal,
 					"no step ID was found for nodeDepId from pipeline %q and step name %q!!",
 					pipeline.Name, nodeDepId)
-				continue
 			}
 
 			dependsOn = append(dependsOn, d)
