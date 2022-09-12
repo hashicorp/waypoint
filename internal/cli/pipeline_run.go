@@ -124,7 +124,6 @@ func (c *PipelineRunCommand) Run(args []string) int {
 		step.Done()
 
 		successful := steps
-
 		for _, jobId := range resp.AllJobIds {
 			job, err := c.project.Client().GetJob(c.Ctx, &pb.GetJobRequest{
 				JobId: jobId,
