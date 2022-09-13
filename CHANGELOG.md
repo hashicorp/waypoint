@@ -6,7 +6,7 @@ IMPROVEMENTS:
 
 BUG FIXES:
 
-## 0.1.0 (September 13, 2022)
+## 0.10.0 (September 13, 2022)
 
 FEATURES:
 
