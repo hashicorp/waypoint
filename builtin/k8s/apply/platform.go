@@ -50,15 +50,26 @@ func (p *Platform) Deploy(
 	defer func() { s.Abort() }()
 
 	deployment := &Deployment{
-		PruneLabel: p.config.PruneLabel,
+		PruneLabel:     p.config.PruneLabel,
+		PruneWhitelist: p.config.PruneWhitelist,
 	}
 
-	s.Update("Executing kubectl apply...")
-	cmd, err := p.cmd(ctx, s, "apply",
+	s.Update("Executing kubectl apply ...")
+	args := []string{
 		"-R",
 		"-f", p.config.Path,
-		"--prune", "-l", deployment.PruneLabel,
-	)
+		"--prune",
+		"-l", deployment.PruneLabel,
+	}
+
+	for _, v := range deployment.PruneWhitelist {
+		args = append(args, []string{
+			"--prune-whitelist",
+			v,
+		}...)
+	}
+
+	cmd, err := p.cmd(ctx, s, "apply", args...)
 	if err != nil {
 		return nil, err
 	}
@@ -149,6 +160,11 @@ type Config struct {
 	// Prune label is the label to use to destroy resources that don't match.
 	PruneLabel string `hcl:"prune_label,attr"`
 
+	// PruneWhitelist is a list of Kubernetes Objects that are allowed to be pruned
+	// An empty list means the defaults. Specify them as group/version/kind (e.g: apps/v1/Deployment)
+	// (see https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands --prune-whitelist)
+	PruneWhitelist []string `hcl:"prune_whitelist,attr"`
+
 	// KubeconfigPath is the path to the kubeconfig file.
 	KubeconfigPath string `hcl:"kubeconfig,optional"`
 
@@ -237,6 +253,10 @@ deploy {
     // build/registry, entrypoint env vars, etc.
     path        = templatedir("${path.app}/k8s")
     prune_label = "app=myapp"
+	prune_whitelist = [
+		"apps/v1/Deployment",
+		"apps/v1/ReplicaSet"
+  	]
   }
 }
 
