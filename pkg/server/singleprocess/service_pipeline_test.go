@@ -481,8 +481,8 @@ func TestServicePipeline_Run(t *testing.T) {
 		require.Equal(pb.Job_QUEUED, job.State)
 
 		// We should have all the job IDs
-		require.Len(resp.JobMap, 5)
-		require.Len(resp.AllJobIds, 5)
+		require.Len(resp.JobMap, 6)
+		require.Len(resp.AllJobIds, 6)
 	})
 
 	t.Run("runs a pipeline with embedded pipeline and workspace", func(t *testing.T) {
@@ -626,8 +626,8 @@ func TestServicePipeline_Run(t *testing.T) {
 		require.Equal(pb.Job_QUEUED, job.State)
 
 		// We should have all the job IDs
-		require.Len(resp.JobMap, 7)
-		require.Len(resp.AllJobIds, 7)
+		require.Len(resp.JobMap, 8)
+		require.Len(resp.AllJobIds, 8)
 
 		// find our embedded jobs and verify they used the correct workspace
 		for id, jobStep := range resp.JobMap {
@@ -879,7 +879,7 @@ func TestServicePipeline_Run(t *testing.T) {
 
 		require.NoError(err)
 		require.NotNil(resp)
-		require.Len(resp.AllJobIds, 5)
+		require.Len(resp.AllJobIds, 6)
 	})
 
 	// This is a nasty cycle graph
