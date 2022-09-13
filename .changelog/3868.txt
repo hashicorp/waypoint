@@ -1,0 +1,3 @@
+```release-note:improvement
+plugins/k8s: Add `prune_whitelist` option to only prune specific resources
+```
