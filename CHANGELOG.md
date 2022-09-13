@@ -6,9 +6,9 @@ IMPROVEMENTS:
 
 BUG FIXES:
 
-FEATURES:
-
 ## 0.1.0 (September 13, 2022)
+
+FEATURES:
 
 * **core: Custom Pipelines** as a Tech Preview gives users the ability to define custom pipelines to run various Waypoint actions such as a build, deploy, release, up and more for deploying applications. Waypoint will monitor and log each pipeline run, associated jobs, and show the results of executing that pipeline. [[GH-3777](https://github.com/hashicorp/waypoint/issues/3777)]
 * **core: Project Destroy** Introduce a new CLI command `project destroy` to delete projects in Waypoint and destroy their associated resources [[GH-3626](https://github.com/hashicorp/waypoint/issues/3626)]
