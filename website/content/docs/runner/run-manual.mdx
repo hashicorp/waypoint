@@ -1,27 +1,34 @@
 ---
 layout: docs
-page_title: Additional Runners
+page_title: Additional Static Runners
 description: |-
-  The `waypoint install` command installs and manages a single Waypoint runner. Waypoint supports any number of additional runners. Additional runners must be run manually today.
+  The `waypoint install` command installs and manages a single Waypoint static
+  runner. Additional static runners can be installed using `waypoint runner install` or
+  mannualy.
 ---
 
 # Additional Runners
 
-The `waypoint install` command installs and manages a single Waypoint runner.
-Waypoint supports any number of additional runners. Additional runners must
-be run manually today. A future version of Waypoint will introduce more
-automated management for additional runners.
+With self managed Waypoint servers, the `waypoint install` command installs and
+manages a single Waypoint static runner.
 
-## Installing a Runner
+Additional static runners can be added using [`waypoint runner install`](/commands/runner-install), which automates the process of creating
+resources in Kubernetes, Nomad, ECS, or Docker to execute a static runner.
 
-Waypoint supports deploying a runner to multiple platforms with one command.
-Depending on the platform, different configurations may be provided to control
-various aspects of the runner deployed in the given platform. By default, the
-server will adopt the runner and create a new runner profile for it after it
+In the case that none of these work for you, you can configure a static runner manually as
+well.
+
+## Installing a Static Runner Automatically
+
+Waypoint supports deploying a static runner to multiple platforms with one command.
+Depending on the platform, different configurations can be provided to control
+how the runner is deployed in a platform. By default, the
+server will adopt the static runner and create a new runner profile for it after it
 reports to the server.
 
-To install a runner, use the `waypoint runner install` command. Below is an
-example of using that command to install a Waypoint runner to Docker:
+To install a static runner, use the [`waypoint runner install`](/commands/runner-install)
+command. Below is an example of using that command to install a Waypoint static runner to
+Docker:
 
 ```shell-session
 $ waypoint runner install -platform=docker -docker-runner-network=waypoint -server-addr=waypoint-server:9701 -server-tls-skip-verify=true
@@ -70,14 +77,21 @@ Currently, Waypoint supports installing runners on the following platforms:
 - Amazon ECS
 - Docker
 
-## Manually Running a Runner
+## Manually Running a Static Runner
 
-The instructions below are only if you're installing additional runners
-manually. `waypoint install` automatically installs a single runner and
-you don't need to manually add any additional runners until the load
-requires it.
+The instructions below are only if you're installing additional static runners
+manually. It's recommended that you utilize the the automated static runner installation if
+possible.
 
-To run a runner, use the `waypoint runner agent` command:
+The primary reason you'd need to install a new static runner manually is because the
+environment it will run in can't be captured by the above automation.
+
+Under normal circumstances, on-demand runners should be the mechanism used to provide
+additional capacity within an installation, not additional static runners.
+
+### Waypoint Runner Agent
+
+To run a static runner, use the `waypoint runner agent` command:
 
 ```shell-session
 $ WAYPOINT_SERVER_ADDR=<server addr> \

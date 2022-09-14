@@ -7,42 +7,44 @@ description: |-
 
 # On-Demand Runners
 
-On-demand runners allow a single Waypoint installation to scale very high by
-leveraging the defined platform to spawn resources to execute Waypoint jobs
-remotely. Through on-demand runner profiles and runner targeting, Waypoint can
-even utilize resources from other platforms that Waypoint has access to. For
-example, a local Kubernetes server install could be configured to use Amazon ECS
+On-demand runners allow a single Waypoint installation to scale by
+leveraging the defined platform to spawn resources to execute Waypoint jobs.
+Through on-demand runner profiles and static runner targeting, Waypoint can
+even utilize resources from multiple platforms.
+For example, you could configure a local Kubernetes server install could be configured to use Amazon ECS
 to execute jobs.
 
 ## Job Assignment
 
-When a job is submitted to the server, if on-demand runners are enabled, it
-will spawn an on-demand runner and the job is placed in a holding set. This is
-the same mechanism we use for automatic CLI runners. When the on-demand
+When the server receives a job, if on-demand runners are enabled, it
+will signal a static runner to spawn an on-demand runner and place the job in held.
+This is the same mechanism we use for automatic CLI runners. When the on-demand
 runner starts, it will execute the normal Waypoint runner code and connect back
-to the server. On connection, the server will see the job in the holding set
+to the server. Upon connection, the server sees the job being held
 and send it immediately to the new runner.
 
 The flow of information about the job uses the normal grpc runner APIs so all
-the input and output remain the same as if the work were performed by the
-CLI-runner.
+the input and output remain the same as if the work were performed by the any other
+runner type.
 
 Upon finishing the job, the on-demand runner will exit and the platform it runs
 on will reclaim its resources.
 
 ### Launching Tasks to Execute Jobs
 
-When Waypoint goes to launch an on-demand runner task, it will generate three
+When Waypoint goes to launch an on-demand runner task, it will generate four
 jobs:
 
 - `StartJob`
 - `TaskJob`
+- `WatchJob`
 - `StopJob`
 
-The start job is responsible for scheduling a resource in the platform to execute
-the assigned job. Once that resource exists, it will be a `TaskJob` that is
-responsible for actually running the assigned job. Once it's complete, the task
-plugin system will launch a stop job to clean up the launched platform resource.
+The start job schedules resources in the platform to execute
+the assigned job. Once that resources exists, the `TaskJob` runs the actual assigned job.
+While running, the `WatchJob` operation monitors output to provide debugging information about
+the on-demand runner. Finally, once the original operation completes, the task
+plugin system will launch a `StopJob` operation to clean up the launched platform resource.
 
 ## On-Demand Runner Profiles
 
@@ -52,28 +54,37 @@ See [runner profiles](/docs/runner/profiles) for more information.
 
 ## OCI/Docker Image
 
-By default, the server will launch on-demand runners using the same OCI image
-it was configured with. The on-demand configuration will also accept a specific
-OCI image url to use instead. This allows operators the ability to prepackage
-any Waypoint plugins into the image and use them in their configuration.
+By default, the server will launch on-demand runners using the same OCI image the
+server was configured with. For HCP Waypoint, there is no default. The on-demand
+configuration also accepts a specific OCI image URL to use instead. This allows
+operators the ability to prepackage any Waypoint plugins into the image and use
+them in their configuration.
 
-The official on-demand runner container image is built very similar to Waypoint
-server, with some additional packages such as `Kaniko` for doing in-container
+The official on-demand runner container image is built very similarly to the Waypoint
+server, with some additional packages such as `kaniko` for doing in-container
 builds for jobs like the `Build` operation.
 
 See the [runner profile docs on OCI URLs](/docs/runner/profiles#oci-url) for more information.
 
+## Profile Configuration
+
+To customize the environment and other launch configurations of an on-demand runner,
+please consult the [on-demand runner profile documentation](/docs/runner/profiles).
+
+Those docs detail how to configure and communicate the various aspects of an on-demand runner launch.
+
 ## Official Waypoint Supported Task Plugin Platforms
 
-When you use the `waypoint server install` command, we automatically set up a
-default On-Demand runner profile for you to use with Waypoint Server. Like our
-server install platform support, we also currently support these platforms
-for launching on-demand runner tasks:
+We currently support the following platforms for launching on-demand runner tasks:
 
 - [Kubernetes](/plugins/kubernetes#kubernetes-task)
 - [HashiCorp/Nomad](/plugins/nomad#nomad-task)
 - [AWS/ECS](/plugins/aws-ecs#aws-ecs-task)
 - [Docker](/plugins/docker#docker-task)
+
+-> **Self-managed Waypoint server:** When you use the `waypoint server install` command,
+we automatically set up a default on-demand runner profile for you that matches the
+platform of the server installation.
 
 ## Adding on-demand runner support for other platforms
 
@@ -83,82 +94,94 @@ using the [plugin SDK](/docs/extending-waypoint).
 Plugins expect to fulfill the SDK interface with the following functions:
 
 - `StartTask`
+- `WatchTask`
 - `StopTask`
 
-These functions are what will launch and stop the spawned resource with the
-task launcher.
+These functions are what launch, monitor, and stop the spawned resource used to
+execute the Waypoint runner code.
 
-Task plugins also can accept `TaskLauncherConfig` configuration which users can
-configure through an [on-demand runner profile](/docs/runner/profiles).
+## Task Inspection
 
-## Task Introspection
+The CLI command `waypoint task` gives users more insight into the task launcher system and
+what Waypoint does with remote-enabled projects. Tasks are the operations that
+on-demand runners are built off of within Waypoint.
 
-In Waypoint 0.9.0, we introduced the CLI command `waypoint task`. This command
-currently gives users more introspection into the task launcher system and
-what Waypoint is doing with remote-enabled projects. The simplest benefit
-to this command is listing all known tasks in the system:
+This command listing all known tasks in the system:
 
 ```shell
 $ waypoint task list
 
 » Waypoint On-Demand Runner Tasks
-              ID             | RUN JOB OPERATION | TASK STATE |   PROJECT   |  TIME CREATED  | TIME COMPLETED
------------------------------+-------------------+------------+-------------+----------------+-----------------
-  01G1RYP6JFSEAQVE2SQX38Q19D | Up                | RUNNING    | go-gitops-0 | 3 seconds ago  |
-  01G1RYP37X5FTD9TFZQE5J2BQM | QueueProject      | STOPPED    | go-gitops-0 | 7 seconds ago  | 3 seconds ago
-  01G1RYP08Z9V18HMBP5XDPP0KA | Poll              | STOPPED    | go-gitops-0 | 10 seconds ago | 6 seconds ago
-  01G1RYNTQJ5421K3QBYR6FPAZP | Init              | STOPPED    | go-gitops-0 | 15 seconds ago | 12 seconds ago
-  01G1RYNNEK141B23YDE26XPED7 | Init              | STOPPED    | go-gitops-0 | 21 seconds ago | 15 seconds ago
+              ID             | RUN JOB OPERATION | PIPELINE   | TASK STATE |   PROJECT   |  TIME CREATED  | TIME COMPLETED
+-----------------------------+-------------------+------------+------------+-------------+----------------+-----------------
+  01GBWYSZ02YEB3EHMVQCA5240G | ConfigSync        |            | STARTED    | k8s-tetris  | 1 week ago     |
+  01G1RYP6JFSEAQVE2SQX38Q19D | Up                |            | RUNNING    | go-gitops-0 | 3 seconds ago  |
+  01G1RYP37X5FTD9TFZQE5J2BQM | QueueProject      |            | STOPPED    | go-gitops-0 | 7 seconds ago  | 3 seconds ago
+  01G1RYP08Z9V18HMBP5XDPP0KA | Poll              |            | STOPPED    | go-gitops-0 | 10 seconds ago | 6 seconds ago
+  01G1RYNTQJ5421K3QBYR6FPAZP | Init              |            | STOPPED    | go-gitops-0 | 15 seconds ago | 12 seconds ago
+  01G1RYNNEK141B23YDE26XPED7 | Init              |            | STOPPED    | go-gitops-0 | 21 seconds ago | 15 seconds ago
 ```
 
 You can also take a closer look at an individual task using `waypoint task inspect`.
-This will provide information about the on-demand runner profile which ran the job,
-the job which executed the operation (the Run Job), as well as the job which was
-watching the Run Job (the Watch Job).
+This output includes information about the runners that handled the job,
+as well as the four jobs (TaskJob, StartJob, WatchJob, StopJob) in the operation task.
 
 ```shell
-$ waypoint task inspect 01G1RYP6JFSEAQVE2SQX38Q19D
+$ waypoint task inspect 01GBWYSZ02YEB3EHMVQCA5240G
 
 » On-Demand Runner Task Configuration
-      Task ID: 01G1RYP6JFSEAQVE2SQX38Q19D
-   Task State: RUNNING
+      Task ID: 01GBWYSZ02YEB3EHMVQCA5240G
+   Task State: STARTED
     Workspace: default
-      Project: go-gitops-0
-  Application: go
+      Project: k8s-tetris
+  Application: tetris
 
-» Run Job Configuration
+» Task Job Configuration
   Job Configuration:
-         Job ID: 01G1RYP6JDVM4FPXEZVHP2JPD9
-      Operation: Up
-  Target Runner: 01G1RYP6JD0AV2HEWF4B9CYY29
+         Job ID: 01GBWYSYYVEFK9JNYKNA73XZ0X
+      Operation: ConfigSync
+  Target Runner: 01GBWYSYYVAJWMS6RWFNQV9MGR
       Workspace: default
-        Project: go-gitops-0
-    Application: go
+        Project: k8s-tetris
+    Application: tetris
 
   Job Results:
-  State: Running
+  State: Queued
 
-» Start Job Configuration
+» Watch Job Configuration
   Job Configuration:
-         Job ID: 01G1RYP6JF57MV6MSGPHMCCQCR
-      Operation: StartTask
+         Job ID: 01GBWYSZ02YH9M2P5VPKPVG40G
+      Operation: WatchTask
   Target Runner: *
       Workspace: default
-        Project: go-gitops-0
-    Application: go
+        Project: k8s-tetris
+    Application: tetris
 
   Job Results:
           State: Success
-  Complete Time: 25 seconds ago
+  Complete Time: 1 week ago
+
+» Start Job Configuration
+  Job Configuration:
+         Job ID: 01GBWYSZ02W2N6SHF0A7BW6EXC
+      Operation: StartTask
+  Target Runner: *
+      Workspace: default
+        Project: k8s-tetris
+    Application: tetris
+
+  Job Results:
+          State: Success
+  Complete Time: 1 week ago
 
 » Stop Job Configuration
   Job Configuration:
-         Job ID: 01G1RYP6JFSS7SHZG2HETKVCBR
+         Job ID: 01GBWYSZ0237HREZ0FBJKMJ7HW
       Operation: StopTask
   Target Runner: *
       Workspace: default
-        Project: go-gitops-0
-    Application: go
+        Project: k8s-tetris
+    Application: tetris
 
   Job Results:
   State: Queued
