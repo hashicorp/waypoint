@@ -28,9 +28,14 @@ not thoroughly explain the config setting CLI or `waypoint.hcl` stanzas.
 The following is a list of currently available configuration sources
 and their associated documentation:
 
-- [Kubernetes](/plugins/kubernetes#kubernetes-configsourcer) - Read values from ConfigMaps and Secrets.
+- [Terraform Cloud](/plugins/terraform-cloud#terraform-cloud-configsourcer) -
+  Read Terraform state outputs from Terraform Cloud.
+- [Kubernetes](/plugins/kubernetes#kubernetes-configsourcer) - Read values from
+  ConfigMaps and Secrets.
 - [Vault](/plugins/vault#vault-configsourcer) - Read values from Vault secrets,
   including dynamic secrets such as database credentials.
+- [AWS SSM](/plugins/aws-ssm#aws-ssm-configsourcer) - Read configuration values
+  from AWS SSM Parameter Store.
 
 -> **Custom configuration source plugins are coming soon.** The groundwork for
 this was set in Waypoint 0.2.0 and a future release will enable custom configuration
