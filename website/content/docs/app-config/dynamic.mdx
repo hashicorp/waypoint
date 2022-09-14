@@ -95,7 +95,7 @@ settings around how to authenticate. Without setting these, Vault configurations
 in applications will not work. These _source settings_ are set at the server
 level and used by all `dynamic` calls.
 
-To set configuration source settings, the `waypoint config source-set` CLI command is used:
+To set configuration source settings, the [`waypoint config source-set`](/commands/config-source-set) CLI command is used:
 
 ```shell-session
 $ waypoint config source-set -type=vault -config="auth=aws"
@@ -112,10 +112,10 @@ To unset the configuration specify the `-delete` flag.
 
 If a configuration value is not available (the environment variable is not
 set or the value is not what you expect), then the best debugging tool
-is `waypoint logs`. The logs command will show entrypoint logs where
+is [`waypoint logs`](/commands/logs). The logs command will show entrypoint logs where
 you will see any errors related to configuration syncing.
 
-The `waypoint logs` output below is from an application deployed with
+The [`waypoint logs`](/commands/logs) output below is from an application deployed with
 Waypoint using Kubernetes ConfigMaps but deployed within a Nomad cluster. The
 lines have been purposely shortened slightly to improve readability on the
 website.
@@ -144,7 +144,7 @@ doing a full redeploy.
 
 If you don't see any errors in the log, it may be possible the envirnment
 variables are set correctly. To verify that environment variables are
-set, open a shell with `waypoint exec` and run `env`. This command will
+set, open a shell with [`waypoint exec`](/commands/exec) and run `env`. This command will
 list the environment variables that are available to your application.
 
 ```shell-session
