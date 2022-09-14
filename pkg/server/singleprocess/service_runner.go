@@ -478,14 +478,21 @@ func (s *Service) RunnerJobStream(
 	// Receive our opening message so we can determine the runner ID.
 	req, err := server.Recv()
 	if err != nil {
-		return err
+		return hcerr.Externalize(
+			log,
+			err,
+			"failed to receive first message for RunnerJobStrem",
+		)
 	}
 	reqEvent, ok := req.Event.(*pb.RunnerJobStreamRequest_Request_)
 	if !ok {
-		return status.Errorf(codes.FailedPrecondition,
-			"first message must be a Request event")
+		return hcerr.Externalize(
+			log,
+			status.Errorf(codes.FailedPrecondition,
+				"first message must be a Request event"),
+			"first message to RunnerJobStream must be a Request event",
+		)
 	}
-	log = log.With("runner_id", reqEvent.Request.RunnerId)
 
 	// Get the runner to validate it is registered
 	runnerId := reqEvent.Request.RunnerId
@@ -494,18 +501,26 @@ func (s *Service) RunnerJobStream(
 	if err != nil {
 		return hcerr.Externalize(log, err, "failed to get this runner", "id", runnerId)
 	}
-	log.With("runner-id", runner.Id)
+	log = log.With("runner_id", reqEvent.Request.RunnerId)
 
 	// The runner must be adopted to get a job.
 	if runner.AdoptionState != pb.Runner_ADOPTED &&
 		runner.AdoptionState != pb.Runner_PREADOPTED {
-		return status.Errorf(codes.FailedPrecondition,
-			"runner must be adopted prior to requesting jobs")
+		return hcerr.Externalize(
+			log,
+			status.Errorf(codes.FailedPrecondition,
+				"runner must be adopted prior to requesting jobs"),
+			"runner must be adopted prior to requesting jobs",
+		)
 	}
 
 	// Verify our token matches the request
 	if err := s.runnerVerifyToken(log, ctx, runner.Id, runner.Labels); err != nil {
-		return err
+		return hcerr.Externalize(
+			log,
+			err,
+			"runner token verification failed",
+		)
 	}
 
 	// Get the job for this runner. If this is a reattach, we lookup
@@ -523,15 +538,27 @@ func (s *Service) RunnerJobStream(
 
 		// If the job is not found, that is an error.
 		if job == nil {
-			return status.Errorf(codes.InvalidArgument,
-				"reattach job ID does not exist")
+			return hcerr.Externalize(
+				log,
+				status.Errorf(codes.InvalidArgument,
+					"reattach job ID does not exist"),
+				"reattach job ID does not exist",
+				"id",
+				jobId,
+			)
 		}
 
 		// The runner reattaching must be the assigned runner.
 		assigned := job.Job.AssignedRunner
 		if assigned == nil || assigned.Id != runner.Id {
-			return status.Errorf(codes.InvalidArgument,
-				"reattach job is not assigned to this runner")
+			return hcerr.Externalize(
+				log,
+				status.Errorf(codes.InvalidArgument,
+					"reattach job is not assigned to this runner"),
+				"reattach job is not assigned to this runner",
+				"id",
+				jobId,
+			)
 		}
 
 		// NOTE(mitchellh): things we should check in the future:
@@ -543,7 +570,7 @@ func (s *Service) RunnerJobStream(
 		log.Info("waiting for job assignment")
 		job, err = s.state(ctx).JobAssignForRunner(ctx, runner)
 		if err != nil {
-			return hcerr.Externalize(log, err, "failed to get job assignment for runner", "id", runnerId)
+			return hcerr.Externalize(log, err, "failed to get job assignment for runner")
 		}
 	}
 	if job == nil || job.Job == nil {
@@ -660,7 +687,7 @@ func (s *Service) RunnerJobStream(
 	if s.logStreamProvider != nil {
 		logStreamWriter, err = s.logStreamProvider.StartWriter(ctx, log, s.state(ctx), job)
 		if err != nil {
-			return errors.Wrapf(err, "failed to start a log writer to handle jog logs")
+			return hcerr.Externalize(log, err, "failed to start a log writer to handle jog logs", "id", runnerId, "job", job.Id)
 		}
 	}
 
@@ -758,8 +785,7 @@ func (s *Service) RunnerJobStream(
 				select {
 				case req := <-eventCh:
 					if err := s.handleJobStreamRequest(log, job, server, req, logStreamWriter); err != nil {
-						log.Error("error handling job stream request during drain", "err", err, "req", req)
-						return err
+						return hcerr.Externalize(log, err, "error handling job stream request during drain", "req", req)
 					}
 				default:
 					return nil
@@ -767,13 +793,11 @@ func (s *Service) RunnerJobStream(
 			}
 
 		case err := <-errCh:
-			log.Error("err from err channel", "err", err)
-			return err
+			return hcerr.Externalize(log, err, "err from err channel")
 
 		case req := <-eventCh:
 			if err := s.handleJobStreamRequest(log, job, server, req, logStreamWriter); err != nil {
-				log.Error("error handling job stream request", "err", err, "req", req)
-				return err
+				return hcerr.Externalize(log, err, "error handling job stream request", "req", req)
 			}
 
 		case job := <-jobCh:
@@ -801,8 +825,7 @@ func (s *Service) RunnerJobStream(
 					},
 				})
 				if err != nil {
-					log.Error("error sending job cancel event to runner", "err", err)
-					return err
+					return hcerr.Externalize(log, err, "error sending job cancel event to runner")
 				}
 
 				// On force we exit immediately.
