@@ -106,7 +106,11 @@ are alongside their parameters in the plugin documentation.
 
 ### Deleting Configuration Source Settings
 
-To unset the configuration specify the `-delete` flag.
+To unset the configuration after it has been set with `waypoint config source-set`, specify the `-delete` flag.
+
+```shell-session
+$ waypoint config source-set -type=vault -delete
+```
 
 ## Debugging Dynamic Configuration
 
