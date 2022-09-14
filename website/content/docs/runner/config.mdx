@@ -47,12 +47,13 @@ available within certain scoped situations. Variables are otherwise server
 global by default.
 
 Consider an example where you're using a `dev` and a `prod` workspace in Waypoint.
-These workspaces match up to your `dev` and `prod` environments in your platform.
-For this example, let's assume that is Nomad (with an ACL-enabled cluster), and
-your `dev` and `prod` environments are separated into different namespaces, also
-named `dev` and `prod`. Accordingly, you could set your runner config to use workspace-scoped
-config, where a Nomad token with permissions to submit jobs to the `dev` namespace
-is used for the `dev` Waypoint workspace, and set another token with permissions to
+These workspaces match up to your `dev` and `prod` environments.
+For this example, let's assume that you use Nomad (with an ACL-enabled cluster), and
+your `dev` and `prod` environments are separated into different namespaces by the name names. These two different workspaces need to be configured by Waypoint to deploy
+to the proper environments in Nomad.
+To accomplish this, you would set your runner config to use workspace-scoped
+config: a Nomad token with permissions to submit jobs to the `dev` namespace
+is used for the `dev` Waypoint workspace, and another token with permissions to
 submit jobs to the `prod` namespace for the `prod` Waypoint workspace. Here's what
 that could look like:
 
@@ -70,9 +71,7 @@ $ waypoint config get -runner
 ```
 
 With configurations set in this way, operations executed in a given workspace will
-only have permissions in the corresponding platform for the corresponding environment
-which you configured. Operations in the `dev` workspace will not work in `prod`, and likewise
-operations in the `prod` workspace will not have permissions to work in `dev`.
+use the `NOMAD_TOKEN` configured for the corresponding environment automatically.
 
 ### Via the `waypoint.hcl` File
 
