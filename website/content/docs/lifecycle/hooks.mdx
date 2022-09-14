@@ -69,8 +69,9 @@ for details on all the fields a hook has and which are required.
 
 ## Execution Environment
 
-Hooks are executed alongside the Waypoint operation, most commonly [where the Waypoint CLI is running](/docs/internals/execution#most-common-cli-and-a-remote-server).
-Reference [Operation Execution](/docs/internals/execution) for more execution options including Remote Runners.
+Hooks are executed alongside the Waypoint operation, most commonly within an
+on-demand runner. For this reason, you may may need to add additional binaries and
+files to the OCI image used to launch the on-demand runner.
 
 Hooks are _not executed in the app deployment platform_. Therefore, operations
 such as database migrations or scripts that must be run within the context
