@@ -24,7 +24,7 @@ This functionality requires the [Waypoint entrypoint](/docs/entrypoint).
 
 ## Setting Configuration via the CLI
 
-Static configuration are values that are set directly using `waypoint config set`.
+Static configuration are values that are set directly using [`waypoint config set`](/commands/config-set).
 They are "static" because they are set with a predetermined value directly on the Waypoint
 server.
 
@@ -39,7 +39,7 @@ when configuration changes.
 
 ### Project Scope
 
-`waypoint config set` will set variables by default scoped to the _project_.
+[`waypoint config set`](/commands/config-set) will set variables by default scoped to the _project_.
 This means that all applications within your project will have the environment
 variable set.
 
@@ -57,7 +57,7 @@ $ waypoint config set -app web PORT=8080
 
 Configuration can also be set directly in the `waypoint.hcl` file using
 the [`config` stanza](/docs/waypoint-hcl/config). The example below achieves
-the same thing as the [`waypoint config set`](/commands/config-set) example in the section above.
+the same thing as the [`waypoint config set`](/commands/config-set) example in the [section above](/docs/app-config#setting-configuration-via-the-cli).
 
 ```hcl
 config {
@@ -69,7 +69,7 @@ config {
 
 Configuration specified in the `waypoint.hcl` file has a number of benefits:
 
-- The configuration is made available immediately during all [`waypoint up`](/commands/up).
+- The configuration is made available immediately during all lifecycle operations (such as [`waypoint up`](/commands/up), [`waypoint deploy`](/commands/deploy), etc.).
 
 - The configuration is persisted as code and can be committed to version control.
 
@@ -82,7 +82,7 @@ Configuration specified in the `waypoint.hcl` file has a number of benefits:
 Changes to configuration within the `waypoint.hcl` file take effect
 whenever a new deploy occurs (such as via a [`waypoint up`](/commands/up) or [`waypoint deploy`](/commands/deploy)).
 Existing deployments can be updated without
-a new deploy by using the `waypoint config sync` CLI command.
+a new deploy by using the [`waypoint config sync`](/commands/config-sync) CLI command.
 
 When configuration changes take effect, any changes will affect
 _all deployments_ of that project or application. Practically, this
