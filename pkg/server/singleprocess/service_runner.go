@@ -14,7 +14,6 @@ import (
 	"github.com/pkg/errors"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"google.golang.org/protobuf/types/known/emptypb"
 	empty "google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
@@ -53,7 +52,7 @@ func (s *Service) RunnerGetDeploymentConfig(
 	req *pb.RunnerGetDeploymentConfigRequest,
 ) (*pb.RunnerGetDeploymentConfigResponse, error) {
 	// Get our server config
-	serverConfig, err := s.GetServerConfig(ctx, &emptypb.Empty{})
+	serverConfig, err := s.GetServerConfig(ctx, &empty.Empty{})
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to get server config to populate runner start job server addr")
 	}
