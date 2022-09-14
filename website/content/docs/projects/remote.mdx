@@ -20,6 +20,11 @@ a variety of useful functionality and patterns:
   Waypoint server. The runners can run on a private network to access
   internal resources.
 
+Running operations remotely is the default and most common mode as it decouples
+waypoint from an individual machine. Operations such as `waypoint build` will always
+attempt to perform a remote operation if possible. This can be override by passing
+`-local` on the command line.
+
 ## Requirements
 
 Remote operations require:
