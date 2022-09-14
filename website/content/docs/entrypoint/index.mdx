@@ -8,28 +8,29 @@ description: |-
 # Waypoint Entrypoint
 
 Waypoint uses an entrypoint binary to enable features such as application
-configuration, logs, exec, and more. In most cases, Waypoint will automatically
-inject and configure the entrypoint binary during the build phase. The
-image below shows a high-level architecture diagram of the entrypoint in
-a Docker image.
+configuration, logs, exec, and more. In most cases if building containers, Waypoint
+will automatically inject and configure the entrypoint binary during the build phase.
+The image below shows a high-level architecture diagram of the entrypoint in a Docker
+image.
 
 ![Entrypoint Overview](/img/entrypoint-overview.png)
 
-~> The entrypoint binary injection and usage is **not required** and can be
+~> **Note:** The entrypoint binary injection and usage is **not required** and can be
 disabled. This will also disable features such as logs, exec, etc. for that
 application. See [disabling the entrypoint](/docs/entrypoint/disable) for more information.
 
 ## Installation
 
-**For builders that produce Docker images, the entrypoint is automatically
-injected into the container image.**
+-> For builders that produce Docker images (docker, docker-pull, pack), the
+entrypoint is automatically injected into the container image.**
 
 For other types of builds, the entrypoint must be manually installed.
 To manually install the entrypoint:
 
-1. [Download](https://releases.hashicorp.com/waypoint-entrypoint/) the appropriate `waypoint-entrypoint` binary for the
-   platform your application will run on. This is _not_ your desktop operating
-   system but the operating system your app will be deployed _to_.
+1. [Download](https://releases.hashicorp.com/waypoint-entrypoint/) the appropriate
+   `waypoint-entrypoint` binary for the platform your application will run on. This is
+   _not_ your desktop operating system but the operating system your app will be
+   deployed _to_.
 
 2. Put the single binary Waypoint entrypoint anywhere in your deployment
    image, such as `/usr/local/bin` on Unix-like systems.
