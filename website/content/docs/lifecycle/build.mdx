@@ -35,7 +35,7 @@ app "my-app" {
 Waypoint includes these builtin plugins to build a Docker image for your app.
 
 - [Docker Build](/plugins/docker#docker-builder)
-- Docker Pull Build
+- [Docker Pull Build](/plugins/docker#docker-pull-builder)
 - [Cloud Native Buildpacks](/plugins/pack)
 
 You can also create a [plugin](/plugins) to extend Waypoint with your own builder.
@@ -190,9 +190,10 @@ directly with Docker
 
 ## Registry
 
-A build may optionally specify a registry to push the built artifact to.
-This is sometimes required so that the build artifact is accessible to the
-deployment platform.
+In the most common use cases of using static and on-demand runners, the
+registry must be specified. The registry block is only optional when building an
+artifact that can be accessed directly by the deploy plugin (such as, with in the
+same Docker daemon).
 
 If a registry is specified, the deployment step will use the artifact
 in the registry. If a registry is not specified, the deployment step will
