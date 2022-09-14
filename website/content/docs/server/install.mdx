@@ -19,8 +19,8 @@ a specific setup that doesn't work for you with `waypoint install`, we recommend
 looking at the [server run](/docs/server/run) documentation instead or opening
 an issue on GitHub and requesting a feature enhancement.
 
-The server which is installed by the `waypoint install` command runs a Waypoint
-server in a Docker container, which is actually running the `waypoint server run`
+The server installed by the `waypoint install` command runs Waypoint
+server in a Docker container, which runs the `waypoint server run`
 command:
 
 ```shell-session
@@ -47,7 +47,7 @@ We recommend reading the README detailed on that project for more information on
 how to get going using Helm and Waypoint.
 
 Installing the Waypoint server to Kubernetes using the `waypoint install` command
-will also use the Waypoint Helm chart for the installation, setting sensible default
+will also use the Waypoint Helm chart behind the scenes for the installation, setting sensible default
 values for the chart values.
 
 ### Nomad Platform
@@ -119,7 +119,7 @@ an IP address from the Nomad allocation after the Waypoint install helper finish
 You may also use Nomad as the service discovery provider with `-nomad-service-provider=nomad`.
 
 If your Nomad cluster is ACL-enabled, you will need the `NOMAD_TOKEN` environment variable
-set, with a token that has permissions for submitting a job to the specified namespace.
+set with a token that has permissions for submitting a job to the specified namespace.
 Likewise, if you are installing the Waypoint server and using Consul for service
 discovery to an ACL-enabled Consul cluster, you may need to set the environment
 variable `CONSUL_HTTP_TOKEN`, depending on your Nomad client configuration.
