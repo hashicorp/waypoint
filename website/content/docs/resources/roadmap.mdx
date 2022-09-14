@@ -17,11 +17,44 @@ a release, please refer to the [GitHub Issue Tracker](https://github.com/hashico
 This is a more manual approach to reading our roadmap and includes small details
 such as bug fixes, but is much more accurate to what we're working on.
 
-### Server Production Readiness Improvements
+### Custom Pipeline
 
-The initial Waypoint releases have a minimal featureset around running the Waypoint server.
-We plan to improve the `waypoint install` and `waypoint server run` interfaces
-to support more options, such as custom TLS certs.
+Waypoint has always had `build`, `deploy`, and `release` as lifecycle events 
+but to handle more complex deployment, Waypoint needs the ability to add custom steps. 
+We plan to add the ability to script custom steps like container scanning or integration 
+with project management tools. Also, custom pipelines will allow user to compose thier
+own Waypoint pipeline with custom steps and embedded pipelines
+
+### App Promotion
+
+Waypoint initially has the [workspaces](/docs/workspaces) feature for
+isolating different environments. We plan on building on this feature 
+and custom pipelines to enable workspaces that may target different 
+infrastructures (such as a dev vs. production cluster) and we
+want to build features so applications can be easily "promoted" from
+one stage to another.
+
+### Infrastructure Provisioning with Terraform
+
+We plan incorporating a tighter integration with Terraform to enable folks
+to provision infrastructure right from their waypoint.hcl file. Waypoint will
+be able to trigger Terraform to provision deployment infrastructure, and connect 
+that infrastructure to the Waypoint server. 
+
+### Service Brokering (Databases, Queues, etc.)
+
+We plan on having some mechanism by which applications can request services
+such as databases, queues, and so on. These services must be satisfied by
+some external system such as Amazon RDS. Waypoint will be able to request
+the service, connect the configuration, and destroy it when its no longer
+in use.
+
+A design goal of Waypoint is explicitly to _not do automated infrastructure
+management_, so this feature will still put the burden of managing these
+services onto the user. However, Waypoint can help orchestrate initializing
+them and configuring applications.
+
+We will likely integrate with [Terraform](https://terraform.io) in some way.
 
 ### Deployment Templates
 
@@ -43,32 +76,6 @@ functionality for the specific deployment it represents. This was built as
 a special security mechanism however and isn't generally available to limit
 access for other tokens.
 
-### Service Brokering (Databases, Queues, etc.)
-
-We plan on having some mechanism by which applications can request services
-such as databases, queues, and so on. These services must be satisfied by
-some external system such as Amazon RDS. Waypoint will be able to request
-the service, connect the configuration, and destroy it when its no longer
-in use.
-
-A design goal of Waypoint is explicitly to _not do automated infrastructure
-management_, so this feature will still put the burden of managing these
-services onto the user. However, Waypoint can help orchestrate initializing
-them and configuring applications.
-
-We will likely integrate with [Terraform](https://www.terraform.io/) in some way.
-
-### App Promotion
-
-Waypoint initially has the [workspaces](/docs/workspaces) feature for
-isolating different environments. This is a working but minimal feature
-targeted towards this use case.
-
-We plan on building on this feature to enable workspaces that may target
-different infrastructures (such as a dev vs. production cluster) and we
-want to build features so applications can be easily "promoted" from
-one stage to another.
-
 ### Exec Improvements
 
 We're really excited about [`waypoint exec`](/docs/exec) but there
@@ -88,12 +95,3 @@ are a lot of improvements we want to make here:
 - **Native exec.** - If a platform provides a native `exec` feature, we
   want to provide that as an option to users. This is always likely to not
   be a default because we want the consistent option as the default.
-
-### Slack
-
-We want to enable a "ChatOps" style interface to Waypoint. We spiked
-an experiment where we got this working and it is committed to the source
-currently under the `x/` directory (for "experimental").
-
-In the end, we felt this experience wasn't quite ready for the initial Waypoint
-release but we will enable this workflow.
