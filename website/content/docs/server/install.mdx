@@ -19,6 +19,14 @@ a specific setup that doesn't work for you with `waypoint install`, we recommend
 looking at the [server run](/docs/server/run) documentation instead or opening
 an issue on GitHub and requesting a feature enhancement.
 
+The server which is installed by the `waypoint install` command runs a Waypoint
+server in a Docker container, which is actually running the `waypoint server run`
+command:
+
+```shell-session
+waypoint server run -accept-tos -vv -db=/data/data.db -listen-grpc=0.0.0.0:9701 -listen-http=0.0.0.0:9702
+```
+
 ## Officially Supported Server Platforms
 
 Currently, Waypoint supports running its server on the following platforms:
@@ -38,9 +46,9 @@ chart can be used to deploy Waypoint server directly onto a Kubernetes cluster w
 We recommend reading the README detailed on that project for more information on
 how to get going using Helm and Waypoint.
 
-You can also install Waypoint server onto Kubernetes using the `waypoint install`
-command. This command sets up a Service, Statefulset, Deployment, and Replicaset
-and deploys Waypoint server and its runner as two separate pods by default.
+Installing the Waypoint server to Kubernetes using the `waypoint install` command
+will also use the Waypoint Helm chart for the installation, setting sensible default
+values for the chart values.
 
 ### Nomad Platform
 
@@ -70,7 +78,7 @@ When running the install helper, the CLI should show the Consul DNS backed hostn
 server at the end of an install:
 
 ```shell-session
-$ waypoint install -platform=nomad -accept-tos -nomad-host-volume="waypoint"
+$ waypoint install -platform=nomad -nomad-host-volume="waypoint" -nomad-runner-host-volume="waypoint-runner" -accept-tos
 ✓ Waypoint server ready
 ✓ The CLI has been configured to automatically install a Consul service for
 the Waypoint service backend and ui service in Nomad.
@@ -106,8 +114,15 @@ up Waypoint server.
 
 If you do not wish to automatically register a Consul service in Nomad for
 Waypoint server by default with `waypoint install`, it can always be disabled
-by including the `-nomad-consul-service=false` flag. You should then see
+by including the `-nomad-service-provider=none` flag. You should then see
 an IP address from the Nomad allocation after the Waypoint install helper finishes.
+You may also use Nomad as the service discovery provider with `-nomad-service-provider=nomad`.
+
+If your Nomad cluster is ACL-enabled, you will need the `NOMAD_TOKEN` environment variable
+set, with a token that has permissions for submitting a job to the specified namespace.
+Likewise, if you are installing the Waypoint server and using Consul for service
+discovery to an ACL-enabled Consul cluster, you may need to set the environment
+variable `CONSUL_HTTP_TOKEN`, depending on your Nomad client configuration.
 
 ### AWS ECS Platform
 
@@ -178,4 +193,5 @@ is recommended only for development to get started using Waypoint. We do not
 recommend using Waypoint running in Docker for production workflows.
 
 This command sets up Docker containers for running Waypoint server and its
-runner as two separate containers by default.
+runner as two separate containers by default. They are each installed to a Docker
+network called "waypoint".
