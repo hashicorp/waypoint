@@ -180,9 +180,10 @@ credentials directly in the `waypoint.hcl` file. Instead, you should use
 Input variables can be configured to read from environment variables so you
 can use well known environment variables (such as `AWS_ACCESS_KEY`), too.
 
-For remote runners, they can get access to input variables either by
-setting the variables in the web UI, or by setting
-[runner configuration](/docs/runner/config).
+Normally, runner configuration should be used to provide these details to a runner
+executing the operation that needs these details.
+
+See [runner configuration](/docs/runner/config) for details.
 
 ## Local vs. Remote Builds
 
