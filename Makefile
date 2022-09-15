@@ -14,11 +14,6 @@ WP_SERVER_PLATFORM?="linux/amd64"
 LAST_RELEASE?=$$(git describe --tags $$(git rev-list --tags --max-count=1))
 THIS_RELEASE?=$$(git rev-parse --abbrev-ref HEAD)
 
-.PHONY: help
-help: # Print valid Make targets
-	@echo "Valid targets:"
-	@grep --extended-regexp --no-filename '^[a-zA-Z/_-]+:' Makefile | sort | awk 'BEGIN {FS = ":.*?# "}; {printf "\033[36m%-15s\033[0m %s\n", $$1, $$2}'
-
 
 .PHONY: bin
 bin: # Creates the binaries for Waypoint for the current platform
@@ -208,3 +203,8 @@ test/service: # Runs the server API function tests. Requires a local postgresql 
 	$(warning "Running the full service suite requires `docker-compose up`! Some Tests rely on a local Horizon instance to be running.")
 	@echo "Running service API server tests..."
 	go test -test.v ./pkg/server/singleprocess/
+
+.PHONY: help
+help: # Print valid Make targets
+	@echo "Valid targets:"
+	@grep --extended-regexp --no-filename '^[a-zA-Z/_-]+:' Makefile | sort | awk 'BEGIN {FS = ":.*?# "}; {printf "\033[36m%-15s\033[0m %s\n", $$1, $$2}'
