@@ -83,7 +83,7 @@
     "ember-export-application-global": "^2.0.1",
     "ember-fetch": "^8.1.2",
     "ember-inflector": "^4.0.2",
-    "ember-intl": "^5.5.0",
+    "ember-intl": "^5.7.2",
     "ember-load-initializers": "^2.1.2",
     "ember-named-blocks-polyfill": "^0.2.4",
     "ember-on-resize-modifier": "^1.0.0",
