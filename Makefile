@@ -21,7 +21,7 @@ help: # Print valid Make targets
 
 
 .PHONY: bin
-bin: # bin Creates the binaries for Waypoint for the current platform
+bin: # Creates the binaries for Waypoint for the current platform
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o ./internal/assets/ceb/ceb ./cmd/waypoint-entrypoint
 	CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -o ./internal/assets/ceb/ceb-arm64 ./cmd/waypoint-entrypoint
 	cd internal/assets && go-bindata -pkg assets -o prod.go -tags assetsembedded ./ceb
@@ -35,7 +35,7 @@ bin/cli-only: # Builds only the cli with no ceb
 	CGO_ENABLED=$(CGO_ENABLED) go build -ldflags $(GOLDFLAGS) -tags assetsembedded -o ./waypoint ./cmd/waypoint
 
 .PHONY: bin/linux
-bin/linux: # bin Creates the binaries for Waypoint for the linux platform
+bin/linux: # Creates the binaries for Waypoint for the linux platform
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o ./internal/assets/ceb/ceb ./cmd/waypoint-entrypoint
 	CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -o ./internal/assets/ceb/ceb-arm64 ./cmd/waypoint-entrypoint
 	cd internal/assets && go-bindata -pkg assets -o prod.go -tags assetsembedded ./ceb
