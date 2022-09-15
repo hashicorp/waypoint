@@ -38,10 +38,12 @@ The primary components of Waypoint are:
   enable this functionality.
 
 - **Runner** - A Waypoint runner executes operations such as build,
-  deploy, etc. Most commonly, the
-  [CLI acts as a runner](/docs/internals/execution#most-common-cli-and-a-remote-server),
-  but it is possible to run dedicated runners. This isn't shown in the diagram
-  above.
+  deploy, etc. There are two kinds of runners:
+
+  - **Static Runner** - A static runner is a long-lived runner that is very likely set up
+    when a team begins using Waypoint.
+  - **On-Demand Runner** - An on-demand runner is launched per operation within a
+    container platform.
 
 ## Failure Behavior
 
@@ -81,9 +83,10 @@ If a dedicated runner is down, then the capacity of the server to execute
 remote operations will be diminished. If no runners exist, jobs will queue.
 Operations include build, deploy, release, etc.
 
-This is only an issue if _remote runners_ are being used. In the most common
-case, the [CLI acts as a runner](/docs/internals/execution#most-common-cli-and-a-remote-server)
-and this is not a possible failure mode.
+If there are no static runners configured in the system or the user has specified
+`-local=true`, then the CLI will spawn a runner itself.
+
+See [CLI acts as a runner](/docs/internals/execution) for more details.
 
 ### CLI
 

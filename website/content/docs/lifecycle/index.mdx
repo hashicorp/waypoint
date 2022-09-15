@@ -87,8 +87,8 @@ DNS, configuring a service mesh, etc.
 
 A **hook** is a customizable command that executes before or after the `build`,
 `registry`, `deploy`, or `release` operations.
-Hooks execute on the [Waypoint Runner](/docs/internals/execution#most-common-cli-and-a-remote-server),
-which is typically the Waypoint CLI.
+Hooks execute on the [Waypoint Runner](/docs/internals/execution),
+which is typically an on-demand runner.
 Hooks can be useful to do things such as perform a security scan on an image,
 run database migrations on a deploy, etc.
 

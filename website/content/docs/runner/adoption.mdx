@@ -7,51 +7,55 @@ description: |-
 
 # Adoption Workflow
 
-Waypoint Runners can exist in various states depending on how they are
-initially installed into a platform. Most runners will move from `Pending` to
+To introduce a static runner to the server, it goes through the Adoption Workflow.
+This allows the operator the ability to approve static runners before they're sent jobs to
+run.
+
+Waypoint static runners can exist in various states depending on how they are
+initially installed into a platform. Most will move from `Pending` to
 `Adopted` to `Rejected` states during their entire lifecycle.
 
-## Pending Runners
+## Preadopted Static Runners
 
-The `Pending` runner state is the default state which newly installed runners
-will be in as they have yet to receive a runner token from the server. Runners
-in this state may be configured to talk to a Waypoint Server but have not yet
-been adopted by the Server and therefore will not receive jobs to run. Runners
-will also show up in this state if they are forgotten about by the server with
+When creating a new static runner, it is possible to generate the runner token and install
+a static runner with the token on its initial installation. These runners are then
+able to immediately recieve jobs from the Waypoint server when they start.
+They also skip the `Pending` state to directly enter the `Preadopted` state.
+
+Preadopted static runners may be moved into the `Rejected` state like other runners by
+issuing the [`waypoint runner reject`](/commands/runner-reject) command. If a preadopted
+static runner is rejected, a new runner token must be created for the runner before it
+is allowed to receive jobs again.
+
+## Pending Static Runners
+
+The `Pending` runner state is the default state which newly installed static runners
+will be in, as they have yet to receive a runner token from the server. Static runners
+in this state can talk to a Waypoint server but will not receive jobs to run.
+Static runners will also show up in this state if they are forgotten about by the server with
 the [`waypoint runner forget`](/commands/runner-forget) command.
 
-When in the `Pending` state, runners may be moved into the `Adopted` state by
+When in the `Pending` state, static runners may be moved into the `Adopted` state by
 issuing the [`waypoint runner adopt`](/commands/runner-adopt) command with the
 desired Runner ID.
 
 Runners automatically skip this state if they are in the `Preadopted` state.
 
-## Preadopted Runners
+## Adopted Static Runners
 
-When creating a new runner it is possible to generate the runner token which
-seeded to the new runner before its initial installation. These runners which
-have an already valid runner token are able to immediately receive jobs from
-the Waypoint Server when they start. They also skip the `Pending` state to
-directly enter the `Preadopted` state.
-
-Preadopted runners may be moved into the `Rejected` state like other runners by
-issuing [`waypoint runner reject`](/commands/runner-reject). If a preadopted
-runner is rejected a new runner token must be created for the runner before it
-is allowed to receive jobs again.
-
-## Adopted Runners
-
-Runners adopted with [`waypoint runner adopt`](/commands/runner-adopt) will
-store the runner token received by the server in their configured state
-directory. Once a runner has been adopted it may start receiving job
-assignments from the Waypoint Server as usual.
+Static runners adopted with [`waypoint runner adopt`](/commands/runner-adopt) will
+store a runner token received by the server in their configured state
+directory, which is local to the static runner itself. Once a static runner has been
+adopted, it may start receiving job assignments from the Waypoint server as usual.
 
 ## Rejected Runners
 
-When a user rejects a Waypoint Runner with the [`waypoint runner reject`](/commands/runner-reject) command the rejected runner is no longer able
-to receive job assignments from the Waypoint Server. Rejected runners will
-continue to appear in the list of runners that the server knows about so that
-subsequent requests by this same runner are ignored.
+When a user rejects a Waypoint runner with the
+[`waypoint runner reject`](/commands/runner-reject) command, the rejected runner
+is no longer able to receive job assignments from the Waypoint server.
+
+Rejected runners will continue to appear in the list of runners that the server
+knows about so that subsequent requests by this same runner are ignored.
 
 Rejecting a runner does not invalidate its token. If a rejected runner is
 forgotten the previously rejected runner may reconnect to the server as long as
@@ -60,8 +64,8 @@ never rejected in the first place.
 
 # Runner Tokens
 
-Runner tokens are special tokens which can only be used by runners receiving
-job assignments from the Waypoint Server. These tokens cannot be revoked, only
+Runner tokens are special tokens which can only be used by runners to recieve
+job assignments from the Waypoint server. These tokens cannot be revoked, only
 rejected through the [`waypoint runner reject`](/commands/runner-reject)
 command. By default runner tokens are valid for 30 days and upon expiring they
 will need to be recreated with [`waypoint runner token`](/commands/runner-token).
@@ -69,9 +73,9 @@ Runners must then be restarted with the new token to receive job assignments
 again. Token expirations may be altered when generating a runner token with
 [`waypoint runner token`](/commands/runner-token).
 
-The Waypoint Runner will look for the token in two places before requesting a
-new token from the Waypoint Server. First the runner will look in its state
-directory for a `token` file containing a Waypoint Runner token. If a `token`
+The Waypoint runner will look for the token in two places before requesting a
+new token from the Waypoint server. First, the runner will look in its state
+directory for a `token` file containing a Waypoint runner token. If a `token`
 file doesn't exist then the Waypoint Runner will look in the
 `WAYPOINT_SERVER_TOKEN` environment variable. If both of these locations do not
 contain a token then the Waypoint Runner enters the `Pending` state and an
