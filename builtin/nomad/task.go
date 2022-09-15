@@ -271,7 +271,11 @@ func (p *TaskLauncher) StartTask(
 	job.TaskGroups[0].Tasks[0].Config = config
 
 	log.Debug("registering on-demand task job", "task-name", taskName)
-	_, _, err = jobclient.Register(job, nil)
+	writeOptions := &api.WriteOptions{
+		Region:    p.config.Region,
+		Namespace: p.config.Namespace,
+	}
+	_, _, err = jobclient.Register(job, writeOptions)
 	if err != nil {
 		log.Debug("failed to register job to nomad")
 		return nil, err
