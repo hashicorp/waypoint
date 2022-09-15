@@ -15,13 +15,13 @@ LAST_RELEASE?=$$(git describe --tags $$(git rev-list --tags --max-count=1))
 THIS_RELEASE?=$$(git rev-parse --abbrev-ref HEAD)
 
 .PHONY: help
-help: # print valid Make targets
+help: # Print valid Make targets
 	@echo "Valid targets:"
 	@grep --extended-regexp --no-filename '^[a-zA-Z/_-]+:' Makefile | sort | awk 'BEGIN {FS = ":.*?# "}; {printf "\033[36m%-15s\033[0m %s\n", $$1, $$2}'
 
 
 .PHONY: bin
-bin: # bin creates the binaries for Waypoint for the current platform
+bin: # bin Creates the binaries for Waypoint for the current platform
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o ./internal/assets/ceb/ceb ./cmd/waypoint-entrypoint
 	CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -o ./internal/assets/ceb/ceb-arm64 ./cmd/waypoint-entrypoint
 	cd internal/assets && go-bindata -pkg assets -o prod.go -tags assetsembedded ./ceb
@@ -35,25 +35,25 @@ bin/cli-only: # Builds only the cli with no ceb
 	CGO_ENABLED=$(CGO_ENABLED) go build -ldflags $(GOLDFLAGS) -tags assetsembedded -o ./waypoint ./cmd/waypoint
 
 .PHONY: bin/linux
-bin/linux: # bin creates the binaries for Waypoint for the linux platform
+bin/linux: # bin Creates the binaries for Waypoint for the linux platform
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o ./internal/assets/ceb/ceb ./cmd/waypoint-entrypoint
 	CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -o ./internal/assets/ceb/ceb-arm64 ./cmd/waypoint-entrypoint
 	cd internal/assets && go-bindata -pkg assets -o prod.go -tags assetsembedded ./ceb
 	GOOS=linux CGO_ENABLED=$(CGO_ENABLED) go build -ldflags $(GOLDFLAGS) -tags assetsembedded -o ./waypoint ./cmd/waypoint
 
 .PHONY: bin/windows
-bin/windows: # create windows binaries
+bin/windows: # Create windows binaries
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o ./internal/assets/ceb/ceb ./cmd/waypoint-entrypoint
 	CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -o ./internal/assets/ceb/ceb-arm64 ./cmd/waypoint-entrypoint
 	cd internal/assets && go-bindata -pkg assets -o prod.go -tags assetsembedded ./ceb
 	GOOS=windows GOARCH=amd64 CGO_ENABLED=$(CGO_ENABLED) go build -ldflags $(GOLDFLAGS) -tags assetsembedded -o ./waypoint.exe ./cmd/waypoint
 
 .PHONY: bin/entrypoint
-bin/entrypoint: # create the entrypoint for the current platform
+bin/entrypoint: # Create the entrypoint for the current platform
 	CGO_ENABLED=0 go build -tags assetsembedded -o ./waypoint-entrypoint ./cmd/waypoint-entrypoint
 
 .PHONY: install
-install: bin # build and copy binaries to $GOPATH/bin/waypoint
+install: bin # Build and copy binaries to $GOPATH/bin/waypoint
 ifneq ("$(wildcard $(GOPATH)/bin/waypoint)","")
 	rm $(GOPATH)/bin/waypoint
 endif
@@ -61,7 +61,7 @@ endif
 	cp ./waypoint $(GOPATH)/bin/waypoint
 
 .PHONY: format
-format: # format go code
+format: # Format all go code in project
 	gofmt -s -w ./
 
 .PHONY: docker/server
@@ -183,7 +183,7 @@ gen/website-mdx: # Generates the website markdown files
 	cd ./website; npx --no-install next-hashicorp format content # only format the content folder in website
 
 .PHONY: tools
-tools: # install dependencies and tools required to build
+tools: # Install dependencies and tools required to build
 	@echo "Fetching tools..."
 	$(GO_CMD) generate -tags tools tools/tools.go
 	@echo
