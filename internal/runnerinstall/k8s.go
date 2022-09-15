@@ -236,9 +236,11 @@ func (i *K8sRunnerInstaller) InstallFlags(set *flag.Set) {
 	})
 
 	set.StringVar(&flag.StringVar{
-		Name:    "k8s-runner-image",
-		Target:  &i.Config.RunnerImage,
-		Default: installutil.DefaultRunnerImage,
+		Name:   "k8s-runner-image",
+		Target: &i.Config.RunnerImage,
+		// This is the static (non-odr) runner, and therefore needs to use the non-ODR
+		// image. The server and the static runner use the same image.
+		Default: installutil.DefaultServerImage,
 		Usage:   "Docker image for the Waypoint runner.",
 	})
 
