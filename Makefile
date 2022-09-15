@@ -31,7 +31,7 @@ bin: # bin creates the binaries for Waypoint for the current platform
 # You can use the binary it produces as a server, runner, or CLI, but it won't contain the CEB, so
 # it won't be able to build projects that don't have `disable_entrypoint = true` set in their build hcl.
 .PHONY: bin/no-ceb
-bin/cli-only:
+bin/cli-only: # Builds only the cli with no ceb
 	CGO_ENABLED=$(CGO_ENABLED) go build -ldflags $(GOLDFLAGS) -tags assetsembedded -o ./waypoint ./cmd/waypoint
 
 .PHONY: bin/linux
@@ -68,21 +68,21 @@ format: # format go code
 docker/server: docker/server-only docker/odr
 
 .PHONY: docker/server-only
-docker/server-only:
+docker/server-only: # Builds a Waypoint server docker image
 	DOCKER_BUILDKIT=1 docker buildx build \
 					--platform $(WP_SERVER_PLATFORM) \
 					-t waypoint:dev \
 					.
 
 .PHONY: docker/odr
-docker/odr:
+docker/odr: # Builds a Waypoint on-demand runner docker image
 	DOCKER_BUILDKIT=1 docker buildx build --target odr \
 					--platform $(WP_SERVER_PLATFORM) \
 					-t waypoint-odr:dev \
 					.
 
 .PHONY: docker/tools
-docker/tools:
+docker/tools: # Creates a docker tools file for generating waypoint server protobuf files
 	@echo "Building docker tools image"
 	docker build -f tools.Dockerfile -t waypoint-tools:dev .
 
@@ -93,7 +93,7 @@ docker/gen/server: docker/tools
 
 # expected to be invoked by make gen/changelog LAST_RELEASE=gitref THIS_RELEASE=gitref
 .PHONY: gen/changelog
-gen/changelog:
+gen/changelog: # Generates the changelog for Waypoint
 	@echo "Generating changelog for $(THIS_RELEASE) from $(LAST_RELEASE)..."
 	@echo
 	@changelog-build -last-release $(LAST_RELEASE) \
@@ -104,17 +104,17 @@ gen/changelog:
 
 # generates protos for the plugins inside builtin
 .PHONY: gen/plugins
-gen/plugins:
+gen/plugins: # Generates plugin protobuf Go files
 	@test -s "thirdparty/proto/api-common-protos/.git" || { echo "git submodules not initialized, run 'git submodule update --init --recursive' and try again"; exit 1; }
 	go generate ./builtin/...
 
 .PHONY: gen/server
-gen/server:
+gen/server: # Generates server protobuf Go files from server.proto
 	@test -s "thirdparty/proto/api-common-protos/.git" || { echo "git submodules not initialized, run 'git submodule update --init --recursive' and try again"; exit 1; }
 	go generate ./pkg/server
 
 .PHONY: gen/ts
-gen/ts:
+gen/ts: # Generates frontend typescript files
 	# Clear existing generated files
 	@rm -rf ./ui/lib/api-common-protos/google 2> /dev/null
 	@rm -rf ./ui/lib/opaqueany/*.{js,ts} 2> /dev/null
@@ -162,12 +162,12 @@ gen/ts:
 		--ts_out=ui/lib/opaqueany/
 
 # This currently assumes you have run `ember build` in the ui/ directory
-static-assets:
+static-assets: # Generates the UI static assets
 	@go-bindata -pkg gen -prefix dist -o $(ASSETFS_PATH) ./ui/dist/...
 	@gofmt -s -w $(ASSETFS_PATH)
 
 .PHONY: gen/doc
-gen/doc:
+gen/doc: # generates the server proto docs
 	mkdir -p ./doc/
 	@rm -rf ./doc/* 2> /dev/null
 	protoc -I=. \
@@ -176,7 +176,7 @@ gen/doc:
 		./pkg/server/proto/server.proto
 
 .PHONY: gen/website-mdx
-gen/website-mdx:
+gen/website-mdx: # Generates the website markdown files
 	go run ./cmd/waypoint docs -website-mdx
 	go run ./cmd/waypoint docs -json
 	go run ./tools/gendocs
@@ -190,7 +190,7 @@ tools: # install dependencies and tools required to build
 	@echo "Done!"
 
 .PHONY: test
-test: # run tests
+test: # Run tests
 	go test ./...
 
 # Run state tests found in pkg/serverstate/statetest/
@@ -199,12 +199,12 @@ test: # run tests
 #
 # >$ TESTARGS="-run TestImpl/runner_ondemand/TestOnDemandRunnerConfig" make test/boltdbstate
 .PHONY: test/boltdbstate
-test/boltdbstate:
+test/boltdbstate: # Runs the boltdbstate tests
 	@echo "Running state tests..."
 	go test -test.v ./internal/server/boltdbstate $(TESTARGS)
 
 .PHONY: test/service
-test/service:
+test/service: # Runs the server API function tests. Requires a local postgresql and horizon via docker-compose
 	$(warning "Running the full service suite requires `docker-compose up`! Some Tests rely on a local Horizon instance to be running.")
 	@echo "Running service API server tests..."
 	go test -test.v ./pkg/server/singleprocess/
