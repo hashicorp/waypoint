@@ -112,6 +112,7 @@ func (c *ProjectInspectCommand) FormatProject(projectTarget string) error {
 			gitRef = ds.Git.Ref
 			gitPath = ds.Git.Path
 		case *pb.Job_DataSource_Remote:
+			dataSource = "Remote"
 			remoteDesc = ds.Remote.Description
 		}
 	}
