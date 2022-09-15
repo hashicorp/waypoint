@@ -14,6 +14,12 @@ WP_SERVER_PLATFORM?="linux/amd64"
 LAST_RELEASE?=$$(git describe --tags $$(git rev-list --tags --max-count=1))
 THIS_RELEASE?=$$(git rev-parse --abbrev-ref HEAD)
 
+.PHONY: help
+help: # print valid Make targets
+	@echo "Valid targets:"
+	@grep --extended-regexp --no-filename '^[a-zA-Z/_-]+:' Makefile | sort | awk 'BEGIN {FS = ":.*?# "}; {printf "\033[36m%-15s\033[0m %s\n", $$1, $$2}'
+
+
 .PHONY: bin
 bin: # bin creates the binaries for Waypoint for the current platform
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o ./internal/assets/ceb/ceb ./cmd/waypoint-entrypoint
