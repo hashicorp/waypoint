@@ -106,7 +106,7 @@
         "routes": [
           {
             "title": "Deploy an Application to Nomad",
-            "href": "/tutorials/get-started-nomad/get-started-nomad"
+            "href": "https://learn.hashicorp.com/tutorials/waypoint/get-started-nomad"
           }
         ]
       },
@@ -127,7 +127,7 @@
           },
           {
             "title": "Deploy an Application to Kubernetes",
-            "href": "/tutorials/get-started-kubernetes/get-started-kubernetes"
+            "href": "https://learn.hashicorp.com/tutorials/waypoint/get-started-kubernetes"
           },
           {
             "title": "Helm Deployment",
@@ -135,7 +135,7 @@
           },
           {
             "title": "Helm and GitOps",
-            "href": "/tutorials/application-deployment/gitops-helm-deploymenty"
+            "href": "https://learn.hashicorp.com/tutorials/waypoint/gitops-helm-deployment"
           },
           {
             "title": "YAML-Free Deployment",
@@ -160,11 +160,11 @@
         "routes": [
           {
             "title": "Deploy an Application to AWS Elastic Container Service",
-            "href": "/tutorials/deploy-aws/aws-ecs"
+            "href": "https://learn.hashicorp.com/tutorials/waypoint/aws-ecs"
           },
           {
             "title": "Deploy an Application onto AWS Lambda",
-            "href": "/tutorials/deploy-aws/aws-lambda"
+            "href": "https://learn.hashicorp.com/tutorials/waypoint/aws-lambda"
           }
         ]
       },
@@ -172,8 +172,8 @@
         "title": "Google Cloud Platform",
         "routes": [
           {
-            "title": "Deploy an application onto an Azure Container Instance",
-            "href": "/tutorials/deploy-google-cloud/google-cloud-run"
+            "title": "Deploy an application to Google CLoud Run",
+            "href": "https://learn.hashicorp.com/tutorials/waypoint/google-cloud-run"
           }
         ]
       },
@@ -182,7 +182,7 @@
         "routes": [
           {
             "title": "Deploy an application onto an Azure Container Instance",
-            "href": "/tutorials/deploy-azure"
+            "href": "https://learn.hashicorp.com/tutorials/waypoint/azure-container-instance"
           }
         ]
       }
@@ -395,7 +395,7 @@
       },
       {
         "title": "Static Values",
-        "href": "/tutorials/configuration/static-application-configuration"
+        "href": "https://learn.hashicorp.com/tutorials/waypoint/static-application-configuration"
       },
       {
         "title": "Dynamic Values",
@@ -722,5 +722,4 @@
       }
     ]
   }
-
 ]
