@@ -70,8 +70,9 @@ func (c *JobInspectCommand) Run(args []string) int {
 	}
 
 	var op string
-	// Job_Noop seems to be missing the isJob_operation method
 	switch resp.Operation.(type) {
+	case *pb.Job_Noop_:
+		op = "Noop"
 	case *pb.Job_Build:
 		op = "Build"
 	case *pb.Job_Push:
@@ -183,6 +184,24 @@ func (c *JobInspectCommand) Run(args []string) int {
 			Name: "Application", Value: resp.Application.Application,
 		},
 	}, terminal.WithInfoStyle())
+
+	if resp.Pipeline != nil {
+		c.ui.Output("Pipeline Info", terminal.WithHeaderStyle())
+		c.ui.NamedValues([]terminal.NamedValue{
+			{
+				Name: "Name", Value: resp.Pipeline.PipelineName,
+			},
+			{
+				Name: "ID", Value: resp.Pipeline.PipelineId,
+			},
+			{
+				Name: "Step", Value: resp.Pipeline.Step,
+			},
+			{
+				Name: "Run Sequence", Value: resp.Pipeline.RunSequence,
+			},
+		}, terminal.WithInfoStyle())
+	}
 
 	c.ui.Output("Job Results", terminal.WithHeaderStyle())
 	c.ui.NamedValues([]terminal.NamedValue{

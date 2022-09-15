@@ -504,6 +504,19 @@
     "path": "plugins"
   },
   {
+    "title": "Pipelines",
+    "routes": [
+      {
+        "title": "Overview",
+        "path": "pipelines"
+      },
+      {
+        "title": "Configuration",
+        "path": "pipelines/config"
+      }
+    ]
+  },
+  {
     "title": "Triggers",
     "path": "triggers"
   },

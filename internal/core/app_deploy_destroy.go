@@ -3,6 +3,7 @@ package core
 import (
 	"context"
 	"fmt"
+
 	"github.com/hashicorp/go-argmapper"
 	"github.com/mitchellh/mapstructure"
 	"google.golang.org/grpc/codes"
@@ -272,10 +273,8 @@ func (op *deployDestroyOperation) Do(ctx context.Context, log hclog.Logger, app 
 		return nil, nil // Fail silently for now, this will be fixed in v0.2
 	}
 
-	baseArgs := []argmapper.Arg{plugin.ArgNamedAny("deployment", op.Deployment.Deployment)}
 	declaredResourcesResp := &component.DeclaredResourcesResp{}
 	destroyedResourcesResp := &component.DestroyedResourcesResp{}
-	args := append(baseArgs, argmapper.Typed(declaredResourcesResp), argmapper.Typed(destroyedResourcesResp))
 
 	// We don't need the result, we just need the declared and destroyed resources
 	// which we can access without the result since they were passed by reference
@@ -284,7 +283,9 @@ func (op *deployDestroyOperation) Do(ctx context.Context, log hclog.Logger, app 
 		nil,
 		op.Component,
 		destroyer.DestroyFunc(),
-		args...,
+		plugin.ArgNamedAny("deployment", op.Deployment.Deployment),
+		argmapper.Typed(declaredResourcesResp),
+		argmapper.Typed(destroyedResourcesResp),
 	)
 	if err != nil {
 		return nil, err

@@ -3,6 +3,7 @@ package cli
 import (
 	"fmt"
 	"sort"
+	"strconv"
 
 	"github.com/dustin/go-humanize"
 	"github.com/golang/protobuf/jsonpb"
@@ -96,13 +97,14 @@ func (c *TaskListCommand) Run(args []string) int {
 
 	c.ui.Output("Waypoint On-Demand Runner Tasks", terminal.WithHeaderStyle())
 
-	tblHeaders := []string{"ID", "Run Job Operation", "Task State", "Project", "Time Created", "Time Completed"}
+	tblHeaders := []string{"ID", "Run Job Operation", "Pipeline", "Task State", "Project", "Time Created", "Time Completed"}
 	tbl := terminal.NewTable(tblHeaders...)
 
 	for _, t := range tasks {
 		var op string
-		// Job_Noop seems to be missing the isJob_operation method
 		switch t.TaskJob.Operation.(type) {
+		case *pb.Job_Noop_:
+			op = "Noop"
 		case *pb.Job_Build:
 			op = "Build"
 		case *pb.Job_Push:
@@ -165,9 +167,15 @@ func (c *TaskListCommand) Run(args []string) int {
 			completeTime = humanize.Time(t.StopJob.CompleteTime.AsTime())
 		}
 
+		pipeline := ""
+		if t.TaskJob.Pipeline != nil {
+			pipeline = "name: " + t.TaskJob.Pipeline.PipelineName + ", run: " + strconv.FormatUint(t.TaskJob.Pipeline.RunSequence, 10) + ", step: " + t.TaskJob.Pipeline.Step
+		}
+
 		tblColumn := []string{
 			t.Task.Id,
 			op,
+			pipeline,
 			pb.Task_State_name[int32(t.Task.JobState)],
 			project,
 			queueTime,

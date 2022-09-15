@@ -2,6 +2,7 @@ package serverinstall
 
 import (
 	"context"
+
 	"github.com/hashicorp/waypoint/internal/runnerinstall"
 
 	"github.com/hashicorp/go-hclog"
@@ -20,7 +21,8 @@ type Installer interface {
 	HasRunner(context.Context, *InstallOpts) (bool, error)
 
 	// Install expects the Waypoint server to be installed.
-	Install(context.Context, *InstallOpts) (*InstallResults, error)
+	// Returns InstallResults, a bootstrap token (if platform sets one up), or an error
+	Install(context.Context, *InstallOpts) (*InstallResults, string, error)
 
 	// InstallRunner expects a Waypoint runner to be installed.
 	InstallRunner(context.Context, *runnerinstall.InstallOpts) error

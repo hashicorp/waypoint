@@ -2444,7 +2444,8 @@ message ListJobsRequest {
   Ref.Project project = 2;
   Ref.Application application = 3;
   Ref.Runner targetRunner = 4;
-  repeated Job.State jobState = 5;
+  Ref.PipelineStep pipeline = 5;
+  repeated Job.State jobState = 6;
 }
 
 message ListJobsResponse {
@@ -3802,6 +3803,9 @@ message Release {
   // A platform resource that this release has created, depends on, or manages.
   repeated DeclaredResource declared_resources = 19;
 
+  // Resources that a destroy operation has destroyed
+  repeated DestroyedResource destroyed_resources = 20;
+
   // This is the populated preload data. Most of this data can be retrieved
   // through additional API calls or manually computed, but certain API
   // calls will pre-populate some of these fields for convenience. The exact
@@ -4782,6 +4786,10 @@ message Pipeline {
 
     // Docker image to execute. This should be a fully qualified image URL.
     string image = 5;
+
+    // Workspace to use in step execution. If undefined, will default to the
+    // Workspace used when running the pipeline, otherwise 'default'
+    Ref.Workspace workspace = 10;
 
     message Exec {
       // TODO(briancain): update this to use the Step exec instead of the plugin

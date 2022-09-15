@@ -4,5 +4,4 @@ updates:
     directory: /ui
     schedule:
       interval: weekly
-    allow:
-      - dependency-name: '@hashicorp/*'
+    open-pull-requests-limit: 3

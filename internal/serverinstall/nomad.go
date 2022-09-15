@@ -5,11 +5,12 @@ import (
 	json "encoding/json"
 	"errors"
 	"fmt"
-	"github.com/hashicorp/waypoint/internal/installutil"
 	"os"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/hashicorp/waypoint/internal/installutil"
 
 	"github.com/hashicorp/waypoint/internal/installutil/nomad"
 	"github.com/hashicorp/waypoint/internal/runnerinstall"
@@ -112,7 +113,7 @@ var (
 func (i *NomadInstaller) Install(
 	ctx context.Context,
 	opts *InstallOpts,
-) (*InstallResults, error) {
+) (*InstallResults, string, error) {
 	ui := opts.UI
 
 	sg := ui.StepGroup()
@@ -124,7 +125,7 @@ func (i *NomadInstaller) Install(
 	// Build api client from environment
 	client, err := api.NewClient(api.DefaultConfig())
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 
 	s.Update("Checking for existing Waypoint server...")
@@ -132,14 +133,14 @@ func (i *NomadInstaller) Install(
 	// Check if waypoint-server has already been deployed
 	jobs, _, err := client.Jobs().PrefixList(serverName)
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 
 	var serverDetected bool
 	for _, j := range jobs {
 		if j.Name == serverName {
 			if j.Status != "running" {
-				return nil, fmt.Errorf("waypoint-server job found but not running")
+				return nil, "", fmt.Errorf("waypoint-server job found but not running")
 			}
 			serverDetected = true
 			break
@@ -150,7 +151,7 @@ func (i *NomadInstaller) Install(
 		var err error
 		i.config.odrImage, err = installutil.DefaultODRImage(i.config.serverImage)
 		if err != nil {
-			return nil, err
+			return nil, "", err
 		}
 	}
 
@@ -172,7 +173,7 @@ func (i *NomadInstaller) Install(
 	if serverDetected {
 		allocs, _, err := client.Jobs().Allocations(serverName, false, nil)
 		if err != nil {
-			return nil, err
+			return nil, "", err
 		}
 
 		var activeAllocs []*api.AllocationListStub
@@ -182,11 +183,11 @@ func (i *NomadInstaller) Install(
 			}
 		}
 		if len(allocs) == 0 || len(activeAllocs) == 0 {
-			return nil, fmt.Errorf("waypoint-server job found but no running allocations available")
+			return nil, "", fmt.Errorf("waypoint-server job found but no running allocations available")
 		}
 		serverAddr, err := getAddrFromAllocID(allocs[0].ID, client)
 		if err != nil {
-			return nil, err
+			return nil, "", err
 		}
 
 		s.Update("Detected existing Waypoint server")
@@ -200,14 +201,14 @@ func (i *NomadInstaller) Install(
 			Context:       &clicfg,
 			AdvertiseAddr: &addr,
 			HTTPAddr:      httpAddr,
-		}, nil
+		}, "", nil
 	}
 
 	if i.config.csiVolumeProvider == "" && i.config.hostVolume == "" {
-		return nil, fmt.Errorf("please include '-nomad-csi-volume-provider' or '-nomad-host-volume'")
+		return nil, "", fmt.Errorf("please include '-nomad-csi-volume-provider' or '-nomad-host-volume'")
 	} else if i.config.csiVolumeProvider != "" {
 		if i.config.hostVolume != "" {
-			return nil, fmt.Errorf("choose either CSI or host volume, not both")
+			return nil, "", fmt.Errorf("choose either CSI or host volume, not both")
 		}
 
 		s.Update("Creating persistent volume")
@@ -226,7 +227,7 @@ func (i *NomadInstaller) Install(
 			i.config.csiSecrets,
 		)
 		if err != nil {
-			return nil, status.Errorf(codes.Internal, "Failed creating Nomad persistent volume: %s", err)
+			return nil, "", status.Errorf(codes.Internal, "Failed creating Nomad persistent volume: %s", err)
 		}
 		s.Update("Persistent volume created!")
 		s.Status(terminal.StatusOK)
@@ -236,7 +237,7 @@ func (i *NomadInstaller) Install(
 	s.Update("Installing Waypoint server to Nomad")
 	allocID, err := nomad.RunJob(ctx, s, client, waypointNomadJob(i.config, opts.ServerRunFlags, false), i.config.policyOverride)
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 
 	// If a Consul service was requested, set the consul DNS hostname rather
@@ -245,7 +246,7 @@ func (i *NomadInstaller) Install(
 	// configured clients will be invalid
 	httpAddr, addr.Addr, err = i.getWaypointAddress(client, allocID)
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 
 	clicfg = clicontext.Config{
@@ -278,7 +279,7 @@ func (i *NomadInstaller) Install(
 		Context:       &clicfg,
 		AdvertiseAddr: &addr,
 		HTTPAddr:      httpAddr,
-	}, nil
+	}, "", nil
 }
 
 func (i *NomadInstaller) getWaypointAddress(client *api.Client, allocID string) (string, string, error) {

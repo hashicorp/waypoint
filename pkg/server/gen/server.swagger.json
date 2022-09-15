@@ -696,6 +696,35 @@
             "type": "string"
           },
           {
+            "name": "pipeline.pipeline_id",
+            "description": "ID of the pipeline.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "pipeline.pipeline_name",
+            "description": "Name of the pipeline.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "pipeline.step",
+            "description": "Step name within the pipeline.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "pipeline.run_sequence",
+            "description": "Pipeline run sequence.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "uint64"
+          },
+          {
             "name": "jobState",
             "in": "query",
             "required": false,
@@ -802,6 +831,35 @@
             "type": "string"
           },
           {
+            "name": "pipeline.pipeline_id",
+            "description": "ID of the pipeline.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "pipeline.pipeline_name",
+            "description": "Name of the pipeline.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "pipeline.step",
+            "description": "Step name within the pipeline.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "pipeline.run_sequence",
+            "description": "Pipeline run sequence.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "uint64"
+          },
+          {
             "name": "jobState",
             "in": "query",
             "required": false,
@@ -892,6 +950,35 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "pipeline.pipeline_id",
+            "description": "ID of the pipeline.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "pipeline.pipeline_name",
+            "description": "Name of the pipeline.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "pipeline.step",
+            "description": "Step name within the pipeline.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "pipeline.run_sequence",
+            "description": "Pipeline run sequence.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "uint64"
           }
         ],
         "tags": [
@@ -1022,6 +1109,35 @@
             "type": "string"
           },
           {
+            "name": "pipeline.pipeline_id",
+            "description": "ID of the pipeline.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "pipeline.pipeline_name",
+            "description": "Name of the pipeline.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "pipeline.step",
+            "description": "Step name within the pipeline.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "pipeline.run_sequence",
+            "description": "Pipeline run sequence.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "uint64"
+          },
+          {
             "name": "jobState",
             "in": "query",
             "required": false,
@@ -1112,6 +1228,35 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "pipeline.pipeline_id",
+            "description": "ID of the pipeline.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "pipeline.pipeline_name",
+            "description": "Name of the pipeline.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "pipeline.step",
+            "description": "Step name within the pipeline.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "pipeline.run_sequence",
+            "description": "Pipeline run sequence.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "uint64"
           }
         ],
         "tags": [
@@ -9121,6 +9266,10 @@
         "image": {
           "type": "string",
           "description": "Docker image to execute. This should be a fully qualified image URL."
+        },
+        "workspace": {
+          "$ref": "#/definitions/hashicorp.waypoint.Ref.Workspace",
+          "title": "Workspace to use in step execution. If undefined, will default to the\nWorkspace used when running the pipeline, otherwise 'default'"
         }
       },
       "description": "A single step within the pipeline."
@@ -9762,6 +9911,13 @@
             "$ref": "#/definitions/hashicorp.waypoint.DeclaredResource"
           },
           "description": "A platform resource that this release has created, depends on, or manages."
+        },
+        "destroyed_resources": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/hashicorp.waypoint.DestroyedResource"
+          },
+          "title": "Resources that a destroy operation has destroyed"
         },
         "preload": {
           "$ref": "#/definitions/hashicorp.waypoint.Release.Preload",

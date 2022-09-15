@@ -101,7 +101,7 @@ type ecsConfig struct {
 func (i *ECSInstaller) Install(
 	ctx context.Context,
 	opts *InstallOpts,
-) (*InstallResults, error) {
+) (*InstallResults, string, error) {
 	ui := opts.UI
 	log := opts.Log
 
@@ -122,15 +122,15 @@ func (i *ECSInstaller) Install(
 	// for more information on valid combinations
 	mem, err := strconv.Atoi(i.config.Memory)
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 	cpu, err := strconv.Atoi(i.config.CPU)
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 
 	if err := utils.ValidateEcsMemCPUPair(mem, cpu); err != nil {
-		return nil, err
+		return nil, "", err
 	}
 
 	// we need to validate the given ODR mem/cpu at install time to verify the
@@ -138,14 +138,14 @@ func (i *ECSInstaller) Install(
 	// post-install
 	odrMem, err := strconv.Atoi(i.config.OdrMemory)
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 	odrCpu, err := strconv.Atoi(i.config.OdrCPU)
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 	if err := utils.ValidateEcsMemCPUPair(odrMem, odrCpu); err != nil {
-		return nil, err
+		return nil, "", err
 	}
 
 	lf := &Lifecycle{
@@ -191,7 +191,7 @@ func (i *ECSInstaller) Install(
 	}
 
 	if err := lf.Execute(log, ui); err != nil {
-		return nil, err
+		return nil, "", err
 	}
 
 	// Set our connection information
@@ -215,7 +215,7 @@ func (i *ECSInstaller) Install(
 		Context:       &contextConfig,
 		AdvertiseAddr: &advertiseAddr,
 		HTTPAddr:      httpAddr,
-	}, nil
+	}, "", nil
 }
 
 // Launch takes the previously created resource and launches the Waypoint server

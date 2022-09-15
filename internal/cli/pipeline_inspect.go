@@ -192,46 +192,55 @@ func (c *PipelineInspectCommand) Run(args []string) int {
 			},
 		}...)
 	} else {
-		lastRun := runs.PipelineRuns[len(runs.PipelineRuns)-1]
-		startJob, err := c.project.Client().GetJob(c.Ctx, &pb.GetJobRequest{
-			JobId: lastRun.Jobs[0].Id,
-		})
-		if err != nil {
-			c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
-			return 1
-		}
-		endJob, err := c.project.Client().GetJob(c.Ctx, &pb.GetJobRequest{
-			JobId: lastRun.Jobs[len(lastRun.Jobs)-1].Id,
-		})
-		if err != nil {
-			c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
-			return 1
+		var totalRuns int
+		if len(runs.PipelineRuns) > 0 {
+			lastRun := runs.PipelineRuns[len(runs.PipelineRuns)-1]
+			startJob, err := c.project.Client().GetJob(c.Ctx, &pb.GetJobRequest{
+				JobId: lastRun.Jobs[0].Id,
+			})
+			if err != nil {
+				c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+				return 1
+			}
+			endJob, err := c.project.Client().GetJob(c.Ctx, &pb.GetJobRequest{
+				JobId: lastRun.Jobs[len(lastRun.Jobs)-1].Id,
+			})
+			if err != nil {
+				c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+				return 1
+			}
+
+			var sha string
+			var msg string
+			if startJob.DataSourceRef != nil {
+				sha = startJob.DataSourceRef.Ref.(*pb.Job_DataSource_Ref_Git).Git.Commit
+				msg = startJob.DataSourceRef.Ref.(*pb.Job_DataSource_Ref_Git).Git.CommitMessage
+			}
+
+			totalRuns = int(lastRun.Sequence)
+
+			output = append(output, []terminal.NamedValue{
+				{
+					Name: "Last Run Started", Value: humanize.Time(startJob.QueueTime.AsTime()),
+				},
+				{
+					Name: "Last Run Completed", Value: humanize.Time(endJob.CompleteTime.AsTime()),
+				},
+				{
+					Name: "Last Run Status", Value: lastRun.State,
+				},
+				{
+					Name: "Last Run Commit SHA", Value: sha,
+				},
+				{
+					Name: "Last Run Commit Message", Value: msg,
+				},
+			}...)
 		}
 
-		var sha string
-		var msg string
-		if startJob.DataSourceRef != nil {
-			sha = startJob.DataSourceRef.Ref.(*pb.Job_DataSource_Ref_Git).Git.Commit
-			msg = startJob.DataSourceRef.Ref.(*pb.Job_DataSource_Ref_Git).Git.CommitMessage
-		}
 		output = append(output, []terminal.NamedValue{
 			{
-				Name: "Total Runs", Value: lastRun.Sequence,
-			},
-			{
-				Name: "Last Run Started", Value: humanize.Time(startJob.QueueTime.AsTime()),
-			},
-			{
-				Name: "Last Run Completed", Value: humanize.Time(endJob.CompleteTime.AsTime()),
-			},
-			{
-				Name: "Last Run Status", Value: lastRun.State,
-			},
-			{
-				Name: "Last Run Commit SHA", Value: sha,
-			},
-			{
-				Name: "Last Run Commit Message", Value: msg,
+				Name: "Total Runs", Value: totalRuns,
 			},
 		}...)
 	}
