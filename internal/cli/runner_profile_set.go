@@ -14,6 +14,7 @@ import (
 	hcljson "github.com/hashicorp/hcl/v2/json"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
+
 	"github.com/hashicorp/waypoint/internal/clierrors"
 	"github.com/hashicorp/waypoint/internal/installutil"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
@@ -257,7 +258,7 @@ func (c *RunnerProfileSetCommand) Flags() *flag.Sets {
 		f.StringVar(&flag.StringVar{
 			Name:    "oci-url",
 			Target:  &c.flagOCIUrl,
-			Default: installutil.DefaultRunnerImage,
+			Default: installutil.DefaultODRImage,
 			Usage:   "The url for the OCI image to launch for the on-demand runner.",
 		})
 

@@ -1,0 +1,3 @@
+```release-note:bug
+runner-install/kubernetes: Fix the static runner image used in the `waypoint runner install` command
+```
