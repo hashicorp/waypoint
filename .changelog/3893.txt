@@ -1,0 +1,3 @@
+```release-note:improvement
+core: Update TaskCancel to also cancel WatchTask job, if it was launched.
+```
