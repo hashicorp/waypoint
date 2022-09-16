@@ -98,10 +98,18 @@ func (s *State) TaskCancel(ref *pb.Ref_Task) error {
 		return err
 	}
 
-	s.log.Trace("canceling task job for task", "task id", task.Id, "start job id", task.TaskJob.Id)
+	s.log.Trace("canceling task job for task", "task id", task.Id, "task job id", task.TaskJob.Id)
 	err = s.JobCancel(task.TaskJob.Id, false)
 	if err != nil {
 		return err
+	}
+
+	if task.WatchJob != nil {
+		s.log.Trace("canceling watch job for task", "task id", task.Id, "watch job id", task.WatchJob.Id)
+		err = s.JobCancel(task.WatchJob.Id, false)
+		if err != nil {
+			return err
+		}
 	}
 
 	s.log.Trace("canceling stop job for task", "task id", task.Id, "stop job id", task.StopJob.Id)
