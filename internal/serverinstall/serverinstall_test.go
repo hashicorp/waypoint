@@ -1,11 +1,12 @@
 package serverinstall
 
 import (
-	"github.com/hashicorp/waypoint/internal/installutil"
 	"testing"
+
+	"github.com/hashicorp/waypoint/internal/installutil"
 )
 
-func TestDefaultODRImage(t *testing.T) {
+func TestDeriveDefaultODRImage(t *testing.T) {
 	tests := []struct {
 		name        string
 		serverImage string
@@ -45,13 +46,13 @@ func TestDefaultODRImage(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := installutil.DefaultODRImage(tt.serverImage)
+			got, err := installutil.DeriveDefaultODRImage(tt.serverImage)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("defaultODRImage() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("DeriveDefaultODRImage() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if got != tt.want {
-				t.Errorf("defaultODRImage() got = %v, want %v", got, tt.want)
+				t.Errorf("DeriveDefaultODRImage() got = %v, want %v", got, tt.want)
 			}
 		})
 	}

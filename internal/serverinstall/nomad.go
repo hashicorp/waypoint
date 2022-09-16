@@ -20,6 +20,7 @@ import (
 
 	"github.com/hashicorp/nomad/api"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
+
 	"github.com/hashicorp/waypoint/internal/clicontext"
 	"github.com/hashicorp/waypoint/internal/clierrors"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
@@ -149,7 +150,7 @@ func (i *NomadInstaller) Install(
 
 	if i.config.odrImage == "" {
 		var err error
-		i.config.odrImage, err = installutil.DefaultODRImage(i.config.serverImage)
+		i.config.odrImage, err = installutil.DeriveDefaultODRImage(i.config.serverImage)
 		if err != nil {
 			return nil, "", err
 		}
@@ -394,7 +395,7 @@ func (i *NomadInstaller) Upgrade(
 
 	if i.config.odrImage == "" {
 		var err error
-		i.config.odrImage, err = installutil.DefaultODRImage(i.config.serverImage)
+		i.config.odrImage, err = installutil.DeriveDefaultODRImage(i.config.serverImage)
 		if err != nil {
 			return nil, err
 		}
@@ -628,7 +629,6 @@ func (i *NomadInstaller) InstallRunner(
 			RunnerImage:           i.config.serverImage,
 			Namespace:             i.config.namespace,
 			ServiceAnnotations:    i.config.serviceAnnotations,
-			OdrImage:              i.config.odrImage,
 			Region:                i.config.region,
 			Datacenters:           i.config.datacenters,
 			PolicyOverride:        i.config.policyOverride,
