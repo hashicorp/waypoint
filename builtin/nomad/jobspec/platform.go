@@ -257,6 +257,15 @@ func (p *Platform) resourceJobStatus(
 			}
 		}
 
+		// Need to subtract # of canaries in the update stanza from
+		// "completed". Canary allocs will end up in the "completed"
+		// state after the deployment, and thusly throw off the count
+		// of otherwise "completed" allocs, resulting in a partial
+		// state, when it's actually healthy
+		if complete > 0 {
+			complete = complete - *job.Update.Canary
+		}
+
 		if running == currentJobVersionAllocs && hasSquashedEvals == false {
 			jobResource.Health = sdk.StatusReport_READY
 			jobResource.HealthMessage = fmt.Sprintf("Job %q is reporting ready!", state.Name)

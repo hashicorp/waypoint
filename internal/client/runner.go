@@ -71,10 +71,10 @@ func remoteOpPreferred(ctx context.Context, client pb.WaypointClient, project *p
 
 	var hasRemoteDataSource bool
 	switch project.DataSource.GetSource().(type) {
-	case *pb.Job_DataSource_Git:
-		hasRemoteDataSource = true
-	default:
+	case *pb.Job_DataSource_Local:
 		hasRemoteDataSource = false
+	default:
+		hasRemoteDataSource = true
 	}
 
 	if !hasRemoteDataSource {
