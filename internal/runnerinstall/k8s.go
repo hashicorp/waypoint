@@ -32,8 +32,9 @@ type K8sRunnerInstaller struct {
 }
 
 const (
-	defaultRunnerMemory = "256Mi"
-	defaultRunnerCPU    = "250m"
+	defaultRunnerMemory          = "256Mi"
+	defaultRunnerCPU             = "250m"
+	defaultOdrServiceAccountName = "waypoint-runner-odr"
 )
 
 type InstalledRunnerConfig struct {
@@ -149,10 +150,16 @@ func (i *K8sRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) err
 				"repository": runnerImageRef.Repository(),
 				"tag":        runnerImageRef.Tag(),
 			},
-			// odr stanza not specified - this is used by the helm chart to
-			// give to the bootstrap job to populate the ODR profile, but only
-			// during a server install. For runner installs, we'll create the
-			// ODR profile ourselves later.
+			"odr": map[string]interface{}{
+				// odr image stanza not specified - this is used by the helm chart to
+				// give to the bootstrap job to populate the ODR profile, but only
+				// during a server install. For runner installs, we'll create the
+				// ODR profile ourselves later.
+				"serviceAccount": map[string]interface{}{
+					"create": i.Config.CreateServiceAccount,
+					"name":   defaultOdrServiceAccountName,
+				},
+			},
 			"resources": map[string]interface{}{
 				"requests": map[string]interface{}{
 					"memory": i.Config.MemRequest,
@@ -522,6 +529,8 @@ func (i *K8sRunnerInstaller) OnDemandRunnerConfig() *pb.OnDemandRunnerConfig {
 	}
 	cfgMap["cpu"] = cpuConfig
 	cfgMap["memory"] = memConfig
+
+	cfgMap["service_account"] = defaultOdrServiceAccountName
 
 	// Marshal our config
 	cfgJson, err := json.MarshalIndent(cfgMap, "", "\t")

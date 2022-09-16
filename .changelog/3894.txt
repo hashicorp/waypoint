@@ -1,0 +1,3 @@
+```release-note:bug
+runner-install/k8s: Use the helm-creates service account in the runner profile, rather than omitting it and getting the default service account with no permissions.
+```
