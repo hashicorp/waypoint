@@ -30,6 +30,8 @@ func DeriveDefaultODRImage(serverImage string) (string, error) {
 	return fmt.Sprintf("%s-odr:%s", imageName, tag), nil
 }
 
+// NOTE: the server image is also used for static (non-ODR) runners.
+// Static runners cannot use the ODR image.
 const DefaultServerImage = "hashicorp/waypoint:latest"
 
 // When we have a serverImage value to give to DeriveDefaultOdrImage,
