@@ -16,6 +16,7 @@ import (
 
 	"github.com/hashicorp/go-version"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
+
 	"github.com/hashicorp/waypoint/builtin/k8s"
 	clientpkg "github.com/hashicorp/waypoint/internal/client"
 	"github.com/hashicorp/waypoint/internal/clierrors"
@@ -431,7 +432,7 @@ func (c *ServerUpgradeCommand) upgradeRunner(
 		} else {
 			ociUrl := odr.OciUrl
 			if ociUrl == "" {
-				ociUrl = installutil.DefaultRunnerImage
+				ociUrl = installutil.DefaultODRImage
 			}
 			odr = &pb.OnDemandRunnerConfig{
 				Id:                   oldRunnerConfig.Config.Id,

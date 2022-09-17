@@ -3,8 +3,6 @@ package runnerinstall
 import (
 	"context"
 	"fmt"
-	"github.com/hashicorp/waypoint/internal/installutil"
-	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	"os"
 	"time"
 
@@ -15,7 +13,10 @@ import (
 	"github.com/docker/docker/api/types/network"
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/jsonmessage"
+
+	"github.com/hashicorp/waypoint/internal/installutil"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
+	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 )
 
 type DockerConfig struct {
@@ -217,7 +218,7 @@ func (i *DockerRunnerInstaller) OnDemandRunnerConfig() *pb.OnDemandRunnerConfig 
 	// TODO: Add options for plugin config here
 	return &pb.OnDemandRunnerConfig{
 		Name:       "docker",
-		OciUrl:     i.Config.RunnerImage,
+		OciUrl:     installutil.DefaultODRImage,
 		PluginType: "docker",
 		Default:    false,
 	}

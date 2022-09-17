@@ -8,15 +8,15 @@ import (
 	"strings"
 	"time"
 
-	"github.com/hashicorp/waypoint/internal/installutil"
-	pb "github.com/hashicorp/waypoint/pkg/server/gen"
-
 	"github.com/hashicorp/nomad/api"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
+	"k8s.io/apimachinery/pkg/util/wait"
+
 	"github.com/hashicorp/waypoint/internal/clierrors"
+	"github.com/hashicorp/waypoint/internal/installutil"
 	nomadutil "github.com/hashicorp/waypoint/internal/installutil/nomad"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
-	"k8s.io/apimachinery/pkg/util/wait"
+	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 )
 
 type NomadRunnerInstaller struct {
@@ -29,7 +29,6 @@ type NomadConfig struct {
 	ServiceAnnotations map[string]string `hcl:"service_annotations,optional"`
 
 	RunnerImage string `hcl:"runner_image,optional"`
-	OdrImage    string `hcl:"odr_image,optional"`
 
 	Region         string   `hcl:"namespace,optional"`
 	Datacenters    []string `hcl:"datacenters,optional"`
@@ -435,7 +434,7 @@ func (i *NomadRunnerInstaller) OnDemandRunnerConfig() *pb.OnDemandRunnerConfig {
 
 	return &pb.OnDemandRunnerConfig{
 		Name:         "nomad",
-		OciUrl:       i.Config.RunnerImage,
+		OciUrl:       installutil.DefaultODRImage,
 		PluginType:   "nomad",
 		Default:      false,
 		PluginConfig: cfgJson,
