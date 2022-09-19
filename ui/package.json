@@ -95,7 +95,7 @@
     "ember-set-helper": "^2.0.0",
     "ember-simple-auth": "^4.2.1",
     "ember-source": "~3.28.8",
-    "ember-svg-jar": "^2.2.3",
+    "ember-svg-jar": "^2.3.4",
     "ember-template-lint": "^3.15.0",
     "ember-test-selectors": "^6.0.0",
     "ember-toggle": "^9.0.3",
