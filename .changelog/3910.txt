@@ -1,0 +1,7 @@
+```release-note:improvement
+plugins/k8s: Add `prune_whitelist` for `kubernetes-apply`
+plugins/k8s: Add `security_context` customization for on-demand runners
+plugins/k8s: Add `scratch_path` customization for on-demand runners
+plugins/k8s: Add `env_from_secret` customization for on-demand runners
+plugins/k8s: Add `mount_secrets` customization for on-demand runners
+```
