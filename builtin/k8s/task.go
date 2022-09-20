@@ -92,6 +92,9 @@ type TaskLauncherConfig struct {
 	// to store temporary data.
 	ScratchSpace []string `hcl:"scratch_path,optional"`
 
+	// MountSecrets
+	MountSecrets []*MountSecret `hcl:"mount_secrets,block"`
+
 	// How long WatchTask should wait for a pod to startup. This option is specifically
 	// wordy because it's only for the WatchTask timing out waiting for the pod
 	// its watching to start up before it attempts to stream its logs.
@@ -99,6 +102,21 @@ type TaskLauncherConfig struct {
 
 	// The PodSecurityContext to apply to the pod
 	SecurityContext *PodSecurityContext `hcl:"security_context,block"`
+}
+
+type MountSecret struct {
+	SecretName  string `hcl:"secret_name"`
+	DefaultMode *int32 `hcl:"default_mode,optional"`
+
+	// cty because of https://github.com/hashicorp/hcl/issues/396
+	Items     []KeyToPath `hcl:"items,optional"`
+	MountPath string      `hcl:"mount_path"`
+	SubPath   string      `hcl:"sub_path"`
+}
+
+type KeyToPath struct {
+	Key  string `cty:"key"`
+	Path string `cty:"path"`
 }
 
 type EnvFromSecret struct {
@@ -306,7 +324,7 @@ func (p *TaskLauncher) StartTask(
 	named = reference.TagNameOnly(named)
 
 	// Build our env vars
-	env := []corev1.EnvVar{}
+	var env []corev1.EnvVar
 	for k, v := range tli.EnvironmentVariables {
 		env = append(env, corev1.EnvVar{
 			Name:  k,
@@ -410,6 +428,37 @@ func (p *TaskLauncher) StartTask(
 	}
 
 	volumes := createScratchVolumes(p.config.ScratchSpace)
+	volumeMounts := createVolumeMounts(p.config.ScratchSpace, volumes)
+
+	var idx = 0
+	for _, v := range p.config.MountSecrets {
+
+		var items []v1.KeyToPath
+		for _, v := range v.Items {
+			items = append(items, v1.KeyToPath{Key: v.Key, Path: v.Path})
+		}
+
+		volumeName := fmt.Sprintf("secrets-%d", idx)
+
+		volumes = append(volumes, v1.Volume{
+			Name: volumeName,
+			VolumeSource: v1.VolumeSource{
+				Secret: &v1.SecretVolumeSource{
+					SecretName:  v.SecretName,
+					DefaultMode: v.DefaultMode,
+					Items:       items,
+				},
+			},
+		})
+
+		volumeMounts = append(volumeMounts, v1.VolumeMount{
+			Name:      volumeName,
+			MountPath: v.MountPath,
+			SubPath:   v.SubPath,
+		})
+
+		idx++
+	}
 
 	var securityContext *corev1.PodSecurityContext = nil
 	podSc := p.config.SecurityContext
@@ -436,7 +485,7 @@ func (p *TaskLauncher) StartTask(
 		Args:            tli.Arguments,
 		Env:             env,
 		Resources:       resourceRequirements,
-		VolumeMounts:    createVolumeMounts(p.config.ScratchSpace, volumes),
+		VolumeMounts:    volumeMounts,
 	}
 
 	// Determine our image pull secret
@@ -555,7 +604,7 @@ func (p *TaskLauncher) WatchTask(
 		switch p.Status.Phase {
 		case v1.PodRunning, v1.PodFailed, v1.PodSucceeded:
 			return true, nil
-		case v1.PodPending, v1.PodUnknown:
+		case v1.PodPending:
 			return false, nil
 		}
 		return false, nil
