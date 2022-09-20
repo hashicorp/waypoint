@@ -84,6 +84,10 @@ type TaskLauncherConfig struct {
 	// Optionally define various ephemeral storage resource limits and requests for kubernetes pod containers
 	EphemeralStorage *ResourceConfig `hcl:"ephemeral_storage,block"`
 
+	// EnvFromSecret defines secrets to be load as environment variables from a Kubernetes Secret
+	// The syntax here is very similar to Kubernetes' SecretKeySelector
+	EnvFromSecret map[string]EnvFromSecret `hcl:"env_from_secret,optional"`
+
 	// ScratchSpace defines an array of paths to directories that will be mounted as EmptyDirVolumes in the pod
 	// to store temporary data.
 	ScratchSpace []string `hcl:"scratch_path,optional"`
@@ -95,6 +99,11 @@ type TaskLauncherConfig struct {
 
 	// The PodSecurityContext to apply to the pod
 	SecurityContext *PodSecurityContext `hcl:"security_context,block"`
+}
+
+type EnvFromSecret struct {
+	Name string `hcl:"name"`
+	Key  string `hcl:"key"`
 }
 
 func (p *TaskLauncher) Documentation() (*docs.Documentation, error) {
@@ -301,6 +310,19 @@ func (p *TaskLauncher) StartTask(
 		env = append(env, corev1.EnvVar{
 			Name:  k,
 			Value: v,
+		})
+	}
+
+	// Add environment variables from secrets
+	for k, v := range p.config.EnvFromSecret {
+		env = append(env, corev1.EnvVar{
+			Name: k,
+			ValueFrom: &corev1.EnvVarSource{
+				SecretKeyRef: &corev1.SecretKeySelector{
+					Key:                  v.Key,
+					LocalObjectReference: corev1.LocalObjectReference{Name: v.Name},
+				},
+			},
 		})
 	}
 
