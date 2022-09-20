@@ -196,6 +196,21 @@ task {
 	)
 
 	doc.SetField(
+		"env_from_secret",
+		"env_from_secret defines a map of environment variables to be fetched from a Kubernetes Secret",
+	)
+
+	doc.SetField(
+		"scratch_path",
+		"scratch_path defines an array of directories that will be mounted as ephemeral storage in the Kubernetes pod",
+	)
+
+	doc.SetField(
+		"mount_secrets",
+		"mount_secrets defines the secrets to be mounted as files in the pod",
+	)
+
+	doc.SetField(
 		"image_pull_policy",
 		"pull policy to use for the task container image",
 	)
@@ -211,6 +226,11 @@ task {
 			"before attempting to stream its logs. If the pod does not start up within "+
 			"the given timeout, WatchTask will exit.",
 		docs.Default("30"),
+	)
+
+	doc.SetField(
+		"security_context",
+		"security_context defines the Pod Security Context to be applied to the pod",
 	)
 
 	return doc, nil
