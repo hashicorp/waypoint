@@ -89,8 +89,8 @@ type TaskLauncherConfig struct {
 	// its watching to start up before it attempts to stream its logs.
 	WatchTaskStartupTimeoutSeconds int `hcl:"watchtask_startup_timeout_seconds,optional"`
 
-	// The Pod Security Context to apply
-	SecurityContext *PodSecurityContext `hcl:"security_context,optional"`
+	// The PodSecurityContext to apply to the pod
+	SecurityContext *PodSecurityContext `hcl:"security_context,block"`
 }
 
 func (p *TaskLauncher) Documentation() (*docs.Documentation, error) {
