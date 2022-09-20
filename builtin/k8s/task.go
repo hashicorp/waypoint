@@ -84,6 +84,10 @@ type TaskLauncherConfig struct {
 	// Optionally define various ephemeral storage resource limits and requests for kubernetes pod containers
 	EphemeralStorage *ResourceConfig `hcl:"ephemeral_storage,block"`
 
+	// ScratchSpace defines an array of paths to directories that will be mounted as EmptyDirVolumes in the pod
+	// to store temporary data.
+	ScratchSpace []string `hcl:"scratch_path,optional"`
+
 	// How long WatchTask should wait for a pod to startup. This option is specifically
 	// wordy because it's only for the WatchTask timing out waiting for the pod
 	// its watching to start up before it attempts to stream its logs.
@@ -382,6 +386,8 @@ func (p *TaskLauncher) StartTask(
 		}
 	}
 
+	volumes := createScratchVolumes(p.config.ScratchSpace)
+
 	var securityContext *corev1.PodSecurityContext = nil
 	podSc := p.config.SecurityContext
 	if podSc != nil {
@@ -407,6 +413,7 @@ func (p *TaskLauncher) StartTask(
 		Args:            tli.Arguments,
 		Env:             env,
 		Resources:       resourceRequirements,
+		VolumeMounts:    createVolumeMounts(p.config.ScratchSpace, volumes),
 	}
 
 	// Determine our image pull secret
@@ -443,6 +450,7 @@ func (p *TaskLauncher) StartTask(
 					ImagePullSecrets:   pullSecrets,
 					RestartPolicy:      corev1.RestartPolicyOnFailure,
 					SecurityContext:    securityContext,
+					Volumes:            volumes,
 				},
 			},
 		},

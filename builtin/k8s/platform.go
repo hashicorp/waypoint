@@ -499,17 +499,7 @@ func configureContainer(
 		Requests: resourceRequests,
 	}
 
-	var volumeMounts []corev1.VolumeMount
-	for idx, scratchSpaceLocation := range scratchSpace {
-		volumeMounts = append(
-			volumeMounts,
-			corev1.VolumeMount{
-				// We know all the volumes are identical
-				Name:      volumes[idx].Name,
-				MountPath: scratchSpaceLocation,
-			},
-		)
-	}
+	volumeMounts := createVolumeMounts(scratchSpace, volumes)
 
 	container := corev1.Container{
 		Name:            c.Name,
@@ -628,7 +618,7 @@ func (p *Platform) resourceDeploymentCreate(
 
 	portStep := sg.Add("")
 	defer func() { portStep.Abort() }()
-	// we dont use %q to save us convering a uint Port to a string and handling the error
+	// we don't use %q to save us converting an uint Port to a string and handling the error
 	portStep.Update("Expected %q port \"%d\" for app %q",
 		appContainerSpec.Ports[0].Name,
 		appContainerSpec.Ports[0].Port,
@@ -650,18 +640,7 @@ func (p *Platform) resourceDeploymentCreate(
 	}
 
 	// Create scratch space volumes
-	var volumes []corev1.Volume
-	for idx := range p.config.ScratchSpace {
-		scratchName := fmt.Sprintf("scratch-%d", idx)
-		volumes = append(volumes,
-			corev1.Volume{
-				Name: scratchName,
-				VolumeSource: corev1.VolumeSource{
-					EmptyDir: &corev1.EmptyDirVolumeSource{},
-				},
-			},
-		)
-	}
+	volumes := createScratchVolumes(p.config.ScratchSpace)
 
 	appImage := fmt.Sprintf("%s:%s", img.Image, img.Tag)
 	appContainerSpec.Name = src.App
