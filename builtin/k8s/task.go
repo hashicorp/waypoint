@@ -86,7 +86,7 @@ type TaskLauncherConfig struct {
 
 	// EnvFromSecret defines secrets to be load as environment variables from a Kubernetes Secret
 	// The syntax here is very similar to Kubernetes' SecretKeySelector
-	EnvFromSecret map[string]EnvFromSecret `hcl:"env_from_secret,optional"`
+	EnvFromSecret map[string]EnvFromSecret `hcl:"env_from_secret,attr"`
 
 	// ScratchSpace defines an array of paths to directories that will be mounted as EmptyDirVolumes in the pod
 	// to store temporary data.
@@ -102,8 +102,9 @@ type TaskLauncherConfig struct {
 }
 
 type EnvFromSecret struct {
-	Name string `hcl:"name"`
-	Key  string `hcl:"key"`
+	//https://github.com/hashicorp/hcl/issues/396
+	SecretName string `cty:"name"`
+	SecretKey  string `cty:"key"`
 }
 
 func (p *TaskLauncher) Documentation() (*docs.Documentation, error) {
@@ -319,8 +320,8 @@ func (p *TaskLauncher) StartTask(
 			Name: k,
 			ValueFrom: &corev1.EnvVarSource{
 				SecretKeyRef: &corev1.SecretKeySelector{
-					Key:                  v.Key,
-					LocalObjectReference: corev1.LocalObjectReference{Name: v.Name},
+					Key:                  v.SecretKey,
+					LocalObjectReference: corev1.LocalObjectReference{Name: v.SecretName},
 				},
 			},
 		})
