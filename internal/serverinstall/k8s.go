@@ -21,6 +21,7 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
+
 	"github.com/hashicorp/waypoint/builtin/k8s"
 	"github.com/hashicorp/waypoint/internal/clicontext"
 	"github.com/hashicorp/waypoint/internal/clierrors"
@@ -102,7 +103,7 @@ func (i *K8sInstaller) Install(
 ) (*InstallResults, string, error) {
 	if i.Config.OdrImage == "" {
 		var err error
-		i.Config.OdrImage, err = installutil.DefaultODRImage(i.Config.ServerImage)
+		i.Config.OdrImage, err = installutil.DeriveDefaultODRImage(i.Config.ServerImage)
 		if err != nil {
 			return nil, "", err
 		}
@@ -431,7 +432,7 @@ func (i *K8sInstaller) Upgrade(
 ) {
 	if i.Config.OdrImage == "" {
 		var err error
-		i.Config.OdrImage, err = installutil.DefaultODRImage(i.Config.ServerImage)
+		i.Config.OdrImage, err = installutil.DeriveDefaultODRImage(i.Config.ServerImage)
 		if err != nil {
 			return nil, err
 		}

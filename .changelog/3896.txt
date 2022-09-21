@@ -1,0 +1,3 @@
+```release-note:bug
+plugin: Fix panic in non-ECS plugins when destroying resources
+```

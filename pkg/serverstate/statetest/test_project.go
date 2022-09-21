@@ -350,6 +350,21 @@ func TestProjectGetSetAllProperties(t *testing.T, f Factory, rf RestartFactory) 
 	respJsonStr := string(respJsonBytes)
 
 	require.Equal(initialJsonStr, respJsonStr)
+
+	t.Run("can delete all input vars", func(t *testing.T) {
+		initialProject.Variables = []*pb.Variable{}
+		err = s.ProjectPut(initialProject)
+		require.NoError(err)
+
+		resp, err := s.ProjectGet(&pb.Ref_Project{
+			Project: initialProject.Name,
+		})
+		require.NoError(err)
+		require.NotNil(resp)
+
+		require.Empty(resp.Variables)
+	})
+
 }
 
 func TestProjectPollPeek(t *testing.T, factory Factory, restartF RestartFactory) {

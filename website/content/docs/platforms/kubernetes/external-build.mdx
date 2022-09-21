@@ -1,0 +1,172 @@
+---
+layout: docs
+page_title: Kubernetes - Using Externally Built Images
+description: |-
+  The Waypoint workflow includes the ability to perform the build step directly, but users may also use Waypoint with externally built artifacts such as from CI pipelines.
+---
+
+# Externally Built Images
+
+The Waypoint workflow includes the ability to perform the
+[build](/docs/lifecycle/build) step directly, but users may also use Waypoint with
+externally built artifacts such as from CI pipelines. This is particularly
+common if you're adopting Waypoint for existing applications (versus
+net new use cases).
+
+## Configuring Waypoint to Use an Existing Image
+
+The [docker-pull builder](/plugins/docker#docker-pull-builder) was designed
+so that Waypoint can use pre-built Docker images. These images can be built
+anyway you want: manually, CI pipelines, 3rd party sources, etc.
+
+The example below shows how we can use an image that was already built.
+In this case, Waypoint does nothing: it just notes that this is the image
+you want to use. It doesn't verify that it can access this image and
+doesn't modify the image in any way. This enables the `deploy` plugin in
+the next step to use this pre-existing image.
+
+```hcl
+build {
+  use "docker-pull" {
+    image = "gcr.io/my-project/my-image"
+    tag   = "abcd1234"
+    disable_entrypoint = true
+  }
+}
+```
+
+A more realistic example would likely use
+[input variables](/docs/waypoint-hcl/variables/input)
+or [functions](/docs/waypoint-hcl/functions/all) to dynamically specify
+the correct image.
+
+-> **Why `disable_entrypoint`?** Waypoint doesn't currently support
+entrypoint injection for the `docker-pull` builder on Kubernetes runners.
+See the [entrypoint injection](#waypoint-entrypoint-with-external-image-builds)
+section on this page for how you can manually inject the entrypoint.
+
+### Input Variables to Specify the Image Tag
+
+[Input variables](/docs/waypoint-hcl/variables/input) can be used
+to specify parameters for configuring the image to use, as shown below.
+This is a more realistic example because this allows a step in a system
+such as a CI to specify to Waypoint what the desired image tag is for deployment.
+
+```hcl
+variable "image_tag" {
+  type = string
+}
+
+app "my-app" {
+  build {
+    use "docker-pull" {
+      image = "gcr.io/my-project/my-image"
+      tag   = var.image_tag
+      disable_entrypoint = true
+    }
+  }
+}
+```
+
+This variable can then be used in [many ways](/docs/waypoint-hcl/variables/input#assigning-values-to-custom-input-variables).
+If a CI is executing Waypoint, the most likely way is via a flag:
+
+```shell-session
+$ waypoint build -var image_tag=$TAG my-project/my-app
+```
+
+-> **Note:** The `<project>/<app>` syntax with `waypoint` CLI operations forces
+a [remote operation](/docs/projects/remote). This can be invoked anywhere;
+`waypoint` does not need the project source to be available in the local filesystem, only credentials to
+access the Waypoint server.
+
+### Git Functions to Specify the Image Tag
+
+Another approach to specifying the image tag, particularly in a GitOps-oriented
+workflow, would be to use [Git functions](/docs/waypoint-hcl/functions/all#gitrefhash).
+
+The example below specifies that the tag should always match the current
+Git commit hash. This assumes your external system is building an image for
+every commit. You can also use functions such as `gitreftag` to get the
+current tag.
+
+```hcl
+app "my-app" {
+  build {
+    use "docker-pull" {
+      image = "gcr.io/my-project/my-image"
+      tag   = gitrefhash()
+      disable_entrypoint = true
+    }
+  }
+}
+```
+
+## Invoking Waypoint when Using External Images
+
+When using externally built images, Waypoint should be invoked after the
+image is already created. The approach to do this depends on how your build
+system is configured and how (or if) your team uses Git.
+
+### Invoking from CI
+
+The first approach is to _not use_ [repository polling](/docs/projects/git#polling)
+with Waypoint, because Waypoint may run before your CI system builds the image.
+Instead, the CI system can manually invoke the Waypoint operation once the
+image is built.
+
+To do this, the CI must be configured with
+[connection environment variables](/docs/automating-execution#environment-variables):
+`WAYPOINT_SERVER_ADDR`, `WAYPOINT_SERVER_TOKEN`, etc. Then, after the
+image is built, trigger a deploy:
+
+```shell-session
+$ waypoint up <project>/<app>
+```
+
+You may specify variables and other flags to the `up` command. The `<project>/<app>`
+syntax will force a [remote operation](/docs/projects/remote) so the up will
+happen remotely. This will block while the operation is happening.
+
+### Invoking from Git
+
+Another approach is to continue using Git to trigger deploys. In this
+approach, your [project Git settings](/docs/projects/git) should be configured
+to watch a specific branch that is only merged to when you're ready to deploy.
+
+For example, you can have a `production` branch (or it may just be your main
+branch) that you only merge to _after_ your CI system ran tests and built
+the resulting image.
+
+This requires a different style of Git discipline and may not fit all teams.
+
+## Waypoint Entrypoint with External Image Builds
+
+The [Waypoint Entrypoint](/docs/entrypoint) is an optional component that enables
+features such as `waypoint exec`, log streaming, instance tracking, and more.
+When using externally built Docker images, you must also manually inject
+the entrypoint.
+This is **optional**! Waypoint does not require the entrypoint to perform
+deploys.
+
+To setup the entrypoint, the simplest approach is to use
+[Docker multi-stage builds](https://docs.docker.com/develop/develop-images/multistage-build/):
+
+```dockerfile
+FROM hashicorp/waypoint:latest AS waypoint
+
+# Your main build:
+FROM yourbaseimage
+
+COPY --from=waypoint /usr/bin/waypoint-entrypoint /waypoint-entrypoint
+
+# Replace "<EXISTING>" with your existing entrypoint (if any)
+ENTRYPOINT ["/waypoint-entrypoint", <EXISTING>]
+```
+
+Note that injecting the entrypoint is safe _even if you don't use Waypoint_.
+If the entrypoint doesn't have the proper environment variables set
+(by Waypoint itself, not as part of the build), then the entrypoints acts
+as if it doesn't exist: it executes its child process and does nothing.
+This lets you start injecting the entrypoint even if you're still only
+experimenting with Waypoint.

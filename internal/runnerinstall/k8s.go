@@ -32,8 +32,9 @@ type K8sRunnerInstaller struct {
 }
 
 const (
-	defaultRunnerMemory = "256Mi"
-	defaultRunnerCPU    = "250m"
+	defaultRunnerMemory          = "256Mi"
+	defaultRunnerCPU             = "250m"
+	defaultOdrServiceAccountName = "waypoint-runner-odr"
 )
 
 type InstalledRunnerConfig struct {
@@ -115,20 +116,6 @@ func (i *K8sRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) err
 		return err
 	}
 
-	odrImage := i.Config.OdrImage
-	if odrImage == "" {
-		odrImage, err = installutil.DefaultODRImage(i.Config.RunnerImage)
-		if err != nil {
-			opts.UI.Output("Error getting default ODR image: %s", clierrors.Humanize(err), terminal.WithErrorStyle())
-			return err
-		}
-	}
-	odrImageRef, err := dockerparser.Parse(odrImage)
-	if err != nil {
-		opts.UI.Output("Error parsing ODR image name: %s", clierrors.Humanize(err), terminal.WithErrorStyle())
-		return err
-	}
-
 	clientSet, err := k8sinstallutil.NewClient(i.Config)
 	if err != nil {
 		opts.UI.Output("Error creating k8s clientset: %s", clierrors.Humanize(err), terminal.StatusError)
@@ -164,13 +151,13 @@ func (i *K8sRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) err
 				"tag":        runnerImageRef.Tag(),
 			},
 			"odr": map[string]interface{}{
-				"image": map[string]interface{}{
-					"repository": odrImageRef.Repository(),
-					"tag":        odrImageRef.Tag(),
-				},
+				// odr image stanza not specified - this is used by the helm chart to
+				// give to the bootstrap job to populate the ODR profile, but only
+				// during a server install. For runner installs, we'll create the
+				// ODR profile ourselves later.
 				"serviceAccount": map[string]interface{}{
 					"create": i.Config.CreateServiceAccount,
-					"name":   "waypoint-runner-odr",
+					"name":   defaultOdrServiceAccountName,
 				},
 			},
 			"resources": map[string]interface{}{
@@ -236,9 +223,11 @@ func (i *K8sRunnerInstaller) InstallFlags(set *flag.Set) {
 	})
 
 	set.StringVar(&flag.StringVar{
-		Name:    "k8s-runner-image",
-		Target:  &i.Config.RunnerImage,
-		Default: installutil.DefaultRunnerImage,
+		Name:   "k8s-runner-image",
+		Target: &i.Config.RunnerImage,
+		// This is the static (non-odr) runner, and therefore needs to use the non-ODR
+		// image. The server and the static runner use the same image.
+		Default: installutil.DefaultServerImage,
 		Usage:   "Docker image for the Waypoint runner.",
 	})
 
@@ -541,6 +530,8 @@ func (i *K8sRunnerInstaller) OnDemandRunnerConfig() *pb.OnDemandRunnerConfig {
 	cfgMap["cpu"] = cpuConfig
 	cfgMap["memory"] = memConfig
 
+	cfgMap["service_account"] = defaultOdrServiceAccountName
+
 	// Marshal our config
 	cfgJson, err := json.MarshalIndent(cfgMap, "", "\t")
 	if err != nil {
@@ -552,10 +543,14 @@ func (i *K8sRunnerInstaller) OnDemandRunnerConfig() *pb.OnDemandRunnerConfig {
 
 	return &pb.OnDemandRunnerConfig{
 		Name:         "kubernetes",
-		OciUrl:       i.Config.RunnerImage,
 		PluginType:   "kubernetes",
 		Default:      false,
 		PluginConfig: cfgJson,
 		ConfigFormat: pb.Hcl_JSON,
+		// Can't use i.Config.OdrImage here, because it hasn't been initalized.
+		// This doesn't matter in practice - this is used in the `runner install` command,
+		// which has its own -odr-image flag that it's going to use to overwrite
+		// this value.
+		OciUrl: installutil.DefaultODRImage,
 	}
 }

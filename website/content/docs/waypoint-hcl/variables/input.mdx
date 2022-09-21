@@ -208,14 +208,14 @@ The resulting output value displayed:
 
 Retrieve the server cookie using the command `waypoint server cookie`:
 
-```
+```shell-session
 $ waypoint server cookie
 WPC01FZ1FB3FQ1BYABXVN67FAPXJE
 ```
 
 Then verify by combining the cookie with the value you expected Waypoint to use:
 
-```
+```shell-session
 $ echo -n "WPC01FZ1FB3FQ1BYABXVN67FAPXJEmyemail@mycorp.com" | sha256sum
 63fc1b8d861dd448c9ae7eaae3102e8a6dd14b838c8bbf1c0ed2f4eceb967d0c
 ```
@@ -264,10 +264,16 @@ when running the `waypoint up` or specific stage commands (e.g. `waypoint build`
 You can use the `-var` option multiple times in a single command to set several
 different variables.
 
+```shell-session
+$ waypoint up -var="port=8080"
 ```
-waypoint up -var="port=8080"
-waypoint up -var='networks=["internal","dev-test"]' -var="port=8080"
-waypoint up -var='network_map={"internal":8080,"dev-test":9701}'
+
+```shell-session
+$ waypoint up -var='networks=["internal","dev-test"]' -var="port=8080"
+```
+
+```shell-session
+$ waypoint up -var='network_map={"internal":8080,"dev-test":9701}'
 ```
 
 The above examples show appropriate syntax for Unix-style shells, such as on
@@ -276,15 +282,15 @@ If you're on Windows, we recommend using the Windows Command Prompt (cmd.exe).
 When you pass a variable value to Waypoint from the Windows Command Prompt,
 use double quotes " around the argument:
 
-```
-waypoint up -var "name=value"
+```shell-session
+$ waypoint up -var "name=value"
 ```
 
 If your intended value includes literal double quotes then you'll need to
 escape those with a backslash:
 
-```
-waypoint up -var "name=va\"lue"
+```shell-session
+$ waypoint up -var "name=va\"lue"
 ```
 
 ### Variable Definitions (`.wpvars`) Files
@@ -294,8 +300,8 @@ a _variable definitions file_ (with a filename ending in either `.wpvars`
 or `.wpvars.json`) and then specify that file on the command line with
 `-var-file`:
 
-```
-waypoint up -var-file="testing.wpvars"
+```shell-session
+$ waypoint up -var-file="testing.wpvars"
 ```
 
 A variable definitions file uses the same basic syntax as Waypoint language
@@ -349,9 +355,8 @@ This can be useful when running Waypoint in automation, or when running a
 sequence of Waypoint commands in succession with the same variables.
 For example, at a `bash` prompt on a Unix system:
 
-```
-$ export WP_VAR_port=8080
-$ waypoint up
+```shell-session
+$ export WP_VAR_port=8080 && waypoint up
 ...
 ```
 
@@ -398,7 +403,7 @@ variables. For convenience, Waypoint defaults to interpreting `-var` and
 environment variable values as literal strings, which need only shell quoting,
 and no special quoting for Waypoint. For example, in a Unix-style shell:
 
-```
+```shell-session
 $ export WP_VAR_port=8080
 ```
 
@@ -408,7 +413,7 @@ instead attempt to parse its value using the same syntax used within variable
 definitions files, which requires careful attention to the string escaping rules
 in your shell:
 
-```
+```shell-session
 $ export WP_VAR_networks='["internal","dev-test"]'
 ```
 
@@ -434,7 +439,7 @@ will result in an error.
 Waypoint loads variables in the following order, with later sources taking
 precedence over earlier ones:
 
-- In the project settings via [the Waypoint server's UI](https://www.waypointproject.io/docs/server#waypoint-server).
+- In the project settings via [the Waypoint server's UI](/docs/server).
 - Automatically loaded variable definition files, named with the pattern
   `*.auto.wpvars`.
 - From environment variables prefixed with `WP_VAR_`.

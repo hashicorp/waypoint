@@ -6,10 +6,6 @@ import (
 	"os"
 	"time"
 
-	"github.com/hashicorp/waypoint/internal/installutil"
-
-	"github.com/hashicorp/waypoint/internal/runnerinstall"
-
 	"github.com/docker/distribution/reference"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
@@ -18,11 +14,12 @@ import (
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/jsonmessage"
 	"github.com/docker/go-connections/nat"
-
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 
 	"github.com/hashicorp/waypoint/internal/clicontext"
+	"github.com/hashicorp/waypoint/internal/installutil"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
+	"github.com/hashicorp/waypoint/internal/runnerinstall"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	"github.com/hashicorp/waypoint/pkg/serverconfig"
 )
@@ -53,7 +50,7 @@ func (i *DockerInstaller) Install(
 ) (*InstallResults, string, error) {
 	if i.config.odrImage == "" {
 		var err error
-		i.config.odrImage, err = installutil.DefaultODRImage(i.config.serverImage)
+		i.config.odrImage, err = installutil.DeriveDefaultODRImage(i.config.serverImage)
 		if err != nil {
 			return nil, "", err
 		}
@@ -295,7 +292,7 @@ func (i *DockerInstaller) Upgrade(
 ) {
 	if i.config.odrImage == "" {
 		var err error
-		i.config.odrImage, err = installutil.DefaultODRImage(i.config.serverImage)
+		i.config.odrImage, err = installutil.DeriveDefaultODRImage(i.config.serverImage)
 		if err != nil {
 			return nil, err
 		}
