@@ -1,0 +1,3 @@
+```release-note:improvement
+plugin/ecs: Implement WatchTask plugin for AWS ECS task launcher. Store ECS on-demand runner logs in the job system.
+```
