@@ -267,9 +267,11 @@ different variables.
 ```shell-session
 $ waypoint up -var="port=8080"
 ```
+
 ```shell-session
 $ waypoint up -var='networks=["internal","dev-test"]' -var="port=8080"
 ```
+
 ```shell-session
 $ waypoint up -var='network_map={"internal":8080,"dev-test":9701}'
 ```
