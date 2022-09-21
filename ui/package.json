@@ -73,7 +73,7 @@
     "ember-cli-page-object": "^1.17.9",
     "ember-cli-sass": "^10.0.1",
     "ember-cli-sri": "^2.1.1",
-    "ember-cli-string-helpers": "^5.0.0",
+    "ember-cli-string-helpers": "^6.1.0",
     "ember-cli-terser": "^4.0.2",
     "ember-cli-typescript": "^4.2.1",
     "ember-composable-helpers": "^4.2.2",
