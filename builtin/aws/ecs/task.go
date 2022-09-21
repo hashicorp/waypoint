@@ -4,22 +4,23 @@ import (
 	"context"
 	"crypto/rand"
 	"fmt"
-	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
-	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
-	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
 	"github.com/aws/aws-sdk-go/service/ecs"
 	"github.com/aws/aws-sdk-go/service/iam"
+	"github.com/oklog/ulid"
+	"google.golang.org/grpc/codes"
+
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint-plugin-sdk/docs"
+	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/builtin/aws/utils"
-	"github.com/oklog/ulid"
 )
 
 // TaskLauncher implements the TaskLauncher plugin interface to support
@@ -309,7 +310,6 @@ func (p *TaskLauncher) WatchTask(
 
 				for _, logStream := range logStreamsResp.LogStreams {
 					if strings.Contains(*logStream.LogStreamName, ti.Id) {
-						// when the log stream is available, inform the main goroutine
 						logStreamName = *logStream.LogStreamName
 					}
 				}
