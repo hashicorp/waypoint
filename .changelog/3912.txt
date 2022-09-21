@@ -1,0 +1,3 @@
+```release-note:improvement
+plugins/docker: Add new `docker-ref` for a build noop for referencing a Docker Image
+```
