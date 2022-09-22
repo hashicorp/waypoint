@@ -1265,12 +1265,12 @@
     resolve "^1.20.0"
     semver "^7.3.2"
 
-"@embroider/macros@^1.0.0":
-  version "1.6.0"
-  resolved "https://registry.yarnpkg.com/@embroider/macros/-/macros-1.6.0.tgz#2b764f965c645fdcfbf05897c88195368b046ba1"
-  integrity sha512-yUEXJGJGP3rjtxorxrbkdxriBFEwnmzOrNk4zK64IXKBfyRjiDZFUHV9DSTrbaYLS29Mw5yK73ZIwi8L13C4Zw==
+"@embroider/macros@^1.0.0", "@embroider/macros@^1.8.0":
+  version "1.8.3"
+  resolved "https://registry.yarnpkg.com/@embroider/macros/-/macros-1.8.3.tgz#2f0961ab8871f6ad819630208031d705b357757e"
+  integrity sha512-gnIOfTL/pUkoD6oI7JyWOqXlVIUgZM+CnbH10/YNtZr2K0hij9eZQMdgjOZZVgN0rKOFw9dIREqc1ygrJHRYQA==
   dependencies:
-    "@embroider/shared-internals" "1.6.0"
+    "@embroider/shared-internals" "1.8.3"
     assert-never "^1.2.1"
     babel-import-util "^1.1.0"
     ember-cli-babel "^7.26.6"
@@ -1318,7 +1318,21 @@
     semver "^7.3.5"
     typescript-memoize "^1.0.1"
 
-"@embroider/shared-internals@1.6.0", "@embroider/shared-internals@^1.0.0", "@embroider/shared-internals@^1.6.0":
+"@embroider/shared-internals@1.8.3":
+  version "1.8.3"
+  resolved "https://registry.yarnpkg.com/@embroider/shared-internals/-/shared-internals-1.8.3.tgz#52d868dc80016e9fe983552c0e516f437bf9b9f9"
+  integrity sha512-N5Gho6Qk8z5u+mxLCcMYAoQMbN4MmH+z2jXwQHVs859bxuZTxwF6kKtsybDAASCtd2YGxEmzcc1Ja/wM28824w==
+  dependencies:
+    babel-import-util "^1.1.0"
+    ember-rfc176-data "^0.3.17"
+    fs-extra "^9.1.0"
+    js-string-escape "^1.0.1"
+    lodash "^4.17.21"
+    resolve-package-path "^4.0.1"
+    semver "^7.3.5"
+    typescript-memoize "^1.0.1"
+
+"@embroider/shared-internals@^1.0.0", "@embroider/shared-internals@^1.6.0":
   version "1.6.0"
   resolved "https://registry.yarnpkg.com/@embroider/shared-internals/-/shared-internals-1.6.0.tgz#35ade2ce1202e529107bf6d1fae4ca753f6ebe5a"
   integrity sha512-es7+pV2S9+tgX5T4losppheXfa+xWtKD6x0gq7mxqA4DIdE14mORNeSWM8/Fu9f/t0tJnPqttddbgnDYw+SvrA==
@@ -4803,7 +4817,7 @@ broccoli-source@^1.1.0:
   resolved "https://registry.yarnpkg.com/broccoli-source/-/broccoli-source-1.1.0.tgz#54f0e82c8b73f46580cbbc4f578f0b32fca8f809"
   integrity sha1-VPDoLItz9GWAy7xPV48LMvyo+Ak=
 
-broccoli-source@^2.0.0, broccoli-source@^2.1.2:
+broccoli-source@^2.1.2:
   version "2.1.2"
   resolved "https://registry.yarnpkg.com/broccoli-source/-/broccoli-source-2.1.2.tgz#e9ae834f143b607e9ec114ade66731500c38b90b"
   integrity sha512-1lLayO4wfS0c0Sj50VfHJXNWf94FYY0WUhxj0R77thbs6uWI7USiOWFqQV5dRmhAJnoKaGN4WyLGQbgjgiYFwQ==
@@ -6616,7 +6630,7 @@ ember-cli-get-component-path-option@^1.0.0:
   resolved "https://registry.yarnpkg.com/ember-cli-get-component-path-option/-/ember-cli-get-component-path-option-1.0.0.tgz#0d7b595559e2f9050abed804f1d8eff1b08bc771"
   integrity sha1-DXtZVVni+QUKvtgE8djv8bCLx3E=
 
-ember-cli-htmlbars@^4.2.0, ember-cli-htmlbars@^4.2.3, ember-cli-htmlbars@^4.3.1:
+ember-cli-htmlbars@^4.2.3, ember-cli-htmlbars@^4.3.1:
   version "4.5.0"
   resolved "https://registry.yarnpkg.com/ember-cli-htmlbars/-/ember-cli-htmlbars-4.5.0.tgz#d299e4f7eba6f30dc723ee086906cc550beb252e"
   integrity sha512-bYJpK1pqFu9AadDAGTw05g2LMNzY8xTCIqQm7dMJmKEoUpLRFbPf4SfHXrktzDh7Q5iggl6Skzf1M0bPlIxARw==
@@ -7498,18 +7512,17 @@ ember-toggle@^9.0.3:
     ember-cli-htmlbars "^6.0.1"
     ember-gesture-modifiers "^3.0.0"
 
-ember-tooltips@^3.4.7:
-  version "3.4.7"
-  resolved "https://registry.yarnpkg.com/ember-tooltips/-/ember-tooltips-3.4.7.tgz#4ef0710e9cef0d83711b94ac4b2de894f088110f"
-  integrity sha512-tTcLi6gteB7N7gHo0LeMNN0k++lPpNNqf1aeho8dqs/0MV0LwUdf6GgzP6Urf92pvF50aw2lZcpd4FVRz5+XbQ==
+ember-tooltips@^3.6.0:
+  version "3.6.0"
+  resolved "https://registry.yarnpkg.com/ember-tooltips/-/ember-tooltips-3.6.0.tgz#15223e6fa50dec2fcf8dac16be9b12b46f395436"
+  integrity sha512-DsqF6vvL3DKWSUHJKuMJ8KSxbE/T+eZAE2xtzAuHRqjl1AYIOkugGBVynGYYP8+2/10NMwk05LYbT1dirAcEBQ==
   dependencies:
+    "@embroider/macros" "^1.8.0"
     broccoli-file-creator "^2.1.1"
-    broccoli-funnel "^2.0.2"
-    broccoli-merge-trees "^2.0.0"
-    broccoli-source "^2.0.0"
-    broccoli-string-replace "^0.1.2"
-    ember-cli-babel "^7.23.0"
-    ember-cli-htmlbars "^4.2.0"
+    broccoli-merge-trees "^4.2.0"
+    ember-auto-import "^1.11.3"
+    ember-cli-babel "^7.26.6"
+    ember-cli-htmlbars "^5.7.1"
     ember-in-element-polyfill "^1.0.1"
     popper.js "^1.12.5"
     resolve "^1.10.1"
