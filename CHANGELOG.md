@@ -1,4 +1,4 @@
-## unreleased
+## 0.10.1 (September 22, 2022)
 
 IMPROVEMENTS:
 
