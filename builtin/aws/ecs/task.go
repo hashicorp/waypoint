@@ -242,7 +242,7 @@ func (p *TaskLauncher) StopTask(
 		if err != nil {
 			return err
 		} else if len(taskResp.Tasks) != 1 {
-			return status.Errorf(codes.Internal, "there should be only 1 task", "num_tasks", len(taskResp.Tasks))
+			return status.Errorf(codes.Internal, "there should be only 1 task, but there are %d", len(taskResp.Tasks))
 		}
 		for _, tag := range taskResp.Tasks[0].Tags {
 			if *tag.Key == "waypoint-odr-task-name" && *tag.Value == ti.Id {
