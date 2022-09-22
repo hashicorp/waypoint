@@ -1,19 +1,18 @@
 ## unreleased
 
-FEATURES:
-
 IMPROVEMENTS:
+
+* core: Update TaskCancel to also cancel WatchTask job, if it was launched. [[GH-3893](https://github.com/hashicorp/waypoint/issues/3893)]
 
 BUG FIXES:
 
-
-## 0.10.0 (September 13, 2022)
-
-FEATURES:
-
-IMPROVEMENTS:
-
-BUG FIXES:
+* plugin/nomad-jobspec: Update Nomad jobspec status check to not report partial
+health for deployments with canaries [[GH-3883](https://github.com/hashicorp/waypoint/issues/3883)]
+* plugin/nomad: Update Nomad task launcher plugin to respect namespace and region
+configs in runner profile [[GH-3883](https://github.com/hashicorp/waypoint/issues/3883)]
+* plugin: Fix panic in non-ECS plugins when destroying resources [[GH-3896](https://github.com/hashicorp/waypoint/issues/3896)]
+* runner-install/k8s: Use the service account created by helm in the runner profile, rather than using the default service account. [[GH-3894](https://github.com/hashicorp/waypoint/issues/3894)]
+* runner-install/kubernetes: Fix the static runner image used in the `waypoint runner install` command [[GH-3890](https://github.com/hashicorp/waypoint/issues/3890)]
 
 ## 0.10.0 (September 13, 2022)
 
