@@ -99,7 +99,7 @@
     "ember-template-lint": "^3.15.0",
     "ember-test-selectors": "^6.0.0",
     "ember-toggle": "^9.0.3",
-    "ember-tooltips": "^3.4.7",
+    "ember-tooltips": "^3.6.0",
     "ember-truth-helpers": "^3.1.1",
     "eslint": "^7.32.0",
     "eslint-config-prettier": "^8.3.0",
