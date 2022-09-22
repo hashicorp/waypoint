@@ -1,0 +1,4 @@
+```release-note: improvement
+cli/runnerinstall: Update `runner install` to set the new profile as the default
+if none exist
+```
