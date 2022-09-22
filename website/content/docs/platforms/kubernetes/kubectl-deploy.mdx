@@ -15,8 +15,8 @@ are expected to write YAML and exactly control their deployments.
 
 -> **There are other deployment options.** Waypoint supports many other mechanisms
 for deploying to Kubernetes. You can use the
-[`kubernetes`](/docs/kubernetes/deploy) plugin for highly opinionated, no YAML deployments. Or you can use
-[Helm](/docs/kubernetes/helm-deploy).
+[`kubernetes`](/docs/platforms/kubernetes/deploy) plugin for highly opinionated, no YAML deployments. Or you can use
+[Helm](/docs/platforms/kubernetes/helm-deploy).
 
 ## A Simple Deployment
 
@@ -83,7 +83,7 @@ to set the proper environment variables so that the entrypoint functions.
 -> **This requires the entrypoint to be in your container image.** If
 you're using the `docker` builder plugin, this happens automatically.
 If you're using externally built images, you may need to
-[manually inject the entrypoint](/docs/kubernetes/external-build#waypoint-entrypoint-with-external-image-builds).
+[manually inject the entrypoint](/docs/platforms/kubernetes/external-build#waypoint-entrypoint-with-external-image-builds).
 
 ```yaml
 // ./k8s/deployment.yaml

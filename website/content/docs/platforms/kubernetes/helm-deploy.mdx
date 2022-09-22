@@ -19,8 +19,8 @@ referencing the most recently built artifacts, etc.
 
 -> **Not a Helm user? No problem!** Waypoint supports many other mechanisms
 for deploying to Kubernetes. You can use the
-[`kubernetes`](/docs/kubernetes/deploy) plugin for highly opinionated, no YAML deployments. Or you can use
-[`kubernetes-apply`](/docs/kubernetes/kubectl-deploy) with
+[`kubernetes`](/docs/platforms/kubernetes/deploy) plugin for highly opinionated, no YAML deployments. Or you can use
+[`kubernetes-apply`](/docs/platforms/kubernetes/kubectl-deploy) with
 a directory of YAML files.
 
 ## Why Helm?
@@ -119,7 +119,7 @@ deploy {
 
 If you want to use the [Waypoint entrypoint](/docs/entrypoint) functionality,
 you must manually inject the [entrypoint environment variables](/docs/entrypoint).
-The [opinionated Kubernetes plugin](/docs/kubernetes/deploy) does this
+The [opinionated Kubernetes plugin](/docs/platforms/kubernetes/deploy) does this
 automatically but since with Helm you're writing manual Kubernetes resources with
 YAML, we can't automatically inject the environment variables.
 
@@ -134,7 +134,7 @@ but an incomplete example is shown below to briefly explain the process.
 -> **Note:** This also requires that the entrypoint binary is already
 injected into the image as part of the build process. This happens automatically
 for `docker` or `pack` builders. If you're using an externally built image,
-you must [inject the entrypoint manually](/docs/kubernetes/external-build#waypoint-entrypoint-with-external-image-builds).
+you must [inject the entrypoint manually](/docs/platforms/kubernetes/external-build#waypoint-entrypoint-with-external-image-builds).
 
 ```hcl
 app "my-app" {

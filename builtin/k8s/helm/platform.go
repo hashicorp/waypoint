@@ -263,7 +263,7 @@ These must be passed in using Helm values (i.e. the chart must make
 environment variables configurable).
 
 This is documented in more detail with a full example in the
-[Kubernetes Helm Deployment documentation](/docs/kubernetes/helm-deploy).
+[Kubernetes Helm Deployment documentation](/docs/platforms/kubernetes/helm-deploy).
 
 #### URL Service
 
