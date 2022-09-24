@@ -24,13 +24,18 @@
     {{#each @resources key="id" as |resource|}}
       <tr>
         <th scope="row">
-          <LinkTo
-            title={{resource.name}}
-            @route={{@route}}
-            @models={{append (or @models (array)) resource.id}}
-          >
-            {{resource.name}}
-          </LinkTo>
+          {{#if resource.id}}
+            <LinkTo
+              title={{resource.name}}
+              @route={{@route}}
+              @models={{append (or @models (array)) resource.id}}
+            >
+              {{resource.name}}
+            </LinkTo>
+          {{else}}
+            <FlightIcon @name="alert-triangle-fill" />
+            <span class="pds--visuallyHidden">{{resource.name}}</span>
+          {{/if}}
         </th>
         <td class="resource-icon"><FlightIcon @name={{icon-for-component resource.platform}} /> {{resource.type}}</td>
         <td>{{date-format-distance-to-now resource.createdTime.seconds}}</td>
