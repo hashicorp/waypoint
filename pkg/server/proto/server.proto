@@ -1964,6 +1964,10 @@ message Job {
     // Description is information about how the Waypoint server
     // acquires the data.
     string description = 1;
+
+    // If remote refers to a git repo, git_remote will be partially populate
+    // with information about which information within the git repo to use.
+    Git git_remote = 2;
   }
 
   message Git {
