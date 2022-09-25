@@ -33,10 +33,10 @@ from the `Registry` component.
 
 ```go
 func (p *Platform) DeployFunc() interface{} {
-  return d.deploy
+  return d.Deploy
 }
 
-func (p *Platform) deploy(
+func (p *Platform) Deploy(
   ctx context.Context,
   ji *component.JobInfo,
   artifact *registry.Artifact,
