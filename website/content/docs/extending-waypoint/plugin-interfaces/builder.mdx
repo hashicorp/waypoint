@@ -2,7 +2,7 @@
 layout: docs
 page_title: 'Builder'
 description: |-
-  How Waypoint plugins work
+  How to implement the Builder component for a Waypoint plugin
 ---
 
 # Builder
@@ -34,7 +34,16 @@ to be injected into the next phase which is the Registry plugin. If an error is 
 and return the error message to the user.
 
 ```go
-func (b *Builder) build(
+type Builder struct {
+  // Other component fields
+}
+
+// BuildFunc implements component.Builder
+func (b *Builder) BuildFunc() interface{} {
+  return b.Build
+}
+
+func (b *Builder) Build(
   ctx context.Context,
   src *component.Source,
   job *component.JobInfo,
