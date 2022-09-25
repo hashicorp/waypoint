@@ -32,11 +32,11 @@ from DeployFunc can be defined to accept the Default Mappers, in addition it can
 from the `Registry` component.
 
 ```go
-func (d *Deploy) DeployFunc() interface{} {
+func (p *Platform) DeployFunc() interface{} {
   return d.deploy
 }
 
-func (d *Deploy) deploy(
+func (p *Platform) deploy(
   ctx context.Context,
   ji *component.JobInfo,
   artifact *registry.Artifact,
