@@ -2,7 +2,7 @@
 layout: docs
 page_title: 'ReleaseManager'
 description: |-
-  How Waypoint plugins work
+  How to implement the ReleaseManager component for a Waypoint plugin
 ---
 
 # ReleaseManager
@@ -12,7 +12,7 @@ https://pkg.go.dev/github.com/hashicorp/waypoint-plugin-sdk/component#ReleaseMan
 The ReleaseManager component is responsible for taking a deployment and making it active, this could be as
 simple as exposing it using a public load balancer or it may be a gradual and phased canary deployment.
 
-![Platform](/img/extending-waypoint/release-manager.png)
+![Release Manager](/img/extending-waypoint/release-manager.png)
 
 To create a ReleaseManager component you implement the ReleaseManager interface in your component.
 
@@ -29,8 +29,12 @@ and in addition you can request the output value from the Deployment component. 
 are a Waypoint value and an error.
 
 ```go
+type Releaser struct {
+  // Other component fields
+}
+
 func (r *Releaser) ReleaseFunc() interface{} {
-	return r.release
+	return r.Release
 }
 
 func (r *Releaser) Release(
