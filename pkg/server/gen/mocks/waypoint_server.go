@@ -1858,6 +1858,29 @@ func (_m *WaypointServer) StartExecStream(_a0 gen.Waypoint_StartExecStreamServer
 	return r0
 }
 
+// UI_GetDeployment provides a mock function with given fields: _a0, _a1
+func (_m *WaypointServer) UI_GetDeployment(_a0 context.Context, _a1 *gen.UI_GetDeploymentRequest) (*gen.UI_GetDeploymentResponse, error) {
+	ret := _m.Called(_a0, _a1)
+
+	var r0 *gen.UI_GetDeploymentResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.UI_GetDeploymentRequest) *gen.UI_GetDeploymentResponse); ok {
+		r0 = rf(_a0, _a1)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gen.UI_GetDeploymentResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.UI_GetDeploymentRequest) error); ok {
+		r1 = rf(_a0, _a1)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // UI_GetProject provides a mock function with given fields: _a0, _a1
 func (_m *WaypointServer) UI_GetProject(_a0 context.Context, _a1 *gen.UI_GetProjectRequest) (*gen.UI_GetProjectResponse, error) {
 	ret := _m.Called(_a0, _a1)
