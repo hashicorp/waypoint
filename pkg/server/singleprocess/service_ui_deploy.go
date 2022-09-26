@@ -35,7 +35,7 @@ func (s *Service) UI_GetDeployment(
 		bundle.DeployUrl, err = s.getDeployUrl(ctx, deploy)
 		if err != nil {
 			log.Warn(
-				"failed getting horizon hostname for deployment, but will attempt again for next deployment",
+				"failed getting horizon hostname for deployment",
 				"deployment id", deploy.Id,
 				"error", err,
 			)
