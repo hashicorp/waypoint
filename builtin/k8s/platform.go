@@ -1911,7 +1911,7 @@ use "kubernetes" {
 		"scratch_path",
 		"a path for the service to store temporary data",
 		docs.Summary(
-			"a path to a directory that will be created for the service to store temporary data using tmpfs",
+			"a path to a directory that will be created for the service to store temporary data using EmptyDir.",
 		),
 	)
 
