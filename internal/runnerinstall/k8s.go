@@ -12,6 +12,8 @@ import (
 	dockerparser "github.com/novln/docker-parser"
 	"helm.sh/helm/v3/pkg/action"
 	"helm.sh/helm/v3/pkg/chart/loader"
+	"helm.sh/helm/v3/pkg/getter"
+	"helm.sh/helm/v3/pkg/repo"
 	v1 "k8s.io/api/apps/v1"
 	apiv1 "k8s.io/api/core/v1"
 	k8sErrors "k8s.io/apimachinery/pkg/api/errors"
@@ -107,6 +109,24 @@ func (i *K8sRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) err
 	c, err := loader.Load(path)
 	if err != nil {
 		opts.UI.Output("Unable to load Waypoint helm chart.", terminal.WithErrorStyle())
+		return err
+	}
+
+	// Update the Hashicorp Helm repo before we attempt to install it
+	chartRepo, err := repo.NewChartRepository(&repo.Entry{
+		Name: "hashicorp",
+		URL:  "https://helm.releases.hashicorp.com",
+	}, getter.Providers{{
+		Schemes: []string{"https"},
+		New:     getter.NewHTTPGetter,
+	}})
+	if err != nil {
+		opts.UI.Output("Error loading chart repository: %s", clierrors.Humanize(err), terminal.WithErrorStyle())
+		return err
+	}
+	_, err = chartRepo.DownloadIndexFile()
+	if err != nil {
+		opts.UI.Output("Error downloading Hashicorp Helm repo chart index file: %s", clierrors.Humanize(err), terminal.WithErrorStyle())
 		return err
 	}
 
