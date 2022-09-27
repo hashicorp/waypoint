@@ -1077,6 +1077,147 @@ func TestServicePipeline_Run(t *testing.T) {
 		require.Nil(resp)
 	})
 
+	t.Run("returns job ids in expected order", func(t *testing.T) {
+		require := require.New(t)
+		ctx := context.Background()
+
+		// Create our server
+		impl, err := New(WithDB(testDB(t)))
+		require.NoError(err)
+		client := server.TestServer(t, impl)
+
+		// Initialize our app
+		TestApp(t, client, serverptypes.TestJobNew(t, nil).Application)
+
+		// Create our pipeline
+		pipeline := serverptypes.TestPipeline(t, nil)
+		pipeline.Steps["B"] = &pb.Pipeline_Step{
+			Name:      "B",
+			DependsOn: []string{"root"},
+			Kind: &pb.Pipeline_Step_Exec_{
+				Exec: &pb.Pipeline_Step_Exec{
+					Image: "hashicorp/waypoint",
+				},
+			},
+		}
+		pipeline.Steps["C"] = &pb.Pipeline_Step{
+			Name:      "C",
+			DependsOn: []string{"B"},
+			Kind: &pb.Pipeline_Step_Exec_{
+				Exec: &pb.Pipeline_Step_Exec{
+					Image: "hashicorp/waypoint",
+				},
+			},
+		}
+		pipeline.Steps["D"] = &pb.Pipeline_Step{
+			Name:      "D",
+			DependsOn: []string{"C"},
+			Kind: &pb.Pipeline_Step_Build_{
+				Build: &pb.Pipeline_Step_Build{},
+			},
+		}
+		pipeline.Steps["E"] = &pb.Pipeline_Step{
+			Name:      "E",
+			DependsOn: []string{"D"},
+			Kind: &pb.Pipeline_Step_Deploy_{
+				Deploy: &pb.Pipeline_Step_Deploy{},
+			},
+		}
+		pipeline.Steps["F"] = &pb.Pipeline_Step{
+			Name:      "F",
+			DependsOn: []string{"E"},
+			Kind: &pb.Pipeline_Step_Release_{
+				Release: &pb.Pipeline_Step_Release{},
+			},
+		}
+		pipeline.Steps["G"] = &pb.Pipeline_Step{
+			Name:      "G",
+			DependsOn: []string{"F"},
+			Kind: &pb.Pipeline_Step_Up_{
+				Up: &pb.Pipeline_Step_Up{},
+			},
+		}
+
+		// Create, should get an ID back
+		pipeResp, err := client.UpsertPipeline(ctx, &pb.UpsertPipelineRequest{
+			Pipeline: pipeline,
+		})
+		require.NoError(err)
+
+		// Build our job template
+		jobTemplate := serverptypes.TestJobNew(t, nil)
+		resp, err := client.RunPipeline(ctx, &pb.RunPipelineRequest{
+			Pipeline: &pb.Ref_Pipeline{
+				Ref: &pb.Ref_Pipeline_Id{
+					Id: pipeResp.Pipeline.Id,
+				},
+			},
+			JobTemplate: jobTemplate,
+		})
+		require.NoError(err)
+		require.NotNil(resp)
+
+		// Job should exist
+		job, err := client.GetJob(ctx, &pb.GetJobRequest{JobId: resp.JobId})
+		require.NoError(err)
+		require.Equal(pb.Job_QUEUED, job.State)
+
+		// We should have all the job IDs
+		require.Len(resp.AllJobIds, 7)
+		var names []string
+		var allJobs []*pb.Job
+		for _, id := range resp.AllJobIds {
+			require.Contains(resp.JobMap, id)
+			names = append(names, resp.JobMap[id].Step)
+
+			j, err := client.GetJob(ctx, &pb.GetJobRequest{JobId: id})
+			require.NoError(err)
+			allJobs = append(allJobs, j)
+		}
+		require.Equal([]string{"root", "B", "C", "D", "E", "F", "G"}, names)
+
+		// Loop through all Job Ids returned from RunPipeline and verify that the
+		// order lines up with the expected order of the pipeline for the test.
+		for i, job := range allJobs {
+			require.Equal(job.Pipeline.PipelineId, pipeline.Id)
+			require.Equal(job.Pipeline.PipelineName, pipeline.Name)
+
+			switch i {
+			case 0:
+				require.Equal(job.Pipeline.Step, "root")
+			case 1:
+				require.Equal(job.Pipeline.Step, "B")
+			case 2:
+				require.Equal(job.Pipeline.Step, "C")
+			case 3:
+				require.Equal(job.Pipeline.Step, "D")
+			case 4:
+				require.Equal(job.Pipeline.Step, "E")
+			case 5:
+				require.Equal(job.Pipeline.Step, "F")
+			case 6:
+				require.Equal(job.Pipeline.Step, "G")
+			}
+		}
+
+	})
+
+	/*
+		t.Run("returns job ids in expected order with embedded pipelines", func(t *testing.T) {
+			require := require.New(t)
+			ctx := context.Background()
+
+			// Create our server
+			impl, err := New(WithDB(testDB(t)))
+			require.NoError(err)
+			client := server.TestServer(t, impl)
+
+			// Initialize our app
+			TestApp(t, client, serverptypes.TestJobNew(t, nil).Application)
+
+		})
+	*/
+
 }
 
 func TestServicePipeline_List(t *testing.T) {
