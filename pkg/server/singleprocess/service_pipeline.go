@@ -486,8 +486,8 @@ func (s *Service) pipelineGraphFull(
 		if len(visitedNodes) != 0 {
 			if pipeName, ok := visitedNodes[step.Name]; ok && pipeName == pipeline.Name {
 				log.Trace("we've cycled to a node we've already visited!", "pipeline", pipeName, "step", step.Name)
-				return nil, nil, status.Error(codes.FailedPrecondition,
-					"we've already visited this node, that means we've got a cycle")
+				return nil, nil, status.Errorf(codes.FailedPrecondition,
+					"cycle has been detected. Node %q in pipeline %q has already been visisted", step.Name, pipeName)
 			}
 		}
 
