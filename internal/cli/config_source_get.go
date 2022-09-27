@@ -104,5 +104,8 @@ Usage: waypoint config source-get [options]
 
   To use this command, you must specify a "-type" flag.
 
+  Configuration for this command is global. The "-app", "-project", and
+  "-workspace" flags are ignored on this command.
+
 ` + c.Flags().Help())
 }
