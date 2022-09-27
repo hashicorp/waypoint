@@ -71,7 +71,7 @@
     "ember-cli-inject-live-reload": "^2.1.0",
     "ember-cli-mirage": "^2.2.0",
     "ember-cli-page-object": "^1.17.10",
-    "ember-cli-sass": "^10.0.1",
+    "ember-cli-sass": "^11.0.1",
     "ember-cli-sri": "^2.1.1",
     "ember-cli-string-helpers": "^6.1.0",
     "ember-cli-terser": "^4.0.2",
