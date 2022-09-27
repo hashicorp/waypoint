@@ -319,6 +319,7 @@ func (c *RunnerInstallCommand) Run(args []string) int {
 		profiles, err := client.ListOnDemandRunnerConfigs(ctx, &empty.Empty{})
 		if err != nil {
 			c.ui.Output("Error getting runner profiles: %s", clierrors.Humanize(err))
+			return 1
 		}
 		if len(profiles.Configs) == 0 {
 			odrConfig.Default = true
