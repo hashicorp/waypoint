@@ -2538,6 +2538,36 @@ func (_m *WaypointClient) StartExecStream(ctx context.Context, opts ...grpc.Call
 	return r0, r1
 }
 
+// UI_GetDeployment provides a mock function with given fields: ctx, in, opts
+func (_m *WaypointClient) UI_GetDeployment(ctx context.Context, in *gen.UI_GetDeploymentRequest, opts ...grpc.CallOption) (*gen.UI_GetDeploymentResponse, error) {
+	_va := make([]interface{}, len(opts))
+	for _i := range opts {
+		_va[_i] = opts[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx, in)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
+
+	var r0 *gen.UI_GetDeploymentResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.UI_GetDeploymentRequest, ...grpc.CallOption) *gen.UI_GetDeploymentResponse); ok {
+		r0 = rf(ctx, in, opts...)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gen.UI_GetDeploymentResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.UI_GetDeploymentRequest, ...grpc.CallOption) error); ok {
+		r1 = rf(ctx, in, opts...)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // UI_GetProject provides a mock function with given fields: ctx, in, opts
 func (_m *WaypointClient) UI_GetProject(ctx context.Context, in *gen.UI_GetProjectRequest, opts ...grpc.CallOption) (*gen.UI_GetProjectResponse, error) {
 	_va := make([]interface{}, len(opts))

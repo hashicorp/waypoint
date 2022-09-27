@@ -8575,6 +8575,10 @@
         "description": {
           "type": "string",
           "description": "Description is information about how the Waypoint server\nacquires the data."
+        },
+        "git_remote": {
+          "$ref": "#/definitions/hashicorp.waypoint.Job.Git",
+          "description": "If remote refers to a git repo, git_remote will be partially populate\nwith information about which information within the git repo to use."
         }
       }
     },
@@ -10924,6 +10928,15 @@
         }
       },
       "description": "A deployment packaged alongside prefetched related messages."
+    },
+    "hashicorp.waypoint.UI.GetDeploymentResponse": {
+      "type": "object",
+      "properties": {
+        "deployment": {
+          "$ref": "#/definitions/hashicorp.waypoint.UI.DeploymentBundle",
+          "description": "The deployment with related messages prefetched."
+        }
+      }
     },
     "hashicorp.waypoint.UI.GetProjectResponse": {
       "type": "object",

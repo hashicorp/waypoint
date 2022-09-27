@@ -465,6 +465,9 @@ service Waypoint {
   // List deployments for a given application.
   rpc UI_ListDeployments(UI.ListDeploymentsRequest) returns (UI.ListDeploymentsResponse);
 
+  // GetDeployment returns a deployment
+  rpc UI_GetDeployment(UI.GetDeploymentRequest) returns (UI.GetDeploymentResponse);
+
   // List releases for a given application.
   rpc UI_ListReleases(UI.ListReleasesRequest) returns (UI.ListReleasesResponse);
 }
@@ -481,7 +484,6 @@ message UI {
     Project project = 1;
     Job latest_init_job = 2;
   }
-
 
   message ListDeploymentsRequest {
     // Application that the deployments belong to.
@@ -505,6 +507,19 @@ message UI {
   message ListDeploymentsResponse {
     // The list of deployments with related messages prefetched.
     repeated UI.DeploymentBundle deployments = 1;
+  }
+
+  message GetDeploymentRequest {
+    Ref.Operation ref = 1;
+
+    // Indicate if the fetched deployments should include additional information
+    // about each deployment.
+    Deployment.LoadDetails load_details = 2;
+  }
+
+  message GetDeploymentResponse {
+    // The deployment with related messages prefetched.
+    UI.DeploymentBundle deployment = 1;
   }
 
   // A deployment packaged alongside prefetched related messages.
@@ -1964,6 +1979,10 @@ message Job {
     // Description is information about how the Waypoint server
     // acquires the data.
     string description = 1;
+
+    // If remote refers to a git repo, git_remote will be partially populate
+    // with information about which information within the git repo to use.
+    Git git_remote = 2;
   }
 
   message Git {
