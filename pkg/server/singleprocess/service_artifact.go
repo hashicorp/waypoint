@@ -6,8 +6,10 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/waypoint/pkg/server"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
+	"github.com/hashicorp/waypoint/pkg/server/hcerr"
 	serverptypes "github.com/hashicorp/waypoint/pkg/server/ptypes"
 	"github.com/hashicorp/waypoint/pkg/serverstate"
 )
@@ -17,7 +19,7 @@ func (s *Service) UpsertPushedArtifact(
 	req *pb.UpsertPushedArtifactRequest,
 ) (*pb.UpsertPushedArtifactResponse, error) {
 	if err := serverptypes.ValidateUpsertPushedArtifactRequest(req); err != nil {
-		return nil, err
+		return nil, hcerr.Externalize(hclog.FromContext(ctx), err, "invalid pushed artifact request")
 	}
 
 	result := req.Artifact
@@ -28,7 +30,11 @@ func (s *Service) UpsertPushedArtifact(
 		// Get the next id
 		id, err := server.Id()
 		if err != nil {
-			return nil, status.Errorf(codes.Internal, "uuid generation failed: %s", err)
+			return nil, hcerr.Externalize(
+				hclog.FromContext(ctx),
+				status.Errorf(codes.Internal, "uuid generation failed: %s", err),
+				"invalid pushed artifact request",
+			)
 		}
 
 		// Specify the id
@@ -36,7 +42,7 @@ func (s *Service) UpsertPushedArtifact(
 	}
 
 	if err := s.state(ctx).ArtifactPut(!insert, result); err != nil {
-		return nil, err
+		return nil, hcerr.Externalize(hclog.FromContext(ctx), err, "failed to upsert artifact")
 	}
 
 	return &pb.UpsertPushedArtifactResponse{Artifact: result}, nil
@@ -47,7 +53,7 @@ func (s *Service) ListPushedArtifacts(
 	req *pb.ListPushedArtifactsRequest,
 ) (*pb.ListPushedArtifactsResponse, error) {
 	if err := serverptypes.ValidateListPushedArtifactsRequest(req); err != nil {
-		return nil, err
+		return nil, hcerr.Externalize(hclog.FromContext(ctx), err, "invalid list pushed artifact request")
 	}
 
 	result, err := s.state(ctx).ArtifactList(req.Application,
@@ -56,7 +62,11 @@ func (s *Service) ListPushedArtifacts(
 		serverstate.ListWithWorkspace(req.Workspace),
 	)
 	if err != nil {
-		return nil, err
+		return nil, hcerr.Externalize(
+			hclog.FromContext(ctx),
+			err,
+			"failed to list artifacts",
+		)
 	}
 
 	if req.IncludeBuild {
@@ -68,7 +78,13 @@ func (s *Service) ListPushedArtifacts(
 			})
 
 			if err != nil {
-				return nil, err
+				return nil, hcerr.Externalize(
+					hclog.FromContext(ctx),
+					err,
+					"failed to get artifact",
+					"build_id",
+					a.BuildId,
+				)
 			}
 
 			a.Build = b
@@ -84,10 +100,20 @@ func (s *Service) GetLatestPushedArtifact(
 	req *pb.GetLatestPushedArtifactRequest,
 ) (*pb.PushedArtifact, error) {
 	if err := serverptypes.ValidateGetLatestPushedArtifactRequest(req); err != nil {
-		return nil, err
+		return nil, hcerr.Externalize(hclog.FromContext(ctx), err, "invalid get latest pushed artifact request")
 	}
 
-	return s.state(ctx).ArtifactLatest(req.Application, req.Workspace)
+	a, err := s.state(ctx).ArtifactLatest(req.Application, req.Workspace)
+	if err != nil {
+		return nil, hcerr.Externalize(
+			hclog.FromContext(ctx),
+			err,
+			"failed to get latest artifact",
+			"application",
+			req.Application.Application,
+		)
+	}
+	return a, nil
 }
 
 // GetPushedArtifact returns a PushedArtifact based on ID
@@ -96,8 +122,18 @@ func (s *Service) GetPushedArtifact(
 	req *pb.GetPushedArtifactRequest,
 ) (*pb.PushedArtifact, error) {
 	if err := serverptypes.ValidateGetPushedArtifactRequest(req); err != nil {
-		return nil, err
+		return nil, hcerr.Externalize(hclog.FromContext(ctx), err, "invalid get pushed artifact request")
 	}
 
-	return s.state(ctx).ArtifactGet(req.Ref)
+	a, err := s.state(ctx).ArtifactGet(req.Ref)
+	if err != nil {
+		return nil, hcerr.Externalize(
+			hclog.FromContext(ctx),
+			err,
+			"failed to get pushed artifact",
+			"reference",
+			req.Ref,
+		)
+	}
+	return a, nil
 }
