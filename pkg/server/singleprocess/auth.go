@@ -68,16 +68,16 @@ var (
 type userKey struct{}
 
 // UserWithContext inserts the user value u into the context. This can
-// be extracted with userFromContext.
+// be extracted with UserFromContext.
 func UserWithContext(ctx context.Context, u *pb.User) context.Context {
 	return context.WithValue(ctx, userKey{}, u)
 }
 
-// userFromContext returns the authenticated user in the request context.
+// UserFromContext returns the authenticated user in the request context.
 // This will return nil if the user is not authenticated. Note that a user
 // may not be authenticated but the request can still be authenticated
 // using a non-user token type. The safeste way to check is decodedTokenFromContext.
-func (s *Service) userFromContext(ctx context.Context) *pb.User {
+func (s *Service) UserFromContext(ctx context.Context) *pb.User {
 	value, ok := ctx.Value(userKey{}).(*pb.User)
 	if !ok && s.superuser {
 		value = &pb.User{Id: DefaultUserId, Username: DefaultUser}
@@ -446,7 +446,7 @@ func (s *Service) GenerateLoginToken(
 	log := hclog.FromContext(ctx)
 
 	// Get our user, that's what we log in as
-	currentUser := s.userFromContext(ctx)
+	currentUser := s.UserFromContext(ctx)
 
 	// If we have a duration set, set the expiry
 	var dur time.Duration
@@ -606,7 +606,7 @@ func (s *Service) GenerateInviteToken(
 ) (*pb.NewTokenResponse, error) {
 	log := hclog.FromContext(ctx)
 
-	currentUser := s.userFromContext(ctx)
+	currentUser := s.UserFromContext(ctx)
 	if currentUser == nil {
 		return nil, status.Errorf(codes.Unauthenticated, "current user is not authenticated")
 	}
