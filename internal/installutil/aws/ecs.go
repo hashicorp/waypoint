@@ -3,7 +3,6 @@ package aws
 import (
 	"context"
 	"fmt"
-	"strconv"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -18,7 +17,6 @@ import (
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
-	"github.com/hashicorp/waypoint/pkg/serverconfig"
 )
 
 const (
@@ -87,11 +85,14 @@ func (lf *Lifecycle) Execute(log hclog.Logger, ui terminal.UI) error {
 	return nil
 }
 
+// SetupNetworking retrieves subnet information and creates the security group
+// necessary for Waypoint.
 func SetupNetworking(
 	ctx context.Context,
 	ui terminal.UI,
 	sess *session.Session,
 	subnet []string,
+	ports []*int64,
 ) (*NetworkInformation, error) {
 	sg := ui.StepGroup()
 	defer sg.Wait()
@@ -104,14 +105,6 @@ func SetupNetworking(
 	}
 
 	s.Update("Setting up security group...")
-	grpcPort, _ := strconv.Atoi(serverconfig.DefaultGRPCPort)
-	httpPort, _ := strconv.Atoi(serverconfig.DefaultHTTPPort)
-	ports := []*int64{
-		aws.Int64(int64(grpcPort)),
-		aws.Int64(int64(httpPort)),
-		aws.Int64(int64(2049)), // EFS File system port
-	}
-
 	sgID, err := createSG(ctx, s, sess, DefaultSecurityGroupName, vpcID, ports)
 	if err != nil {
 		return nil, err
@@ -141,6 +134,7 @@ func SetupEFS(
 	efsSvc := efs.New(sess)
 	ulid, _ := component.Id()
 
+	// TODO: Use different tags for runner volume
 	fsd, err := efsSvc.CreateFileSystem(&efs.CreateFileSystemInput{
 		CreationToken: aws.String(ulid),
 		Encrypted:     aws.Bool(true),
@@ -377,6 +371,8 @@ func SetupExecutionRole(
 	return roleArn, nil
 }
 
+// subnetInfo returns the subnets and VPC to the caller. If no subnets
+// were provided as input, then the default subnets are returned.
 func subnetInfo(
 	ctx context.Context,
 	s terminal.Step,
@@ -565,6 +561,7 @@ func SetupLogs(
 	return logGroup, nil
 }
 
+// DeleteEcsCommonResources deletes the provided ECS service and task definition
 func DeleteEcsCommonResources(
 	ctx context.Context,
 	sess *session.Session,
