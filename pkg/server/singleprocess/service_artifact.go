@@ -19,7 +19,7 @@ func (s *Service) UpsertPushedArtifact(
 	req *pb.UpsertPushedArtifactRequest,
 ) (*pb.UpsertPushedArtifactResponse, error) {
 	if err := serverptypes.ValidateUpsertPushedArtifactRequest(req); err != nil {
-		return nil, hcerr.Externalize(hclog.FromContext(ctx), err, "invalid pushed artifact request")
+		return nil, err
 	}
 
 	result := req.Artifact
@@ -53,7 +53,7 @@ func (s *Service) ListPushedArtifacts(
 	req *pb.ListPushedArtifactsRequest,
 ) (*pb.ListPushedArtifactsResponse, error) {
 	if err := serverptypes.ValidateListPushedArtifactsRequest(req); err != nil {
-		return nil, hcerr.Externalize(hclog.FromContext(ctx), err, "invalid list pushed artifact request")
+		return nil, err
 	}
 
 	result, err := s.state(ctx).ArtifactList(req.Application,
@@ -100,7 +100,7 @@ func (s *Service) GetLatestPushedArtifact(
 	req *pb.GetLatestPushedArtifactRequest,
 ) (*pb.PushedArtifact, error) {
 	if err := serverptypes.ValidateGetLatestPushedArtifactRequest(req); err != nil {
-		return nil, hcerr.Externalize(hclog.FromContext(ctx), err, "invalid get latest pushed artifact request")
+		return nil, err
 	}
 
 	a, err := s.state(ctx).ArtifactLatest(req.Application, req.Workspace)
@@ -122,7 +122,7 @@ func (s *Service) GetPushedArtifact(
 	req *pb.GetPushedArtifactRequest,
 ) (*pb.PushedArtifact, error) {
 	if err := serverptypes.ValidateGetPushedArtifactRequest(req); err != nil {
-		return nil, hcerr.Externalize(hclog.FromContext(ctx), err, "invalid get pushed artifact request")
+		return nil, err
 	}
 
 	a, err := s.state(ctx).ArtifactGet(req.Ref)
