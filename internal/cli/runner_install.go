@@ -268,6 +268,7 @@ func (c *RunnerInstallCommand) Run(args []string) int {
 		c.ui.Output("Error installing runner: %s", clierrors.Humanize(err),
 			terminal.WithErrorStyle(),
 		)
+		c.ui.Output(runnerInstallFailed, c.platform[0], id, terminal.WithWarningStyle())
 		return 1
 	}
 	s.Update("Runner %q installed successfully to %s", id, platform[0])
@@ -332,5 +333,12 @@ func (c *RunnerInstallCommand) Run(args []string) int {
 var (
 	runnerInstalledButNotYetAdopted = strings.TrimSpace(`The installed runner must be adopted.
 Please run "waypoint runner adopt" before the runner can start accepting jobs.
+`)
+
+	runnerInstallFailed = strings.TrimSpace(`
+Please run the following to clean up the resources from the unsuccessful runner installation,
+specifying additional platform flags as needed:
+
+waypoint runner uninstall -platform=%[1]s -id=%[2]s <additional_platform_flags>
 `)
 )
