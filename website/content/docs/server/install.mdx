@@ -38,17 +38,15 @@ Currently, Waypoint supports running its server on the following platforms:
 
 ### Kubernetes Platform
 
-Installing Waypoint server onto Kubernetes has a couple of options: Using the
-waypoint-helm chart or using `waypoint install`.
-
-The officially supported [hashicorp/waypoint-helm](https://github.com/hashicorp/waypoint-helm)
-chart can be used to deploy Waypoint server directly onto a Kubernetes cluster with Helm charts.
-We recommend reading the README detailed on that project for more information on
-how to get going using Helm and Waypoint.
-
 Installing the Waypoint server to Kubernetes using the `waypoint install` command
-will also use the Waypoint Helm chart behind the scenes for the installation, setting sensible default
-values for the chart values.
+uses the [hashicorp/waypoint-helm](https://github.com/hashicorp/waypoint-helm)
+chart. Waypoint install will set sensible defaults for many of the Helm chart's
+values, while using flags for customization of some values as well.
+
+You may also use the Helm chart directly and install Waypoint using `helm install`.
+We recommend reading the README detailed on the waypoint-helm project for more
+information on how to further customize your Waypoint installation to Kubernetes
+with Helm.
 
 ### Nomad Platform
 
