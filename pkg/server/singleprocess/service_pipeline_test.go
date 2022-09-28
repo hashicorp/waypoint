@@ -1375,63 +1375,32 @@ func TestServicePipeline_Run(t *testing.T) {
 			allJobs = append(allJobs, j)
 		}
 
-		// Loop through all Job Ids returned from RunPipeline and verify that the
-		// order lines up with the expected order of the pipeline for the test.
-		for i, job := range allJobs {
-			switch i {
-			case 0:
-				require.Equal(job.Pipeline.PipelineId, pipeline.Id)
-				require.Equal(job.Pipeline.PipelineName, pipeline.Name)
-
-				require.Equal(job.Pipeline.Step, "root")
-			case 1:
-				require.Equal(job.Pipeline.PipelineId, pipeline.Id)
-				require.Equal(job.Pipeline.PipelineName, pipeline.Name)
-				require.Equal(job.Pipeline.Step, "B")
-			case 2:
-				require.Equal(job.Pipeline.PipelineId, pipeline.Id)
-				require.Equal(job.Pipeline.PipelineName, pipeline.Name)
-				require.Equal(job.Pipeline.Step, "C")
-			case 3:
-				require.Equal(job.Pipeline.PipelineId, embedPipeline.Id)
-				require.Equal(job.Pipeline.PipelineName, embedPipeline.Name)
-
-				require.Equal(job.Pipeline.Step, "first")
-			case 4:
-				require.Equal(job.Pipeline.PipelineId, embedPipeline.Id)
-				require.Equal(job.Pipeline.PipelineName, embedPipeline.Name)
-
-				require.Equal(job.Pipeline.Step, "second")
-			case 5:
-				// Note that this is the "noop" job we use to figure out when a pipeline
-				// has finished running.
-				// The server intentionally treats a pipeline step reference as a noop
-				// job that gets queued as the "final" job of a pipeline.
-				require.Equal(job.Pipeline.PipelineId, pipeline.Id)
-				require.Equal(job.Pipeline.PipelineName, pipeline.Name)
-
-				require.Equal(job.Pipeline.Step, "Embed")
-			case 6:
-				require.Equal(job.Pipeline.PipelineId, embedPipeline.Id)
-				require.Equal(job.Pipeline.PipelineName, embedPipeline.Name)
-
-				require.Equal(job.Pipeline.Step, "one")
-			case 7:
-				require.Equal(job.Pipeline.PipelineId, embedTwoPipeline.Id)
-				require.Equal(job.Pipeline.PipelineName, embedTwoPipeline.Name)
-
-				require.Equal(job.Pipeline.Step, "two")
-			case 8:
-				// Note that this is the "noop" job we use to figure out when a pipeline
-				// has finished running.
-				// The server intentionally treats a pipeline step reference as a noop
-				// job that gets queued as the "final" job of a pipeline.
-				require.Equal(job.Pipeline.PipelineId, pipeline.Id)
-				require.Equal(job.Pipeline.PipelineName, pipeline.Name)
-
-				require.Equal(job.Pipeline.Step, "AnotherEmbed")
+		idx := func(p1, s1 string) int {
+			for i, job := range allJobs {
+				if job.Pipeline.PipelineName == p1 && job.Pipeline.Step == s1 {
+					return i
+				}
 			}
+
+			return -1
 		}
+
+		before := func(p1, s1, p2, s2 string) {
+			a := idx(p1, s1)
+			b := idx(p2, s2)
+
+			require.True(a < b, "expected %s.%s before %s.%s", p1, s1, p2, s2)
+		}
+
+		// Ensure that flattened list of jobs matches expected order for embedded pipelines
+		before("test", "root", "test", "B")
+		before("test", "B", "test", "C")
+		before("test", "C", "test", "Embed")
+		before("embed", "first", "test", "Embed")
+		before("embed", "second", "test", "Embed")
+		before("test", "Embed", "test", "AnotherEmbed")
+		before("twoembed", "one", "test", "AnotherEmbed")
+		before("twoembed", "two", "test", "AnotherEmbed")
 	})
 
 }
