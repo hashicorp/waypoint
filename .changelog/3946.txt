@@ -1,0 +1,7 @@
+
+```release-note:bug
+core: Fix out of order job ids for `waypoint pipeline run` job stream CLI. If the
+right pipeline was constructed, the server would return the job ids out of order
+from what they actually ran in, resulting in the CLI to read the stream out of
+order.
+```
