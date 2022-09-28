@@ -315,6 +315,16 @@ func (c *RunnerInstallCommand) Run(args []string) int {
 			}
 		}
 
+		// if we have no runner profiles, make this one the default
+		profiles, err := client.ListOnDemandRunnerConfigs(ctx, &empty.Empty{})
+		if err != nil {
+			c.ui.Output("Error getting runner profiles: %s", clierrors.Humanize(err))
+			return 1
+		}
+		if len(profiles.Configs) == 0 {
+			odrConfig.Default = true
+		}
+
 		runnerProfile, err := client.UpsertOnDemandRunnerConfig(ctx, &pb.UpsertOnDemandRunnerConfigRequest{Config: odrConfig})
 		if err != nil {
 			c.ui.Output("Error creating runner profile: %s", clierrors.Humanize(err),
