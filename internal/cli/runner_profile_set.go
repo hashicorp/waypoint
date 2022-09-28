@@ -133,7 +133,7 @@ func (c *RunnerProfileSetCommand) Run(args []string) int {
 			c.ui.Output("Both -target-runner-id and -target-runner-any detected, only one can be set at a time. ID takes priority.",
 				terminal.WithWarningStyle())
 		}
-	} else if c.flagTargetRunnerAny != nil && *c.flagTargetRunnerAny {
+	} else if od.TargetRunner == nil || (c.flagTargetRunnerAny != nil && *c.flagTargetRunnerAny) {
 		od.TargetRunner = &pb.Ref_Runner{Target: &pb.Ref_Runner_Any{}}
 	}
 
