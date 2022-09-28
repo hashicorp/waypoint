@@ -16,9 +16,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/efs"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/hashicorp/go-hclog"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
-
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/builtin/aws/utils"
 	"github.com/hashicorp/waypoint/internal/clierrors"
@@ -401,8 +398,8 @@ func (i *ECSRunnerInstaller) Uninstall(ctx context.Context, opts *InstallOpts) e
 					defer cancel()
 					select {
 					case <-ctx.Done():
-						return status.Errorf(codes.DeadlineExceeded, "After 5 minutes, the file system could"+
-							"not be deleted, because the mount targets weren't deleted.", terminal.WithErrorStyle())
+						return errors.New("after 5 minutes, the file system could" +
+							"not be deleted, because the mount targets weren't deleted")
 					default:
 						_, err = efsSvc.DeleteFileSystem(&efs.DeleteFileSystemInput{FileSystemId: fileSystem.FileSystemId})
 						if err != nil {
