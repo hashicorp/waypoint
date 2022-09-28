@@ -9,11 +9,6 @@ import (
 	"strings"
 	"time"
 
-	pb "github.com/hashicorp/waypoint/pkg/server/gen"
-
-	"github.com/hashicorp/waypoint/internal/clierrors"
-	"github.com/hashicorp/waypoint/internal/installutil"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -21,11 +16,16 @@ import (
 	"github.com/aws/aws-sdk-go/service/efs"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/hashicorp/go-hclog"
-	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
+	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/builtin/aws/utils"
+	"github.com/hashicorp/waypoint/internal/clierrors"
+	"github.com/hashicorp/waypoint/internal/installutil"
 	awsinstallutil "github.com/hashicorp/waypoint/internal/installutil/aws"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
+	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	"github.com/hashicorp/waypoint/pkg/serverconfig"
 )
 
@@ -357,6 +357,8 @@ func (i *ECSRunnerInstaller) Uninstall(ctx context.Context, opts *InstallOpts) e
 	}
 	s.Done()
 
+	// TODO: Still attempt to delete the EFS volume if the ECS service
+	// uninstall fails
 	efsSvc := efs.New(sess)
 	fileSystemsResp, err := efsSvc.DescribeFileSystems(&efs.DescribeFileSystemsInput{
 		CreationToken: nil,
@@ -394,14 +396,28 @@ func (i *ECSRunnerInstaller) Uninstall(ctx context.Context, opts *InstallOpts) e
 					}
 				}
 
-				_, err = efsSvc.DeleteFileSystem(&efs.DeleteFileSystemInput{FileSystemId: aws.String("")})
-				if err != nil {
-					return err
+				for {
+					ctx, cancel := context.WithTimeout(ctx, 5*time.Minute)
+					defer cancel()
+					select {
+					case <-ctx.Done():
+						return status.Errorf(codes.DeadlineExceeded, "After 5 minutes, the file system could"+
+							"not be deleted, because the mount targets weren't deleted.", terminal.WithErrorStyle())
+					default:
+						_, err = efsSvc.DeleteFileSystem(&efs.DeleteFileSystemInput{FileSystemId: fileSystem.FileSystemId})
+						if err != nil {
+							if strings.Contains(err.Error(), "because it has mount targets") {
+								continue
+							}
+							return err
+						}
+						// if we reach this point, we're done
+						return nil
+					}
 				}
 			}
 		}
 	}
-
 	return nil
 }
 
