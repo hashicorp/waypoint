@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+package apprunner;
+
+option go_package = "waypoint/builtin/aws/apprunner";
+
+
+message Deployment {
+  // Identifier for the deployment, required by Waypoint
+  string id = 1;
+
+  // The AWS region the App Runner service is deployed to
+  // This is limited to us-east-1, us-east-2, us-west-2, ap-northest-1, eu-west-1
+  // - see https://docs.aws.amazon.com/general/latest/gr/apprunner.html
+  string region = 2;
+
+  // A name for the App Runner service. It must be unique across
+  // all the running App Runner services in your Amazon Web Services account in the Amazon Web Services Region.
+  string service_name = 3;
+
+  // The ARN for the App Runner service
+  string service_arn = 4;
+
+  // The default domain provided by App Runner
+  string service_url = 5;
+
+  // The current state of the App Runner service.
+  string status = 6;
+}

@@ -10,6 +10,7 @@ import (
 
 	"github.com/hashicorp/waypoint/builtin/aws/alb"
 	"github.com/hashicorp/waypoint/builtin/aws/ami"
+	awsapprunner "github.com/hashicorp/waypoint/builtin/aws/apprunner"
 	"github.com/hashicorp/waypoint/builtin/aws/ec2"
 	"github.com/hashicorp/waypoint/builtin/aws/ecr"
 	awsecrpull "github.com/hashicorp/waypoint/builtin/aws/ecr/pull"
@@ -56,6 +57,7 @@ var (
 		"nomad":                    nomad.Options,
 		"nomad-jobspec":            jobspec.Options,
 		"nomad-jobspec-canary":     canary.Options,
+		"aws-apprunner":            awsapprunner.Options,
 		"aws-ami":                  ami.Options,
 		"aws-ec2":                  ec2.Options,
 		"aws-alb":                  alb.Options,
