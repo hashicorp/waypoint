@@ -25,13 +25,14 @@ type RunnerProfileSetCommand struct {
 	*baseCommand
 	//TODO(XX): after `-env-vars` as a slice is deprecated, rename flagEnvVar to flagEnvVars
 	flagName               string
-	flagOCIUrl             string
+	flagOCIUrl             *string
 	flagEnvVar             map[string]string
 	flagEnvVars            []string
-	flagPluginType         string
+	flagPluginType         *string
 	flagPluginConfig       string
 	flagDefault            *bool
-	flagTargetRunnerId     string
+	flagTargetRunnerAny    *bool
+	flagTargetRunnerId     *string
 	flagTargetRunnerLabels map[string]string
 }
 
@@ -104,13 +105,17 @@ func (c *RunnerProfileSetCommand) Run(args []string) int {
 	}
 
 	// Set target runner for profile
-	if c.flagTargetRunnerId != "" {
+	if c.flagTargetRunnerId != nil {
 		od.TargetRunner = &pb.Ref_Runner{
 			Target: &pb.Ref_Runner_Id{
 				Id: &pb.Ref_RunnerId{
-					Id: c.flagTargetRunnerId,
+					Id: *c.flagTargetRunnerId,
 				},
 			},
+		}
+		if c.flagTargetRunnerAny != nil {
+			c.ui.Output("Both -target-runner-id and -target-runner-any detected, only one can be set at a time. ID takes priority.",
+				terminal.WithWarningStyle())
 		}
 		if c.flagTargetRunnerLabels != nil {
 			c.ui.Output("Both -target-runner-id and -target-runner-label detected, only one can be set at a time. ID takes priority.",
@@ -124,7 +129,11 @@ func (c *RunnerProfileSetCommand) Run(args []string) int {
 				},
 			},
 		}
-	} else {
+		if c.flagTargetRunnerAny != nil {
+			c.ui.Output("Both -target-runner-id and -target-runner-any detected, only one can be set at a time. ID takes priority.",
+				terminal.WithWarningStyle())
+		}
+	} else if c.flagTargetRunnerAny != nil && *c.flagTargetRunnerAny {
 		od.TargetRunner = &pb.Ref_Runner{Target: &pb.Ref_Runner_Any{}}
 	}
 
@@ -189,8 +198,13 @@ func (c *RunnerProfileSetCommand) Run(args []string) int {
 		}
 	}
 
-	od.OciUrl = c.flagOCIUrl
-	od.EnvironmentVariables = map[string]string{}
+	if od.OciUrl == "" {
+		od.OciUrl = installutil.DefaultODRImage
+	}
+	if c.flagOCIUrl != nil {
+		od.OciUrl = *c.flagOCIUrl
+	}
+
 	if c.flagDefault != nil {
 		od.Default = *c.flagDefault
 	}
@@ -198,7 +212,7 @@ func (c *RunnerProfileSetCommand) Run(args []string) int {
 	if c.flagEnvVars != nil {
 		//TODO(XX): Deprecate -env-vars and this logic
 		c.ui.Output(
-			"Flag '-env-vars' is deprecated, please use flag `-env-var=k=v`",
+			"Flag '-env-vars' is deprecated, please use flag '-env-var=k=v'",
 			terminal.WithWarningStyle(),
 		)
 		for _, kv := range c.flagEnvVars {
@@ -207,20 +221,29 @@ func (c *RunnerProfileSetCommand) Run(args []string) int {
 				od.EnvironmentVariables[kv[:idx]] = kv[idx+1:]
 			}
 		}
-	} else {
-		od.EnvironmentVariables = c.flagEnvVar
 	}
 
-	if c.flagPluginType == "" {
-		c.ui.Output(
-			"Flag '-plugin-type' must be set to a valid plugin type like 'docker' or 'kubernetes'.\n\n%s",
-			c.Help(),
-			terminal.WithErrorStyle(),
-		)
-		return 1
+	if c.flagEnvVar != nil {
+		for k, v := range c.flagEnvVar {
+			if v == "" {
+				delete(od.EnvironmentVariables, k)
+			} else {
+				od.EnvironmentVariables[k] = v
+			}
+		}
 	}
 
-	od.PluginType = c.flagPluginType
+	if c.flagPluginType != nil || od.PluginType == "" {
+		if *c.flagPluginType == "" {
+			c.ui.Output(
+				"Flag '-plugin-type' must be set to a valid plugin type like 'docker' or 'kubernetes'.\n\n%s",
+				c.Help(),
+				terminal.WithErrorStyle(),
+			)
+			return 1
+		}
+		od.PluginType = *c.flagPluginType
+	}
 
 	// Upsert
 	_, err := c.project.Client().UpsertOnDemandRunnerConfig(ctx, &pb.UpsertOnDemandRunnerConfigRequest{
@@ -255,7 +278,7 @@ func (c *RunnerProfileSetCommand) Flags() *flag.Sets {
 			Usage:   "The name of an existing runner profile to update.",
 		})
 
-		f.StringVar(&flag.StringVar{
+		f.StringPtrVar(&flag.StringPtrVar{
 			Name:    "oci-url",
 			Target:  &c.flagOCIUrl,
 			Default: installutil.DefaultODRImage,
@@ -276,11 +299,10 @@ func (c *RunnerProfileSetCommand) Flags() *flag.Sets {
 			Usage:  "DEPRECATED. Please see `-env-var`.",
 		})
 
-		f.StringVar(&flag.StringVar{
-			Name:    "plugin-type",
-			Target:  &c.flagPluginType,
-			Default: "",
-			Usage:   "The type of the plugin to launch for the on-demand runner, such as aws-ecs, kubernetes, etc.",
+		f.StringPtrVar(&flag.StringPtrVar{
+			Name:   "plugin-type",
+			Target: &c.flagPluginType,
+			Usage:  "The type of the plugin to launch for the on-demand runner, such as aws-ecs, kubernetes, etc.",
 		})
 
 		f.StringVar(&flag.StringVar{
@@ -299,11 +321,10 @@ func (c *RunnerProfileSetCommand) Flags() *flag.Sets {
 				"otherwise specify its own remote runner.",
 		})
 
-		f.StringVar(&flag.StringVar{
-			Name:    "target-runner-id",
-			Target:  &c.flagTargetRunnerId,
-			Default: "",
-			Usage:   "ID of the runner to target for this remote runner profile.",
+		f.StringPtrVar(&flag.StringPtrVar{
+			Name:   "target-runner-id",
+			Target: &c.flagTargetRunnerId,
+			Usage:  "ID of the runner to target for this remote runner profile.",
 		})
 
 		f.StringMapVar(&flag.StringMapVar{
@@ -311,6 +332,12 @@ func (c *RunnerProfileSetCommand) Flags() *flag.Sets {
 			Target: &c.flagTargetRunnerLabels,
 			Usage: "Labels on the runner to target for this remote runner profile. " +
 				"e.g. `-target-runner-label=k=v`. Can be specified multiple times.",
+		})
+
+		f.BoolPtrVar(&flag.BoolPtrVar{
+			Name:   "target-runner-any",
+			Target: &c.flagTargetRunnerAny,
+			Usage:  "Set profile to target any available runner.",
 		})
 	})
 }
