@@ -174,7 +174,13 @@ func (i *ECSInstaller) Install(
 				return err
 			}
 
-			if efsInfo, err = awsinstallutil.SetupEFS(ctx, ui, sess, netInfo); err != nil {
+			efsTags := []*efs.Tag{
+				{
+					Key:   aws.String(defaultServerTagName),
+					Value: aws.String(defaultServerTagValue),
+				},
+			}
+			if efsInfo, err = awsinstallutil.SetupEFS(ctx, ui, sess, netInfo, efsTags); err != nil {
 				return err
 			}
 

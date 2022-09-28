@@ -124,6 +124,7 @@ func SetupEFS(
 	ui terminal.UI,
 	sess *session.Session,
 	netInfo *NetworkInformation,
+	efsTags []*efs.Tag,
 ) (*EfsInformation, error) {
 	sg := ui.StepGroup()
 	defer sg.Wait()
@@ -134,16 +135,10 @@ func SetupEFS(
 	efsSvc := efs.New(sess)
 	ulid, _ := component.Id()
 
-	// TODO: Use different tags for runner volume
 	fsd, err := efsSvc.CreateFileSystem(&efs.CreateFileSystemInput{
 		CreationToken: aws.String(ulid),
 		Encrypted:     aws.Bool(true),
-		Tags: []*efs.Tag{
-			{
-				Key:   aws.String(defaultServerTagName),
-				Value: aws.String(defaultServerTagValue),
-			},
-		},
+		Tags:          efsTags,
 	})
 	if err != nil {
 		return nil, err
@@ -198,6 +193,7 @@ EFSLOOP:
 	s.Update("Creating EFS Access Point...")
 	uid := aws.Int64(int64(100))
 	gid := aws.Int64(int64(1000))
+	// TODO: Change path to not always include "server"
 	accessPoint, err := efsSvc.CreateAccessPoint(&efs.CreateAccessPointInput{
 		FileSystemId: fsd.FileSystemId,
 		PosixUser: &efs.PosixUser{
@@ -292,6 +288,7 @@ func CreateService(serviceInput *ecs.CreateServiceInput, ecsSvc *ecs.ECS) (*ecs.
 }
 
 // TODO: Add runner ID as tag
+// SetupExecutionRole
 func SetupExecutionRole(
 	ctx context.Context,
 	ui terminal.UI,

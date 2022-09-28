@@ -170,7 +170,17 @@ func (i *ECSRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) err
 			}
 			i.netInfo = netInfo
 
-			if efsInfo, err = awsinstallutil.SetupEFS(ctx, ui, sess, netInfo); err != nil {
+			efsTags := []*efs.Tag{
+				{
+					Key:   aws.String(DefaultRunnerTagName),
+					Value: aws.String(defaultRunnerTagValue),
+				},
+				{
+					Key:   aws.String("runner-id"),
+					Value: aws.String(opts.Id),
+				},
+			}
+			if efsInfo, err = awsinstallutil.SetupEFS(ctx, ui, sess, netInfo, efsTags); err != nil {
 				return err
 			}
 
@@ -360,9 +370,7 @@ func (i *ECSRunnerInstaller) Uninstall(ctx context.Context, opts *InstallOpts) e
 	for _, fileSystem := range fileSystemsResp.FileSystems {
 		// Check if tags match ID, if so then delete things
 		for _, tag := range fileSystem.Tags {
-			// TODO: add a key/value pair to the file system with the
-			// runner ID during install
-			if *tag.Key == "" && *tag.Value == opts.Id {
+			if *tag.Key == "runner-id" && *tag.Value == opts.Id {
 				describeAccessPointsResp, err := efsSvc.DescribeAccessPoints(&efs.DescribeAccessPointsInput{
 					FileSystemId: fileSystem.FileSystemId,
 				})
