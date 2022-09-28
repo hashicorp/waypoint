@@ -108,6 +108,19 @@ func (s *Service) EntrypointConfig(
 			}
 		}
 
+		// Refresh the application record in case it's been deleted
+		_, err = s.state(ctx).AppGet(deployment.Application)
+		if err != nil {
+			log.Warn("detecting application has been removing in entrypoint",
+				"project", deployment.Application.Project,
+				"application", deployment.Application.Application,
+				"lookup-error", err,
+			)
+
+			log.Warn("exitting EntrypointConfig because project was deleted")
+			return status.Error(codes.Unavailable, "project has been deleted")
+		}
+
 		// Build our config
 		config := &pb.EntrypointConfig{}
 		for _, exec := range execs {
