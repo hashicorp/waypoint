@@ -18,6 +18,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/ecs"
+	"github.com/aws/aws-sdk-go/service/efs"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
@@ -160,7 +161,11 @@ func (i *ECSRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) err
 				return err
 			}
 
-			if netInfo, err = awsinstallutil.SetupNetworking(ctx, ui, sess, i.Config.Subnets); err != nil {
+			// TODO: Add a port here if the user specified the -liveness-tcp-addr flag
+			// after `--` on the runner install CLI - currently without this, there
+			// is no way to use that flag effectively, since the SG won't allow traffic
+			// to the port of the -liveness-tcp-addr flag
+			if netInfo, err = awsinstallutil.SetupNetworking(ctx, ui, sess, i.Config.Subnets, []*int64{aws.Int64(int64(2049))}); err != nil {
 				return err
 			}
 			i.netInfo = netInfo
@@ -275,6 +280,9 @@ func (i *ECSRunnerInstaller) InstallFlags(set *flag.Set) {
 	})
 }
 
+// Uninstall deletes the waypoint-runner service from AWS ECS, and its
+// associated volume from EFS. The log group, execution role, subnets,
+// and ECS cluster are not deleted.
 func (i *ECSRunnerInstaller) Uninstall(ctx context.Context, opts *InstallOpts) error {
 	ui := opts.UI
 	log := opts.Log
@@ -330,7 +338,7 @@ func (i *ECSRunnerInstaller) Uninstall(ctx context.Context, opts *InstallOpts) e
 			Services: []*string{service.ServiceArn},
 		})
 		if err != nil {
-			log.Debug("error waint for runner to deactivate: %s", err)
+			log.Debug("error waiting for runner to deactivate: %s", err)
 			ui.Output("Error waiting for Runner service to deactivate: %s", clierrors.Humanize(err), terminal.WithErrorStyle())
 			return err
 		}
@@ -338,6 +346,54 @@ func (i *ECSRunnerInstaller) Uninstall(ctx context.Context, opts *InstallOpts) e
 		s.Update("Runner uninstalled")
 	}
 	s.Done()
+
+	efsSvc := efs.New(sess)
+	fileSystemsResp, err := efsSvc.DescribeFileSystems(&efs.DescribeFileSystemsInput{
+		CreationToken: nil,
+		FileSystemId:  nil,
+		Marker:        nil,
+		MaxItems:      nil,
+	})
+	if err != nil {
+		return err
+	}
+	for _, fileSystem := range fileSystemsResp.FileSystems {
+		// Check if tags match ID, if so then delete things
+		for _, tag := range fileSystem.Tags {
+			// TODO: add a key/value pair to the file system with the
+			// runner ID during install
+			if *tag.Key == "" && *tag.Value == opts.Id {
+				describeAccessPointsResp, err := efsSvc.DescribeAccessPoints(&efs.DescribeAccessPointsInput{
+					FileSystemId: fileSystem.FileSystemId,
+				})
+				if err != nil {
+					return err
+				}
+				for _, accessPoint := range describeAccessPointsResp.AccessPoints {
+					_, err = efsSvc.DeleteAccessPoint(&efs.DeleteAccessPointInput{AccessPointId: accessPoint.AccessPointId})
+					if err != nil {
+						return err
+					}
+				}
+
+				describeMountTargetsResp, err := efsSvc.DescribeMountTargets(&efs.DescribeMountTargetsInput{
+					FileSystemId: fileSystem.FileSystemId,
+				})
+				for _, mountTarget := range describeMountTargetsResp.MountTargets {
+					_, err = efsSvc.DeleteMountTarget(&efs.DeleteMountTargetInput{MountTargetId: mountTarget.MountTargetId})
+					if err != nil {
+						return err
+					}
+				}
+
+				_, err = efsSvc.DeleteFileSystem(&efs.DeleteFileSystemInput{FileSystemId: aws.String("")})
+				if err != nil {
+					return err
+				}
+			}
+		}
+	}
+
 	return nil
 }
 
@@ -605,6 +661,7 @@ func buildLoggingOptions(
 	return result
 }
 
+// setupTaskRole creates an IAM task role for launching on-demand runners
 func (i *ECSRunnerInstaller) setupTaskRole(
 	ctx context.Context,
 	ui terminal.UI,

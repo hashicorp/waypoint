@@ -158,7 +158,14 @@ func (i *ECSInstaller) Install(
 				return err
 			}
 
-			if netInfo, err = awsinstallutil.SetupNetworking(ctx, ui, sess, i.config.Subnets); err != nil {
+			grpcPort, _ := strconv.Atoi(serverconfig.DefaultGRPCPort)
+			httpPort, _ := strconv.Atoi(serverconfig.DefaultHTTPPort)
+			ports := []*int64{
+				aws.Int64(int64(grpcPort)),
+				aws.Int64(int64(httpPort)), // TODO: Not needed for runner install
+				aws.Int64(int64(2049)),     // EFS File system port
+			}
+			if netInfo, err = awsinstallutil.SetupNetworking(ctx, ui, sess, i.config.Subnets, ports); err != nil {
 				return err
 			}
 			i.netInfo = netInfo
