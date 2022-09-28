@@ -33,7 +33,7 @@ func (s *Service) UpsertPushedArtifact(
 			return nil, hcerr.Externalize(
 				hclog.FromContext(ctx),
 				status.Errorf(codes.Internal, "uuid generation failed: %s", err),
-				"invalid pushed artifact request",
+				"failed to generate a uuid while upserting a pushed artifact",
 			)
 		}
 
