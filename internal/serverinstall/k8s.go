@@ -212,6 +212,7 @@ func (i *K8sInstaller) Install(
 			"image": map[string]interface{}{
 				"repository": imageRef.Repository(),
 				"tag":        imageRef.Tag(),
+				"pullPolicy": i.Config.ImagePullPolicy,
 			},
 			"resources": map[string]interface{}{
 				"requests": map[string]interface{}{
@@ -729,6 +730,7 @@ func (i *K8sInstaller) InstallRunner(
 			MemRequest:           i.Config.MemRequest,
 			CreateServiceAccount: true,
 			OdrImage:             i.Config.OdrImage,
+			ImagePullPolicy:      i.Config.ImagePullPolicy,
 		},
 	}
 	// parachute in case we remove the flag defaults one day
