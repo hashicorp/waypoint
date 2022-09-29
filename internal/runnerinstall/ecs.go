@@ -5,10 +5,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	"strconv"
 	"strings"
 	"time"
+
+	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 
 	"github.com/hashicorp/waypoint/internal/clierrors"
 	"github.com/hashicorp/waypoint/internal/installutil"
@@ -20,6 +21,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
+
 	"github.com/hashicorp/waypoint/builtin/aws/utils"
 	awsinstallutil "github.com/hashicorp/waypoint/internal/installutil/aws"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
@@ -729,7 +731,7 @@ func (i *ECSRunnerInstaller) OnDemandRunnerConfig() *pb.OnDemandRunnerConfig {
 
 	return &pb.OnDemandRunnerConfig{
 		Name:         "ecs",
-		OciUrl:       i.Config.RunnerImage,
+		OciUrl:       installutil.DefaultODRImage,
 		PluginType:   "aws-ecs",
 		Default:      false,
 		PluginConfig: cfgJson,

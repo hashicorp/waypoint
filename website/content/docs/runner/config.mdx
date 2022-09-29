@@ -20,27 +20,62 @@ You can set environment variables using [`waypoint config`](/commands/config-set
 with the `-runner` flag:
 
 ```shell-session
-$ waypoint config set -runner AWS_ACCESS_KEY_ID=abcd AWS_SECRET_ACCESS_KEY=1234
+$ waypoint config set -runner -scope=global AWS_ACCESS_KEY_ID=abcd AWS_SECRET_ACCESS_KEY=1234
 ```
 
 This will expose these environment variables on every runner (including
-the CLI when it runs operations locally). To unset any variables, assign it to
+a CLI runner when an operation runs locally). To unset any variables, assign it to
 an empty value. You may view the set of runner configuration values using
 `waypoint config get`:
 
 ```shell-session
 $ waypoint config get -runner
+   SCOPE  |    NAME               | VALUE | WORKSPACE | LABELS
+----------+-----------------------+-------+-----------+---------
+  global  | AWS_ACCESS_KEY_ID     | abcd  |           |
+  global  | AWS_SECRET_ACCESS_KEY | 1234  |           |
 ```
 
-~> **Security note:** These configuration values are stored as plaintext in the
-Waypoint server. If you do not want to store any secrets on the Waypoint server,
-you must set the environment variables manually when
+~> **Security note:** HCP Waypoint stores these values encrypted within its backend
+using HashiCorp Vault. If that's unsatisfactory, you can set the environment variables
+manually when [manually running the runner](/docs/runner/run-manual).
+
+~> **Security note:** On a self hosted Waypoint server, these configuration values are
+stored as plaintext in the Waypoint server data file. If you do not want to store any
+secrets on the Waypoint server, you must set the environment variables manually when
 [manually running the runner](/docs/runner/run-manual).
 
 You can use the `-scope` flag paired with flags such as `-project`,
 `-label-scope`, and `-workspace-scope` to set runner variables that are only
-available within certain scoped situations. Variables are otherwise server
-global by default.
+available within certain scoped situations. Unscoped variables are globally sent to
+all runners.
+
+Consider an example where you're using a `dev` and a `prod` workspace in Waypoint.
+These workspaces match up to your `dev` and `prod` environments.
+For this example, let's assume that you use Nomad (with an ACL-enabled cluster), and
+your `dev` and `prod` environments are separated into different namespaces by the name names. These two different workspaces need to be configured by Waypoint to deploy
+to the proper environments in Nomad.
+To accomplish this, you would set your runner config to use workspace-scoped
+config: a Nomad token with permissions to submit jobs to the `dev` namespace
+is used for the `dev` Waypoint workspace, and another token with permissions to
+submit jobs to the `prod` namespace for the `prod` Waypoint workspace. Here's what
+that could look like:
+
+```shell-session
+$ waypoint config set -runner -workspace-scope=dev NOMAD_TOKEN=abc123
+
+$ waypoint config set -runner -workspace-scope=prod NOMAD_TOKEN=def456
+
+$ waypoint config get -runner
+   SCOPE  |    NAME     |                VALUE                 | WORKSPACE | LABELS
+----------+-------------+--------------------------------------+-----------+---------
+  project | NOMAD_TOKEN | abc123                               | dev       |
+  project | NOMAD_TOKEN | def456                               | prod      |
+
+```
+
+With configurations set in this way, operations executed in a given workspace will
+use the `NOMAD_TOKEN` configured for the corresponding environment automatically.
 
 ### Via the `waypoint.hcl` File
 
@@ -66,9 +101,9 @@ the `waypoint.hcl` file.
 
 ## Files
 
-Using the `waypoint.hcl` file, you can configure files to be available
-within runners for that project or application. You cannot configure files
-to be available globally to the server. This behaves similarly to
+Using the `waypoint.hcl` file, you can configure data to be stored in files
+that are available to runners when running operations for that project or application.
+You cannot configure files to be available globally to the server. This behaves similarly to
 [application configuration files](/docs/app-config/files).
 
 ```hcl
@@ -85,7 +120,8 @@ config {
 
 -> **Note:** The user that is running the runner must have permission to
 write to the given file paths. File paths are not cleaned up after the
-runner operation completes since we assume single-use runners.
+runner operation completes as this feature presume On-demand runners are in use, as
+they are the most common production deployment setup.
 
 ## Dynamic Values
 

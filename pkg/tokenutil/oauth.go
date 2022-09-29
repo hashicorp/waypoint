@@ -12,7 +12,7 @@ import (
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 )
 
-func SetupExternalCreds(ctx context.Context, log hclog.Logger, token, aud string) (credentials.PerRPCCredentials, error) {
+func SetupExternalCreds(ctx context.Context, log hclog.Logger, token string) (credentials.PerRPCCredentials, error) {
 	transport, _, err := TokenDecode(token)
 	if err != nil {
 		return nil, err
@@ -24,7 +24,7 @@ func SetupExternalCreds(ctx context.Context, log hclog.Logger, token, aud string
 				ClientID:       oc.OauthCreds.ClientId,
 				ClientSecret:   oc.OauthCreds.ClientSecret,
 				TokenURL:       oc.OauthCreds.Url,
-				EndpointParams: url.Values{"audience": {aud}},
+				EndpointParams: url.Values{"audience": {"https://api.hashicorp.cloud"}},
 			}
 
 			oauthToken, err := conf.Token(ctx)

@@ -13,14 +13,14 @@ The `registry` stanza configures the result of a build to be pushed
 to a registry such as a Docker Registry, Amazon ECR, Artifactory, etc. A registry
 is used to make the result of a build available to the deployment platform.
 
-A `registry` is required when using a [remote runner](/docs/runner#remote-runner)
-with GitOps. The remote runner will build your image and push the artifact to
-this registery.
+A `registry` is required unless using the Docker build plugin via a [CLI
+runner](/docs/runner#cli-runner). This is not the common case, and thusly almost
+always a `registry` stanza should be used.
 
-For local Waypoint runs, registries are **optional.** Please see the documentation on the
+Please see the documentation on the
 [registry phase of the Waypoint lifecycle](/docs/lifecycle/build#registry)
-for examples of when a registry is necessary and the behavior of Waypoint
-without a registry specified.
+for examples of when a registry is necessary and the behavior of Waypoint without a
+registry specified.
 
 ```hcl
 app "frontend" {

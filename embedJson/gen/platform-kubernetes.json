@@ -265,7 +265,7 @@
          "Field": "scratch_path",
          "Type": "list of string",
          "Synopsis": "a path for the service to store temporary data",
-         "Summary": "a path to a directory that will be created for the service to store temporary data using tmpfs",
+         "Summary": "a path to a directory that will be created for the service to store temporary data using EmptyDir.",
          "Optional": true,
          "Default": "",
          "EnvVar": "",

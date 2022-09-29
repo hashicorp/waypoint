@@ -104,5 +104,12 @@ Usage: waypoint config source-set [options]
   "-config" values. Please see the documentation for the config source type
   you're configuring for details on what configuration fields are available.
 
+  This command overrides all configuration already set for a configuration
+  source plugin. When modifying an existing configuration, all desired
+  "-config" flags will need to be set each time the command is ran.
+
+  Configuration for this command is global. The "-app", "-project", and
+  "-workspace" flags are ignored on this command.
+
 ` + c.Flags().Help())
 }

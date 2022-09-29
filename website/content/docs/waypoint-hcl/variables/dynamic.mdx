@@ -14,8 +14,8 @@ sourced using the
 set as a default value for an
 [input variable](/docs/waypoint-hcl/variables/input).
 
--> **Requirements:** External data fetching only works for jobs that run
-on [remote runners](/docs/extending-waypoint). You can still operate locally
+-> **Requirements:** External data fetching does not works in jobs that run
+on [CLI runners](/docs/extending-waypoint). You can still operate locally
 on waypoint.hcl files that fetch external data, but all the variables that fetch
 external values must be manually overridden.
 

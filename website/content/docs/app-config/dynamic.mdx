@@ -28,11 +28,14 @@ not thoroughly explain the config setting CLI or `waypoint.hcl` stanzas.
 The following is a list of currently available configuration sources
 and their associated documentation:
 
-- [Kubernetes](/plugins/kubernetes#kubernetes-configsourcer) - Read values from ConfigMaps and Secrets.
+- [Terraform Cloud](/plugins/terraform-cloud#terraform-cloud-configsourcer) -
+  Read Terraform state outputs from Terraform Cloud.
+- [Kubernetes](/plugins/kubernetes#kubernetes-configsourcer) - Read values from
+  ConfigMaps and Secrets.
 - [Vault](/plugins/vault#vault-configsourcer) - Read values from Vault secrets,
   including dynamic secrets such as database credentials.
-- [Terraform Cloud](/plugins/terraform-cloud#vault-configsourcer) - Read outputs
-  directly from Workspaces on [Terraform Cloud](https://app.terraform.io).
+- [AWS SSM](/plugins/aws-ssm#aws-ssm-configsourcer) - Read configuration values
+  from AWS SSM Parameter Store.
 
 -> **Custom configuration source plugins are coming soon.** Currently it's overly
 difficult to get configuration source plugins into a place that they can be execute.
@@ -92,7 +95,7 @@ settings around how to authenticate. Without setting these, Vault configurations
 in applications will not work. These _source settings_ are set at the server
 level and used by all `dynamic` calls.
 
-To set configuration source settings, the `waypoint config source-set` CLI command is used:
+To set configuration source settings, the [`waypoint config source-set`](/commands/config-source-set) CLI command is used:
 
 ```shell-session
 $ waypoint config source-set -type=vault -config="auth=aws"
@@ -103,16 +106,20 @@ are alongside their parameters in the plugin documentation.
 
 ### Deleting Configuration Source Settings
 
-To unset the configuration specify the `-delete` flag.
+To unset the configuration after it has been set with `waypoint config source-set`, specify the `-delete` flag.
+
+```shell-session
+$ waypoint config source-set -type=vault -delete
+```
 
 ## Debugging Dynamic Configuration
 
 If a configuration value is not available (the environment variable is not
 set or the value is not what you expect), then the best debugging tool
-is `waypoint logs`. The logs command will show entrypoint logs where
+is [`waypoint logs`](/commands/logs). The logs command will show entrypoint logs where
 you will see any errors related to configuration syncing.
 
-The `waypoint logs` output below is from an application deployed with
+The [`waypoint logs`](/commands/logs) output below is from an application deployed with
 Waypoint using Kubernetes ConfigMaps but deployed within a Nomad cluster. The
 lines have been purposely shortened slightly to improve readability on the
 website.
@@ -141,7 +148,7 @@ doing a full redeploy.
 
 If you don't see any errors in the log, it may be possible the envirnment
 variables are set correctly. To verify that environment variables are
-set, open a shell with `waypoint exec` and run `env`. This command will
+set, open a shell with [`waypoint exec`](/commands/exec) and run `env`. This command will
 list the environment variables that are available to your application.
 
 ```shell-session

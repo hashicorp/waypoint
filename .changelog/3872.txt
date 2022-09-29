@@ -1,0 +1,3 @@
+```release-note:improvement
+core: improve runner job stream error logging
+```

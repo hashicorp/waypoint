@@ -1,0 +1,8 @@
+```release-note:bug
+plugin/nomad: Update Nomad task launcher plugin to respect namespace and region
+configs in runner profile
+```
+```release-note:bug
+plugin/nomad-jobspec: Update Nomad jobspec status check to not report partial
+health for deployments with canaries
+```

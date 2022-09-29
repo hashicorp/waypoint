@@ -8,6 +8,7 @@ import (
 	empty "google.golang.org/protobuf/types/known/emptypb"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
+
 	"github.com/hashicorp/waypoint/internal/clierrors"
 	"github.com/hashicorp/waypoint/internal/installutil"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
@@ -66,7 +67,7 @@ func (c *RunnerInstallCommand) Flags() *flag.Sets {
 		f.StringVar(&flag.StringVar{
 			Name:    "odr-image",
 			Usage:   "Docker image for the on-demand runners.",
-			Default: installutil.DefaultRunnerImage,
+			Default: installutil.DefaultODRImage,
 			Target:  &c.runnerProfileOdrImage,
 		})
 
@@ -288,6 +289,7 @@ func (c *RunnerInstallCommand) Run(args []string) int {
 		if odc, ok := p.(installutil.OnDemandRunnerConfigProvider); ok {
 			odrConfig = odc.OnDemandRunnerConfig()
 			odrConfig.Name = odrConfig.Name + "-" + strings.ToUpper(id)
+			odrConfig.OciUrl = c.runnerProfileOdrImage // Use what we got from flags (or the default)
 		} else {
 			odrConfig = &pb.OnDemandRunnerConfig{
 				Name:       platform[0] + "-" + strings.ToUpper(id),
@@ -311,6 +313,16 @@ func (c *RunnerInstallCommand) Run(args []string) int {
 					},
 				},
 			}
+		}
+
+		// if we have no runner profiles, make this one the default
+		profiles, err := client.ListOnDemandRunnerConfigs(ctx, &empty.Empty{})
+		if err != nil {
+			c.ui.Output("Error getting runner profiles: %s", clierrors.Humanize(err))
+			return 1
+		}
+		if len(profiles.Configs) == 0 {
+			odrConfig.Default = true
 		}
 
 		runnerProfile, err := client.UpsertOnDemandRunnerConfig(ctx, &pb.UpsertOnDemandRunnerConfigRequest{Config: odrConfig})

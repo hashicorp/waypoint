@@ -274,6 +274,9 @@ func TestTaskCancel(t *testing.T, factory Factory, restartF RestartFactory) {
 			Id: "j_test",
 		})))
 		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
+			Id: "watch_job",
+		})))
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
 			Id: "stop_job",
 		})))
 
@@ -281,6 +284,7 @@ func TestTaskCancel(t *testing.T, factory Factory, restartF RestartFactory) {
 			Id:       "t_test",
 			TaskJob:  &pb.Ref_Job{Id: "j_test"},
 			StartJob: &pb.Ref_Job{Id: "start_job"},
+			WatchJob: &pb.Ref_Job{Id: "watch_job"},
 			StopJob:  &pb.Ref_Job{Id: "stop_job"},
 		})
 		require.NoError(err)
@@ -307,6 +311,12 @@ func TestTaskCancel(t *testing.T, factory Factory, restartF RestartFactory) {
 		require.NotEmpty(job.CancelTime)
 
 		job, err = s.JobById("j_test", nil)
+		require.NoError(err)
+		require.Equal(pb.Job_ERROR, job.Job.State)
+		require.NotNil(job.Job.Error)
+		require.NotEmpty(job.CancelTime)
+
+		job, err = s.JobById("watch_job", nil)
 		require.NoError(err)
 		require.Equal(pb.Job_ERROR, job.Job.State)
 		require.NotNil(job.Job.Error)

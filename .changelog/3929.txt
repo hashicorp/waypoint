@@ -1,0 +1,3 @@
+```release-note:bug
+ui: don’t crash when encountering resources without IDs
+```

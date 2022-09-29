@@ -1077,6 +1077,330 @@ func TestServicePipeline_Run(t *testing.T) {
 		require.Nil(resp)
 	})
 
+	t.Run("returns job ids in expected order for a single pipeline", func(t *testing.T) {
+		require := require.New(t)
+		ctx := context.Background()
+
+		// Create our server
+		impl, err := New(WithDB(testDB(t)))
+		require.NoError(err)
+		client := server.TestServer(t, impl)
+
+		// Initialize our app
+		TestApp(t, client, serverptypes.TestJobNew(t, nil).Application)
+
+		// Create our pipeline
+		pipeline := serverptypes.TestPipeline(t, nil)
+		pipeline.Steps["B"] = &pb.Pipeline_Step{
+			Name:      "B",
+			DependsOn: []string{"root"},
+			Kind: &pb.Pipeline_Step_Exec_{
+				Exec: &pb.Pipeline_Step_Exec{
+					Image: "hashicorp/waypoint",
+				},
+			},
+		}
+		pipeline.Steps["C"] = &pb.Pipeline_Step{
+			Name:      "C",
+			DependsOn: []string{"B"},
+			Kind: &pb.Pipeline_Step_Exec_{
+				Exec: &pb.Pipeline_Step_Exec{
+					Image: "hashicorp/waypoint",
+				},
+			},
+		}
+		pipeline.Steps["D"] = &pb.Pipeline_Step{
+			Name:      "D",
+			DependsOn: []string{"C"},
+			Kind: &pb.Pipeline_Step_Build_{
+				Build: &pb.Pipeline_Step_Build{},
+			},
+		}
+		pipeline.Steps["E"] = &pb.Pipeline_Step{
+			Name:      "E",
+			DependsOn: []string{"D"},
+			Kind: &pb.Pipeline_Step_Deploy_{
+				Deploy: &pb.Pipeline_Step_Deploy{},
+			},
+		}
+		pipeline.Steps["F"] = &pb.Pipeline_Step{
+			Name:      "F",
+			DependsOn: []string{"E"},
+			Kind: &pb.Pipeline_Step_Release_{
+				Release: &pb.Pipeline_Step_Release{},
+			},
+		}
+		pipeline.Steps["G"] = &pb.Pipeline_Step{
+			Name:      "G",
+			DependsOn: []string{"F"},
+			Kind: &pb.Pipeline_Step_Up_{
+				Up: &pb.Pipeline_Step_Up{},
+			},
+		}
+
+		// Create, should get an ID back
+		pipeResp, err := client.UpsertPipeline(ctx, &pb.UpsertPipelineRequest{
+			Pipeline: pipeline,
+		})
+		require.NoError(err)
+
+		// Build our job template
+		jobTemplate := serverptypes.TestJobNew(t, nil)
+		resp, err := client.RunPipeline(ctx, &pb.RunPipelineRequest{
+			Pipeline: &pb.Ref_Pipeline{
+				Ref: &pb.Ref_Pipeline_Id{
+					Id: pipeResp.Pipeline.Id,
+				},
+			},
+			JobTemplate: jobTemplate,
+		})
+		require.NoError(err)
+		require.NotNil(resp)
+
+		// Job should exist
+		job, err := client.GetJob(ctx, &pb.GetJobRequest{JobId: resp.JobId})
+		require.NoError(err)
+		require.Equal(pb.Job_QUEUED, job.State)
+
+		// We should have all the job IDs
+		require.Len(resp.AllJobIds, 7)
+		var names []string
+		var allJobs []*pb.Job
+		for _, id := range resp.AllJobIds {
+			require.Contains(resp.JobMap, id)
+			names = append(names, resp.JobMap[id].Step)
+
+			j, err := client.GetJob(ctx, &pb.GetJobRequest{JobId: id})
+			require.NoError(err)
+			allJobs = append(allJobs, j)
+		}
+		require.Equal([]string{"root", "B", "C", "D", "E", "F", "G"}, names)
+
+		// Loop through all Job Ids returned from RunPipeline and verify that the
+		// order lines up with the expected order of the pipeline for the test.
+		for i, job := range allJobs {
+			require.Equal(job.Pipeline.PipelineId, pipeline.Id)
+			require.Equal(job.Pipeline.PipelineName, pipeline.Name)
+
+			switch i {
+			case 0:
+				require.Equal(job.Pipeline.Step, "root")
+			case 1:
+				require.Equal(job.Pipeline.Step, "B")
+			case 2:
+				require.Equal(job.Pipeline.Step, "C")
+			case 3:
+				require.Equal(job.Pipeline.Step, "D")
+			case 4:
+				require.Equal(job.Pipeline.Step, "E")
+			case 5:
+				require.Equal(job.Pipeline.Step, "F")
+			case 6:
+				require.Equal(job.Pipeline.Step, "G")
+			}
+		}
+
+	})
+
+	t.Run("returns job ids in expected order for an embedded pipeline", func(t *testing.T) {
+		require := require.New(t)
+		ctx := context.Background()
+
+		// Create our server
+		impl, err := New(WithDB(testDB(t)))
+		require.NoError(err)
+		client := server.TestServer(t, impl)
+
+		// Initialize our app
+		TestApp(t, client, serverptypes.TestJobNew(t, nil).Application)
+
+		// Create our pipeline
+		pipeline := serverptypes.TestPipeline(t, nil)
+		pipeline.Steps["B"] = &pb.Pipeline_Step{
+			Name:      "B",
+			DependsOn: []string{"root"},
+			Kind: &pb.Pipeline_Step_Exec_{
+				Exec: &pb.Pipeline_Step_Exec{
+					Image: "hashicorp/waypoint",
+				},
+			},
+		}
+		pipeline.Steps["C"] = &pb.Pipeline_Step{
+			Name:      "C",
+			DependsOn: []string{"B"},
+			Kind: &pb.Pipeline_Step_Exec_{
+				Exec: &pb.Pipeline_Step_Exec{
+					Image: "hashicorp/waypoint",
+				},
+			},
+		}
+
+		// Having two embedded pipeline step references is what is causing the bug
+		// at the moment, i.e. https://github.com/hashicorp/waypoint/issues/3869
+		pipeline.Steps["Embed"] = &pb.Pipeline_Step{
+			Name:      "Embed",
+			DependsOn: []string{"C"},
+			Kind: &pb.Pipeline_Step_Pipeline_{
+				Pipeline: &pb.Pipeline_Step_Pipeline{
+					Ref: &pb.Ref_Pipeline{
+						Ref: &pb.Ref_Pipeline_Id{
+							Id: "embed",
+						},
+					},
+				},
+			},
+		}
+		pipeline.Steps["AnotherEmbed"] = &pb.Pipeline_Step{
+			Name:      "AnotherEmbed",
+			DependsOn: []string{"Embed"},
+			Kind: &pb.Pipeline_Step_Pipeline_{
+				Pipeline: &pb.Pipeline_Step_Pipeline{
+					Ref: &pb.Ref_Pipeline{
+						Ref: &pb.Ref_Pipeline_Id{
+							Id: "twoembed",
+						},
+					},
+				},
+			},
+		}
+
+		// Create, should get an ID back
+		pipeResp, err := client.UpsertPipeline(ctx, &pb.UpsertPipelineRequest{
+			Pipeline: pipeline,
+		})
+		require.NoError(err)
+
+		// Create our pipeline
+		embedPipeline := &pb.Pipeline{
+			Id:   "embed",
+			Name: "embed",
+			Owner: &pb.Pipeline_Project{
+				Project: &pb.Ref_Project{
+					Project: "project",
+				},
+			},
+			Steps: map[string]*pb.Pipeline_Step{
+				"first": {
+					Name: "first",
+					Kind: &pb.Pipeline_Step_Exec_{
+						Exec: &pb.Pipeline_Step_Exec{
+							Image: "hashicorp/waypoint",
+						},
+					},
+				},
+				"second": {
+					Name:      "second",
+					DependsOn: []string{"first"},
+					Kind: &pb.Pipeline_Step_Exec_{
+						Exec: &pb.Pipeline_Step_Exec{
+							Image: "hashicorp/waypoint",
+						},
+					},
+				},
+			},
+		}
+
+		// Create, should get an ID back
+		_, err = client.UpsertPipeline(ctx, &pb.UpsertPipelineRequest{
+			Pipeline: embedPipeline,
+		})
+		require.NoError(err)
+
+		// Create our pipeline
+		embedTwoPipeline := &pb.Pipeline{
+			Id:   "twoembed",
+			Name: "twoembed",
+			Owner: &pb.Pipeline_Project{
+				Project: &pb.Ref_Project{
+					Project: "project",
+				},
+			},
+			Steps: map[string]*pb.Pipeline_Step{
+				"one": {
+					Name: "one",
+					Kind: &pb.Pipeline_Step_Exec_{
+						Exec: &pb.Pipeline_Step_Exec{
+							Image: "hashicorp/waypoint",
+						},
+					},
+				},
+				"two": {
+					Name:      "two",
+					DependsOn: []string{"one"},
+					Kind: &pb.Pipeline_Step_Exec_{
+						Exec: &pb.Pipeline_Step_Exec{
+							Image: "hashicorp/waypoint",
+						},
+					},
+				},
+			},
+		}
+
+		// Create, should get an ID back
+		_, err = client.UpsertPipeline(ctx, &pb.UpsertPipelineRequest{
+			Pipeline: embedTwoPipeline,
+		})
+		require.NoError(err)
+
+		// Build our job template
+		jobTemplate := serverptypes.TestJobNew(t, nil)
+		resp, err := client.RunPipeline(ctx, &pb.RunPipelineRequest{
+			Pipeline: &pb.Ref_Pipeline{
+				Ref: &pb.Ref_Pipeline_Id{
+					Id: pipeResp.Pipeline.Id,
+				},
+			},
+			JobTemplate: jobTemplate,
+		})
+		require.NoError(err)
+		require.NotNil(resp)
+
+		// Job should exist
+		job, err := client.GetJob(ctx, &pb.GetJobRequest{JobId: resp.JobId})
+		require.NoError(err)
+		require.Equal(pb.Job_QUEUED, job.State)
+
+		// We should have all the job IDs
+		require.Len(resp.JobMap, 9)
+		require.Len(resp.AllJobIds, 9)
+
+		var allJobs []*pb.Job
+		for _, id := range resp.AllJobIds {
+			require.Contains(resp.JobMap, id)
+
+			j, err := client.GetJob(ctx, &pb.GetJobRequest{JobId: id})
+			require.NoError(err)
+			allJobs = append(allJobs, j)
+		}
+
+		idx := func(p1, s1 string) int {
+			for i, job := range allJobs {
+				if job.Pipeline.PipelineName == p1 && job.Pipeline.Step == s1 {
+					return i
+				}
+			}
+
+			return -1
+		}
+
+		before := func(p1, s1, p2, s2 string) {
+			a := idx(p1, s1)
+			b := idx(p2, s2)
+
+			require.True(a < b, "expected %s.%s before %s.%s", p1, s1, p2, s2)
+		}
+
+		// Ensure that flattened list of jobs matches expected order for embedded pipelines
+		before("test", "root", "test", "B")
+		before("test", "B", "test", "C")
+		before("test", "C", "test", "Embed")
+		before("embed", "first", "test", "Embed")
+		before("embed", "second", "test", "Embed")
+		before("test", "Embed", "test", "AnotherEmbed")
+		before("twoembed", "one", "test", "AnotherEmbed")
+		before("twoembed", "two", "test", "AnotherEmbed")
+	})
+
 }
 
 func TestServicePipeline_List(t *testing.T) {
