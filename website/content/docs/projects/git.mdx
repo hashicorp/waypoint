@@ -13,18 +13,12 @@ A project can be directly associated with a Git repository to enable many featur
 - Poll and automatically trigger a `waypoint up` when changes are detected
 - Manual [remote operations](/docs/projects/remote)
 
-This is an optional integration. If you do not associate a project with a Git
-repository, you can always execute local operations such as `waypoint up`
-by checking out the source code and having a `waypoint.hcl` file.
+This is the most common operational mode, although it is optional. It's currently the
+only way that your project data can flow to the static and on-demand runners.
 
-### Waypoint Server Requirement
-
-Git Polling requires Waypoint server version 0.3.0 and later. If you are on an older
-version and wish to take advantage of this feature, follow the [upgrade guide](/docs/upgrading)
-to upgrade your Waypoint Server. Note that you will have to [manually install
-a runner](/docs/runner/run-manual#manually-running-a-runner) in your server if
-you are upgrading from an old server version. A fresh installation of Waypoint
-server 0.3.0 will automatically include runners.
+If it is not configured, operations will have to run within the CLI so that they have
+access the project data. This is possible by checking out the source code, having a
+`waypoint.hcl` file, and running a command such as `waypoint up`.
 
 ## Configuring the Project
 
