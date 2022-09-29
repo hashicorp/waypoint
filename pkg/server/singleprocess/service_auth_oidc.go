@@ -244,7 +244,7 @@ func (s *Service) CompleteOIDCAuth(
 		return nil, hcerr.Externalize(
 			hclog.FromContext(ctx),
 			err,
-			"OIDC request failed to exchange for token for auth method",
+			"OIDC request failed to exchange token for auth method",
 			"auth_method",
 			am.Name,
 		)
