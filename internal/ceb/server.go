@@ -172,7 +172,7 @@ func (ceb *CEB) dialServer(ctx context.Context, cfg *config, isRetry bool) error
 		var perRPC credentials.PerRPCCredentials = tokenutil.StaticToken(token)
 
 		if token != "" {
-			externalRPC, err := tokenutil.SetupExternalCreds(ctx, ceb.logger, token, "waypoint-ceb")
+			externalRPC, err := tokenutil.SetupExternalCreds(ctx, ceb.logger, token)
 			if err != nil {
 				return err
 			}
