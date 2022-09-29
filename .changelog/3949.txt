@@ -1,0 +1,3 @@
+```release-note:bug
+Connected entrypoints for deleted projects now error out properly.
+```
