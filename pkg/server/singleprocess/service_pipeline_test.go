@@ -1270,7 +1270,6 @@ func TestServicePipeline_Run(t *testing.T) {
 		})
 		require.NoError(err)
 
-		// Create another pipeline that references the first one
 		// Create our pipeline
 		embedPipeline := &pb.Pipeline{
 			Id:   "embed",
@@ -1307,7 +1306,6 @@ func TestServicePipeline_Run(t *testing.T) {
 		})
 		require.NoError(err)
 
-		// Create another pipeline that references the first one
 		// Create our pipeline
 		embedTwoPipeline := &pb.Pipeline{
 			Id:   "twoembed",

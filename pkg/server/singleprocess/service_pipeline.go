@@ -529,12 +529,9 @@ func (s *Service) pipelineGraphFull(
 					pipeline.Name)
 			}
 
-			// TODO(briancain): We need to write a test to validate that embedded pipelines
-			// properly draw edges from the parent step to *this* node id.
 			// Add an edge to the parent step as an implicit dependency
 			// Embedded pipeline steps have an implicit dependency on the parent step
 			// from the parent pipeline.
-
 			for _, dep := range parentStepDeps {
 				stepGraph.AddEdge(dep, nodeId)
 			}
