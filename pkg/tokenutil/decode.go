@@ -65,5 +65,7 @@ func StripCreds(tt *pb.TokenTransport) (string, error) {
 		return "", err
 	}
 
-	return base58.Encode(data), nil
+	magicified := append([]byte(TokenMagic), data...)
+
+	return base58.Encode(magicified), nil
 }
