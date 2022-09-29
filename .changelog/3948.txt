@@ -1,0 +1,4 @@
+```release-note:bug
+cli/install: Set image pull policy configuration on Helm installation
+of Waypoint server and runner
+```
