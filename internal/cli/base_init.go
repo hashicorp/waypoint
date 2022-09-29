@@ -4,11 +4,16 @@ import (
 	"context"
 	"fmt"
 	"path/filepath"
+	"time"
 
+	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/internal/clicontext"
 	clientpkg "github.com/hashicorp/waypoint/internal/client"
 	configpkg "github.com/hashicorp/waypoint/internal/config"
+	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	"github.com/hashicorp/waypoint/pkg/serverclient"
+	"github.com/mr-tron/base58"
+	"google.golang.org/protobuf/proto"
 )
 
 // This file contains the various methods that are used to perform
@@ -63,6 +68,44 @@ func (c *baseCommand) initConfigLoad(path string) (*configpkg.Config, configpkg.
 	return cfg, results, nil
 }
 
+// Given a duration, check the clientContext's auth token to determine if the
+// token expires within the duration.
+// Emits a warning on the cli if token expires within the duration.
+// Returns any errors which may have occurred parsing the token.
+//
+// This function provides no guarantee that the token itself is valid as
+// validation checks can only happen on the server.
+func (c *baseCommand) checkTokenExpiry(duration time.Duration) error {
+	token := c.clientContext.Server.AuthToken
+	tokenMagic := "wp24"
+	data, err := base58.Decode(token)
+	if err != nil {
+		return err
+	}
+
+	var tt pb.TokenTransport
+	err = proto.Unmarshal(data[len(tokenMagic):], &tt)
+	if err != nil {
+		return err
+	}
+
+	var body pb.Token
+	err = proto.Unmarshal(tt.Body, &body)
+	if err != nil {
+		return err
+	}
+
+	if body.ValidUntil != nil {
+		te := time.Unix(body.ValidUntil.Seconds, int64(body.ValidUntil.Nanos))
+		expireWarnPeriod := time.Now().Add(duration)
+		if te.Before(expireWarnPeriod) {
+			c.ui.Output(fmt.Sprintf("The token used to authenticate with Waypoint "+
+				"will be expiring at %s. Please reauthenticate with Waypoint soon.", te), terminal.WithWarningStyle())
+		}
+	}
+	return nil
+}
+
 // initClient initializes the client.
 //
 // If ctx is nil, c.Ctx will be used. If ctx is non-nil, that context will be
@@ -90,6 +133,10 @@ func (c *baseCommand) initClient(
 	c.clientContext, err = serverclient.ContextConfig(connectOpts...)
 	if err != nil {
 		return nil, err
+	}
+
+	if err := c.checkTokenExpiry(time.Hour * 24 * 7); err != nil {
+		c.Log.Debug("Unable to decode token when checking token expiry.")
 	}
 
 	// Start building our client options
