@@ -2,9 +2,7 @@ package singleprocess
 
 import (
 	"context"
-
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
+	"fmt"
 
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/waypoint/pkg/server"
@@ -32,7 +30,7 @@ func (s *Service) UpsertPushedArtifact(
 		if err != nil {
 			return nil, hcerr.Externalize(
 				hclog.FromContext(ctx),
-				status.Errorf(codes.Internal, "uuid generation failed: %s", err),
+				fmt.Errorf("uuid generation failed: %s", err),
 				"failed to generate a uuid while upserting a pushed artifact",
 			)
 		}
