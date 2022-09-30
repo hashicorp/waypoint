@@ -414,8 +414,10 @@ func (p *Platform) Generation(
 	}
 
 	canaryDeployment := false
-	// If we have canaries, generate random ID, otherwise keep gen ID as job ID
-	if !job.IsPeriodic() {
+	// If we have canaries, generate random ID, otherwise keep gen ID as job ID.
+	// Periodic jobs and system jobs currently don't support canaries, so we don't
+	// do this check if our job fits either case.
+	if !job.IsPeriodic() && *job.Type != "system" {
 		for _, taskGroup := range job.TaskGroups {
 			if *taskGroup.Update.Canary > 0 {
 				canaryDeployment = true
