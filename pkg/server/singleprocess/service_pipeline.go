@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/waypoint/internal/pkg/graph"
 	"github.com/hashicorp/waypoint/pkg/server"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
+	"github.com/hashicorp/waypoint/pkg/server/hcerr"
 	serverptypes "github.com/hashicorp/waypoint/pkg/server/ptypes"
 )
 
@@ -25,7 +26,11 @@ func (s *Service) UpsertPipeline(
 
 	result := req.Pipeline
 	if err := s.state(ctx).PipelinePut(result); err != nil {
-		return nil, err
+		return nil, hcerr.Externalize(
+			hclog.FromContext(ctx),
+			err,
+			"error upserting pipeline",
+		)
 	}
 
 	return &pb.UpsertPipelineResponse{Pipeline: result}, nil
@@ -42,14 +47,24 @@ func (s *Service) GetPipeline(
 
 	p, err := s.state(ctx).PipelineGet(req.Pipeline)
 	if err != nil {
-		return nil, err
+		return nil, hcerr.Externalize(
+			hclog.FromContext(ctx),
+			err,
+			"error getting pipeline",
+		)
 	}
 
 	// Get the graph for the steps so we can get the root. We enforce a
 	// single root so the root is always the first step.
 	stepGraph, err := serverptypes.PipelineGraph(p)
 	if err != nil {
-		return nil, err
+		return nil, hcerr.Externalize(
+			hclog.FromContext(ctx),
+			err,
+			"error generating pipline graph",
+			"pipeline_id",
+			p.Id,
+		)
 	}
 
 	orderedStep := stepGraph.KahnSort()
@@ -73,7 +88,11 @@ func (s *Service) ListPipelines(
 
 	result, err := s.state(ctx).PipelineList(req.Project)
 	if err != nil {
-		return nil, err
+		return nil, hcerr.Externalize(
+			hclog.FromContext(ctx),
+			err,
+			"error listing piplines",
+		)
 	}
 
 	return &pb.ListPipelinesResponse{
@@ -93,7 +112,11 @@ func (s *Service) RunPipeline(
 	// Get the pipeline we should execute
 	pipeline, err := s.state(ctx).PipelineGet(req.Pipeline)
 	if err != nil {
-		return nil, err
+		return nil, hcerr.Externalize(
+			hclog.FromContext(ctx),
+			err,
+			"error getting pipeline",
+		)
 	}
 
 	// Get the graph for the steps so we can get the root. We enforce a
@@ -102,7 +125,11 @@ func (s *Service) RunPipeline(
 		make(map[string]string), nil, pipeline)
 	if err != nil {
 		log.Error("server failed to build full pipeline graph to determine cycles", "err", err)
-		return nil, err
+		return nil, hcerr.Externalize(
+			log,
+			fmt.Errorf("server failed to build full pipeline graph to determine cycles: %w", err),
+			"server failed to build full pipeline graph to determine cycles",
+		)
 	}
 
 	// Initialize a pipeline run
@@ -114,19 +141,37 @@ func (s *Service) RunPipeline(
 		},
 		State: pb.PipelineRun_PENDING,
 	}); err != nil {
-		return nil, err
+		return nil, hcerr.Externalize(
+			log,
+			err,
+			"error initializing pipeline run",
+			"pipeline_id",
+			pipeline.Id,
+		)
 	}
 
 	pipelineRun, err := s.state(ctx).PipelineRunGetLatest(pipeline.Id)
 	if err != nil {
-		return nil, err
+		return nil, hcerr.Externalize(
+			log,
+			err,
+			"error getting latest pipeline run",
+			"pipeline_id",
+			pipeline.Id,
+		)
 	}
 
 	// Build out all of the queued job requests for running this pipeline's steps
 	stepJobs, pipelineRun, stepIds, err := s.buildStepJobs(ctx, log, req,
 		make(map[string]interface{}), nodeToStepRef, make(map[string][]string), pipeline, pipelineRun)
 	if err != nil {
-		return nil, err
+		return nil, hcerr.Externalize(
+			log,
+			err,
+			"error building jobs for pipeline",
+			"pipeline_id",
+			pipeline.Id,
+		)
 	}
 
 	// Get the ordered jobs.
@@ -139,11 +184,21 @@ func (s *Service) RunPipeline(
 		nodeId := v.(string)
 		stepRef, ok := nodeToStepRef.nodeStepRefs[nodeId]
 		if !ok {
-			return nil, status.Errorf(codes.Internal,
-				"could not get pipeline step ref for node id %q", nodeId)
+			return nil, hcerr.Externalize(
+				log,
+				fmt.Errorf("could not get pipeline step ref for node id: %q", nodeId),
+				"error getting pipeline step",
+				"pipeline_id",
+				pipeline.Id,
+			)
 		} else if stepRef == nil {
-			return nil, status.Errorf(codes.Internal,
-				"node id %q returned a nil pipeline step ref", nodeId)
+			return nil, hcerr.Externalize(
+				log,
+				fmt.Errorf("node id %q returned a nil pipeline step ref", nodeId),
+				"error getting pipeline steps reference",
+				"pipeline_id",
+				pipeline.Id,
+			)
 		}
 
 		// get the generated queued job request
@@ -166,12 +221,24 @@ func (s *Service) RunPipeline(
 
 	pipelineRun.State = pb.PipelineRun_STARTING
 	if err = s.state(ctx).PipelineRunPut(pipelineRun); err != nil {
-		return nil, err
+		return nil, hcerr.Externalize(
+			log,
+			err,
+			"error updating pipeline to starting state",
+			"pipeline_id",
+			pipeline.Id,
+		)
 	}
 
 	// Queue all the jobs atomically
 	if _, err := s.queueJobMulti(ctx, stepJobs); err != nil {
-		return nil, err
+		return nil, hcerr.Externalize(
+			log,
+			err,
+			"error queueing jobs for pipeline",
+			"pipeline_id",
+			pipeline.Id,
+		)
 	}
 
 	return &pb.RunPipelineResponse{
