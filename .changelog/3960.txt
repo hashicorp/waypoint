@@ -1,0 +1,3 @@
+```release-note:improvement
+cli: Emit warning when token in the default context is near its expiration
+```
