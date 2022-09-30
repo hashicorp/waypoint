@@ -2,14 +2,11 @@ package apprunner
 
 import (
 	"context"
-	"fmt"
-	"time"
+	"strconv"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/apprunner"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
@@ -30,6 +27,8 @@ type PlatformConfig struct {
 	Name   string `hcl:"name"`
 	Memory int    `hcl:"memory,optional"`
 	Cpu    int    `hcl:"cpu,optional"`
+	// Once created, Port cannot be modified
+	Port int `hcl:"port,optional"`
 
 	// Environment variables that are meant to configure the application in a static
 	// way. This might be control an image that has multiple modes of operation,
@@ -85,10 +84,16 @@ func (p *Platform) Deploy(
 	}
 
 	roleArn := p.config.RoleArn
+	port := p.config.Port
+	if port == 0 {
+		// App Runner default port
+		port = 8080
+	}
 
 	if roleArn == "" {
-		// TODO(kevinwang): source this from configuration
-		roleArn = "arn:aws:iam::000000000000:role/service-role/AppRunnerECRAccessRole"
+		// if role arn is not specified, we should create a service role,
+		// similar to how the AWS console
+		roleArn = "arn:aws:iam::111122223333:role/service-role/AppRunnerECRAccessRole"
 	}
 
 	mem := int64(p.config.Memory)
@@ -96,14 +101,14 @@ func (p *Platform) Deploy(
 		mem = 2048
 	}
 
-	storage := int64(p.config.Cpu)
-	if storage == 0 {
-		storage = 1024
+	cpu := int64(p.config.Cpu)
+	if cpu == 0 {
+		cpu = 1024
 	}
 
 	step.Done()
 
-	step = sg.Add("App Runner: %s", src.App)
+	step = sg.Add("App Runner::%s", src.App)
 	step.Done()
 
 	arSvc := apprunner.New(sess)
@@ -158,16 +163,38 @@ func (p *Platform) Deploy(
 		}
 	}
 
+	operationId := ""
+
 	// If we found a previous service, update it.
 	if foundServiceSummary != nil {
 		// TODO(kevinwang): implement me
 		log.Debug("found existing service...", "name", p.config.Name)
 
-		// uso, err :=
-		arSvc.UpdateService(&apprunner.UpdateServiceInput{
+		step = sg.Add("App Runner::UpdateService %s", *foundServiceSummary.ServiceName)
+
+		uso, err := arSvc.UpdateService(&apprunner.UpdateServiceInput{
 			ServiceArn: foundServiceSummary.ServiceArn,
-			// TODO(kevinwang): update configs
+			InstanceConfiguration: &apprunner.InstanceConfiguration{
+				Cpu:    aws.String(strconv.FormatInt(cpu, 10)),
+				Memory: aws.String(strconv.FormatInt(mem, 10)),
+			},
 		})
+
+		if err != nil {
+			step.Update("App Runner::UpdateService Failed: %s", err)
+			return nil, err
+		}
+
+		// If no configuration is changed, no Operation is triggered,
+		// and no OperationId is returned
+		if uso.OperationId != nil {
+			operationId = *uso.OperationId
+		} else {
+			// step.Update("uso.OperationId was null %+v", uso)
+			// TODO(Kevinwang): handle this; Maybe fail?
+		}
+
+		step.Done()
 
 	} else {
 		step = sg.Add("App Runner::CreateService")
@@ -175,15 +202,26 @@ func (p *Platform) Deploy(
 		log.Debug("creating new service...", "name", p.config.Name)
 		log.Debug("using image", "image", img.Name)
 
+		// Warning: App Runner will crash with a "exec format error"
+		// when running Arm64 images.
+
 		cso, err := arSvc.CreateService(&apprunner.CreateServiceInput{
 			ServiceName: aws.String(p.config.Name),
+			InstanceConfiguration: &apprunner.InstanceConfiguration{
+				Cpu:    aws.String(strconv.Itoa(int(cpu))),
+				Memory: aws.String(strconv.Itoa(int(mem))),
+			},
+			HealthCheckConfiguration: &apprunner.HealthCheckConfiguration{},
 			SourceConfiguration: &apprunner.SourceConfiguration{
 				AuthenticationConfiguration: &apprunner.AuthenticationConfiguration{
 					AccessRoleArn: aws.String(roleArn),
 				},
 				ImageRepository: &apprunner.ImageRepository{
 					ImageRepositoryType: aws.String(apprunner.ImageRepositoryTypeEcr),
-					ImageIdentifier:     aws.String(img.Image + ":" + img.Tag),
+					ImageIdentifier:     aws.String(img.Name()),
+					ImageConfiguration: &apprunner.ImageConfiguration{
+						Port: aws.String(strconv.Itoa(port)),
+					},
 				},
 				AutoDeploymentsEnabled: aws.Bool(false),
 			},
@@ -195,79 +233,22 @@ func (p *Platform) Deploy(
 
 		step.Done()
 
-		serviceArn = *cso.Service.ServiceArn
-		serviceUrl = *cso.Service.ServiceUrl
-		serviceStatus = *cso.Service.Status
-
-		// wait for operation status to become `SUCCEEDED`
-
-		step = sg.Add("App Runner::Waiting for Create Service to succeed...")
-		d := time.Now().Add(time.Minute * time.Duration(5))
-		ctx, cancel := context.WithDeadline(ctx, d)
-		defer cancel()
-		ticker := time.NewTicker(5 * time.Second)
-
-		opId := *cso.OperationId
-
-		shouldRetry := true
-		for shouldRetry {
-			loo, err := arSvc.ListOperations(&apprunner.ListOperationsInput{
-				ServiceArn: &serviceArn,
-			})
-
-			// TODO(kevinwang): better error handling/reporting
-			if err != nil {
-				if aerr, ok := err.(awserr.Error); ok {
-					return nil, aerr
-				}
-				return nil, err
-			}
-
-			// var foundOperationSummary *apprunner.OperationSummary = nil
-			for _, os := range loo.OperationSummaryList {
-
-				// find operation by id from CreateService request
-				if *os.Id == opId {
-					// update state
-					serviceStatus = *os.Status
-
-					switch *os.Status {
-					case apprunner.OperationStatusSucceeded:
-						// OK — resume
-						step.Update("OK!")
-						shouldRetry = false
-					case apprunner.OperationStatusFailed:
-						// Failed — exit
-						step.Update("Failed...")
-						return nil, status.Error(codes.FailedPrecondition, fmt.Sprintf("App Runner responded with status: %s", *os.Status))
-					case apprunner.OperationStatusInProgress:
-						select {
-						case <-ticker.C: // retry
-						case <-ctx.Done(): // abort
-							step.Update("Timeout...")
-							return nil, status.Errorf(codes.Aborted, fmt.Sprintf("Context cancelled from timeout when waiting for App Runner graduate from %s", *os.Status))
-						}
-					default:
-						log.Warn("Unexpected status: %s", *os.Status)
-					}
-				}
-			}
-		}
-		step.Done()
-
+		operationId = *cso.OperationId
 		serviceArn = *cso.Service.ServiceArn
 		serviceUrl = *cso.Service.ServiceUrl
 		serviceStatus = *cso.Service.Status
 	}
 
-	step.Done()
-
+	step = sg.Add("Assigning Deployment Values")
 	deployment.Id = id
 	deployment.Region = p.config.Region
 	deployment.ServiceName = p.config.Name
 	deployment.ServiceArn = serviceArn
 	deployment.ServiceUrl = serviceUrl
 	deployment.Status = serviceStatus
+	// possibly empty string when no configuration change is detected
+	deployment.OperationId = operationId
+	step.Done()
 
 	return deployment, nil
 }
@@ -276,3 +257,53 @@ var (
 	_ component.Configurable = (*Platform)(nil)
 	_ component.Platform     = (*Platform)(nil)
 )
+
+// {
+// Service: {
+//   AutoScalingConfigurationSummary: {
+//     AutoScalingConfigurationArn: "arn:aws:apprunner:us-east-1:058050752201:autoscalingconfiguration/DefaultConfiguration/1/00000000000000000000000000000001"
+//     AutoScalingConfigurationName: "DefaultConfiguration",
+// 		AutoScalingConfigurationRevision: 1
+// 	},
+// 	CreatedAt: 2022-09-29 06:08:12 +0000 UTC,
+// 	HealthCheckConfiguration: {
+// 		HealthyThreshold: 1,
+// 		Interval: 5,
+// 		Path: "/",
+// 		 Protocol: "TCP",
+// 		 Timeout: 2,
+// 		 UnhealthyThreshold: 5
+// 		},
+// 		InstanceConfiguration: {
+// 			Cpu: "1024",
+// 			Memory: "2048"
+// 		},
+// 		NetworkConfiguration: {
+// 			EgressConfiguration: {
+// 				EgressType: "DEFAULT"
+// 			}
+// 		},
+// 		ServiceArn: "arn:aws:apprunner:us-east-1:058050752201:service/my-apprunner-service3/4992ba7a6832496e9289bce260d65b8a",
+// 		ServiceId: "4992ba7a6832496e9289bce260d65b8a",
+// 		ServiceName: "my-apprunner-service3",
+// 		ServiceUrl: "vi4rav3dvx.us-east-1.awsapprunner.com",
+// 		SourceConfiguration: {
+// 			AuthenticationConfiguration: {
+// 				AccessRoleArn: "arn:aws:iam::058050752201:role/service-role/AppRunnerECRAccessRole"
+// 			},
+// 			AutoDeploymentsEnabled: false,
+// 			ImageRepository: {
+// 				ImageConfiguration: {
+// 					Port: "7531",
+// 					RuntimeEnvironmentVariables: {
+// 						Test: "1"
+// 					}
+// 				},
+// 				ImageIdentifier: "058050752201.dkr.ecr.us-east-1.amazonaws.com/python-fastapi:latest",
+// 				ImageRepositoryType: "ECR"
+// 			}
+// 		},
+// 		Status: "RUNNING",
+// 		UpdatedAt: 2022-09-29 06:08:12 +0000 UTC
+// 	}
+// }

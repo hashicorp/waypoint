@@ -4,6 +4,15 @@ package apprunner;
 
 option go_package = "waypoint/builtin/aws/apprunner";
 
+import "opaqueany/any.proto";
+
+
+// When creating a service, App runner automatically starts a deployment, so the
+// Waypoint deploy lifecycle effectively encompasses the 
+// enum DeploymentType {
+//   CREATE = 0;
+//   UPDATE = 1;
+// }
 
 message Deployment {
   // Identifier for the deployment, required by Waypoint
@@ -26,4 +35,24 @@ message Deployment {
 
   // The current state of the App Runner service.
   string status = 6;
+
+  // The Deploy lifecycle will either CreateService (new) 
+  // or UpdateService (existing); Both will provide an OperationId.
+  //
+  // OperationId can be passed to the following Release lifecycle,
+  // which can wait/poll the operation status, as well as see the
+  // operation type, like CREATE_SERVICE or ____
+  string operation_id = 7;
 }
+
+
+
+message Release {
+  string url = 1;
+  string region = 2;
+  string service_name = 3;
+  string service_arn = 4;
+}
+
+
+

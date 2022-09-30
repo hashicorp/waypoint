@@ -16,20 +16,16 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-var (
-	_ component.Destroyer = (*Platform)(nil)
-)
-
 // DestroyFunc implements component.Destroyer
-func (p *Platform) DestroyFunc() interface{} {
-	return p.Destroy
+func (r *Releaser) DestroyFunc() interface{} {
+	return r.Destroy
 }
 
-func (p *Platform) Destroy(
+func (r *Releaser) Destroy(
 	ctx context.Context,
 	log hclog.Logger,
 	ui terminal.UI,
-	deployment *Deployment,
+	release *Release,
 ) error {
 	sg := ui.StepGroup()
 	defer sg.Wait()
@@ -44,7 +40,6 @@ func (p *Platform) Destroy(
 	// Delete app runner by service ARN
 
 	sess, err := utils.GetSession(&utils.SessionConfig{
-		Region: p.config.Region,
 		Logger: log,
 	})
 	if err != nil {
@@ -54,9 +49,9 @@ func (p *Platform) Destroy(
 
 	arSvc := apprunner.New(sess)
 
-	step.Update("Deleting service: %s", deployment.ServiceArn)
+	step.Update("Deleting service: %s", release.ServiceArn)
 	dso, err := arSvc.DeleteService(&apprunner.DeleteServiceInput{
-		ServiceArn: aws.String(deployment.ServiceArn),
+		ServiceArn: aws.String(release.ServiceArn),
 	})
 	step.Done()
 
@@ -72,7 +67,7 @@ func (p *Platform) Destroy(
 
 	for shouldRetry {
 		loo, err := arSvc.ListOperations(&apprunner.ListOperationsInput{
-			ServiceArn: &deployment.ServiceArn,
+			ServiceArn: &release.ServiceArn,
 		})
 
 		// TODO(kevinwang): better error reporting
@@ -109,6 +104,8 @@ func (p *Platform) Destroy(
 		}
 	}
 
-	step.Update("Deleted App Runner service: %s", deployment.ServiceName)
+	step.Update("Deleted App Runner service: %s", release.ServiceName)
 	return nil
 }
+
+var _ component.Destroyer = (*Releaser)(nil)
