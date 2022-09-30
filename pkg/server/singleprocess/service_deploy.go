@@ -31,11 +31,13 @@ func (s *Service) UpsertDeployment(
 	if insert {
 		// Get the next id
 		id, err := server.Id()
-		return nil, hcerr.Externalize(
-			hclog.FromContext(ctx),
-			fmt.Errorf("uuid generation failed: %w", err),
-			"failed to generate a uuid while upserting a pushed artifact",
-		)
+		if err != nil {
+			return nil, hcerr.Externalize(
+				hclog.FromContext(ctx),
+				fmt.Errorf("uuid generation failed: %w", err),
+				"failed to generate a uuid while upserting a pushed artifact",
+			)
+		}
 
 		// Specify the id
 		result.Id = id
