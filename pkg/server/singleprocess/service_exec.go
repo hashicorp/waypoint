@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/waypoint/pkg/server"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	"github.com/hashicorp/waypoint/pkg/server/grpcmetadata"
+	"github.com/hashicorp/waypoint/pkg/server/hcerr"
 	"github.com/hashicorp/waypoint/pkg/server/ptypes"
 	"github.com/hashicorp/waypoint/pkg/serverstate"
 )
@@ -27,20 +28,32 @@ func (s *Service) StartExecStream(
 	// to start the exec stream.
 	iexec, ok := s.state(ctx).(serverstate.InstanceExecHandler)
 	if !ok {
-		return status.Errorf(codes.Unimplemented,
-			"state storage doesn't support exec streaming")
+		return hcerr.Externalize(
+			log,
+			status.Errorf(codes.Unimplemented,
+				"state storage doesn't support exec streaming"),
+			"state storage doesn't support exec streaming",
+		)
 	}
 
 	// Read our first event which must be a Start event.
 	log.Trace("waiting for Start message")
 	req, err := srv.Recv()
 	if err != nil {
-		return err
+		return hcerr.Externalize(
+			log,
+			err,
+			"failed to receive entrypoint exex stream",
+		)
 	}
 	start, ok := req.Event.(*pb.ExecStreamRequest_Start_)
 	if !ok {
-		return status.Errorf(codes.FailedPrecondition,
-			"first message must be start type")
+		return hcerr.Externalize(
+			log,
+			status.Errorf(codes.FailedPrecondition,
+				"error reading entrypoint exec stream, first message must be start type"),
+			"error reading entrypoint exec stream, first message must be start type",
+		)
 	}
 	if err := ptypes.ValidateExecStreamRequestStart(start.Start); err != nil {
 		return err
@@ -65,7 +78,11 @@ func (s *Service) StartExecStream(
 		log = log.With("instance_id", t.InstanceId)
 		err = iexec.InstanceExecCreateByTargetedInstance(t.InstanceId, execRec)
 		if err != nil {
-			return err
+			return hcerr.Externalize(
+				log,
+				err,
+				"failed to create exec session with target instance",
+			)
 		}
 	case *pb.ExecStreamRequest_Start_DeploymentId:
 		log = log.With("deployment_id", t.DeploymentId)
@@ -76,7 +93,13 @@ func (s *Service) StartExecStream(
 			},
 		})
 		if err != nil {
-			return err
+			return hcerr.Externalize(
+				log,
+				err,
+				"failed to get deployment for exec",
+				"deployment_id",
+				t.DeploymentId,
+			)
 		}
 
 		// We need to spawn a job that will in turn spawn a virtual CEB
@@ -85,7 +108,11 @@ func (s *Service) StartExecStream(
 		if deployment.HasExecPlugin {
 			instId, err := server.Id()
 			if err != nil {
-				return err
+				return hcerr.Externalize(
+					log,
+					err,
+					"failed to connect with server for exec",
+				)
 			}
 
 			log.Info("spawning exec plugin via job", "instance-id", instId)
@@ -140,7 +167,11 @@ func (s *Service) StartExecStream(
 				ExpiresIn: "60s",
 			})
 			if err != nil {
-				return err
+				return hcerr.Externalize(
+					log,
+					err,
+					"failed to connect with server for exec",
+				)
 			}
 
 			jobId := qresp.JobId
@@ -153,7 +184,11 @@ func (s *Service) StartExecStream(
 
 			state, err := s.waitOnJobStarted(srv.Context(), jobId)
 			if err != nil {
-				return err
+				return hcerr.Externalize(
+					log,
+					err,
+					"failed waiting for exec job",
+				)
 			}
 
 			switch state {
@@ -174,12 +209,22 @@ func (s *Service) StartExecStream(
 
 			err = iexec.InstanceExecCreateForVirtualInstance(ctx, instId, execRec)
 			if err != nil {
-				return err
+				return hcerr.Externalize(
+					log,
+					err,
+					"failed to create exec session",
+				)
 			}
 		} else {
 			err = iexec.InstanceExecCreateByDeployment(t.DeploymentId, execRec)
 			if err != nil {
-				return err
+				return hcerr.Externalize(
+					log,
+					err,
+					"failed to create exec session with deployment",
+					"deployment_id",
+					t.DeploymentId,
+				)
 			}
 		}
 	default:
@@ -200,12 +245,20 @@ func (s *Service) StartExecStream(
 			Open: &pb.ExecStreamResponse_Open{},
 		},
 	}); err != nil {
-		return err
+		return hcerr.Externalize(
+			log,
+			err,
+			"failed to send open exec message",
+		)
 	}
 
 	err = iexec.InstanceExecWaitConnected(ctx, execRec)
 	if err != nil {
-		return err
+		return hcerr.Externalize(
+			log,
+			err,
+			"exec session failed while waiting for connection",
+		)
 	}
 
 	// Start our receive loop to read data from the client
@@ -242,7 +295,11 @@ func (s *Service) StartExecStream(
 
 		case err := <-clientCloseCh:
 			// The client closed the connection so we want to exit the stream.
-			return err
+			return hcerr.Externalize(
+				log,
+				err,
+				"client closed exec session",
+			)
 
 		case entryReq, active := <-eventCh:
 			// We got an event, exit out of the select and determine our action
@@ -253,7 +310,11 @@ func (s *Service) StartExecStream(
 
 			exit, err := s.handleEntrypointExecRequest(log, srv, entryReq)
 			if exit || err != nil {
-				return err
+				return hcerr.Externalize(
+					log,
+					err,
+					"error handling exec session",
+				)
 			}
 		}
 	}
