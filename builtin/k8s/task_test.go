@@ -10,8 +10,11 @@ import (
 	"testing"
 )
 
+// TestStartTask makes sure that we can use this Task Launcher Configuration - useful
+// to test for example new fields and their parsing.
+
 func TestStartTask(t *testing.T) {
-	f, err := os.Open(os.Getenv("HCL_FILE"))
+	f, err := os.Open("./testdata/config.hcl")
 	if err != nil {
 		t.Fatalf("unable to open file: %v", err)
 	}
