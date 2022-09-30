@@ -1,0 +1,82 @@
+{
+   "description": "\nUse an existing, pre-built Docker image without modifying it.\n",
+   "example": "build {\n  use \"docker-ref\" {\n    image = \"gcr.io/my-project/my-image\"\n    tag   = \"abcd1234\"\n  }\n}",
+   "input": "component.Source",
+   "mappers": null,
+   "name": "docker-ref",
+   "optionalFields": null,
+   "output": "docker.Image",
+   "outputAttrs": [
+      {
+         "Field": "architecture",
+         "Type": "string",
+         "Synopsis": "",
+         "Summary": "",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "image",
+         "Type": "string",
+         "Synopsis": "",
+         "Summary": "",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "location",
+         "Type": "docker.isImage_Location",
+         "Synopsis": "",
+         "Summary": "",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "tag",
+         "Type": "string",
+         "Synopsis": "",
+         "Summary": "",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      }
+   ],
+   "outputAttrsHelp": "Output attributes can be used in your `waypoint.hcl` as [variables](/docs/waypoint-hcl/variables) via [`artifact`](/docs/waypoint-hcl/variables/artifact) or [`deploy`](/docs/waypoint-hcl/variables/deploy).",
+   "requiredFields": [
+      {
+         "Field": "image",
+         "Type": "string",
+         "Synopsis": "The image to pull.",
+         "Summary": "This should NOT include the tag (the value following the ':' in a Docker image). Use `tag` to define the image tag.",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "tag",
+         "Type": "string",
+         "Synopsis": "The tag of the image to pull.",
+         "Summary": "",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      }
+   ],
+   "type": "builder",
+   "use": "the [`use` stanza](/docs/waypoint-hcl/use) for this plugin."
+}
