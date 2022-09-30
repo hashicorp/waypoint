@@ -1682,6 +1682,12 @@ func TestJobPipeline_AckAndComplete(t *testing.T, factory Factory, rf RestartFac
 
 		jobRef := &pb.Ref_Job{Id: "root_job"}
 
+		// Write project
+		ref := &pb.Ref_Project{Project: "project"}
+		require.NoError(s.ProjectPut(serverptypes.TestProject(t, &pb.Project{
+			Name: ref.Project,
+		})))
+
 		p := serverptypes.TestPipeline(t, nil)
 		err := s.PipelinePut(p)
 		require.NoError(err)
