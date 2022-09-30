@@ -136,7 +136,7 @@ func (c *baseCommand) initClient(
 	}
 
 	if err := c.checkTokenExpiry(time.Hour * 24 * 7); err != nil {
-		c.Log.Debug("Unable to decode token when checking token expiry.")
+		c.Log.Debug("Unable to decode token when checking token expiry.", err)
 	}
 
 	// Start building our client options
