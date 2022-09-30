@@ -264,7 +264,9 @@ func (c *ProjectApplyCommand) Run(args []string) int {
 
 	case "local":
 		// Disable polling cause this never works with local
-		proj.DataSourcePoll.Enabled = false
+		if proj.DataSourcePoll != nil {
+			proj.DataSourcePoll.Enabled = false
+		}
 
 		// Set the data source to local if it isn't set.
 		var localInfo *pb.Job_Local
