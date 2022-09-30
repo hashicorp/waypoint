@@ -137,11 +137,14 @@ func (p *Platform) resourceJobCreate(
 	state.Name = result.Name
 	st.Step(terminal.StatusOK, "Job registration successful")
 
-	// Wait on the allocation
+	// Wait on the allocation. Periodic Nomad jobs will not get an evaluation,
+	// so we don't monitor an evaluation if we don't have one.
 	evalID := regResult.EvalID
-	st.Update("Monitoring evaluation " + evalID)
-	if err := nomad.NewMonitor(st, client).Monitor(evalID); err != nil {
-		return err
+	if evalID != "" {
+		st.Update("Monitoring evaluation " + evalID)
+		if err := nomad.NewMonitor(st, client).Monitor(evalID); err != nil {
+			return err
+		}
 	}
 	st.Step(terminal.StatusOK, "Deployment successfully rolled out!")
 
@@ -410,11 +413,13 @@ func (p *Platform) Generation(
 		return nil, err
 	}
 
-	// If we have canaries, generate random ID, otherwise keep gen ID as job ID
 	canaryDeployment := false
-	for _, taskGroup := range job.TaskGroups {
-		if *taskGroup.Update.Canary > 0 {
-			canaryDeployment = true
+	// If we have canaries, generate random ID, otherwise keep gen ID as job ID
+	if !job.IsPeriodic() {
+		for _, taskGroup := range job.TaskGroups {
+			if *taskGroup.Update.Canary > 0 {
+				canaryDeployment = true
+			}
 		}
 	}
 
