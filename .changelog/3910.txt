@@ -1,4 +1,7 @@
 ```release-note:improvement
 plugins/k8s: Add `prune_whitelist` for `kubernetes-apply`
+```
+
+```release-note:improvement
 plugins/k8s: Add multiple customizations for on-demand runners
 ```
