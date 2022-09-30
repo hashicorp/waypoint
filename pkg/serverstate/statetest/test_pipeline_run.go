@@ -7,6 +7,7 @@ import (
 
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	"github.com/hashicorp/waypoint/pkg/server/ptypes"
+	serverptypes "github.com/hashicorp/waypoint/pkg/server/ptypes"
 )
 
 func init() {
@@ -21,6 +22,12 @@ func TestPipelineRun(t *testing.T, factory Factory, restartF RestartFactory) {
 
 		s := factory(t)
 		defer s.Close()
+
+		// Write project
+		ref := &pb.Ref_Project{Project: "project"}
+		require.NoError(s.ProjectPut(serverptypes.TestProject(t, &pb.Project{
+			Name: ref.Project,
+		})))
 
 		// Set Pipeline
 		p := ptypes.TestPipeline(t, nil)
@@ -96,6 +103,12 @@ func TestPipelineRun(t *testing.T, factory Factory, restartF RestartFactory) {
 		s := factory(t)
 		defer s.Close()
 
+		// Write project
+		ref := &pb.Ref_Project{Project: "project"}
+		require.NoError(s.ProjectPut(serverptypes.TestProject(t, &pb.Project{
+			Name: ref.Project,
+		})))
+
 		// Set Pipeline
 		p := ptypes.TestPipeline(t, nil)
 		err := s.PipelinePut(p)
@@ -143,6 +156,12 @@ func TestPipelineRun(t *testing.T, factory Factory, restartF RestartFactory) {
 
 		s := factory(t)
 		defer s.Close()
+
+		// Write project
+		ref := &pb.Ref_Project{Project: "project"}
+		require.NoError(s.ProjectPut(serverptypes.TestProject(t, &pb.Project{
+			Name: ref.Project,
+		})))
 
 		// Set Pipeline
 		p := ptypes.TestPipeline(t, nil)
