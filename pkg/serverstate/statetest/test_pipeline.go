@@ -9,6 +9,7 @@ import (
 
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	"github.com/hashicorp/waypoint/pkg/server/ptypes"
+	serverptypes "github.com/hashicorp/waypoint/pkg/server/ptypes"
 )
 
 func init() {
@@ -23,6 +24,12 @@ func TestPipeline(t *testing.T, factory Factory, _ RestartFactory) {
 
 		s := factory(t)
 		defer s.Close()
+
+		// Write project
+		ref := &pb.Ref_Project{Project: "project"}
+		require.NoError(s.ProjectPut(serverptypes.TestProject(t, &pb.Project{
+			Name: ref.Project,
+		})))
 
 		// Set
 		p := ptypes.TestPipeline(t, nil)
@@ -58,6 +65,12 @@ func TestPipeline(t *testing.T, factory Factory, _ RestartFactory) {
 		s := factory(t)
 		defer s.Close()
 
+		// Write project
+		ref := &pb.Ref_Project{Project: "project"}
+		require.NoError(s.ProjectPut(serverptypes.TestProject(t, &pb.Project{
+			Name: ref.Project,
+		})))
+
 		// Set
 		p := ptypes.TestPipeline(t, nil)
 		p.Steps = nil
@@ -71,6 +84,12 @@ func TestPipeline(t *testing.T, factory Factory, _ RestartFactory) {
 
 		s := factory(t)
 		defer s.Close()
+
+		// Write project
+		ref := &pb.Ref_Project{Project: "project"}
+		require.NoError(s.ProjectPut(serverptypes.TestProject(t, &pb.Project{
+			Name: ref.Project,
+		})))
 
 		// Set
 		p := ptypes.TestPipeline(t, nil)
@@ -94,6 +113,12 @@ func TestPipeline(t *testing.T, factory Factory, _ RestartFactory) {
 
 		s := factory(t)
 		defer s.Close()
+
+		// Write project
+		ref := &pb.Ref_Project{Project: "project"}
+		require.NoError(s.ProjectPut(serverptypes.TestProject(t, &pb.Project{
+			Name: ref.Project,
+		})))
 
 		// Set
 		p := ptypes.TestPipeline(t, nil)
@@ -121,6 +146,12 @@ func TestPipeline(t *testing.T, factory Factory, _ RestartFactory) {
 		s := factory(t)
 		defer s.Close()
 
+		// Write project
+		ref := &pb.Ref_Project{Project: "project"}
+		require.NoError(s.ProjectPut(serverptypes.TestProject(t, &pb.Project{
+			Name: ref.Project,
+		})))
+
 		// Set
 		p := ptypes.TestPipeline(t, nil)
 		p.Steps = map[string]*pb.Pipeline_Step{
@@ -142,6 +173,12 @@ func TestPipeline(t *testing.T, factory Factory, _ RestartFactory) {
 
 		s := factory(t)
 		defer s.Close()
+
+		// Write project
+		ref := &pb.Ref_Project{Project: "project"}
+		require.NoError(s.ProjectPut(serverptypes.TestProject(t, &pb.Project{
+			Name: ref.Project,
+		})))
 
 		// Set a few pipelines
 		p := ptypes.TestPipeline(t, nil)
@@ -181,6 +218,12 @@ func TestPipeline(t *testing.T, factory Factory, _ RestartFactory) {
 		s := factory(t)
 		defer s.Close()
 
+		// Write project
+		ref := &pb.Ref_Project{Project: "project"}
+		require.NoError(s.ProjectPut(serverptypes.TestProject(t, &pb.Project{
+			Name: ref.Project,
+		})))
+
 		// Set a few pipelines
 		p := ptypes.TestPipeline(t, nil)
 		err := s.PipelinePut(p)
@@ -219,6 +262,12 @@ func TestPipeline(t *testing.T, factory Factory, _ RestartFactory) {
 
 		s := factory(t)
 		defer s.Close()
+
+		// Write project
+		ref := &pb.Ref_Project{Project: "project"}
+		require.NoError(s.ProjectPut(serverptypes.TestProject(t, &pb.Project{
+			Name: ref.Project,
+		})))
 
 		// Set a few pipelines
 		p := ptypes.TestPipeline(t, nil)
@@ -283,6 +332,12 @@ func TestPipeline(t *testing.T, factory Factory, _ RestartFactory) {
 		s := factory(t)
 		defer s.Close()
 
+		// Write project
+		ref := &pb.Ref_Project{Project: "project"}
+		require.NoError(s.ProjectPut(serverptypes.TestProject(t, &pb.Project{
+			Name: ref.Project,
+		})))
+
 		// Set a few pipelines
 		p := ptypes.TestPipeline(t, nil)
 		err := s.PipelinePut(p)
@@ -300,6 +355,12 @@ func TestPipeline(t *testing.T, factory Factory, _ RestartFactory) {
 		})
 		err = s.PipelinePut(p2)
 		require.NoError(err)
+
+		// Write project
+		pref := &pb.Ref_Project{Project: "nintendo"}
+		require.NoError(s.ProjectPut(serverptypes.TestProject(t, &pb.Project{
+			Name: pref.Project,
+		})))
 
 		// a third, same pipeline name but different project
 		p3 := ptypes.TestPipeline(t, &pb.Pipeline{
@@ -347,6 +408,12 @@ func TestPipeline(t *testing.T, factory Factory, _ RestartFactory) {
 		s := factory(t)
 		defer s.Close()
 
+		// Write project
+		ref := &pb.Ref_Project{Project: "project"}
+		require.NoError(s.ProjectPut(serverptypes.TestProject(t, &pb.Project{
+			Name: ref.Project,
+		})))
+
 		// Set
 		p := ptypes.TestPipeline(t, nil)
 		err := s.PipelinePut(p)
@@ -370,6 +437,12 @@ func TestPipeline(t *testing.T, factory Factory, _ RestartFactory) {
 
 		s := factory(t)
 		defer s.Close()
+
+		// Write project
+		ref := &pb.Ref_Project{Project: "project"}
+		require.NoError(s.ProjectPut(serverptypes.TestProject(t, &pb.Project{
+			Name: ref.Project,
+		})))
 
 		// Set
 		p := ptypes.TestPipeline(t, nil)
@@ -422,6 +495,12 @@ func TestPipeline(t *testing.T, factory Factory, _ RestartFactory) {
 			require.Len(resp, 3)
 		}
 
+		// Write project
+		pref := &pb.Ref_Project{Project: "not-our-project"}
+		require.NoError(s.ProjectPut(serverptypes.TestProject(t, &pb.Project{
+			Name: pref.Project,
+		})))
+
 		// a fourth that is in a different project
 		p4 := ptypes.TestPipeline(t, &pb.Pipeline{
 			Id:   "wario",
@@ -451,6 +530,12 @@ func TestPipeline(t *testing.T, factory Factory, _ RestartFactory) {
 
 		s := factory(t)
 		defer s.Close()
+
+		// Write project
+		ref := &pb.Ref_Project{Project: "project"}
+		require.NoError(s.ProjectPut(serverptypes.TestProject(t, &pb.Project{
+			Name: ref.Project,
+		})))
 
 		// Set
 		p := ptypes.TestPipeline(t, nil)
