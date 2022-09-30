@@ -282,7 +282,7 @@ func (p *TaskLauncher) WatchTask(
 
 	// this channel will receive the status of the ECS task
 	taskStatusCh := make(chan string)
-	go taskStatus(ctx, time.Duration(5*time.Minute), &taskStatusCh, log, sess, p.config.Cluster, ti.Id)
+	go p.taskStatus(ctx, 5*time.Minute, &taskStatusCh, log, sess, ti.Id)
 
 	var logStreamName string
 	// We wait 5 minutes for the log stream to be available
@@ -504,7 +504,7 @@ func roleArn(name string, sess *session.Session) (string, error) {
 
 // taskStatus gets the status of an ECS task and provides it to the caller via a channel
 // the caller is responsible for closing the channel
-func taskStatus(ctx context.Context, d time.Duration, taskStatusCh *chan string, log hclog.Logger, sess *session.Session, cluster string, taskId string) {
+func (p *TaskLauncher) taskStatus(ctx context.Context, d time.Duration, taskStatusCh *chan string, log hclog.Logger, sess *session.Session, taskId string) {
 	ecsSvc := ecs.New(sess)
 
 	taskContext, cancel := context.WithTimeout(ctx, d)
