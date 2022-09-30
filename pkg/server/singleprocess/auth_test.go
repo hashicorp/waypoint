@@ -51,7 +51,7 @@ func TestServiceAuth(t *testing.T) {
 		ctx, err := s.Authenticate(context.Background(), bootstrapToken, "test", nil)
 		require.NoError(t, err)
 
-		user := s.userFromContext(ctx)
+		user := s.UserFromContext(ctx)
 		require.NotNil(t, user)
 		require.Equal(t, DefaultUserId, user.Id)
 	})
@@ -134,7 +134,7 @@ func TestServiceAuth(t *testing.T) {
 		// Auth
 		ctx, err := s.Authenticate(context.Background(), token, "UpsertDeployment", nil)
 		require.NoError(err)
-		user := s.userFromContext(ctx)
+		user := s.UserFromContext(ctx)
 		require.NotNil(user)
 		require.NotEqual(DefaultUserId, user.Id)
 		require.Equal("alice", user.Username)
@@ -156,7 +156,7 @@ func TestServiceAuth(t *testing.T) {
 			// Verify authing works
 			ctx, err := s.Authenticate(context.Background(), token, "test", nil)
 			require.NoError(err)
-			user := s.userFromContext(ctx)
+			user := s.UserFromContext(ctx)
 			require.NotNil(t, user)
 			require.NotEqual(t, DefaultUserId, user.Id)
 			require.Equal("alice", user.Username)
@@ -475,7 +475,7 @@ func TestServiceAuth_userSuperuserForced(t *testing.T) {
 	s := impl.(*Service)
 	ctx := context.Background()
 
-	user := s.userFromContext(ctx)
+	user := s.UserFromContext(ctx)
 	require.NotNil(t, user)
 	require.Equal(t, DefaultUserId, user.Id)
 }

@@ -98,7 +98,7 @@ func (s *Service) RunPipeline(
 
 	// Get the graph for the steps so we can get the root. We enforce a
 	// single root so the root is always the first step.
-	stepGraph, nodeToStepRef, err := s.pipelineGraphFull(ctx, log, nil, "",
+	stepGraph, nodeToStepRef, err := s.pipelineGraphFull(ctx, log, nil, "", nil,
 		make(map[string]string), nil, pipeline)
 	if err != nil {
 		log.Error("server failed to build full pipeline graph to determine cycles", "err", err)
@@ -132,7 +132,9 @@ func (s *Service) RunPipeline(
 	// Get the ordered jobs.
 	var jobIds []string
 	jobMap := map[string]*pb.Ref_PipelineStep{}
-	for _, v := range stepGraph.KahnSort() {
+	order := stepGraph.KahnSort()
+
+	for _, v := range order {
 		// Look up step name and ref by the assigned node ID from graph generation
 		nodeId := v.(string)
 		stepRef, ok := nodeToStepRef.nodeStepRefs[nodeId]
@@ -462,6 +464,7 @@ func (s *Service) pipelineGraphFull(
 	log hclog.Logger,
 	g *graph.Graph,
 	parentStep string,
+	parentStepDeps []string,
 	visitedNodes map[string]string,
 	nodeStepRef *nodeToStepRef,
 	pipeline *pb.Pipeline,
@@ -486,8 +489,8 @@ func (s *Service) pipelineGraphFull(
 		if len(visitedNodes) != 0 {
 			if pipeName, ok := visitedNodes[step.Name]; ok && pipeName == pipeline.Name {
 				log.Trace("we've cycled to a node we've already visited!", "pipeline", pipeName, "step", step.Name)
-				return nil, nil, status.Error(codes.FailedPrecondition,
-					"we've already visited this node, that means we've got a cycle")
+				return nil, nil, status.Errorf(codes.FailedPrecondition,
+					"cycle has been detected. Node %q in pipeline %q has already been visisted", step.Name, pipeName)
 			}
 		}
 
@@ -497,10 +500,11 @@ func (s *Service) pipelineGraphFull(
 		if !ok {
 			var err error
 			// unique node graph id for full graph
-			nodeId, err = server.Id()
+			uid, err := server.Id()
 			if err != nil {
 				return nil, nil, err
 			}
+			nodeId = fmt.Sprintf("%s.%s-%s", pipeline.Id, step.Name, uid)
 		}
 
 		nodeStepRef.nodeStepRefs[nodeId] = &pb.Ref_PipelineStep{
@@ -525,13 +529,20 @@ func (s *Service) pipelineGraphFull(
 					pipeline.Name)
 			}
 
-			// TODO(briancain): We need to write a test to validate that embedded pipelines
-			// properly draw edges from the parent step to *this* node id.
 			// Add an edge to the parent step as an implicit dependency
 			// Embedded pipeline steps have an implicit dependency on the parent step
 			// from the parent pipeline.
+			for _, dep := range parentStepDeps {
+				stepGraph.AddEdge(dep, nodeId)
+			}
+
+			// The edge here indicates an order. It says that parentStep should run before
+			// nodeId. Ie to traverse the graph of work, you need to travel from the parentStep
+			// vertex to the nodeId vertex.
 			stepGraph.AddEdge(nodeId, parentStep)
 		}
+
+		var myDeps []string
 
 		// Add any dependencies as defined by the current Step
 		for _, dep := range step.DependsOn {
@@ -543,10 +554,12 @@ func (s *Service) pipelineGraphFull(
 				// We haven't reached this node yet, but we're adding it to the graph so
 				// we generate an id here too so we can add it to the graph as a vertex
 				// and create an edge to the given step with the depencny
-				depId, err = server.Id() // unique node graph id for full graph
+				uid, err := server.Id() // unique node graph id for full graph
 				if err != nil {
 					return nil, nil, err
 				}
+
+				depId = fmt.Sprintf("%s.%s-%s", pipeline.Id, dep, uid)
 
 				// add node id to map
 				nodeStepRef.nodeStepRefs[depId] = &pb.Ref_PipelineStep{
@@ -556,8 +569,14 @@ func (s *Service) pipelineGraphFull(
 				nodeStepRef.stepRefs[nodePipelineStepRef{pipeline: pipeline.Id, step: dep}] = depId
 			}
 
+			myDeps = append(myDeps, depId)
+
 			// Add the dependency as a vertex and draw an edge to *this* steps node ID
 			stepGraph.Add(depId)
+
+			// The edge here indicates that to travel the graph properly, you have to
+			// go from the depId vertex to the nodeId vertex. For example, if
+			// B depends on C, then depId == C, nodeId == B.
 			stepGraph.AddEdge(depId, nodeId)
 
 			// This only checks for steps inside *this* pipeline. Plain steps cannot
@@ -581,7 +600,7 @@ func (s *Service) pipelineGraphFull(
 			// Build the nested pipelines graph
 			parentStep := nodeId
 			embeddedGraph, embedNodeToStepRef, err := s.pipelineGraphFull(ctx, log, stepGraph,
-				parentStep, visitedNodes, nodeStepRef, embeddedPipeline)
+				parentStep, myDeps, visitedNodes, nodeStepRef, embeddedPipeline)
 			if err != nil {
 				return nil, nil, err
 			}

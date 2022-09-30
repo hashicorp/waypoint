@@ -149,6 +149,7 @@ func (i *K8sRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) err
 			"image": map[string]interface{}{
 				"repository": runnerImageRef.Repository(),
 				"tag":        runnerImageRef.Tag(),
+				"pullPolicy": i.Config.ImagePullPolicy,
 			},
 			"odr": map[string]interface{}{
 				// odr image stanza not specified - this is used by the helm chart to
@@ -250,6 +251,13 @@ func (i *K8sRunnerInstaller) InstallFlags(set *flag.Set) {
 		Target:  &i.Config.CreateServiceAccount,
 		Default: true,
 		Usage:   "Create the service account if it does not exist.",
+	})
+
+	set.StringVar(&flag.StringVar{
+		Name:    "k8s-image-pull-policy",
+		Target:  &i.Config.ImagePullPolicy,
+		Default: "",
+		Usage:   "Set the pull policy for the Waypoint runner image",
 	})
 }
 

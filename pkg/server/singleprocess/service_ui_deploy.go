@@ -70,7 +70,9 @@ func (s *Service) UI_ListDeployments(
 
 	for _, deploy := range deployList {
 		bundle, err := s.getDeploymentBundle(ctx, req.Application, req.Workspace, deploy)
-
+		if err != nil {
+			return nil, err
+		}
 		/*
 			NOTE(briancain): Look up horizon URL ONCE, then for each deployment, append the deploy sequence
 			This assumes every app deployment has the same URL, which it generally always does. We don't
