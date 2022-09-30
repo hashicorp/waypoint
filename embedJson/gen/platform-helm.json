@@ -16,6 +16,17 @@
          "SubFields": null
       },
       {
+         "Field": "create_namespace",
+         "Type": "bool",
+         "Synopsis": "Create Namespace if it doesn't exist.",
+         "Summary": "This option will instruct Helm to create a namespace if it doesn't exist.",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
          "Field": "devel",
          "Type": "bool",
          "Synopsis": "True to considered non-released chart versions for installation.",
@@ -52,7 +63,7 @@
          "Field": "namespace",
          "Type": "string",
          "Synopsis": "Namespace to deploy the Helm chart.",
-         "Summary": "This will be created if it does not exist. This defaults to the current namespace of the auth settings.",
+         "Summary": "This will be created if it does not exist (see create_namespace). This defaults to the current namespace of the auth settings.",
          "Optional": true,
          "Default": "",
          "EnvVar": "",
@@ -64,6 +75,17 @@
          "Type": "string",
          "Synopsis": "URL of the Helm repository that contains the chart.",
          "Summary": "This only needs to be set if you're NOT using a local chart.",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "skip_crds",
+         "Type": "bool",
+         "Synopsis": "Do not create CRDs",
+         "Summary": "This option will tell Helm to skip the creation of CRDs.",
          "Optional": true,
          "Default": "",
          "EnvVar": "",

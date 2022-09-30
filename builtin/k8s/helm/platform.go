@@ -149,7 +149,7 @@ func (p *Platform) Deploy(
 	client.Timeout = 300 * time.Second
 	client.Namespace = p.config.Namespace
 	client.Atomic = false
-	client.SkipCRDs = false
+	client.SkipCRDs = p.config.SkipCRDs
 	client.SubNotes = true
 	client.DisableOpenAPIValidation = false
 	client.Description = ""
@@ -393,7 +393,7 @@ deploy {
 
 	doc.SetField(
 		"skip_crds",
-		"Do not create CRDss",
+		"Do not create CRDs",
 		docs.Summary(
 			"This option will tell Helm to skip the creation of CRDs.",
 		),
