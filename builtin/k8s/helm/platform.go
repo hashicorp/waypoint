@@ -117,12 +117,12 @@ func (p *Platform) Deploy(
 		client.NameTemplate = ""
 		client.OutputDir = ""
 		client.Atomic = false
-		client.SkipCRDs = false
+		client.SkipCRDs = p.config.SkipCRDs
 		client.SubNotes = true
 		client.DisableOpenAPIValidation = false
 		client.Replace = false
 		client.Description = ""
-		client.CreateNamespace = true
+		client.CreateNamespace = p.config.CreateNamespace
 
 		s.Update("Installing Chart...")
 		rel, err := client.Run(c, values)
@@ -149,7 +149,7 @@ func (p *Platform) Deploy(
 	client.Timeout = 300 * time.Second
 	client.Namespace = p.config.Namespace
 	client.Atomic = false
-	client.SkipCRDs = false
+	client.SkipCRDs = p.config.SkipCRDs
 	client.SubNotes = true
 	client.DisableOpenAPIValidation = false
 	client.Description = ""
@@ -231,8 +231,10 @@ type Config struct {
 	Driver    string `hcl:"driver,optional"`
 	Namespace string `hcl:"namespace,optional"`
 
-	KubeconfigPath string `hcl:"kubeconfig,optional"`
-	Context        string `hcl:"context,optional"`
+	KubeconfigPath  string `hcl:"kubeconfig,optional"`
+	Context         string `hcl:"context,optional"`
+	CreateNamespace bool   `hcl:"create_namespace,optional"`
+	SkipCRDs        bool   `hcl:"skip_crds,optional"`
 }
 
 func (p *Platform) Documentation() (*docs.Documentation, error) {
@@ -376,8 +378,24 @@ deploy {
 		"namespace",
 		"Namespace to deploy the Helm chart.",
 		docs.Summary(
-			"This will be created if it does not exist. This defaults to the ",
+			"This will be created if it does not exist (see create_namespace). This defaults to the ",
 			"current namespace of the auth settings.",
+		),
+	)
+
+	doc.SetField(
+		"create_namespace",
+		"Create Namespace if it doesn't exist.",
+		docs.Summary(
+			"This option will instruct Helm to create a namespace if it doesn't exist.",
+		),
+	)
+
+	doc.SetField(
+		"skip_crds",
+		"Do not create CRDs",
+		docs.Summary(
+			"This option will tell Helm to skip the creation of CRDs.",
 		),
 	)
 
