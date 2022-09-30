@@ -21,7 +21,13 @@ func (s *Service) UpsertProject(
 
 	result := req.Project
 	if err := s.state(ctx).ProjectPut(result); err != nil {
-		return nil, err
+		return nil, hcerr.Externalize(
+			hclog.FromContext(ctx),
+			err,
+			"failed to upsert project",
+			"project_name",
+			result.GetName(),
+		)
 	}
 
 	if projectNeedsRemoteInit(result) {
@@ -54,13 +60,25 @@ func (s *Service) GetProject(
 
 	result, err := s.state(ctx).ProjectGet(req.Project)
 	if err != nil {
-		return nil, err
+		return nil, hcerr.Externalize(
+			hclog.FromContext(ctx),
+			err,
+			"failed to get project",
+			"project_name",
+			result.GetName(),
+		)
 	}
 
 	// Get all the workspaces that this project is part of
 	workspaces, err := s.state(ctx).ProjectListWorkspaces(req.Project)
 	if err != nil {
-		return nil, err
+		return nil, hcerr.Externalize(
+			hclog.FromContext(ctx),
+			err,
+			"failed to list workspaces for project",
+			"project_name",
+			result.GetName(),
+		)
 	}
 
 	return &pb.GetProjectResponse{
@@ -75,7 +93,11 @@ func (s *Service) ListProjects(
 ) (*pb.ListProjectsResponse, error) {
 	result, err := s.state(ctx).ProjectList()
 	if err != nil {
-		return nil, err
+		return nil, hcerr.Externalize(
+			hclog.FromContext(ctx),
+			err,
+			"failed to list projects",
+		)
 	}
 
 	return &pb.ListProjectsResponse{Projects: result}, nil
@@ -91,7 +113,13 @@ func (s *Service) DestroyProject(
 
 	err := s.state(ctx).ProjectDelete(req.Project)
 	if err != nil {
-		return nil, err
+		return nil, hcerr.Externalize(
+			hclog.FromContext(ctx),
+			err,
+			"failed to delete project",
+			"project",
+			req.Project.Project,
+		)
 	}
 
 	return &empty.Empty{}, nil
@@ -107,7 +135,13 @@ func (s *Service) GetApplication(
 
 	result, err := s.state(ctx).AppGet(req.Application)
 	if err != nil {
-		return nil, err
+		return nil, hcerr.Externalize(
+			hclog.FromContext(ctx),
+			err,
+			"failed to get application",
+			"application",
+			req.Application.Application,
+		)
 	}
 
 	return &pb.GetApplicationResponse{
@@ -126,7 +160,11 @@ func (s *Service) UpsertApplication(
 	// Get the project
 	praw, err := s.state(ctx).ProjectGet(req.Project)
 	if err != nil {
-		return nil, err
+		return nil, hcerr.Externalize(
+			hclog.FromContext(ctx),
+			err,
+			"failed to get project in application upsert",
+		)
 	}
 
 	var app *pb.Application
@@ -146,7 +184,13 @@ func (s *Service) UpsertApplication(
 
 	app, err = s.state(ctx).AppPut(app)
 	if err != nil {
-		return nil, err
+		return nil, hcerr.Externalize(
+			hclog.FromContext(ctx),
+			err,
+			"failed to get upsert application",
+			"application_name",
+			app.GetName(),
+		)
 	}
 
 	return &pb.UpsertApplicationResponse{Application: app}, nil
