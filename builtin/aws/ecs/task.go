@@ -515,46 +515,46 @@ func taskStatus(ctx context.Context, d time.Duration, taskStatusCh *chan string,
 			log.Error("timeout waiting for task to become ready", terminal.WithErrorStyle())
 			return
 		default:
-			tasks, err := ecsSvc.ListTasks(&ecs.ListTasksInput{
+		}
+		tasks, err := ecsSvc.ListTasks(&ecs.ListTasksInput{
+			Cluster: aws.String(cluster),
+			Family:  aws.String("waypoint-runner"),
+		})
+		if err != nil {
+			log.Error("error listing ECS tasks", "err", err)
+			return
+		}
+		var odrTask *ecs.Task
+		for _, taskArn := range tasks.TaskArns {
+			taskResp, err := ecsSvc.DescribeTasks(&ecs.DescribeTasksInput{
 				Cluster: aws.String(cluster),
-				Family:  aws.String("waypoint-runner"),
+				Tasks:   aws.StringSlice([]string{*taskArn}),
+				Include: aws.StringSlice([]string{"TAGS"}),
 			})
 			if err != nil {
-				log.Error("error listing ECS tasks", "err", err)
+				log.Error("error describing ECS tasks", "err", err)
+				return
+			} else if len(taskResp.Tasks) != 1 {
+				log.Error("there should be only 1 task", "num_tasks", len(taskResp.Tasks))
 				return
 			}
-			var odrTask *ecs.Task
-			for _, taskArn := range tasks.TaskArns {
-				taskResp, err := ecsSvc.DescribeTasks(&ecs.DescribeTasksInput{
-					Cluster: aws.String(cluster),
-					Tasks:   aws.StringSlice([]string{*taskArn}),
-					Include: aws.StringSlice([]string{"TAGS"}),
-				})
-				if err != nil {
-					log.Error("error describing ECS tasks", "err", err)
-					return
-				} else if len(taskResp.Tasks) != 1 {
-					log.Error("there should be only 1 task", "num_tasks", len(taskResp.Tasks))
-					return
-				}
-				for _, tag := range taskResp.Tasks[0].Tags {
-					if *tag.Key == "waypoint-odr-task-name" && *tag.Value == taskId {
-						odrTask = taskResp.Tasks[0]
-						break
-					}
+			for _, tag := range taskResp.Tasks[0].Tags {
+				if *tag.Key == "waypoint-odr-task-name" && *tag.Value == taskId {
+					odrTask = taskResp.Tasks[0]
+					break
 				}
 			}
-
-			if odrTask == nil {
-				log.Info("ODR Task not found")
-				*taskStatusCh <- "DELETED"
-				return
-			} else {
-				log.Debug("ODR task status", "status", *odrTask.LastStatus)
-			}
-			*taskStatusCh <- *odrTask.LastStatus
-			time.Sleep(500 * time.Millisecond)
 		}
+
+		if odrTask == nil {
+			log.Info("ODR Task not found")
+			*taskStatusCh <- "DELETED"
+			return
+		} else {
+			log.Debug("ODR task status", "status", *odrTask.LastStatus)
+		}
+		*taskStatusCh <- *odrTask.LastStatus
+		time.Sleep(500 * time.Millisecond)
 	}
 }
 
