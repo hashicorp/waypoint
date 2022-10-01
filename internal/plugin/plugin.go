@@ -3,6 +3,7 @@ package plugin
 import (
 	sdk "github.com/hashicorp/waypoint-plugin-sdk"
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
+	dockerref "github.com/hashicorp/waypoint/builtin/docker/ref"
 	"github.com/hashicorp/waypoint/builtin/nomad/canary"
 	"github.com/hashicorp/waypoint/internal/factory"
 
@@ -40,6 +41,7 @@ var (
 		"pack":                     pack.Options,
 		"docker":                   docker.Options,
 		"docker-pull":              dockerpull.Options,
+		"docker-ref":               dockerref.Options,
 		"exec":                     exec.Options,
 		"google-cloud-run":         cloudrun.Options,
 		"azure-container-instance": aci.Options,

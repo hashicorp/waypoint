@@ -5,7 +5,9 @@ import (
 
 	empty "google.golang.org/protobuf/types/known/emptypb"
 
+	"github.com/hashicorp/go-hclog"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
+	"github.com/hashicorp/waypoint/pkg/server/hcerr"
 	"github.com/hashicorp/waypoint/pkg/server/ptypes"
 )
 
@@ -14,7 +16,7 @@ func (s *Service) SetConfig(
 	req *pb.ConfigSetRequest,
 ) (*pb.ConfigSetResponse, error) {
 	if err := s.state(ctx).ConfigSet(req.Variables...); err != nil {
-		return nil, err
+		return nil, hcerr.Externalize(hclog.FromContext(ctx), err, "failed to set config")
 	}
 
 	return &pb.ConfigSetResponse{}, nil
@@ -30,7 +32,7 @@ func (s *Service) GetConfig(
 
 	vars, err := s.state(ctx).ConfigGet(req)
 	if err != nil {
-		return nil, err
+		return nil, hcerr.Externalize(hclog.FromContext(ctx), err, "failed to get config")
 	}
 
 	return &pb.ConfigGetResponse{Variables: vars}, nil
@@ -45,7 +47,11 @@ func (s *Service) SetConfigSource(
 	}
 
 	if err := s.state(ctx).ConfigSourceSet(req.ConfigSource); err != nil {
-		return nil, err
+		return nil, hcerr.Externalize(
+			hclog.FromContext(ctx),
+			err,
+			"failed to set config source",
+		)
 	}
 
 	return &empty.Empty{}, nil
@@ -61,7 +67,11 @@ func (s *Service) GetConfigSource(
 
 	vars, err := s.state(ctx).ConfigSourceGet(req)
 	if err != nil {
-		return nil, err
+		return nil, hcerr.Externalize(
+			hclog.FromContext(ctx),
+			err,
+			"failed to get config source",
+		)
 	}
 
 	return &pb.GetConfigSourceResponse{ConfigSources: vars}, nil
