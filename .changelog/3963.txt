@@ -1,0 +1,3 @@
+```release-note:bug
+plugin/nomad-jobspec: Fix deployment of periodic and system Nomad jobs.
+```
