@@ -551,7 +551,7 @@ func (p *TaskLauncher) taskStatus(ctx context.Context, d time.Duration, taskStat
 			*taskStatusCh <- "DELETED"
 			return
 		} else {
-			log.Debug("ODR task status", "status", *odrTask.LastStatus)
+			log.Trace("ODR task status", "status", *odrTask.LastStatus)
 		}
 		*taskStatusCh <- *odrTask.LastStatus
 		time.Sleep(500 * time.Millisecond)
