@@ -517,7 +517,7 @@ func (p *TaskLauncher) taskStatus(ctx context.Context, d time.Duration, taskStat
 		default:
 		}
 		tasks, err := ecsSvc.ListTasks(&ecs.ListTasksInput{
-			Cluster: aws.String(cluster),
+			Cluster: aws.String(p.config.Cluster),
 			Family:  aws.String("waypoint-runner"),
 		})
 		if err != nil {
@@ -527,7 +527,7 @@ func (p *TaskLauncher) taskStatus(ctx context.Context, d time.Duration, taskStat
 		var odrTask *ecs.Task
 		for _, taskArn := range tasks.TaskArns {
 			taskResp, err := ecsSvc.DescribeTasks(&ecs.DescribeTasksInput{
-				Cluster: aws.String(cluster),
+				Cluster: aws.String(p.config.Cluster),
 				Tasks:   aws.StringSlice([]string{*taskArn}),
 				Include: aws.StringSlice([]string{"TAGS"}),
 			})
