@@ -322,44 +322,41 @@ func (p *TaskLauncher) WatchTask(
 	token := ""
 	var resp *cloudwatchlogs.GetLogEventsOutput
 	for {
-		select {
-		default:
-			// loop until log stream is ready
-			getLogsInput := &cloudwatchlogs.GetLogEventsInput{
-				LogGroupName:  aws.String(p.config.LogGroup),
-				LogStreamName: aws.String(logStreamName),
-				StartFromHead: aws.Bool(true),
-			}
-			if resp != nil {
-				token = *resp.NextForwardToken
-				getLogsInput.NextToken = aws.String(token)
-			}
-			resp, err = cwl.GetLogEvents(getLogsInput)
-			if err != nil {
-				return nil, err
-			}
-
-			if *resp.NextForwardToken == token {
-				// if the task is done, AND we're at the end of the log
-				// stream, we exit
-				taskStatus := <-taskStatusCh
-				if taskStatus == "DELETED" || taskStatus == "DEPROVISIONING" || taskStatus == "STOPPED" || taskStatus == "DEACTIVATING" {
-					close(taskStatusCh)
-					return &component.TaskResult{ExitCode: 0}, nil
-				}
-				time.Sleep(500 * time.Millisecond)
-				continue
-			}
-
-			for _, event := range resp.Events {
-				log.Info(*event.Message)
-				ui.Output(*event.Message, terminal.WithInfoStyle())
-			}
-
-			token = *resp.NextForwardToken
-			// Sleep for half a second to slam the CloudWatch API less
-			time.Sleep(500 * time.Millisecond)
+		// loop until log stream is ready
+		getLogsInput := &cloudwatchlogs.GetLogEventsInput{
+			LogGroupName:  aws.String(p.config.LogGroup),
+			LogStreamName: aws.String(logStreamName),
+			StartFromHead: aws.Bool(true),
 		}
+		if resp != nil {
+			token = *resp.NextForwardToken
+			getLogsInput.NextToken = aws.String(token)
+		}
+		resp, err = cwl.GetLogEvents(getLogsInput)
+		if err != nil {
+			return nil, err
+		}
+
+		if *resp.NextForwardToken == token {
+			// if the task is done, AND we're at the end of the log
+			// stream, we exit
+			taskStatus := <-taskStatusCh
+			if taskStatus == "DELETED" || taskStatus == "DEPROVISIONING" || taskStatus == "STOPPED" || taskStatus == "DEACTIVATING" {
+				close(taskStatusCh)
+				return &component.TaskResult{ExitCode: 0}, nil
+			}
+			time.Sleep(500 * time.Millisecond)
+			continue
+		}
+
+		for _, event := range resp.Events {
+			log.Info(*event.Message)
+			ui.Output(*event.Message, terminal.WithInfoStyle())
+		}
+
+		token = *resp.NextForwardToken
+		// Sleep for half a second to slam the CloudWatch API less
+		time.Sleep(500 * time.Millisecond)
 	}
 }
 
