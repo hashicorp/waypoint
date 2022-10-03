@@ -1,6 +1,7 @@
 package hcerr
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/hashicorp/go-hclog"
@@ -27,7 +28,12 @@ import (
 // These will be displayed as key/value pairs to the client. If there are an odd number of args,
 // this assumes it's a mistake and adds "EXTRA_VALUE_AT_END" as the label for the final arg.
 func Externalize(log hclog.Logger, err error, msg string, args ...interface{}) error {
-	log.Error(msg, append(args, "error", err)...)
+
+	if errors.Is(err, context.Canceled) {
+		log.Trace(msg, append(args, "error", err)...)
+	} else {
+		log.Error(msg, append(args, "error", err)...)
+	}
 
 	// Preserve the proto status
 	// status.Status does not support errors.As (https://github.com/grpc/grpc-go/issues/2934)
