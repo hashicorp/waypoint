@@ -23,10 +23,11 @@ Waypoint has always had `build`, `deploy`, and `release` lifecycle events, but
 to handle more complex deployments, Waypoint needed the ability to add custom steps.
 We recently released a [Tech Preview of custom pipelines](/docs/pipelines),
 introducing the ability to script custom steps, such as running tests after a
-build or security scanning artifacts prior to a deploy. As we work to bring this
-feature out of Tech Preview, custom pipelines will grow to allow users to compose their
-own Waypoint pipelines with custom steps, embedded pipelines, and further
-customizable steps and plugins.
+build or security scanning artifacts prior to a deploy. As we work to bring
+custom pipelines out of Tech Preview, we'll be introducing more support for
+steps consuming and producing data for other steps in a pipeline, improvements
+around how pipelines access VCS data, customizable step plugins, and introducing
+pipelines to the UI.
 
 ### App Promotion
 
