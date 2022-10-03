@@ -1711,7 +1711,7 @@ func TestJobPipeline_AckAndComplete(t *testing.T, factory Factory, rf RestartFac
 		r.Jobs = append(r.Jobs, jobRef)
 		err = s.PipelineRunPut(r)
 		require.NoError(err)
-		require.Equal(uint64(2), r.Sequence)
+		require.Equal(uint64(1), r.Sequence)
 		require.Equal(pb.PipelineRun_PENDING, r.State)
 
 		// Assign the job, we should get this build

@@ -1,8 +1,7 @@
 package boltdbstate
 
 import (
-	"fmt"
-	"strconv"
+	"math"
 	"strings"
 	"sync/atomic"
 
@@ -44,20 +43,22 @@ func (s *State) PipelineRunPut(pr *pb.PipelineRun) error {
 		}
 
 		// only alter sequence if this is a new pipeline run
-		if pr.State == pb.PipelineRun_PENDING {
+		if pr.Sequence == 0 {
 			pId := pr.Pipeline.Ref.(*pb.Ref_Pipeline_Id).Id
-			raw, err := memTxn.Last(
+			iter, err := memTxn.ReverseLowerBound(
 				pipelineRunIndexTableName,
-				pipelineRunIndexPId,
-				pId)
+				pipelineRunIndexPIdBySeq,
+				pId, uint(math.MaxInt))
 			if err != nil {
 				return err
 			}
+
+			raw := iter.Next()
+
 			// increment sequence if this is not the first run
 			if raw != nil {
 				idx := raw.(*pipelineRunIndexRecord)
-				seq, _ := strconv.ParseUint(idx.Sequence, 10, 64)
-				pr.Sequence = atomic.AddUint64(&seq, 1)
+				pr.Sequence = atomic.AddUint64(&idx.Sequence, 1)
 			} else {
 				pr.Sequence = 1
 			}
@@ -112,7 +113,7 @@ func (s *State) PipelineRunGetByJobId(jobId string) (*pb.PipelineRun, error) {
 			},
 		}
 		p, err := s.pipelineGet(dbTxn, memTxn, ref)
-		result, err = s.pipelineRunGet(dbTxn, memTxn, p.Id, fmt.Sprint(job.Pipeline.RunSequence))
+		result, err = s.pipelineRunGet(dbTxn, memTxn, p.Id, job.Pipeline.RunSequence)
 		return err
 	})
 
@@ -130,7 +131,7 @@ func (s *State) PipelineRunGet(ref *pb.Ref_Pipeline, seq uint64) (*pb.PipelineRu
 	var result *pb.PipelineRun
 	err := s.db.View(func(dbTxn *bolt.Tx) error {
 		p, err := s.pipelineGet(dbTxn, memTxn, ref)
-		result, err = s.pipelineRunGet(dbTxn, memTxn, p.Id, fmt.Sprint(seq))
+		result, err = s.pipelineRunGet(dbTxn, memTxn, p.Id, seq)
 		return err
 	})
 
@@ -141,7 +142,7 @@ func (s *State) pipelineRunGet(
 	dbTxn *bolt.Tx,
 	memTxn *memdb.Txn,
 	pId string,
-	seq string,
+	seq uint64,
 ) (*pb.PipelineRun, error) {
 	var result pb.PipelineRun
 	b := dbTxn.Bucket(pipelineRunBucket)
@@ -192,11 +193,16 @@ func (s *State) pipelineRunGetLatest(
 	b := dbTxn.Bucket(pipelineRunBucket)
 
 	// Look up the last instance of the pipeline run where the pipeline matches
-	raw, err := memTxn.Last(pipelineRunIndexTableName,
-		pipelineRunIndexPId, pId)
+	iter, err := memTxn.ReverseLowerBound(
+		pipelineRunIndexTableName,
+		pipelineRunIndexPIdBySeq,
+		pId, uint(math.MaxInt))
 	if err != nil {
 		return nil, err
 	}
+
+	raw := iter.Next()
+
 	if raw == nil {
 		return nil, status.Errorf(codes.NotFound,
 			"pipeline run could not be found for pipeline Id: %q", pId)
@@ -299,7 +305,7 @@ func (s *State) pipelineRunList(
 func (s *State) pipelineRunIndexSet(txn *memdb.Txn, id []byte, value *pb.PipelineRun) error {
 	record := &pipelineRunIndexRecord{
 		Id:         string(id),
-		Sequence:   fmt.Sprint(value.Sequence),
+		Sequence:   value.Sequence,
 		PipelineId: value.Pipeline.Ref.(*pb.Ref_Pipeline_Id).Id,
 	}
 
@@ -352,9 +358,8 @@ func pipelineRunIndexSchema() *memdb.TableSchema {
 							Lowercase: true,
 						},
 
-						&memdb.StringFieldIndex{
-							Field:     "Sequence",
-							Lowercase: true,
+						&memdb.UintFieldIndex{
+							Field: "Sequence",
 						},
 					},
 				},
@@ -381,7 +386,7 @@ const (
 
 type pipelineRunIndexRecord struct {
 	Id         string
-	Sequence   string
+	Sequence   uint64
 	PipelineId string
 }
 
