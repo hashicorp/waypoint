@@ -1,4 +1,4 @@
-## unreleased
+## 0.10.2 (October 03, 2022)
 
 BREAKING CHANGES:
 
