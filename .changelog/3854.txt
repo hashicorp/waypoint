@@ -1,0 +1,7 @@
+```release-note:improvement
+cli: Setting configurations in a runner profile no longer resets unspecified configuration
+```
+
+```release-note:improvement
+cli: A new `-runner-target-any` flag has been added to runner profile set to allow users to specify targeting any runner.
+```
