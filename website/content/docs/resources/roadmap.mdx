@@ -19,11 +19,14 @@ such as bug fixes, but is much more accurate to what we're working on.
 
 ### Custom Pipeline
 
-Waypoint has always had `build`, `deploy`, and `release` as lifecycle events,
-but to handle more complex deployments, Waypoint needs the ability to add custom steps.
-We plan to add the ability to script custom steps like container scanning or integration
-with project management tools. Also, custom pipelines will allow users to compose their
-own Waypoint pipelines with custom steps and embedded pipelines
+Waypoint has always had `build`, `deploy`, and `release` lifecycle events, but
+to handle more complex deployments, Waypoint needed the ability to add custom steps.
+We recently released a [Tech Preview of custom pipelines](https://www.waypointproject.io/docs/pipelines),
+introducing the ability to script custom steps, such as running tests after a
+build or security scanning artifacts prior to a deploy. As we work to bring this
+feature out of Tech Preview, custom pipelines will grow to allow users to compose their
+own Waypoint pipelines with custom steps, embedded pipelines, and further
+customizable steps and plugins, such as integrations with project management tools.
 
 ### App Promotion
 
