@@ -1,10 +1,26 @@
 ## unreleased
 
-FEATURES:
+BREAKING CHANGES:
+
+* plugin/helm: Add support for create_namespace and skip_crds (default is now false) [[GH-3950](https://github.com/hashicorp/waypoint/issues/3950)]
 
 IMPROVEMENTS:
 
+* cli/runnerinstall: Update `runner install` to set the new profile as the default
+if none exists [[GH-3922](https://github.com/hashicorp/waypoint/issues/3922)]
+* cli: A new `-runner-target-any` flag has been added to `runner profile set` to allow users to specify targeting any runner. [[GH-3854](https://github.com/hashicorp/waypoint/issues/3854)]
+* cli: Setting configurations in a runner profile no longer resets unspecified configuration [[GH-3854](https://github.com/hashicorp/waypoint/issues/3854)]
+* plugin/ecs: Implement WatchTask plugin for AWS ECS task launcher. Store ECS on-demand runner logs in the job system. [[GH-3918](https://github.com/hashicorp/waypoint/issues/3918)]
+* plugin/docker: Add new `docker-ref` plugin for a build noop for referencing a Docker Image [[GH-3912](https://github.com/hashicorp/waypoint/issues/3912)]
+
 BUG FIXES:
+
+* cli/install: Set image pull policy configuration on Helm installation of Waypoint server and runner [[GH-3948](https://github.com/hashicorp/waypoint/issues/3948)]
+* cli: Fix panic when setting project datasource to local [[GH-3972](https://github.com/hashicorp/waypoint/issues/3972)]
+* core: Connected entrypoints for deleted projects now error out properly. [[GH-3949](https://github.com/hashicorp/waypoint/issues/3949)]
+* core: Fix out of order job ids for `waypoint pipeline run` job stream CLI. [[GH-3946](https://github.com/hashicorp/waypoint/issues/3946)]
+* plugin/nomad-jobspec: Fix deployment of periodic and system Nomad jobs. [[GH-3963](https://github.com/hashicorp/waypoint/issues/3963)]
+* ui: Fix crash when encountering resources without IDs [[GH-3929](https://github.com/hashicorp/waypoint/issues/3929)]
 
 ## 0.10.1 (September 22, 2022)
 
