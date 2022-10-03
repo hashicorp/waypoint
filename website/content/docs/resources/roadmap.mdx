@@ -19,24 +19,24 @@ such as bug fixes, but is much more accurate to what we're working on.
 
 ### Custom Pipeline
 
-Waypoint has always had `build`, `deploy`, and `release` as lifecycle events
-but to handle more complex deployment, Waypoint needs the ability to add custom steps.
+Waypoint has always had `build`, `deploy`, and `release` as lifecycle events,
+but to handle more complex deployments, Waypoint needs the ability to add custom steps.
 We plan to add the ability to script custom steps like container scanning or integration
-with project management tools. Also, custom pipelines will allow user to compose thier
-own Waypoint pipeline with custom steps and embedded pipelines
+with project management tools. Also, custom pipelines will allow users to compose their
+own Waypoint pipelines with custom steps and embedded pipelines
 
 ### App Promotion
 
-Waypoint initially has the [workspaces](/docs/workspaces) feature for
-isolating different environments. We plan on building on this feature
-and custom pipelines to enable workspaces that may target different
-infrastructures (such as a dev vs. production cluster) and we
+Waypoint has the [workspaces](/docs/workspaces) feature for
+isolating different environments. We plan to build on this feature,
+and custom pipelines, to enable workspaces that may target different
+infrastructure environments (such as a dev vs. production cluster), and we
 want to build features so applications can be easily "promoted" from
 one stage to another.
 
 ### Infrastructure Provisioning
 
-We plan incorporating a tighter integration with [Terraform](https://terraform.io)
+We plan to incorporate a tighter integration with [Terraform](https://terraform.io)
 to enable folks to provision infrastructure right from their waypoint.hcl file.
 Waypoint will be able to trigger Terraform to provision deployment infrastructure,
 and connect that infrastructure to the Waypoint server.
