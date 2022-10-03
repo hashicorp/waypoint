@@ -186,14 +186,14 @@ func (p *TaskLauncher) Config() (interface{}, error) {
 	return &p.config, nil
 }
 
-// StopTask signals to docker to stop the container created previously
+// StopTask signals to Kubernetes to stop the container created previously
 func (p *TaskLauncher) StopTask(
 	ctx context.Context,
 	log hclog.Logger,
 	ti *TaskInfo,
 ) error {
-	// If a job completes and the coresponding pod exits with a "completed"
-	// status, we urposely do nothing here. We leverage the job TTL feature in
+	// If a job completes and the corresponding pod exits with a "completed"
+	// status, we purposely do nothing here. We leverage the job TTL feature in
 	// Kube 1.19+ so that Kubernetes automatically deletes old jobs and pods
 	// after they complete running.
 	//
