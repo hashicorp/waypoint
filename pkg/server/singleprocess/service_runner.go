@@ -2,6 +2,7 @@ package singleprocess
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"strings"
 	"time"
@@ -242,12 +243,18 @@ func (s *Service) RunnerToken(
 
 			hash, err := serverptypes.RunnerLabelHash(record.Labels)
 			if err != nil {
-				return nil, err
+				return nil, hcerr.Externalize(log, err, "failed to calculate runner hash", "id", record.Id)
 			}
 
 			encodedId, err := s.encodeId(ctx, record.Id)
 			if err != nil {
-				return nil, errors.Wrapf(err, "failed to encode runner id %s", record.Id)
+				return nil, hcerr.Externalize(
+					log,
+					fmt.Errorf("failed to encode runner id %s", record.Id),
+					"failed to encode runner id",
+					"id",
+					record.Id,
+				)
 			}
 
 			tok, err := s.newToken(ctx,
@@ -268,7 +275,11 @@ func (s *Service) RunnerToken(
 				},
 			)
 			if err != nil {
-				return nil, err
+				return nil, hcerr.Externalize(
+					log,
+					err,
+					"failed to generate new runner token",
+				)
 			}
 
 			return &pb.RunnerTokenResponse{Token: tok}, nil
@@ -277,7 +288,11 @@ func (s *Service) RunnerToken(
 		// Wait for changes
 		log.Trace("runner is not adopted, waiting for state change")
 		if err := ws.WatchCtx(ctx); err != nil {
-			return nil, err
+			return nil, hcerr.Externalize(
+				log,
+				err,
+				"error waiting for runner state changes",
+			)
 		}
 	}
 }
@@ -292,7 +307,11 @@ func (s *Service) RunnerConfig(
 	// Get the request
 	event, err := srv.Recv()
 	if err != nil {
-		return err
+		return hcerr.Externalize(
+			log,
+			err,
+			"error receiving runner config request",
+		)
 	}
 	req, ok := event.Event.(*pb.RunnerConfigRequest_Open_)
 	if !ok {
@@ -303,7 +322,11 @@ func (s *Service) RunnerConfig(
 
 	// Get our token and reverify that we are adopted.
 	if err := s.runnerVerifyToken(log, ctx, record.Id, record.Labels); err != nil {
-		return err
+		return hcerr.Externalize(
+			log,
+			err,
+			"error verifying runner token",
+		)
 	}
 
 	// Create our record
@@ -454,7 +477,11 @@ func (s *Service) RunnerConfig(
 		if err := srv.Send(&pb.RunnerConfigResponse{
 			Config: config,
 		}); err != nil {
-			return err
+			return hcerr.Externalize(
+				log,
+				err,
+				"error sending runner config response",
+			)
 		}
 
 		// Nil out the stuff we used so that if we're waiting awhile we can GC
@@ -462,7 +489,11 @@ func (s *Service) RunnerConfig(
 
 		// Wait for any changes
 		if err := ws.WatchCtx(ctx); err != nil {
-			return err
+			return hcerr.Externalize(
+				log,
+				err,
+				"error waiting for runner config state changes",
+			)
 		}
 	}
 }
