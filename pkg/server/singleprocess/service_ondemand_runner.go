@@ -77,13 +77,21 @@ func (s *Service) DeleteOnDemandRunnerConfig(
 	// Check that runner config exists
 	resp, err := s.GetOnDemandRunnerConfig(ctx, &pb.GetOnDemandRunnerConfigRequest{Config: req.Config})
 	if err != nil {
-		return nil, err
+		return nil, hcerr.Externalize(
+			hclog.FromContext(ctx),
+			err,
+			"failed to generate get on-demand runner config when trying to delete it",
+		)
 	}
 
 	// Delete the runner config
 	err = s.state(ctx).OnDemandRunnerConfigDelete(req.Config)
 	if err != nil {
-		return nil, err
+		return nil, hcerr.Externalize(
+			hclog.FromContext(ctx),
+			err,
+			"failed to delete on-demand runner config",
+		)
 	}
 	result := resp.Config
 

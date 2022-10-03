@@ -2,6 +2,7 @@ package singleprocess
 
 import (
 	"context"
+	"fmt"
 	"sync"
 
 	"github.com/hashicorp/go-hclog"
@@ -13,6 +14,7 @@ import (
 	"github.com/hashicorp/waypoint/pkg/server"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	"github.com/hashicorp/waypoint/pkg/server/grpcmetadata"
+	"github.com/hashicorp/waypoint/pkg/server/hcerr"
 	"github.com/hashicorp/waypoint/pkg/server/logbuffer"
 	"github.com/hashicorp/waypoint/pkg/serverstate"
 )
@@ -178,7 +180,13 @@ func (s *Service) GetLogStream(
 			},
 		})
 		if err != nil {
-			return err
+			return hcerr.Externalize(
+				log,
+				err,
+				"failed to get deployment in get log stream",
+				"deployment_id",
+				scope.DeploymentId,
+			)
 		}
 
 		log = log.With("deployment_id", scope.DeploymentId)
@@ -189,8 +197,11 @@ func (s *Service) GetLogStream(
 			log.Debug("deployment supports log plugin. spawning log plugin")
 			inst, jobId, err := s.spawnLogPlugin(srv.Context(), log, deployment)
 			if err != nil {
-				log.Warn("error spawning log plugin", "err", err)
-				return err
+				return hcerr.Externalize(
+					log,
+					fmt.Errorf("error spawning log plugin: %w", err),
+					"error spawning log plugin",
+				)
 			}
 
 			// Be sure to cleanup when we, the job creator, are finished.
@@ -214,7 +225,13 @@ func (s *Service) GetLogStream(
 			instanceFunc = func(ws memdb.WatchSet) ([]*streamRec, error) {
 				instances, err := s.state(ctx).InstancesByDeployment(scope.DeploymentId, ws)
 				if err != nil {
-					return nil, err
+					return nil, hcerr.Externalize(
+						log,
+						err,
+						"failed to get instance by deployment",
+						"deployment_id",
+						scope.DeploymentId,
+					)
 				}
 				instanceLog.Trace("instances loaded for deployment",
 					"instances_len", len(instances))
@@ -283,7 +300,11 @@ func (s *Service) GetLogStream(
 				serverstate.ListWithWatchSet(ws),
 			)
 			if err != nil {
-				return nil, err
+				return nil, hcerr.Externalize(
+					log,
+					err,
+					"failed to list successful deployments",
+				)
 			}
 			instanceLog.Trace(
 				"deployments refreshed for application",
@@ -301,7 +322,11 @@ func (s *Service) GetLogStream(
 						instanceLog.Trace("deployment supports log plugin, spawning log plugin instance")
 						inst, jobId, err := s.spawnLogPlugin(srv.Context(), log, dep)
 						if err != nil {
-							return nil, err
+							return nil, hcerr.Externalize(
+								log,
+								err,
+								"failed to launch log plugin for deployment",
+							)
 						}
 						instanceLog.Trace("log plugin spawned", "job_id", jobId)
 
@@ -321,7 +346,13 @@ func (s *Service) GetLogStream(
 					instanceLog.Trace("tracking instances for deployment", "deployment_id", dep.Id)
 					depInstances, err := s.state(ctx).InstancesByDeployment(dep.Id, ws)
 					if err != nil {
-						return nil, err
+						return nil, hcerr.Externalize(
+							log,
+							err,
+							"failed to get instance by deployment",
+							"deployment_id",
+							dep.Id,
+						)
 					}
 
 					for _, i := range depInstances {

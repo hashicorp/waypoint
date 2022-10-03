@@ -16,6 +16,7 @@ import (
 
 	"github.com/hashicorp/waypoint/internal/server/boltdbstate"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
+	"github.com/hashicorp/waypoint/pkg/server/hcerr"
 	"github.com/hashicorp/waypoint/pkg/server/logbuffer"
 	"github.com/hashicorp/waypoint/pkg/server/ptypes"
 	"github.com/hashicorp/waypoint/pkg/serverstate"
@@ -37,7 +38,13 @@ func (s *Service) EntrypointConfig(
 		},
 	})
 	if err != nil {
-		return err
+		return hcerr.Externalize(
+			log,
+			err,
+			"failed to get deployment in entrypoint config",
+			"deployment_id",
+			req.DeploymentId,
+		)
 	}
 
 	// Create our record
@@ -54,7 +61,13 @@ func (s *Service) EntrypointConfig(
 		DisableExec:  req.DisableExec,
 	}
 	if err := s.state(ctx).InstanceCreate(record); err != nil {
-		return err
+		return hcerr.Externalize(
+			log,
+			err,
+			"failed to get create an instance in entrypoint config",
+			"deployment_id",
+			req.DeploymentId,
+		)
 	}
 
 	// Handling exec requests is optional so we check if state supports
@@ -104,7 +117,11 @@ func (s *Service) EntrypointConfig(
 		if iexec != nil {
 			execs, err = iexec.InstanceExecListByInstanceId(req.InstanceId, ws)
 			if err != nil {
-				return err
+				return hcerr.Externalize(
+					log,
+					err,
+					"failed to find an instance for exec",
+				)
 			}
 		}
 
@@ -146,7 +163,11 @@ func (s *Service) EntrypointConfig(
 			Labels:    deployment.Labels,
 		}, ws)
 		if err != nil {
-			return err
+			return hcerr.Externalize(
+				log,
+				err,
+				"failed to watch config in entrypoint config",
+			)
 		}
 		config.EnvVars = vars
 
@@ -154,7 +175,11 @@ func (s *Service) EntrypointConfig(
 			deployment.Application,
 		)
 		if err != nil {
-			return err
+			return hcerr.Externalize(
+				log,
+				err,
+				"failed to get file change signal in entrypoint config",
+			)
 		}
 
 		// Get the config sources we need for our vars. We only do this if
@@ -169,7 +194,11 @@ func (s *Service) EntrypointConfig(
 				},
 			}, ws)
 			if err != nil {
-				return err
+				return hcerr.Externalize(
+					log,
+					err,
+					"failed to watch config source in entrypoint config",
+				)
 			}
 
 			config.ConfigSources = sources
@@ -216,7 +245,11 @@ func (s *Service) EntrypointConfig(
 		if err := srv.Send(&pb.EntrypointConfigResponse{
 			Config: config,
 		}); err != nil {
-			return err
+			return hcerr.Externalize(
+				log,
+				err,
+				"failed to send config in entrypoint config",
+			)
 		}
 
 		// Nil out the stuff we used so that if we're waiting awhile we can GC
@@ -225,7 +258,11 @@ func (s *Service) EntrypointConfig(
 
 		// Wait for any changes
 		if err := ws.WatchCtx(srv.Context()); err != nil {
-			return err
+			return hcerr.Externalize(
+				log,
+				err,
+				"failed to watch for changes in entrypoint config",
+			)
 		}
 	}
 }
@@ -242,8 +279,12 @@ func (s *Service) EntrypointLogStream(
 	// state store. We will add support for our other stores later.
 	inmemstate, ok := s.state(ctx).(*boltdbstate.State)
 	if !ok {
-		return status.Errorf(codes.Unimplemented,
-			"state storage doesn't support log streaming")
+		return hcerr.Externalize(
+			hclog.FromContext(ctx),
+			status.Errorf(codes.Unimplemented,
+				"state storage doesn't support log streaming"),
+			"state storage doesn't support log streaming",
+		)
 	}
 
 	var buf *logbuffer.Buffer
@@ -251,7 +292,11 @@ func (s *Service) EntrypointLogStream(
 		// Read the next log entry
 		batch, err := server.Recv()
 		if err != nil {
-			return err
+			return hcerr.Externalize(
+				log,
+				err,
+				"failed to receive entrypoint log",
+			)
 		}
 
 		// If we haven't initialized our buffer yet, do that
@@ -270,13 +315,21 @@ func (s *Service) EntrypointLogStream(
 					log.Info("no Instance found, attempting to lookup InstanceLogs record instead")
 					il, err := inmemstate.InstanceLogsByInstanceId(batch.InstanceId)
 					if err != nil {
-						return err
+						return hcerr.Externalize(
+							log,
+							err,
+							"failed to find log by instance ID in entrypoint",
+						)
 					}
 
 					log.Info("using InstanceLogs record")
 					buf = il.LogBuffer
 				} else {
-					return err
+					return hcerr.Externalize(
+						log,
+						err,
+						"failed to find log by instance ID in entrypoint",
+					)
 				}
 			} else {
 				// Get our log buffer
@@ -315,32 +368,52 @@ func (s *Service) EntrypointExecStream(
 	// it's supported first.
 	iexec, ok := s.state(ctx).(serverstate.InstanceExecHandler)
 	if !ok {
-		return status.Errorf(codes.Unimplemented,
-			"state storage doesn't support exec streaming")
+		return hcerr.Externalize(
+			log,
+			status.Errorf(codes.Unimplemented,
+				"state storage doesn't support exec streaming"),
+			"state storage doesn't support exec streaming",
+		)
 	}
 
 	// Receive our opening message so we can determine the exec stream.
 	req, err := server.Recv()
 	if err != nil {
-		return err
+		return hcerr.Externalize(
+			log,
+			err,
+			"failed to receive entrypoint exex stream",
+		)
 	}
 	open, ok := req.Event.(*pb.EntrypointExecRequest_Open_)
 	if !ok {
-		return status.Errorf(codes.FailedPrecondition,
-			"first message must be open type")
+		return hcerr.Externalize(
+			log,
+			status.Errorf(codes.FailedPrecondition,
+				"error reading entrypoint exec stream, first message must be open type"),
+			"error reading entrypoint exec stream, first message must be open type",
+		)
 	}
 
 	// Get our instance and look for this exec index
 	exec, err := iexec.InstanceExecConnect(ctx, open.Open.Index)
 	if err != nil {
-		return err
+		return hcerr.Externalize(
+			log,
+			err,
+			"failed to connect to instance for exec",
+		)
 	}
 	log = log.With("instance_id", exec.InstanceId, "index", open.Open.Index)
 
 	// Mark we're connected
 	if !atomic.CompareAndSwapUint32(&exec.Connected, 0, 1) {
-		return status.Errorf(codes.FailedPrecondition,
-			"exec session is already open for this index")
+		return hcerr.Externalize(
+			log,
+			status.Errorf(codes.FailedPrecondition,
+				"exec session is already open for this index"),
+			"exec session is already open for this index",
+		)
 	}
 	log.Debug("exec stream open")
 
@@ -460,7 +533,11 @@ func (s *Service) EntrypointExecStream(
 			Opened: true,
 		},
 	}); err != nil {
-		return err
+		return hcerr.Externalize(
+			log,
+			err,
+			"failure to send entrypoint exec response",
+		)
 	}
 
 	// Loop through our receive loop
@@ -473,14 +550,22 @@ func (s *Service) EntrypointExecStream(
 			// Double check and see if there was an error and if so, return it.
 			select {
 			case err = <-errCh:
-				return err
+				return hcerr.Externalize(
+					log,
+					err,
+					"error in entrypoint exec stream",
+				)
 			default:
 				return nil
 			}
 
 		// The above goroutine has errored.
 		case err := <-errCh:
-			return err
+			return hcerr.Externalize(
+				log,
+				err,
+				"error in entrypoint exec stream",
+			)
 
 		// The client goroutine has finished.
 		case req, active := <-exec.ClientEventCh:
@@ -490,7 +575,11 @@ func (s *Service) EntrypointExecStream(
 			}
 
 			if err := s.handleClientExecRequest(log, server, req); err != nil {
-				return err
+				return hcerr.Externalize(
+					log,
+					err,
+					"error handling client exec request",
+				)
 			}
 		}
 	}
