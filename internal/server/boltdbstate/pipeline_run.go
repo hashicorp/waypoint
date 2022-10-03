@@ -3,7 +3,6 @@ package boltdbstate
 import (
 	"math"
 	"strings"
-	"sync/atomic"
 
 	bolt "go.etcd.io/bbolt"
 	"google.golang.org/grpc/codes"
@@ -58,7 +57,7 @@ func (s *State) PipelineRunPut(pr *pb.PipelineRun) error {
 			// increment sequence if this is not the first run
 			if raw != nil {
 				idx := raw.(*pipelineRunIndexRecord)
-				pr.Sequence = atomic.AddUint64(&idx.Sequence, 1)
+				pr.Sequence = idx.Sequence + 1
 			} else {
 				pr.Sequence = 1
 			}
