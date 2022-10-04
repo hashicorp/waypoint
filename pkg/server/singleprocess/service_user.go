@@ -47,7 +47,7 @@ func (s *Service) UpdateUser(
 		},
 	})
 	if err != nil {
-		return nil, err
+		return nil, hcerr.Externalize(hclog.FromContext(ctx), err, "failed to get user in update")
 	}
 
 	// Update our writable fields
