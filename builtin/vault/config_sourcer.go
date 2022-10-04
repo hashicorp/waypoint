@@ -168,7 +168,7 @@ func (cs *ConfigSourcer) read(
 			// and prevents flapping values on every refresh.
 			if secret.Renewable {
 				L.Debug("secret is renewable, starting renewer")
-				cs.startRenewer(client, vaultReq.Path, secret)
+				cs.startRenewer(client, vaultReq.Path, secret, L)
 			}
 		}
 
@@ -240,25 +240,31 @@ func (cs *ConfigSourcer) stop() error {
 	return nil
 }
 
-func (cs *ConfigSourcer) startRenewer(client *vaultapi.Client, path string, s *vaultapi.Secret) {
+func (cs *ConfigSourcer) startRenewer(client *vaultapi.Client, path string, s *vaultapi.Secret, log hclog.Logger) {
 	// The secret should be in the cache. If it isn't then just ignore.
 	// The reason it should be in the cache is because we only call startRenewer
 	// after querying the initial secret and inserting it into the cache.
+	log.Debug("checking if secret is in cache...")
 	cache, ok := cs.secretCache[path]
 	if !ok {
 		return
 	}
+	log.Debug("secret is in cache")
 
-	renewer, err := client.NewRenewer(&vaultapi.RenewerInput{
+	log.Debug("creating new lifetime watcher...")
+	renewer, err := client.NewLifetimeWatcher(&vaultapi.LifetimeWatcherInput{
 		Secret: cache.Secret,
 	})
 	if err != nil {
 		cache.Err = err
 		return
 	}
+	log.Debug("lifetime watcher created")
 
+	log.Debug("starting renewer...")
 	// Start the renewer in the background
-	renewer.Renew()
+	go renewer.Renew()
+	log.Debug("renewer started")
 
 	// Create our cancellation context
 	ctx, cancel := context.WithCancel(context.Background())
@@ -267,7 +273,7 @@ func (cs *ConfigSourcer) startRenewer(client *vaultapi.Client, path string, s *v
 	// Start our goroutine that actually watches for changes. This
 	// goroutine can no longer assume the "cache" variable is safe for
 	// reading or writing and must acquire a lock.
-	go func() {
+	go func(log hclog.Logger) {
 		defer renewer.Stop()
 
 		for {
@@ -276,14 +282,17 @@ func (cs *ConfigSourcer) startRenewer(client *vaultapi.Client, path string, s *v
 			case <-ctx.Done():
 				// If we're canceled, we assume something else is handling
 				// our cleanup and values and so on so just exit.
+				log.Debug("renewer canceled")
 				return
 
 			case err := <-renewer.DoneCh():
 				// Error during renew, mark the error value and exit.
+				log.Debug("renewer done")
 				newVal.Err = err
 
 			case renew := <-renewer.RenewCh():
 				// Successful renewal, store the secret
+				log.Debug("renewing secret...")
 				newVal.Secret = renew.Secret
 			}
 
@@ -305,8 +314,9 @@ func (cs *ConfigSourcer) startRenewer(client *vaultapi.Client, path string, s *v
 			}
 
 			cs.cacheMu.Unlock()
+			log.Debug("secret renewed")
 		}
-	}()
+	}(log)
 }
 
 func (cs *ConfigSourcer) Documentation() (*docs.Documentation, error) {
