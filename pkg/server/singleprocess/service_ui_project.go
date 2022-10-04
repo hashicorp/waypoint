@@ -4,7 +4,9 @@ import (
 	"context"
 	"sort"
 
+	"github.com/hashicorp/go-hclog"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
+	"github.com/hashicorp/waypoint/pkg/server/hcerr"
 	serverptypes "github.com/hashicorp/waypoint/pkg/server/ptypes"
 )
 
@@ -17,15 +19,21 @@ func (s *Service) UI_GetProject(
 	}
 
 	project, err := s.state(ctx).ProjectGet(req.Project)
-
 	if err != nil {
-		return nil, err
+		return nil, hcerr.Externalize(
+			hclog.FromContext(ctx),
+			err,
+			"error getting project",
+		)
 	}
 
 	jobs, err := s.state(ctx).JobList(&pb.ListJobsRequest{})
-
 	if err != nil {
-		return nil, err
+		return nil, hcerr.Externalize(
+			hclog.FromContext(ctx),
+			err,
+			"error listing jobs",
+		)
 	}
 
 	// Sort jobs by queue time (descending)
