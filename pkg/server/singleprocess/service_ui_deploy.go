@@ -76,7 +76,7 @@ func (s *Service) UI_ListDeployments(
 			err,
 			"error getting deployment list for application",
 			"application",
-			req.Application,
+			req.GetApplication(),
 		)
 	}
 
