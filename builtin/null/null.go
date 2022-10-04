@@ -12,5 +12,5 @@ import (
 
 // Options are the SDK options to use for instantiation for this plugin.
 var Options = []sdk.Option{
-	sdk.WithComponents(&ConfigSourcer{}),
+	sdk.WithComponents(&ConfigSourcer{}, &Builder{}, &Platform{}, &Releaser{}),
 }
