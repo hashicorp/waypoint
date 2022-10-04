@@ -3,7 +3,9 @@ package singleprocess
 import (
 	"context"
 
+	"github.com/hashicorp/go-hclog"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
+	"github.com/hashicorp/waypoint/pkg/server/hcerr"
 	"github.com/hashicorp/waypoint/pkg/serverstate"
 )
 
@@ -18,7 +20,11 @@ func (s *Service) UI_ListReleases(
 		serverstate.ListWithPhysicalState(req.PhysicalState),
 	)
 	if err != nil {
-		return nil, err
+		return nil, hcerr.Externalize(
+			hclog.FromContext(ctx),
+			err,
+			"error listing releases",
+		)
 	}
 
 	// TODO: make this more efficient. We should be able to just grab the relevant status report in one go, not have to
@@ -33,7 +39,15 @@ func (s *Service) UI_ListReleases(
 		serverstate.ListWithWorkspace(req.Workspace),
 	)
 	if err != nil {
-		return nil, err
+		return nil, hcerr.Externalize(
+			hclog.FromContext(ctx),
+			err,
+			"error listing status reports",
+			"application",
+			req.GetApplication(),
+			"workspace",
+			req.GetWorkspace(),
+		)
 	}
 
 	var releaseBundles []*pb.UI_ReleaseBundle
@@ -54,7 +68,11 @@ func (s *Service) UI_ListReleases(
 
 		// Always pre-populate release details for bundles
 		if err := s.releasePreloadDetails(ctx, pb.Release_BUILD, release); err != nil {
-			return nil, err
+			return nil, hcerr.Externalize(
+				hclog.FromContext(ctx),
+				err,
+				"error reloading data for releases",
+			)
 		}
 
 		bundle := pb.UI_ReleaseBundle{
