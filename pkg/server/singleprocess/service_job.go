@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/pkg/server"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
+	"github.com/hashicorp/waypoint/pkg/server/hcerr"
 	serverptypes "github.com/hashicorp/waypoint/pkg/server/ptypes"
 	"github.com/hashicorp/waypoint/pkg/serverconfig"
 	"github.com/hashicorp/waypoint/pkg/serverstate"
@@ -28,7 +29,13 @@ func (s *Service) GetJob(
 ) (*pb.Job, error) {
 	job, err := s.state(ctx).JobById(req.JobId, nil)
 	if err != nil {
-		return nil, err
+		return nil, hcerr.Externalize(
+			hclog.FromContext(ctx),
+			err,
+			"failed to get job by id",
+			"job_id",
+			req.JobId,
+		)
 	}
 	if job == nil || job.Job == nil {
 		return nil, status.Errorf(codes.NotFound, "job not found")
@@ -43,7 +50,11 @@ func (s *Service) ListJobs(
 ) (*pb.ListJobsResponse, error) {
 	jobs, err := s.state(ctx).JobList(req)
 	if err != nil {
-		return nil, err
+		return nil, hcerr.Externalize(
+			hclog.FromContext(ctx),
+			err,
+			"error listing jobs",
+		)
 	}
 
 	return &pb.ListJobsResponse{
@@ -56,7 +67,13 @@ func (s *Service) CancelJob(
 	req *pb.CancelJobRequest,
 ) (*empty.Empty, error) {
 	if err := s.state(ctx).JobCancel(req.JobId, req.Force); err != nil {
-		return nil, err
+		return nil, hcerr.Externalize(
+			hclog.FromContext(ctx),
+			err,
+			"error cancelling job",
+			"job_id",
+			req.JobId,
+		)
 	}
 
 	return &empty.Empty{}, nil

@@ -9,9 +9,11 @@ import (
 	"google.golang.org/grpc/status"
 	empty "google.golang.org/protobuf/types/known/emptypb"
 
+	"github.com/hashicorp/go-hclog"
 	wphznpb "github.com/hashicorp/waypoint-hzn/pkg/pb"
 
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
+	"github.com/hashicorp/waypoint/pkg/server/hcerr"
 	"github.com/hashicorp/waypoint/pkg/server/ptypes"
 )
 
@@ -39,7 +41,11 @@ func (s *Service) CreateHostname(
 	// Determine our labels based on our target
 	labels, err := s.hostnameLabelSet(req.Target)
 	if err != nil {
-		return nil, err
+		return nil, hcerr.Externalize(
+			hclog.FromContext(ctx),
+			err,
+			"failed to determine hostname labels",
+		)
 	}
 
 	// Build our request
@@ -62,7 +68,11 @@ func (s *Service) CreateHostname(
 	// Make the request
 	resp, err := urlClient.RegisterHostname(ctx, hostnameReq)
 	if err != nil {
-		return nil, err
+		return nil, hcerr.Externalize(
+			hclog.FromContext(ctx),
+			err,
+			"failed to register hostname",
+		)
 	}
 
 	// Extract some data for our result
@@ -96,7 +106,11 @@ func (s *Service) ListHostnames(
 	if req.Target != nil {
 		labels, err := s.hostnameLabelSet(req.Target)
 		if err != nil {
-			return nil, err
+			return nil, hcerr.Externalize(
+				hclog.FromContext(ctx),
+				err,
+				"failed to determine hostname labels",
+			)
 		}
 
 		targetMap = s.hostnameLabelSetToMap(labels)
@@ -104,7 +118,11 @@ func (s *Service) ListHostnames(
 
 	resp, err := urlClient.ListHostnames(ctx, &wphznpb.ListHostnamesRequest{})
 	if err != nil {
-		return nil, err
+		return nil, hcerr.Externalize(
+			hclog.FromContext(ctx),
+			err,
+			"failed to list hostnames",
+		)
 	}
 
 	result := make([]*pb.Hostname, 0, len(resp.Hostnames))
@@ -142,7 +160,13 @@ func (s *Service) DeleteHostname(
 		Hostname: req.Hostname,
 	})
 	if err != nil {
-		return nil, err
+		return nil, hcerr.Externalize(
+			hclog.FromContext(ctx),
+			err,
+			"failed to delete hostname",
+			"hostname",
+			req.Hostname,
+		)
 	}
 
 	return &empty.Empty{}, nil

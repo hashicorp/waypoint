@@ -3,7 +3,9 @@ package singleprocess
 import (
 	"context"
 
+	"github.com/hashicorp/go-hclog"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
+	"github.com/hashicorp/waypoint/pkg/server/hcerr"
 	serverptypes "github.com/hashicorp/waypoint/pkg/server/ptypes"
 )
 
@@ -17,7 +19,11 @@ func (s *Service) ListPipelineRuns(
 
 	result, err := s.state(ctx).PipelineRunList(req.Pipeline)
 	if err != nil {
-		return nil, err
+		return nil, hcerr.Externalize(
+			hclog.FromContext(ctx),
+			err,
+			"failed to push pipeline run",
+		)
 	}
 
 	return &pb.ListPipelineRunsResponse{
@@ -35,7 +41,11 @@ func (s *Service) GetPipelineRun(
 
 	result, err := s.state(ctx).PipelineRunGet(req.Pipeline, req.Sequence)
 	if err != nil {
-		return nil, err
+		return nil, hcerr.Externalize(
+			hclog.FromContext(ctx),
+			err,
+			"failed to get pipeline run",
+		)
 	}
 
 	return &pb.GetPipelineRunResponse{

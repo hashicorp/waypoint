@@ -3,13 +3,12 @@ package singleprocess
 import (
 	"context"
 	"fmt"
-	"github.com/hashicorp/waypoint/pkg/server/hcerr"
 	"strings"
 	"time"
 
+	"github.com/hashicorp/waypoint/pkg/server/hcerr"
+
 	"github.com/hashicorp/go-hclog"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 
 	"github.com/hashicorp/waypoint/pkg/server"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
@@ -33,7 +32,11 @@ func (s *Service) UpsertDeployment(
 		// Get the next id
 		id, err := server.Id()
 		if err != nil {
-			return nil, status.Errorf(codes.Internal, "uuid generation failed: %s", err)
+			return nil, hcerr.Externalize(
+				hclog.FromContext(ctx),
+				fmt.Errorf("uuid generation failed: %w", err),
+				"failed to generate a uuid while upserting a pushed artifact",
+			)
 		}
 
 		// Specify the id
