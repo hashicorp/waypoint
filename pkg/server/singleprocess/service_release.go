@@ -2,12 +2,12 @@ package singleprocess
 
 import (
 	"context"
+	"fmt"
 
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
-
+	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/waypoint/pkg/server"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
+	"github.com/hashicorp/waypoint/pkg/server/hcerr"
 	"github.com/hashicorp/waypoint/pkg/server/ptypes"
 	"github.com/hashicorp/waypoint/pkg/serverstate"
 )
@@ -28,7 +28,11 @@ func (s *Service) UpsertRelease(
 		// Get the next id
 		id, err := server.Id()
 		if err != nil {
-			return nil, status.Errorf(codes.Internal, "uuid generation failed: %s", err)
+			return nil, hcerr.Externalize(
+				hclog.FromContext(ctx),
+				fmt.Errorf("uuid generation failed: %w", err),
+				"failed to generate a uuid while upserting a release",
+			)
 		}
 
 		// Specify the id
@@ -36,7 +40,13 @@ func (s *Service) UpsertRelease(
 	}
 
 	if err := s.state(ctx).ReleasePut(!insert, result); err != nil {
-		return nil, err
+		return nil, hcerr.Externalize(
+			hclog.FromContext(ctx),
+			err,
+			"failed to upsert release",
+			"release_id",
+			result.GetId(),
+		)
 	}
 
 	return &pb.UpsertReleaseResponse{Release: result}, nil
@@ -54,12 +64,20 @@ func (s *Service) ListReleases(
 		serverstate.ListWithPhysicalState(req.PhysicalState),
 	)
 	if err != nil {
-		return nil, err
+		return nil, hcerr.Externalize(
+			hclog.FromContext(ctx),
+			err,
+			"error listing releases",
+		)
 	}
 
 	for _, r := range result {
 		if err := s.releasePreloadDetails(ctx, req.LoadDetails, r); err != nil {
-			return nil, err
+			return nil, hcerr.Externalize(
+				hclog.FromContext(ctx),
+				err,
+				"error preloading release list details",
+			)
 		}
 	}
 
@@ -77,11 +95,19 @@ func (s *Service) GetLatestRelease(
 
 	r, err := s.state(ctx).ReleaseLatest(req.Application, req.Workspace)
 	if err != nil {
-		return nil, err
+		return nil, hcerr.Externalize(
+			hclog.FromContext(ctx),
+			err,
+			"error getting latest release",
+		)
 	}
 
 	if err := s.releasePreloadDetails(ctx, req.LoadDetails, r); err != nil {
-		return nil, err
+		return nil, hcerr.Externalize(
+			hclog.FromContext(ctx),
+			err,
+			"error preloading release details",
+		)
 	}
 
 	return r, nil
@@ -98,11 +124,23 @@ func (s *Service) GetRelease(
 
 	r, err := s.state(ctx).ReleaseGet(req.Ref)
 	if err != nil {
-		return nil, err
+		return nil, hcerr.Externalize(
+			hclog.FromContext(ctx),
+			err,
+			"error getting release",
+			"release",
+			req.Ref.GetTarget(),
+		)
 	}
 
 	if err := s.releasePreloadDetails(ctx, req.LoadDetails, r); err != nil {
-		return nil, err
+		return nil, hcerr.Externalize(
+			hclog.FromContext(ctx),
+			err,
+			"error preloading release details",
+			"release",
+			req.Ref.GetTarget(),
+		)
 	}
 
 	return r, nil
