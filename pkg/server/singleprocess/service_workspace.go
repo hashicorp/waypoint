@@ -6,7 +6,9 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	"github.com/hashicorp/go-hclog"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
+	"github.com/hashicorp/waypoint/pkg/server/hcerr"
 	"github.com/hashicorp/waypoint/pkg/server/ptypes"
 )
 
@@ -21,7 +23,13 @@ func (s *Service) GetWorkspace(
 
 	result, err := s.state(ctx).WorkspaceGet(req.Workspace.Workspace)
 	if err != nil {
-		return nil, err
+		return nil, hcerr.Externalize(
+			hclog.FromContext(ctx),
+			err,
+			"error getting workspace",
+			"workspace",
+			req.Workspace.GetWorkspace(),
+		)
 	}
 
 	return &pb.GetWorkspaceResponse{Workspace: result}, nil
@@ -54,7 +62,11 @@ func (s *Service) ListWorkspaces(
 			"unknown ListWorkspaces scope type: %T", req.Scope)
 	}
 	if err != nil {
-		return nil, err
+		return nil, hcerr.Externalize(
+			hclog.FromContext(ctx),
+			err,
+			"error listing workspaces",
+		)
 	}
 
 	return &pb.ListWorkspacesResponse{Workspaces: result}, nil
@@ -70,7 +82,13 @@ func (s *Service) UpsertWorkspace(
 	}
 
 	if err := s.state(ctx).WorkspacePut(req.Workspace); err != nil {
-		return nil, err
+		return nil, hcerr.Externalize(
+			hclog.FromContext(ctx),
+			err,
+			"error upserting workspace",
+			"workspace",
+			req.GetWorkspace(),
+		)
 	}
 
 	return &pb.UpsertWorkspaceResponse{Workspace: req.Workspace}, nil
