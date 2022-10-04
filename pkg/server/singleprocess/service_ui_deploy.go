@@ -9,6 +9,7 @@ import (
 	"github.com/pkg/errors"
 
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
+	"github.com/hashicorp/waypoint/pkg/server/hcerr"
 	"github.com/hashicorp/waypoint/pkg/server/ptypes"
 	"github.com/hashicorp/waypoint/pkg/serverstate"
 )
@@ -23,12 +24,22 @@ func (s *Service) UI_GetDeployment(
 
 	deploy, err := s.GetDeployment(ctx, getDeployReq)
 	if err != nil {
-		return nil, errors.Wrapf(err, "error getting deployment %q", deploy.Id)
+		return nil, hcerr.Externalize(
+			hclog.FromContext(ctx),
+			err,
+			"error getting deployment",
+		)
 	}
 
 	bundle, err := s.getDeploymentBundle(ctx, deploy.Application, deploy.Workspace, deploy)
 	if err != nil {
-		return nil, errors.Wrapf(err, "error getting bundle for deployment %q", deploy.Id)
+		return nil, hcerr.Externalize(
+			hclog.FromContext(ctx),
+			err,
+			"error getting bundle for deployment",
+			"deployment_id",
+			deploy.Id,
+		)
 	}
 
 	if bundle.Deployment.HasEntrypointConfig {
@@ -60,7 +71,13 @@ func (s *Service) UI_ListDeployments(
 		serverstate.ListWithPhysicalState(req.PhysicalState),
 	)
 	if err != nil {
-		return nil, err
+		return nil, hcerr.Externalize(
+			hclog.FromContext(ctx),
+			err,
+			"error getting deployment list for application",
+			"application",
+			req.Application,
+		)
 	}
 
 	var (
@@ -71,7 +88,15 @@ func (s *Service) UI_ListDeployments(
 	for _, deploy := range deployList {
 		bundle, err := s.getDeploymentBundle(ctx, req.Application, req.Workspace, deploy)
 		if err != nil {
-			return nil, err
+			return nil, hcerr.Externalize(
+				hclog.FromContext(ctx),
+				err,
+				"error getting deployment bundle for application",
+				"application",
+				req.GetApplication(),
+				"workspace",
+				req.GetWorkspace(),
+			)
 		}
 		/*
 			NOTE(briancain): Look up horizon URL ONCE, then for each deployment, append the deploy sequence
@@ -123,7 +148,15 @@ func (s *Service) getDeploymentBundle(
 		serverstate.ListWithWorkspace(workspace),
 	)
 	if err != nil {
-		return nil, err
+		return nil, hcerr.Externalize(
+			hclog.FromContext(ctx),
+			err,
+			"error getting status report list",
+			"application",
+			application.GetApplication(),
+			"workspace",
+			workspace.GetWorkspace(),
+		)
 	}
 
 	bundle := pb.UI_DeploymentBundle{
@@ -151,7 +184,13 @@ func (s *Service) getDeploymentBundle(
 		},
 	})
 	if err != nil {
-		return nil, err
+		return nil, hcerr.Externalize(
+			hclog.FromContext(ctx),
+			err,
+			"error getting artifact",
+			"artifact_id",
+			deploy.GetArtifactId(),
+		)
 	}
 
 	// Find build
@@ -162,7 +201,13 @@ func (s *Service) getDeploymentBundle(
 			},
 		})
 		if err != nil {
-			return nil, err
+			return nil, hcerr.Externalize(
+				hclog.FromContext(ctx),
+				err,
+				"error getting build for artifact",
+				"artifact_id",
+				bundle.Artifact.GetBuildId(),
+			)
 		}
 	}
 	return &bundle, nil
