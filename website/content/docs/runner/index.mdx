@@ -91,10 +91,12 @@ On-demand runners: see [on-demand runners](/docs/runner/on-demand-runner) for mo
 
 ## Runner Targeting
 
-Runner targeting allows users to configure Waypoint to target specific runners
-to execute operations for an application. A runner `profile` can be specified
-in the `runner` stanza in the `waypoint.hcl` file. The `runner profile` can be
-configured to use a specific static runner, or multiple, based on labels.
+Runner targeting was designed with multi-environment and multi-region workflows in mind.
+Static runners can be installed with user-defined ID and labels.
+You can then set [runner profiles](/docs/runner/profiles), which tell the server which static runner to target to handle operations,
+and the configurations of the short-lived on-demand runner that will execute jobs.
+Finally, specify which `runner profile` to use for an application via
+the `profile` option in the `runner` stanza of the `waypoint.hcl` file.
 
 ### Runner Targeting Example
 
