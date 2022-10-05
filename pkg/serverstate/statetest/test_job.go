@@ -1696,6 +1696,8 @@ func TestJobPipeline_AckAndComplete(t *testing.T, factory Factory, rf RestartFac
 		// Create a new pipeline run
 		pr := &pb.PipelineRun{Pipeline: pipeline}
 		r := serverptypes.TestPipelineRun(t, pr)
+		err = s.PipelineRunPut(r)
+		require.NoError(err)
 
 		// Create a job
 		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{

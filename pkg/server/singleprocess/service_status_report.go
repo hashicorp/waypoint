@@ -7,8 +7,10 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/waypoint/pkg/server"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
+	"github.com/hashicorp/waypoint/pkg/server/hcerr"
 	serverptypes "github.com/hashicorp/waypoint/pkg/server/ptypes"
 	"github.com/hashicorp/waypoint/pkg/serverstate"
 )
@@ -29,7 +31,11 @@ func (s *Service) UpsertStatusReport(
 		// Get the next id
 		id, err := server.Id()
 		if err != nil {
-			return nil, status.Errorf(codes.Internal, "uuid generation failed: %s", err)
+			return nil, hcerr.Externalize(
+				hclog.FromContext(ctx),
+				err,
+				"failed to generate a uuid while upserting a status report",
+			)
 		}
 
 		// Specify the id
@@ -37,7 +43,11 @@ func (s *Service) UpsertStatusReport(
 	}
 
 	if err := s.state(ctx).StatusReportPut(!insert, result); err != nil {
-		return nil, err
+		return nil, hcerr.Externalize(
+			hclog.FromContext(ctx),
+			err,
+			"error upserting status report",
+		)
 	}
 
 	return &pb.UpsertStatusReportResponse{StatusReport: result}, nil
@@ -57,7 +67,11 @@ func (s *Service) ListStatusReports(
 		serverstate.ListWithWorkspace(req.Workspace),
 	)
 	if err != nil {
-		return nil, err
+		return nil, hcerr.Externalize(
+			hclog.FromContext(ctx),
+			err,
+			"error listing status reports",
+		)
 	}
 
 	var response *pb.ListStatusReportsResponse
@@ -131,7 +145,13 @@ func (s *Service) GetLatestStatusReport(
 
 	r, err := s.state(ctx).StatusReportLatest(req.Application, req.Workspace, filter)
 	if err != nil {
-		return nil, err
+		return nil, hcerr.Externalize(
+			hclog.FromContext(ctx),
+			err,
+			"error retrieving latest status reports",
+			"application",
+			req.Application.GetApplication(),
+		)
 	}
 
 	return r, nil
@@ -148,7 +168,11 @@ func (s *Service) GetStatusReport(
 
 	r, err := s.state(ctx).StatusReportGet(req.Ref)
 	if err != nil {
-		return nil, err
+		return nil, hcerr.Externalize(
+			hclog.FromContext(ctx),
+			err,
+			"error getting status report",
+		)
 	}
 
 	return r, nil
@@ -169,7 +193,11 @@ func (s *Service) ExpediteStatusReport(
 	case *pb.ExpediteStatusReportRequest_Deployment:
 		d, err := s.state(ctx).DeploymentGet(target.Deployment)
 		if err != nil {
-			return nil, err
+			return nil, hcerr.Externalize(
+				hclog.FromContext(ctx),
+				err,
+				"error getting deployment for expedited status report",
+			)
 		}
 
 		applicationRef = d.Application
@@ -179,7 +207,11 @@ func (s *Service) ExpediteStatusReport(
 	case *pb.ExpediteStatusReportRequest_Release:
 		r, err := s.state(ctx).ReleaseGet(target.Release)
 		if err != nil {
-			return nil, err
+			return nil, hcerr.Externalize(
+				hclog.FromContext(ctx),
+				err,
+				"error getting release in expedited status report",
+			)
 		}
 
 		applicationRef = r.Application
@@ -193,7 +225,13 @@ func (s *Service) ExpediteStatusReport(
 	// Status report jobs need the parent project to obtain its datasource
 	project, err := s.state(ctx).ProjectGet(&pb.Ref_Project{Project: applicationRef.Project})
 	if err != nil {
-		return nil, err
+		return nil, hcerr.Externalize(
+			hclog.FromContext(ctx),
+			err,
+			"error getting project in expedited status report",
+			"project",
+			applicationRef.GetProject(),
+		)
 	}
 
 	var workspace string
@@ -233,7 +271,11 @@ func (s *Service) ExpediteStatusReport(
 
 	queueJobResponse, err := s.QueueJob(ctx, jobRequest)
 	if err != nil {
-		return nil, err
+		return nil, hcerr.Externalize(
+			hclog.FromContext(ctx),
+			err,
+			"error queueing job for expedited status report",
+		)
 	}
 	jobID := queueJobResponse.JobId
 
