@@ -35,7 +35,7 @@ uniquely configured environments.
 
 For that reason, Waypoint makes heavy usage of On-demand runners:
 
-### On-demand runners
+### On-Demand Runners
 
 While the static runner is capable of performing operations on its own, it also
 supports the ability to spawn on-demand runners for a given platform. These
@@ -44,6 +44,16 @@ They can perform container builds without any privileged access, offer more isol
 between operations, and allow Waypoint to scale further.
 
 On-demand runners: see [on-demand runners](/docs/runner/on-demand-runner) for more information.
+
+### Deployment Diagram
+
+This diagram shows the relationship between Waypoint and runners on your infrastructure of choice:
+
+<ImageConfig width={400}>
+
+![Waypoint deployment diagram](/img/waypoint-runner.jpg)
+
+</ImageConfig>
 
 ## Other Runners
 
