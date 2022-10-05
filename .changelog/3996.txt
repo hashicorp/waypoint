@@ -1,0 +1,3 @@
+```release-note:bug
+cli/runner-profile-set: Fix panic when omitting the -plugin-type flag
+```
