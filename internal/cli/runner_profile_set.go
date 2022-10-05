@@ -233,8 +233,12 @@ func (c *RunnerProfileSetCommand) Run(args []string) int {
 		}
 	}
 
-	if c.flagPluginType != nil || od.PluginType == "" {
-		if *c.flagPluginType == "" {
+	if c.flagPluginType != nil && *c.flagPluginType != "" {
+		// If the user specified a plugin type, we use that.
+		od.PluginType = *c.flagPluginType
+	} else {
+		if od.PluginType == "" {
+			// The user didn't specify a plugin type, and we don't have one already
 			c.ui.Output(
 				"Flag '-plugin-type' must be set to a valid plugin type like 'docker' or 'kubernetes'.\n\n%s",
 				c.Help(),
@@ -242,7 +246,6 @@ func (c *RunnerProfileSetCommand) Run(args []string) int {
 			)
 			return 1
 		}
-		od.PluginType = *c.flagPluginType
 	}
 
 	// Upsert
