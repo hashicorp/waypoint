@@ -7,9 +7,57 @@ description: |-
 
 # Waypoint Runners
 
-Waypoint utilizes "runners" to execute operations. Every build, deploy, or
-release operation happens on a Waypoint runner. Waypoint has three kinds of
-runners:
+Waypoint utilizes "runners" to execute operations. A runner is a program executing
+[`waypoint runner agent`](/commands/runner-agent) that is configured with the details
+of the Waypoint server.
+
+Every operation that Waypoint runs (build, deploy, release, etc) is executed by a Waypoint runner.
+The Waypoint server maintains a queue of jobs that the server hands out to connected
+runners. The server never connects directly to runners, runners always connect to the
+server. This is important because runners are designed to be run in the same
+environment that your application is deployed into because the plugins such as Deploy
+need to talk directly to your deployment platform APIs.
+
+In most deployments, there are two kinds of runners:
+
+### Static Runner
+
+Static runners are long-lived runners that are installed into your deployment
+environment once, likely when you setup Waypoint for the first time.
+
+The [`waypoint install`](/commands/install) and [`waypoint runner install`](/commands/runner-install)
+commands can install these runners for you, using details about your deployment
+environment.
+
+One issue with static runners is that they have fixed capacity: they can only run so
+many operations at a time. Additionally to run certain plugins like Docker, we need to have
+uniquely configured environments.
+
+For that reason, Waypoint makes heavy usage of On-demand runners:
+
+### On-Demand Runners
+
+While the static runner is capable of performing operations on its own, it also
+supports the ability to spawn on-demand runners for a given platform. These
+on-demand runners are ephemeral container instances that perform one operation only.
+They can perform container builds without any privileged access, offer more isolation
+between operations, and allow Waypoint to scale further.
+
+On-demand runners: see [on-demand runners](/docs/runner/on-demand-runner) for more information.
+
+### Deployment Diagram
+
+This diagram shows the relationship between Waypoint and runners on your infrastructure of choice:
+
+<ImageConfig width={400}>
+
+![Waypoint deployment diagram](/img/waypoint-runner.jpg)
+
+</ImageConfig>
+
+## Other Runners
+
+One runner behavior is used less often, the CLI runner:
 
 ### CLI Runner
 
