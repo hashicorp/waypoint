@@ -53,7 +53,7 @@ first time.
 
 ### Using NPM
 
-Make sure your local development environment has a supported version (v14.0.0+) of [node installed](https://nodejs.org/en/) you can run:
+Make sure your local development environment has a supported version (v16.0.0+) of [node installed](https://nodejs.org/en/) you can run:
 
 - `npm install`
 - `npm start`
