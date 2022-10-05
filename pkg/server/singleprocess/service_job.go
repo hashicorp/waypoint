@@ -254,6 +254,8 @@ func (s *Service) QueueJob(
 	ctx context.Context,
 	req *pb.QueueJobRequest,
 ) (*pb.QueueJobResponse, error) {
+	log := hclog.FromContext(ctx)
+
 	if req.Job == nil {
 		return nil, status.Errorf(codes.FailedPrecondition, "job must be set")
 	}
@@ -269,12 +271,12 @@ func (s *Service) QueueJob(
 
 	jobs, jobId, err := s.queueJobReqToJob(ctx, req)
 	if err != nil {
-		return nil, err
+		return nil, hcerr.Externalize(log, err, "failed to create job to queue")
 	}
 
 	// Queue the job
 	if err := s.state(ctx).JobCreate(ctx, jobs...); err != nil {
-		return nil, err
+		return nil, hcerr.Externalize(log, err, "failed to create job(s)")
 	}
 
 	return &pb.QueueJobResponse{JobId: jobId}, nil
@@ -692,7 +694,7 @@ func (s *Service) GetJobStream(
 	ws := memdb.NewWatchSet()
 	job, err := s.state(ctx).JobById(ctx, req.JobId, ws)
 	if err != nil {
-		return err
+		return hcerr.Externalize(log, err, "failed to get job with id %q", req.JobId)
 	}
 	if job == nil {
 		return status.Errorf(codes.NotFound, "job not found for ID: %s", req.JobId)
@@ -705,7 +707,7 @@ func (s *Service) GetJobStream(
 			Open: &pb.GetJobStreamResponse_Open{},
 		},
 	}); err != nil {
-		return err
+		return hcerr.Externalize(log, err, "failed to send job response")
 	}
 
 	// Start a goroutine that watches for job changes
