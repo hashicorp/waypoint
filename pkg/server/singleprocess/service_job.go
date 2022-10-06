@@ -694,7 +694,7 @@ func (s *Service) GetJobStream(
 	ws := memdb.NewWatchSet()
 	job, err := s.state(ctx).JobById(ctx, req.JobId, ws)
 	if err != nil {
-		return hcerr.Externalize(log, err, "failed to get job with id %q", req.JobId)
+		return hcerr.Externalize(log, err, "failed to get job with id", "job_id", req.JobId)
 	}
 	if job == nil {
 		return status.Errorf(codes.NotFound, "job not found for ID: %s", req.JobId)
