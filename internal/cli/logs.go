@@ -104,8 +104,10 @@ func (c *LogsCommand) Flags() *flag.Sets {
 	return c.flagSet(flagSetOperation, func(set *flag.Sets) {
 		f := set.NewSet("Command Options")
 		f.StringVar(&flag.StringVar{
-			Name:   "deployment-seq",
-			Usage:  "Get logs for a specific deployment of the app using the deployment sequence number.",
+			Name: "deployment-seq",
+			Usage: "Get logs for a specific deployment of the app using the deployment " +
+				"sequence number. Not valid with the -workspace param as deployment sequence " +
+				"numbers span across workspaces.",
 			Target: &c.flagDeploySeq,
 		})
 	})
