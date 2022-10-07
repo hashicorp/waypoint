@@ -271,6 +271,7 @@ func (s *Service) GetLogStream(
 
 			deployments, err := s.state(ctx).DeploymentList(scope.Application.Application,
 				serverstate.ListWithPhysicalState(pb.Operation_CREATED),
+				serverstate.ListWithWorkspace(scope.Application.Workspace),
 				serverstate.ListWithStatusFilter(&pb.StatusFilter{
 					Filters: []*pb.StatusFilter_Filter{
 						{
