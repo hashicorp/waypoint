@@ -235,7 +235,7 @@ func projectNeedsRemoteInit(project *pb.Project) bool {
 		return false
 	}
 
-	if project.DataSource.GetGit() == nil {
+	if project.DataSource.GetGit() == nil && project.DataSource.GetRemote() == nil {
 		return false
 	}
 

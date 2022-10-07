@@ -168,7 +168,7 @@ func (s *Service) queueJobReqToJob(
 					"An internal server issue was detected when calculating the data source")
 			}
 		} else {
-			log.Error("job has a remote DataSource but server provided to populateDataSource")
+			log.Error("job has a remote DataSource but server provided no populateDataSource")
 			// This is a server misconfiguration.
 			if job.DataSource.GetRemote() != nil {
 				return nil, "", status.Errorf(codes.Internal,
