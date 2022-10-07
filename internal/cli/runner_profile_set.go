@@ -28,7 +28,7 @@ type RunnerProfileSetCommand struct {
 	flagOCIUrl             *string
 	flagEnvVar             map[string]string
 	flagEnvVars            []string
-	flagPluginType         *string
+	flagPluginType         string
 	flagPluginConfig       string
 	flagDefault            *bool
 	flagTargetRunnerAny    *bool
@@ -233,20 +233,20 @@ func (c *RunnerProfileSetCommand) Run(args []string) int {
 		}
 	}
 
-	if c.flagPluginType != nil || od.PluginType == "" {
-		if *c.flagPluginType == "" {
-			c.ui.Output(
-				"Flag '-plugin-type' must be set to a valid plugin type like 'docker' or 'kubernetes'.\n\n%s",
-				c.Help(),
-				terminal.WithErrorStyle(),
-			)
-			return 1
-		}
-		od.PluginType = *c.flagPluginType
-	}
+	if c.flagPluginType == "" && od.PluginType == "" {
+		c.ui.Output(
+			"Flag '-plugin-type' must be set to a valid plugin type like 'docker' or 'kubernetes'.\n\n%s",
+			c.Help(),
+			terminal.WithErrorStyle(),
+		)
+		return 1
+	} else if c.flagPluginType != "" {
+		// override plugin type from flag
+		od.PluginType = c.flagPluginType
+	} // else we stick with whats set originally in od
 
 	// Upsert
-	_, err := c.project.Client().UpsertOnDemandRunnerConfig(ctx, &pb.UpsertOnDemandRunnerConfigRequest{
+	resp, err := c.project.Client().UpsertOnDemandRunnerConfig(ctx, &pb.UpsertOnDemandRunnerConfigRequest{
 		Config: od,
 	})
 	if err != nil {
@@ -258,9 +258,9 @@ func (c *RunnerProfileSetCommand) Run(args []string) int {
 	}
 
 	if updated {
-		s.Update("Runner profile updated")
+		s.Update("Runner profile %q updated", resp.Config.Name)
 	} else {
-		s.Update("Runner profile created")
+		s.Update("Runner profile %q created", resp.Config.Name)
 	}
 	s.Done()
 
@@ -299,10 +299,11 @@ func (c *RunnerProfileSetCommand) Flags() *flag.Sets {
 			Usage:  "DEPRECATED. Please see `-env-var`.",
 		})
 
-		f.StringPtrVar(&flag.StringPtrVar{
-			Name:   "plugin-type",
-			Target: &c.flagPluginType,
-			Usage:  "The type of the plugin to launch for the on-demand runner, such as aws-ecs, kubernetes, etc.",
+		f.StringVar(&flag.StringVar{
+			Name:    "plugin-type",
+			Target:  &c.flagPluginType,
+			Default: "",
+			Usage:   "The type of the plugin to launch for the on-demand runner, such as aws-ecs, kubernetes, etc.",
 		})
 
 		f.StringVar(&flag.StringVar{
