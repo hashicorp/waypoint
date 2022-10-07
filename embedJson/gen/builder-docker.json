@@ -108,7 +108,7 @@
          "Field": "build_args",
          "Type": "map of string to string",
          "Synopsis": "build args to pass to docker for the build step",
-         "Summary": "An array of strings of build-time variables passed as build-arg to docker for the build step.",
+         "Summary": "A map of key/value pairs passed as build-args to docker for the build step.",
          "Optional": true,
          "Default": "",
          "EnvVar": "",
