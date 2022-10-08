@@ -6,14 +6,13 @@ import (
 	"net/http"
 	"time"
 
-	assetfs "github.com/elazarl/go-bindata-assetfs"
 	"github.com/gorilla/mux"
 	"github.com/hashicorp/go-hclog"
 	"github.com/improbable-eng/grpc-web/go/grpcweb"
 	"google.golang.org/grpc"
 
 	"github.com/hashicorp/waypoint/internal/server/httpapi"
-	"github.com/hashicorp/waypoint/pkg/server/gen"
+	"github.com/hashicorp/waypoint/ui"
 )
 
 type httpServer struct {
@@ -35,15 +34,6 @@ func newHttpServer(grpcServer *grpc.Server, ln net.Listener, opts *options) *htt
 		grpcweb.WithAllowNonRootResource(true),
 	)
 
-	// This is the http.Handler for the UI
-	uifs := http.FileServer(&assetfs.AssetFS{
-		Asset:     gen.Asset,
-		AssetDir:  gen.AssetDir,
-		AssetInfo: gen.AssetInfo,
-		Prefix:    "ui/dist",
-		Fallback:  "index.html",
-	})
-
 	// grpcAddr is the address that we can connect back to our own
 	// gRPC server. This is used by the exec handler.
 	grpcAddr := opts.GRPCListener.Addr().String()
@@ -53,7 +43,7 @@ func newHttpServer(grpcServer *grpc.Server, ln net.Listener, opts *options) *htt
 	r.HandleFunc("/v1/exec", httpapi.HandleExec(grpcAddr, true))
 	r.HandleFunc("/v1/trigger/{id:[a-zA-Z0-9]+}", httpapi.HandleTrigger(grpcAddr, true))
 	r.PathPrefix("/grpc").Handler(grpcWrapped)
-	r.PathPrefix("/").Handler(uifs)
+	r.PathPrefix("/").Handler(ui.HttpHandler())
 
 	// Create our root handler which is just our router. We then wrap it
 	// in various middlewares below.
