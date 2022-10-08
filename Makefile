@@ -1,5 +1,3 @@
-ASSETFS_PATH?=pkg/server/gen/bindata_ui.go
-
 GIT_COMMIT=$$(git rev-parse --short HEAD)
 GIT_DIRTY=$$(test -n "`git status --porcelain`" && echo "+CHANGES" || true)
 GIT_DESCRIBE=$$(git describe --tags --always --match "v*")
@@ -152,11 +150,6 @@ gen/ts: # Generates frontend typescript files
 		./thirdparty/proto/opaqueany/*.proto \
 		--js_out=import_style=commonjs,binary:ui/lib/opaqueany/ \
 		--ts_out=ui/lib/opaqueany/
-
-# This currently assumes you have run `ember build` in the ui/ directory
-static-assets: # Generates the UI static assets
-	@go-bindata -pkg gen -prefix dist -o $(ASSETFS_PATH) ./ui/dist/...
-	@gofmt -s -w $(ASSETFS_PATH)
 
 .PHONY: gen/doc
 gen/doc: # generates the server proto docs
