@@ -1,0 +1,4 @@
+```release-note:bug
+cli: Respect the -workspace flag when requesting a logstream for a deployment
+by workspace
+```

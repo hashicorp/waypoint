@@ -17,7 +17,7 @@ import (
 type LogsCommand struct {
 	*baseCommand
 
-	deployment string
+	flagDeploySeq string
 }
 
 var logColors = map[pb.LogBatch_Entry_Source]*color.Color{
@@ -36,7 +36,7 @@ func (c *LogsCommand) Run(args []string) int {
 	}
 
 	err := c.DoApp(c.Ctx, func(ctx context.Context, app *clientpkg.App) error {
-		stream, err := app.Logs(ctx, c.deployment)
+		stream, err := app.Logs(ctx, c.flagDeploySeq)
 		if err != nil {
 			if !clierrors.IsCanceled(err) {
 				app.UI.Output("Error reading logs: %s", err, terminal.WithErrorStyle())
@@ -104,9 +104,11 @@ func (c *LogsCommand) Flags() *flag.Sets {
 	return c.flagSet(flagSetOperation, func(set *flag.Sets) {
 		f := set.NewSet("Command Options")
 		f.StringVar(&flag.StringVar{
-			Name:   "deployment-seq",
-			Usage:  "Get logs for a specific deployment of the app using the deployment sequence number.",
-			Target: &c.deployment,
+			Name: "deployment-seq",
+			Usage: "Get logs for a specific deployment of the app using the deployment " +
+				"sequence number. Not valid with the -workspace param as deployment sequence " +
+				"numbers span across workspaces.",
+			Target: &c.flagDeploySeq,
 		})
 	})
 }

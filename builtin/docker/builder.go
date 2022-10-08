@@ -158,8 +158,7 @@ build {
 		"build_args",
 		"build args to pass to docker for the build step",
 		docs.Summary(
-			"An array of strings of build-time variables passed as build-arg to docker",
-			" for the build step.",
+			"A map of key/value pairs passed as build-args to docker for the build step.",
 		),
 	)
 
