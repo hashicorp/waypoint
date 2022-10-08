@@ -236,7 +236,6 @@ jobs:
           at: .
       - run:
           command: |
-            go get github.com/kevinburke/go-bindata/...
             PATH=/home/circleci/go/bin:$PATH make bin
             cp waypoint /home/circleci/go/bin
       # save dev build to pass to downstream jobs
@@ -259,7 +258,6 @@ jobs:
           at: .
       - run:
           command: |
-            go get github.com/kevinburke/go-bindata/...
             PATH=/home/circleci/go/bin:$PATH make bin/windows
       - notify_main_failure
 
