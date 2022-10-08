@@ -6,10 +6,13 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/apprunner"
+	"github.com/aws/aws-sdk-go/service/iam"
 
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
+	"github.com/hashicorp/waypoint-plugin-sdk/docs"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/builtin/aws/ecr"
 	"github.com/hashicorp/waypoint/builtin/aws/utils"
@@ -20,15 +23,17 @@ type Platform struct {
 }
 
 type PlatformConfig struct {
-	Region  string `hcl:"region,optional"`
-	RoleArn string `hcl:"role_arn,optional"`
-	// InstanceConfiguration map[string]int `hcl:"source_configuration,optional"`
+	Region string `hcl:"region,optional"`
 
-	Name   string `hcl:"name"`
-	Memory int    `hcl:"memory,optional"`
-	Cpu    int    `hcl:"cpu,optional"`
+	Name string `hcl:"name"`
+
+	Memory int `hcl:"memory,optional"`
+	Cpu    int `hcl:"cpu,optional"`
+
 	// Once created, Port cannot be modified
 	Port int `hcl:"port,optional"`
+	// Once created, RoleName cannot be modified
+	RoleName string `hcl:"role_name,optional"`
 
 	// Environment variables that are meant to configure the application in a static
 	// way. This might be control an image that has multiple modes of operation,
@@ -47,7 +52,9 @@ func (p *Platform) DeployFunc() interface{} {
 	return p.Deploy
 }
 
-// Deploy deploys an image to AWS Lambda.
+// Deploy creates an AppRunner service, updates an
+// AppRunner service, or no-ops if zero configuration
+// changes are detected.
 func (p *Platform) Deploy(
 	ctx context.Context,
 	log hclog.Logger,
@@ -61,18 +68,15 @@ func (p *Platform) Deploy(
 	defer sg.Wait()
 
 	step := sg.Add("Connecting to AWS")
-
-	// We put this in a function because if/when step is reassigned, we want to
-	// abort the new value.
 	defer func() {
 		step.Abort()
 	}()
 
-	// Start building our deployment since we use this information
 	deployment := &Deployment{}
-	id, err := component.Id()
-	if err != nil {
+	if id, err := component.Id(); err != nil {
 		return nil, err
+	} else {
+		deployment.Id = id
 	}
 
 	sess, err := utils.GetSession(&utils.SessionConfig{
@@ -83,17 +87,26 @@ func (p *Platform) Deploy(
 		return nil, err
 	}
 
-	roleArn := p.config.RoleArn
 	port := p.config.Port
 	if port == 0 {
 		// App Runner default port
 		port = 8080
 	}
 
-	if roleArn == "" {
-		// if role arn is not specified, we should create a service role,
-		// similar to how the AWS console
-		roleArn = "arn:aws:iam::111122223333:role/service-role/AppRunnerECRAccessRole"
+	roleName := p.config.RoleName
+	if roleName == "" {
+		// if role name is not specified, we'll fall back to
+		// getting or creating a service role, with the same
+		// default roleName that AWS uses in the console
+		roleName = defaultRoleName
+	}
+
+	// roleArn only applies to the initial create
+	var roleArn string
+	if arn, err := p.getOrCreateIamRoleArn(sess, log, roleName); err != nil {
+		return nil, err
+	} else {
+		roleArn = arn
 	}
 
 	mem := int64(p.config.Memory)
@@ -118,62 +131,27 @@ func (p *Platform) Deploy(
 	//
 	// While `DescribeService` only supports a service ARN, our best effort approach
 	// is to list all services and manually match by user-provided name.
-	//
-	// - If we find a match, we should update
-	// - If no match, we should create
-
-	// TODO(kevinwang): pagination
 	step = sg.Add("App Runner::ListServices")
-	lso, err := arSvc.ListServices(&apprunner.ListServicesInput{
-		// max is 20
-		MaxResults: aws.Int64(20),
-	})
+	service, err := p.getServiceSummaryByName(sess, log, p.config.Name)
 	if err != nil {
-		log.Error("error listing services")
-
-		// TODO(kevinwang): specific error handling
-		if aerr, ok := err.(awserr.Error); ok {
-			log.Error("AWS Error", "code", aerr.Code(), "message", aerr.Message())
-			switch aerr.Code() {
-			default:
-				return nil, aerr
-			}
-		}
-		log.Error("Non-AWS Error", "error", err)
 		return nil, err
 	}
 	step.Done()
 
-	log.Info("found services", "service count", len(lso.ServiceSummaryList))
-
-	// Did we find a previous apprunner service by name?
-	var foundServiceSummary *apprunner.ServiceSummary = nil
-
+	operationId := ""
 	serviceArn := ""
 	serviceUrl := ""
 	serviceStatus := ""
 
-	for _, ss := range lso.ServiceSummaryList {
-		if *ss.ServiceName == p.config.Name {
-			foundServiceSummary = ss
-			serviceArn = *ss.ServiceArn
-			serviceUrl = *ss.ServiceUrl
-			serviceStatus = *ss.Status
-			break
-		}
-	}
-
-	operationId := ""
-
 	// If we found a previous service, update it.
-	if foundServiceSummary != nil {
-		// TODO(kevinwang): implement me
-		log.Debug("found existing service...", "name", p.config.Name)
-
-		step = sg.Add("App Runner::UpdateService %s", *foundServiceSummary.ServiceName)
+	if service != nil {
+		step = sg.Add("App Runner::UpdateService %s", service.Name)
+		serviceArn = service.Arn
+		serviceUrl = service.Url
+		serviceStatus = service.Status
 
 		uso, err := arSvc.UpdateService(&apprunner.UpdateServiceInput{
-			ServiceArn: foundServiceSummary.ServiceArn,
+			ServiceArn: aws.String(service.Arn),
 			InstanceConfiguration: &apprunner.InstanceConfiguration{
 				Cpu:    aws.String(strconv.FormatInt(cpu, 10)),
 				Memory: aws.String(strconv.FormatInt(mem, 10)),
@@ -190,21 +168,19 @@ func (p *Platform) Deploy(
 		if uso.OperationId != nil {
 			operationId = *uso.OperationId
 		} else {
-			// step.Update("uso.OperationId was null %+v", uso)
-			// TODO(Kevinwang): handle this; Maybe fail?
+			log.Warn("No operationId was returned. This likely means no configuration change was detected.")
 		}
 
 		step.Done()
 
 	} else {
-		step = sg.Add("App Runner::CreateService")
 		// If we didn't find a previous service, create it.
+		step = sg.Add("App Runner::CreateService")
 		log.Debug("creating new service...", "name", p.config.Name)
 		log.Debug("using image", "image", img.Name)
 
 		// Warning: App Runner will crash with a "exec format error"
 		// when running Arm64 images.
-
 		cso, err := arSvc.CreateService(&apprunner.CreateServiceInput{
 			ServiceName: aws.String(p.config.Name),
 			InstanceConfiguration: &apprunner.InstanceConfiguration{
@@ -239,8 +215,6 @@ func (p *Platform) Deploy(
 		serviceStatus = *cso.Service.Status
 	}
 
-	step = sg.Add("Assigning Deployment Values")
-	deployment.Id = id
 	deployment.Region = p.config.Region
 	deployment.ServiceName = p.config.Name
 	deployment.ServiceArn = serviceArn
@@ -248,62 +222,130 @@ func (p *Platform) Deploy(
 	deployment.Status = serviceStatus
 	// possibly empty string when no configuration change is detected
 	deployment.OperationId = operationId
-	step.Done()
 
 	return deployment, nil
+}
+
+type ServiceSummary struct {
+	Name   string
+	Arn    string
+	Url    string
+	Status string
+}
+
+// a helper func to find an apprunner service by name
+func (p *Platform) getServiceSummaryByName(
+	sess *session.Session,
+	log hclog.Logger,
+	name string,
+) (*ServiceSummary, error) {
+	arSvc := apprunner.New(sess)
+	lso, err := arSvc.ListServices(&apprunner.ListServicesInput{})
+	if err != nil {
+		log.Error("error listing services")
+		return nil, err
+	}
+
+	log.Debug("found services", "service count", len(lso.ServiceSummaryList))
+
+	var serviceSummary *ServiceSummary = nil
+	for _, ss := range lso.ServiceSummaryList {
+		if *ss.ServiceName == p.config.Name {
+
+			serviceSummary = &ServiceSummary{
+				Name:   *ss.ServiceName,
+				Arn:    *ss.ServiceArn,
+				Url:    *ss.ServiceUrl,
+				Status: *ss.Status,
+			}
+			break
+		}
+	}
+
+	if serviceSummary != nil {
+		log.Debug("Found matching apprunner service", "name", serviceSummary.Name, "arn", serviceSummary.Arn)
+	} else {
+		log.Warn("No matching apprunner service was found")
+	}
+
+	return serviceSummary, nil
+}
+
+const defaultRoleName = `AppRunnerECRAccessRole`
+const rolePolicy = `{
+	"Version": "2012-10-17",
+	"Statement": [
+		{
+			"Effect": "Allow",
+			"Principal": {
+				"Service": "build.apprunner.amazonaws.com"
+			},
+			"Action": "sts:AssumeRole"
+		}
+	]
+}`
+
+// AWS-managed service policy
+const AWSAppRunnerServicePolicyForECRAccess = `arn:aws:iam::aws:policy/service-role/AWSAppRunnerServicePolicyForECRAccess`
+
+func (p *Platform) getOrCreateIamRoleArn(
+	sess *session.Session,
+	log hclog.Logger,
+	name string,
+) (string, error) {
+	iamSvc := iam.New(sess)
+	ro, err := iamSvc.GetRole(&iam.GetRoleInput{
+		RoleName: aws.String(name),
+	})
+	if err != nil {
+		if aerr, ok := err.(awserr.Error); ok {
+			switch aerr.Code() {
+			case iam.ErrCodeNoSuchEntityException: // if "NoSuchEntity", create the role
+				log.Info("CreateRole...")
+				if _, err := iamSvc.CreateRole(&iam.CreateRoleInput{
+					RoleName:                 aws.String(name),
+					Path:                     aws.String("/service-role/"),
+					AssumeRolePolicyDocument: aws.String(rolePolicy),
+					Description:              aws.String("This role gives App Runner permission to access ECR"),
+					// Tags: ,
+				}); err != nil {
+					log.Info("CreateRole ERROR")
+					return "", err
+				}
+				log.Info("CreateRole OK")
+
+				log.Info("AttachRolePolicy...")
+				if _, err := iamSvc.AttachRolePolicy(&iam.AttachRolePolicyInput{
+					RoleName:  aws.String(name),
+					PolicyArn: aws.String(AWSAppRunnerServicePolicyForECRAccess),
+				}); err != nil {
+					log.Info("AttachRolePolicy ERROR")
+					return "", err
+				}
+				log.Info("AttachRolePolicy OK")
+			default:
+				return "", aerr
+			}
+		} else {
+			return "", err
+		}
+	}
+	return *ro.Role.Arn, nil
+}
+
+func (p *Platform) Documentation() (*docs.Documentation, error) {
+	doc, err := docs.New(docs.FromConfig(&PlatformConfig{}))
+	if err != nil {
+		return nil, err
+	}
+
+	// TODO
+
+	return doc, nil
 }
 
 var (
 	_ component.Configurable = (*Platform)(nil)
 	_ component.Platform     = (*Platform)(nil)
+	_ component.Documented   = (*Platform)(nil)
 )
-
-// {
-// Service: {
-//   AutoScalingConfigurationSummary: {
-//     AutoScalingConfigurationArn: "arn:aws:apprunner:us-east-1:058050752201:autoscalingconfiguration/DefaultConfiguration/1/00000000000000000000000000000001"
-//     AutoScalingConfigurationName: "DefaultConfiguration",
-// 		AutoScalingConfigurationRevision: 1
-// 	},
-// 	CreatedAt: 2022-09-29 06:08:12 +0000 UTC,
-// 	HealthCheckConfiguration: {
-// 		HealthyThreshold: 1,
-// 		Interval: 5,
-// 		Path: "/",
-// 		 Protocol: "TCP",
-// 		 Timeout: 2,
-// 		 UnhealthyThreshold: 5
-// 		},
-// 		InstanceConfiguration: {
-// 			Cpu: "1024",
-// 			Memory: "2048"
-// 		},
-// 		NetworkConfiguration: {
-// 			EgressConfiguration: {
-// 				EgressType: "DEFAULT"
-// 			}
-// 		},
-// 		ServiceArn: "arn:aws:apprunner:us-east-1:058050752201:service/my-apprunner-service3/4992ba7a6832496e9289bce260d65b8a",
-// 		ServiceId: "4992ba7a6832496e9289bce260d65b8a",
-// 		ServiceName: "my-apprunner-service3",
-// 		ServiceUrl: "vi4rav3dvx.us-east-1.awsapprunner.com",
-// 		SourceConfiguration: {
-// 			AuthenticationConfiguration: {
-// 				AccessRoleArn: "arn:aws:iam::058050752201:role/service-role/AppRunnerECRAccessRole"
-// 			},
-// 			AutoDeploymentsEnabled: false,
-// 			ImageRepository: {
-// 				ImageConfiguration: {
-// 					Port: "7531",
-// 					RuntimeEnvironmentVariables: {
-// 						Test: "1"
-// 					}
-// 				},
-// 				ImageIdentifier: "058050752201.dkr.ecr.us-east-1.amazonaws.com/python-fastapi:latest",
-// 				ImageRepositoryType: "ECR"
-// 			}
-// 		},
-// 		Status: "RUNNING",
-// 		UpdatedAt: 2022-09-29 06:08:12 +0000 UTC
-// 	}
-// }
