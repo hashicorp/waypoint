@@ -17,7 +17,7 @@ import (
 
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 
-	"github.com/hashicorp/waypoint/internal/cli/datagen"
+	"github.com/hashicorp/waypoint/internal/cli/data"
 	hclpkg "github.com/hashicorp/waypoint/internal/cli/hclgen"
 	clientpkg "github.com/hashicorp/waypoint/internal/client"
 	"github.com/hashicorp/waypoint/internal/clierrors"
@@ -227,13 +227,13 @@ func (c *InitCommand) Run(args []string) int {
 }
 
 func (c *InitCommand) initNew() bool {
-	data, err := datagen.Asset("init.tpl.hcl")
+	initTplHcl, err := data.Asset("init.tpl.hcl")
 	if err != nil {
 		// Should never happen because it is embedded.
 		panic(err)
 	}
 
-	if err := ioutil.WriteFile(configpkg.Filename, data, 0644); err != nil {
+	if err := ioutil.WriteFile(configpkg.Filename, initTplHcl, 0644); err != nil {
 		c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 		return false
 	}

@@ -1,7 +1,5 @@
 package cli
 
-//go:generate go-bindata -nomemcopy -nometadata -pkg datagen -o datagen/datagen.go -prefix data/ data/...
-
 import (
 	"bytes"
 	"context"
