@@ -6,7 +6,6 @@
 , docker-compose
 , doctl
 , go
-, go-bindata
 , go-changelog
 , go-mockery
 , go-protobuf
@@ -38,7 +37,6 @@ mkShell rec {
   packages = [
     docker-compose
     go
-    go-bindata
     grpcurl
     nodejs-16_x
     postgresql_12
