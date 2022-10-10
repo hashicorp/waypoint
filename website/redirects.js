@@ -1,7 +1,7 @@
 module.exports = [
   {
     source: '/waypoint/docs/kubernetes/:path*',
-    destination: '/docs/platforms/kubernetes/:path*',
+    destination: '/waypoint/docs/platforms/kubernetes/:path*',
     permanent: true,
   },
   {
