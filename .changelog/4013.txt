@@ -1,0 +1,3 @@
+```release-note:bug
+cli: Fix panic in `waypoint runner profile set` when no flags are specified.
+```
