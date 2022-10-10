@@ -1,0 +1,4 @@
+```release-note:bug
+cli: Fix panic in cli for `waypoint task cancel` if attempting to cancel by run
+job id with no argument.
+```
