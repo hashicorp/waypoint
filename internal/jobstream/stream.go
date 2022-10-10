@@ -199,7 +199,7 @@ func (s *stream) Run(ctx context.Context) (*pb.Job_Result, error) {
 						ui.Output("Performing this operation on a remote runner with id %q", runner.Id, terminal.WithInfoStyle())
 					}
 				case *pb.Runner_Odr:
-					log.Debug("Executing operation on an on-demand runner from profile with ID %q", runnerType.Odr.ProfileId)
+					log.Debug("Executing operation with on-demand runner from profile", "runner_profile_id", runnerType.Odr.ProfileId)
 					profile, err := s.client.GetOnDemandRunnerConfig(
 						ctx, &pb.GetOnDemandRunnerConfigRequest{
 							Config: &pb.Ref_OnDemandRunnerConfig{
