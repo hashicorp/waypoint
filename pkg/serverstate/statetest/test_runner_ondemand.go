@@ -176,6 +176,79 @@ func TestOnDemandRunnerConfig(t *testing.T, factory Factory, restartF RestartFac
 		}
 	})
 
+	t.Run("cannot create a new profile with existing name", func(t *testing.T) {
+		require := require.New(t)
+
+		s := factory(t)
+		defer s.Close()
+
+		// Set
+		rec := serverptypes.TestOnDemandRunnerConfig(t, &pb.OnDemandRunnerConfig{
+			Name:                 "test",
+			OciUrl:               "h/w:s",
+			EnvironmentVariables: map[string]string{"CONTAINER": "DOCKER", "FOO": "BAR"},
+			TargetRunner:         &pb.Ref_Runner{Target: &pb.Ref_Runner_Any{Any: &pb.Ref_RunnerAny{}}},
+			PluginConfig:         []byte(`{"foo":"bar"}`),
+			ConfigFormat:         pb.Hcl_JSON,
+			Default:              true,
+		})
+
+		putResp, err := s.OnDemandRunnerConfigPut(rec)
+		require.NoError(err)
+		require.NotEmpty(putResp.Id) // must have chosen an id
+		require.Equal(rec.Name, putResp.Name)
+		require.Equal(rec.TargetRunner.Target, putResp.TargetRunner.Target)
+		require.Equal(rec.OciUrl, putResp.OciUrl)
+		require.Equal(rec.EnvironmentVariables, putResp.EnvironmentVariables)
+		require.Equal(rec.PluginConfig, putResp.PluginConfig)
+		require.Equal(rec.ConfigFormat, putResp.ConfigFormat)
+		require.Equal(rec.Default, putResp.Default)
+
+		// Get exact
+		{
+			resp, err := s.OnDemandRunnerConfigGet(&pb.Ref_OnDemandRunnerConfig{
+				Id: rec.Id,
+			})
+			require.NoError(err)
+			require.NotNil(resp)
+
+			// Ensure fields were saved correctly
+			require.Equal(putResp.Id, resp.Id)
+			require.Equal(rec.Name, resp.Name)
+			require.Equal(rec.TargetRunner.Target, resp.TargetRunner.Target)
+			require.Equal(rec.OciUrl, resp.OciUrl)
+			require.Equal(rec.EnvironmentVariables, resp.EnvironmentVariables)
+			require.Equal(rec.PluginConfig, resp.PluginConfig)
+			require.Equal(rec.ConfigFormat, resp.ConfigFormat)
+			require.Equal(rec.Default, resp.Default)
+		}
+
+		// Try to create a new profile with existing name!
+		rec2 := serverptypes.TestOnDemandRunnerConfig(t, &pb.OnDemandRunnerConfig{
+			Name:                 "test",
+			OciUrl:               "hc/wp:s",
+			EnvironmentVariables: map[string]string{"CONTAINER": "DOCKER", "BAZ": "BAR"},
+			TargetRunner:         &pb.Ref_Runner{Target: &pb.Ref_Runner_Any{Any: &pb.Ref_RunnerAny{}}},
+			PluginConfig:         []byte(`{"baz":"bar"}`),
+			ConfigFormat:         pb.Hcl_JSON,
+			Default:              false,
+		})
+
+		// No error, it just updates the existing one
+		resp, err := s.OnDemandRunnerConfigPut(rec2)
+		require.NoError(err)
+		// We updated a field, see if it stuck
+		require.Equal(rec2.OciUrl, resp.OciUrl)
+
+		// List should only return 1
+		{
+			resp, err := s.OnDemandRunnerConfigList()
+			require.NoError(err)
+			require.Len(resp, 1)
+		}
+
+	})
+
 	t.Run("Delete", func(t *testing.T) {
 		require := require.New(t)
 
