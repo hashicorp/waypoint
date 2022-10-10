@@ -8,6 +8,8 @@
 # This is run during the website build step to determine if we should skip the build or not.
 # More information: https://vercel.com/docs/platform/projects#ignored-build-step
 
+exit 1;
+
 if [[ "$VERCEL_GIT_COMMIT_REF" == "stable-website"  ]] ; then
   # Proceed with the build if the branch is stable-website
   echo "✅ - Build can proceed"
