@@ -1,6 +1,6 @@
 # Waypoint Documentation Website
 
-This subdirectory contains the content for the [Waypoint Website](https://waypointproject.io/).
+This subdirectory contains the content for the [Waypoint Reference Documentation](https://developer.hashicorp.com/waypoint/docs).
 
 <!--
   This readme file contains several blocks of generated text, to make it easier to share common information

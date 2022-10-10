@@ -10,7 +10,7 @@ PREVIEW_DIR=website-preview
 # The product for which we are building the deploy preview
 PRODUCT=waypoint
 # Preview mode, controls the UI rendered (either the product site or developer). Can be `io` or `developer`
-PREVIEW_MODE=io
+PREVIEW_MODE=developer
 
 should_pull=true
 
