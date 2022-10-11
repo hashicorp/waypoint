@@ -6846,10 +6846,10 @@ ember-cli-typescript@^4.0.0, ember-cli-typescript@^4.1.0, ember-cli-typescript@^
     stagehand "^1.0.0"
     walk-sync "^2.2.0"
 
-ember-cli-typescript@^5.0.0:
-  version "5.1.0"
-  resolved "https://registry.yarnpkg.com/ember-cli-typescript/-/ember-cli-typescript-5.1.0.tgz#460eb848564e29d64f2b36b2a75bbe98172b72a4"
-  integrity sha512-wEZfJPkjqFEZAxOYkiXsDrJ1HY75e/6FoGhQFg8oNFJeGYpIS/3W0tgyl1aRkSEEN1NRlWocDubJ4aZikT+RTA==
+ember-cli-typescript@^5.0.0, ember-cli-typescript@^5.1.1:
+  version "5.1.1"
+  resolved "https://registry.yarnpkg.com/ember-cli-typescript/-/ember-cli-typescript-5.1.1.tgz#cf561026f3e7bd05312c1c212acffa1c30d5fa0c"
+  integrity sha512-DbzATYWY8nbXwSxXqtK8YlqGJTcyFyL+eg6IGCc2ur0AMnq/H+o6Z9np9eGoq1sI+HwX7vBkOVoD3k0WurAwXg==
   dependencies:
     ansi-to-html "^0.6.15"
     broccoli-stew "^3.0.0"
@@ -7325,10 +7325,10 @@ ember-set-helper@^2.0.0:
     ember-cli-babel "^7.18.0"
     ember-cli-htmlbars "^4.2.3"
 
-ember-simple-auth@^4.2.1:
-  version "4.2.1"
-  resolved "https://registry.yarnpkg.com/ember-simple-auth/-/ember-simple-auth-4.2.1.tgz#6c0e837d30fb00fd90a2efdc2fe04489f478c076"
-  integrity sha512-ausab68MGevJ4/eySjS7oNRDZmbo8AjLBAK+J2zURc/vJWsUxKzQFf0E1MURwGWfhMJrTLIUrn57sHu2sFOhhg==
+ember-simple-auth@^4.2.2:
+  version "4.2.2"
+  resolved "https://registry.yarnpkg.com/ember-simple-auth/-/ember-simple-auth-4.2.2.tgz#5c1de1bb13a75e519e512fb82cba7cc1e277b07c"
+  integrity sha512-D7W6OREUvf5OzeB0ePptSNBilccchRYukH4f7mkbL6WT+z6VEqRRAIaQuBZdFM6lrcSFGmzctINLZJwsIpI3wg==
   dependencies:
     base-64 "^0.1.0"
     broccoli-file-creator "^2.1.1"
