@@ -68,7 +68,7 @@ func (c *WorkspaceListCommand) Run(args []string) int {
 			strings.Join(projects, ","),
 		}, nil)
 	}
-	c.ui.Table(table)
+	c.ui.Table(table, terminal.WithStyle("Simple"))
 
 	return 0
 }

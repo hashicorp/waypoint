@@ -175,7 +175,7 @@ func (c *ArtifactListCommand) Run(args []string) int {
 			}
 		}
 
-		c.ui.Table(table)
+		c.ui.Table(table, terminal.WithStyle("Simple"))
 
 		return nil
 	})

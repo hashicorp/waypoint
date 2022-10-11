@@ -149,7 +149,7 @@ func (c *PipelineListCommand) Run(args []string) int {
 		tbl.Rich(tblColumn, nil)
 	}
 
-	c.ui.Table(tbl)
+	c.ui.Table(tbl, terminal.WithStyle("Simple"))
 
 	return 0
 }

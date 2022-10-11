@@ -365,7 +365,7 @@ func (c *DeploymentListCommand) Run(args []string) int {
 			}
 		}
 
-		c.ui.Table(tbl)
+		c.ui.Table(tbl, terminal.WithStyle("Simple"))
 
 		return nil
 	})

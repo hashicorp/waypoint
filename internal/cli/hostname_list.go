@@ -40,7 +40,7 @@ func (c *HostnameListCommand) Run(args []string) int {
 		}, nil)
 	}
 
-	c.ui.Table(table)
+	c.ui.Table(table, terminal.WithStyle("Simple"))
 	return 0
 }
 
