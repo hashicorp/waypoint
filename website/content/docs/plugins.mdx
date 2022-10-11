@@ -67,7 +67,7 @@ contains only the plugins which are built-in to the Waypoint binary. To add a cu
 plugin, you may extend this image to add your own plugin:
 
 ```Dockerfile
-FROM hashicorp/waypoint:latest
+FROM hashicorp/waypoint-odr:latest
 
 COPY ./waypoint-plugin-myplugin $HOME/.config/waypoint/plugins/waypoint-plugin-myplugin
 ```
