@@ -114,7 +114,7 @@ func (c *PipelineGetRunCommand) Run(args []string) int {
 			return fmt.Errorf("Response was empty when requesting a pipeline run for pipeline %q", pipelineIdent)
 		}
 
-		step.Update("Attempting to read job stream sequentially in order")
+		step.Update("Attempting to read job stream sequentially in order for run %q", resp.PipelineRun.Sequence)
 		step.Done()
 
 		// Receive job ids from running pipeline, use job client to attach to job stream
@@ -148,9 +148,8 @@ func (c *PipelineGetRunCommand) Run(args []string) int {
 			if job.Workspace != nil {
 				ws = job.Workspace.Workspace
 			}
-			// TODO(briancain): fix me
-			//app.UI.Output("Executing Step %q in workspace: %q", resp.JobMap[jobId].Step, ws, terminal.WithHeaderStyle())
-			app.UI.Output("Executing Step %q in workspace: %q", "FIXME", ws, terminal.WithHeaderStyle())
+			stepName := job.Pipeline.Step
+			app.UI.Output("Executing Step %q in workspace: %q", stepName, ws, terminal.WithHeaderStyle())
 			app.UI.Output("Reading job stream (jobId: %s)...", jobId, terminal.WithInfoStyle())
 			app.UI.Output("")
 
