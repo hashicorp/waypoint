@@ -1527,6 +1527,39 @@
         ]
       }
     },
+    "/v1/project/config": {
+      "put": {
+        "summary": "Set one or more configuration variables for applications or runners.",
+        "operationId": "Waypoint_SetConfig",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/hashicorp.waypoint.ConfigSetResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/grpc.gateway.runtime.Error"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/hashicorp.waypoint.ConfigSetRequest"
+            }
+          }
+        ],
+        "tags": [
+          "Waypoint"
+        ]
+      }
+    },
     "/v1/project/{application.application.project}/application/{application.application.application}/instances": {
       "get": {
         "summary": "ListInstances returns the running instances of deployments.",
@@ -3280,6 +3313,68 @@
           },
           {
             "name": "project.project",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "Waypoint"
+        ]
+      }
+    },
+    "/v1/project/{application.project}/{application.application}/config": {
+      "get": {
+        "summary": "Retrieve merged configuration values for a specific scope. You can determine\nwhere a configuration variable was set by looking at the scope field on\neach variable.",
+        "operationId": "Waypoint_GetConfig3",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/hashicorp.waypoint.ConfigGetResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/grpc.gateway.runtime.Error"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "application.project",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "application.application",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "project.project",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "runner.id",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "workspace.workspace",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "prefix",
+            "description": "Get all configuration entries under the given prefix. When empty,\nreturns all config variables.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -6442,6 +6537,18 @@
           "items": {
             "$ref": "#/definitions/hashicorp.waypoint.ConfigVar"
           }
+        }
+      }
+    },
+    "hashicorp.waypoint.ConfigSetRequest": {
+      "type": "object",
+      "properties": {
+        "variables": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/hashicorp.waypoint.ConfigVar"
+          },
+          "description": "The set of variables to set. Note that create vs update is determined\nbased on if the targets match, so if you want to change the target of\nan existing config var you must send two items here: one with a matching\ntarget to UNSET it, and one with a new target to set it.\n\nUnsets are handled before sets so that a delete will not override a write.\nAll config variables are updated atomically."
         }
       }
     },
