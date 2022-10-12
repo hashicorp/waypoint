@@ -215,6 +215,10 @@ func (c *RunnerProfileSetCommand) Run(args []string) int {
 			"Flag '-env-vars' is deprecated, please use flag '-env-var=k=v'",
 			terminal.WithWarningStyle(),
 		)
+
+		if od.EnvironmentVariables == nil {
+			od.EnvironmentVariables = make(map[string]string)
+		}
 		for _, kv := range c.flagEnvVars {
 			idx := strings.IndexByte(kv, '=')
 			if idx != -1 {
@@ -224,6 +228,9 @@ func (c *RunnerProfileSetCommand) Run(args []string) int {
 	}
 
 	if c.flagEnvVar != nil {
+		if od.EnvironmentVariables == nil {
+			od.EnvironmentVariables = make(map[string]string)
+		}
 		for k, v := range c.flagEnvVar {
 			if v == "" {
 				delete(od.EnvironmentVariables, k)
