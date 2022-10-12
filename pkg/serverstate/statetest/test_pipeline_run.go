@@ -1,6 +1,7 @@
 package statetest
 
 import (
+	"strconv"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -40,6 +41,23 @@ func TestPipelineRun(t *testing.T, factory Factory, restartF RestartFactory) {
 		err = s.PipelineRunPut(r)
 		require.NoError(err)
 
+		// We manually add job ids to a PipelineRun over in RunPipeline, so this
+		// replicates how job ids are added to a run messasge
+		for i := 1; i < 4; i++ {
+			is := strconv.Itoa(i)
+			require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
+				Id: is,
+				Pipeline: &pb.Ref_PipelineStep{
+					PipelineId:  p.Id,
+					RunSequence: r.Sequence,
+				},
+			})))
+
+			r.Jobs = append(r.Jobs, &pb.Ref_Job{Id: string(is)})
+		}
+		err = s.PipelineRunPut(r)
+		require.NoError(err)
+
 		// Get run by pipeline and sequence
 		{
 			resp, err := s.PipelineRunGet(pipeline, 1)
@@ -48,6 +66,10 @@ func TestPipelineRun(t *testing.T, factory Factory, restartF RestartFactory) {
 			require.Equal(r.Id, resp.Id)
 			require.Equal(r.Sequence, resp.Sequence)
 			require.Equal(pipeline.Ref.(*pb.Ref_Pipeline_Id).Id, resp.Pipeline.Ref.(*pb.Ref_Pipeline_Id).Id)
+			require.NotEmpty(resp.Jobs)
+			require.Equal("1", resp.Jobs[0].Id)
+			require.Equal("2", resp.Jobs[1].Id)
+			require.Equal("3", resp.Jobs[2].Id)
 		}
 
 		// Get run by Id
