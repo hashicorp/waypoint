@@ -73,7 +73,7 @@ func (cs *ConfigSourcer) read(
 	cs.cacheMu.Lock()
 	defer cs.cacheMu.Unlock()
 
-	// If we have a last read value and its before our refresh period, we
+	// If we have a last read value and it's before our refresh period, we
 	// just returned cached values. Note that cached values may still be
 	// updated in the background for secrets that have leases. Additionally,
 	// when Stop is called, we reset lastRead to zero.
@@ -118,7 +118,7 @@ func (cs *ConfigSourcer) read(
 	// above where we purge the cache, we keep any with Cancel set. This keeps
 	// long-running dynamic secrets around so that they don't flap every refresh
 	// period. Instead, those are still in the cache and we use whatever value
-	// they have. A background goroutine will update those (see startRenewer).
+	// they have. A background goroutine will update those (see startLifetimeWatcher).
 	//
 	// If a config change happens, the ConfigSourcer contract states that
 	// Stop will be called. When Stop is called, we clear our full cache and
@@ -149,7 +149,7 @@ func (cs *ConfigSourcer) read(
 			secret, err := client.Logical().Read(vaultReq.Path)
 			if err != nil {
 				result.Result = &pb.ConfigSource_Value_Error{
-					Error: status.New(codes.Aborted, fmt.Sprintf("Failed to read from vault. Path: %q, err: %q", vaultReq.Path, err)).Proto(),
+					Error: status.New(codes.Aborted, fmt.Sprintf("Failed to read from Vault. Path: %q, err: %q", vaultReq.Path, err)).Proto(),
 				}
 
 				continue
@@ -161,15 +161,18 @@ func (cs *ConfigSourcer) read(
 				continue
 			}
 			cachedSecretVal = &cachedSecret{Secret: secret}
+			L.Trace("adding the secret to the cache")
 			cs.secretCache[vaultReq.Path] = cachedSecretVal
 
 			// If this secret is renewable, we will start a background
 			// renewer to watch it. This more efficiently updates this secret
 			// and prevents flapping values on every refresh.
 			if secret.Renewable {
-				L.Debug("secret is renewable, starting renewer")
-				cs.startRenewer(client, vaultReq.Path, secret)
+				L.Trace("secret is renewable, starting renewer")
+				cs.startLifetimeWatcher(L, client, vaultReq.Path, secret)
 			}
+		} else {
+			L.Trace("this secret has already been read and is in the cache")
 		}
 
 		// If the secret has an error, return that
@@ -240,16 +243,18 @@ func (cs *ConfigSourcer) stop() error {
 	return nil
 }
 
-func (cs *ConfigSourcer) startRenewer(client *vaultapi.Client, path string, s *vaultapi.Secret) {
+func (cs *ConfigSourcer) startLifetimeWatcher(log hclog.Logger, client *vaultapi.Client, path string, s *vaultapi.Secret) {
 	// The secret should be in the cache. If it isn't then just ignore.
-	// The reason it should be in the cache is because we only call startRenewer
+	// The reason it should be in the cache is because we only call startLifetimeWatcher
 	// after querying the initial secret and inserting it into the cache.
+	log.Debug("checking if secret is in cache")
 	cache, ok := cs.secretCache[path]
 	if !ok {
 		return
 	}
 
-	renewer, err := client.NewRenewer(&vaultapi.RenewerInput{
+	log.Trace("creating new lifetime watcher")
+	renewer, err := client.NewLifetimeWatcher(&vaultapi.LifetimeWatcherInput{
 		Secret: cache.Secret,
 	})
 	if err != nil {
@@ -257,8 +262,9 @@ func (cs *ConfigSourcer) startRenewer(client *vaultapi.Client, path string, s *v
 		return
 	}
 
+	log.Trace("starting renewer")
 	// Start the renewer in the background
-	renewer.Renew()
+	go renewer.Start()
 
 	// Create our cancellation context
 	ctx, cancel := context.WithCancel(context.Background())
@@ -276,22 +282,27 @@ func (cs *ConfigSourcer) startRenewer(client *vaultapi.Client, path string, s *v
 			case <-ctx.Done():
 				// If we're canceled, we assume something else is handling
 				// our cleanup and values and so on so just exit.
+				log.Trace("renewer canceled")
 				return
 
 			case err := <-renewer.DoneCh():
 				// Error during renew, mark the error value and exit.
+				log.Trace("renewer done")
 				newVal.Err = err
 
 			case renew := <-renewer.RenewCh():
 				// Successful renewal, store the secret
+				log.Trace("renewing secret...")
 				newVal.Secret = renew.Secret
 			}
 
 			// Grab a lock to update our value
 			cs.cacheMu.Lock()
 
+			log.Trace("checking if path is in secret cache")
 			value, ok := cs.secretCache[path]
 			if !ok {
+				log.Error("path is not in secret cache")
 				// Shouldn't happen, exit.
 				cs.cacheMu.Unlock()
 				return
@@ -301,10 +312,24 @@ func (cs *ConfigSourcer) startRenewer(client *vaultapi.Client, path string, s *v
 				value.Err = newVal.Err
 			}
 			if newVal.Secret != nil {
-				value.Secret = newVal.Secret
+				data := value.Secret.Data
+				if len(newVal.Secret.Data) > 0 {
+					data = newVal.Secret.Data
+				}
+				value.Secret = &vaultapi.Secret{
+					RequestID:     newVal.Secret.RequestID,
+					LeaseID:       newVal.Secret.LeaseID,
+					LeaseDuration: newVal.Secret.LeaseDuration,
+					Renewable:     newVal.Secret.Renewable,
+					Data:          data,
+					Warnings:      newVal.Secret.Warnings,
+					Auth:          newVal.Secret.Auth,
+					WrapInfo:      newVal.Secret.WrapInfo,
+				}
 			}
 
 			cs.cacheMu.Unlock()
+			log.Trace("secret renewed")
 		}
 	}()
 }
