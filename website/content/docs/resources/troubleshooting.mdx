@@ -50,21 +50,17 @@ $ docker volume prune -f
 
 #### Waypoint Server in Kubernetes
 
-[`waypoint install`] for Kubernetes creates a [StatefulSet][k8s.sts], [Service][k8s.svc], [PersistentVolumeClaim][k8s.pvc], and a [Deployment][k8s.deploy].
-These resources should be removed when Waypoint Server is no longer needed. These are some example `kubectl` commands that should
-clean up after a Waypoint Server installation.
+[`waypoint install`] for Kubernetes installs the Waypoint Helm chart to your Kubernetes cluster.
+To delete the resources created by the Helm chart installation, the commands below will help with
+the cleanup of the server and static runner:
 
 [`waypoint install`]: /commands/install
-[k8s.sts]: https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/
-[k8s.svc]: https://kubernetes.io/docs/concepts/services-networking/service/
-[k8s.pvc]: https://kubernetes.io/docs/concepts/storage/persistent-volumes/#persistentvolumeclaims
-[k8s.deploy]: https://kubernetes.io/docs/concepts/workloads/controllers/deployment/
 
 ```shell-session
-$ kubectl delete sts waypoint-server
+$ helm uninstall waypoint
+$ helm uninstall waypoint-static
 $ kubectl delete pvc data-waypoint-server-0
-$ kubectl delete svc waypoint
-$ kubectl delete deploy waypoint-runner
+$ kubectl delete pvc data-default-waypoint-static-runner-0
 ```
 
 ## Pack Builder No Such Image
