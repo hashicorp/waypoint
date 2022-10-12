@@ -169,7 +169,7 @@ func (cs *ConfigSourcer) read(
 			// and prevents flapping values on every refresh.
 			if secret.Renewable {
 				L.Trace("secret is renewable, starting renewer")
-				cs.startLifetimeWatcher(client, vaultReq.Path, secret, L)
+				cs.startLifetimeWatcher(L, client, vaultReq.Path, secret)
 			}
 		} else {
 			L.Trace("this secret has already been read and is in the cache")
@@ -243,7 +243,7 @@ func (cs *ConfigSourcer) stop() error {
 	return nil
 }
 
-func (cs *ConfigSourcer) startLifetimeWatcher(client *vaultapi.Client, path string, s *vaultapi.Secret, log hclog.Logger) {
+func (cs *ConfigSourcer) startLifetimeWatcher(log hclog.Logger, client *vaultapi.Client, path string, s *vaultapi.Secret) {
 	// The secret should be in the cache. If it isn't then just ignore.
 	// The reason it should be in the cache is because we only call startLifetimeWatcher
 	// after querying the initial secret and inserting it into the cache.
