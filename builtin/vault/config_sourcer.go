@@ -273,7 +273,7 @@ func (cs *ConfigSourcer) startLifetimeWatcher(log hclog.Logger, client *vaultapi
 	// Start our goroutine that actually watches for changes. This
 	// goroutine can no longer assume the "cache" variable is safe for
 	// reading or writing and must acquire a lock.
-	go func(log hclog.Logger) {
+	go func() {
 		defer renewer.Stop()
 
 		for {
@@ -331,7 +331,7 @@ func (cs *ConfigSourcer) startLifetimeWatcher(log hclog.Logger, client *vaultapi
 			cs.cacheMu.Unlock()
 			log.Trace("secret renewed")
 		}
-	}(log)
+	}()
 }
 
 func (cs *ConfigSourcer) Documentation() (*docs.Documentation, error) {
