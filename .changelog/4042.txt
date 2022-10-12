@@ -1,0 +1,4 @@
+```release-note:improvement
+cli: Introduce new CLI command `waypoint pipeline get-run` which will stream
+an existing pipeline run either by the latest known run or a specific sequence id.
+```
