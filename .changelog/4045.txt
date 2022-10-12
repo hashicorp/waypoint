@@ -1,0 +1,3 @@
+```release-note:feature
+plugin/consul: Consul key-value data config sourcer plugin
+```
