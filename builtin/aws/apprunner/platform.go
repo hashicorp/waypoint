@@ -39,7 +39,7 @@ type PlatformConfig struct {
 	// way. This might be control an image that has multiple modes of operation,
 	// selected via environment variable. Most configuration should use the waypoint
 	// config commands.
-	SourceConfiguration map[string]string `hcl:"source_configuration,optional"`
+	StaticEnvVars map[string]string `hcl:"static_environment,optional"`
 }
 
 // Config implements Configurable
@@ -111,12 +111,17 @@ func (p *Platform) Deploy(
 
 	mem := int64(p.config.Memory)
 	if mem == 0 {
-		mem = 2048
+		mem = defaultMemory
 	}
 
 	cpu := int64(p.config.Cpu)
 	if cpu == 0 {
-		cpu = 1024
+		cpu = defaultCpu
+	}
+
+	envVars := make(map[string]*string)
+	for k, v := range p.config.StaticEnvVars {
+		envVars[k] = aws.String(v)
 	}
 
 	step.Done()
@@ -196,7 +201,8 @@ func (p *Platform) Deploy(
 					ImageRepositoryType: aws.String(apprunner.ImageRepositoryTypeEcr),
 					ImageIdentifier:     aws.String(img.Name()),
 					ImageConfiguration: &apprunner.ImageConfiguration{
-						Port: aws.String(strconv.Itoa(port)),
+						Port:                        aws.String(strconv.Itoa(port)),
+						RuntimeEnvironmentVariables: envVars,
 					},
 				},
 				AutoDeploymentsEnabled: aws.Bool(false),
@@ -271,7 +277,10 @@ func (p *Platform) getServiceSummaryByName(
 	return serviceSummary, nil
 }
 
+const defaultMemory = 2048
+const defaultCpu = 1024
 const defaultRoleName = `AppRunnerECRAccessRole`
+
 const rolePolicy = `{
 	"Version": "2012-10-17",
 	"Statement": [
@@ -339,7 +348,9 @@ func (p *Platform) Documentation() (*docs.Documentation, error) {
 		return nil, err
 	}
 
-	// TODO
+	doc.Description(`
+Creates an App Runner service, with the specified configuration 
+from ` + "`waypoint.hcl`.")
 
 	return doc, nil
 }

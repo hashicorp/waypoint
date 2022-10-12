@@ -1,7 +1,15 @@
 [
   {
+    "title": "AWS App Runner",
+    "path": "aws-apprunner"
+  },
+  {
     "title": "aws-ec2",
     "path": "aws-ec2"
+  },
+  {
+    "title": "AWS ECR Pull",
+    "path": "aws-ecr-pull"
   },
   {
     "title": "aws-ecs",

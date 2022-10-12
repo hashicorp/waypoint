@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/apprunner"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
+	"github.com/hashicorp/waypoint-plugin-sdk/docs"
 	"github.com/hashicorp/waypoint-plugin-sdk/framework/resource"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/builtin/aws/utils"
@@ -161,7 +162,29 @@ func (r *Releaser) resourceManager(log hclog.Logger) *resource.Manager {
 	)
 }
 
+func (p *Releaser) Documentation() (*docs.Documentation, error) {
+	doc, err := docs.New(docs.FromConfig(&PlatformConfig{}))
+	if err != nil {
+		return nil, err
+	}
+
+	doc.Description(`
+This releaser is a lightweight layer that polls App Runner until a deployment
+reaches the ` + "`SUCCEEDED` status." + `
+
+~> **Note:** Using the ` + "`-prune=false`" + ` flag is recommended for this releaser. By default,
+Waypoint prunes and destroys all unreleased deployments and keeps only one previous
+deployment. Therefore, if ` + "`-prune=false`" + ` is not set, Waypoint will delete the single
+service that App Runner manages upon a ` + "second `waypoint up`." + `
+
+See [deployment pruning](/docs/lifecycle/release#deployment-pruning) for more information.
+`)
+
+	return doc, nil
+}
+
 var (
 	_ component.Configurable   = (*Releaser)(nil)
 	_ component.ReleaseManager = (*Releaser)(nil)
+	_ component.Documented     = (*Releaser)(nil)
 )

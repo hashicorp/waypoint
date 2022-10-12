@@ -1,0 +1,55 @@
+## aws-apprunner (releasemanager)
+
+This releaser is a lightweight layer that polls App Runner until a deployment
+reaches the `SUCCEEDED` status.
+
+~> **Note:** Using the `-prune=false` flag is recommended for this releaser. By default,
+Waypoint prunes and destroys all unreleased deployments and keeps only one previous
+deployment. Therefore, if `-prune=false` is not set, Waypoint will delete the single
+service that App Runner manages upon a second `waypoint up`.
+
+See [deployment pruning](/docs/lifecycle/release#deployment-pruning) for more information.
+
+### Interface
+
+### Required Parameters
+
+These parameters are used in the [`use` stanza](/docs/waypoint-hcl/use) for this plugin.
+
+#### name
+
+- Type: **string**
+
+### Optional Parameters
+
+These parameters are used in the [`use` stanza](/docs/waypoint-hcl/use) for this plugin.
+
+#### cpu
+
+- Type: **int**
+- **Optional**
+
+#### memory
+
+- Type: **int**
+- **Optional**
+
+#### port
+
+- Type: **int**
+- **Optional**
+
+#### region
+
+- Type: **string**
+- **Optional**
+
+#### role_name
+
+- Type: **string**
+- **Optional**
+
+#### static_environment
+
+- Type: **map of string to string**
+- **Optional**
