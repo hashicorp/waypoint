@@ -23,6 +23,7 @@ func init() {
 		TestProjectListWorkspaces,
 		TestProjectGetSetAllProperties,
 		TestProjectGetSetAllPropertiesSansVariables,
+		TestProjectCanTransitionDataSource,
 	}
 }
 
@@ -251,6 +252,103 @@ func TestProjectGetSetAllPropertiesSansVariables(t *testing.T, f Factory, rf Res
 	respJsonStr := string(respJsonBytes)
 
 	require.Equal(initialJsonStr, respJsonStr)
+}
+
+func TestProjectCanTransitionDataSource(t *testing.T, f Factory, rf RestartFactory) {
+	require := require.New(t)
+
+	s := f(t)
+	defer s.Close()
+
+	project := &pb.Project{
+		Name: "testProject",
+	}
+
+	// Can post initially
+	{
+		// Set
+		err := s.ProjectPut(project)
+		require.NoError(err)
+
+		// Get
+		resp, err := s.ProjectGet(&pb.Ref_Project{
+			Project: project.Name,
+		})
+		require.NoError(err)
+		require.NotNil(resp)
+		require.Nil(resp.DataSource)
+	}
+
+	// TODO(izaak) Reenable this when all server implementations support an explicit local datasource state
+	// rather than assuming that the nil state is datasource.
+
+	// Can set ds to local
+	//{
+	//	project.DataSource = &pb.Job_DataSource{
+	//		Source: &pb.Job_DataSource_Local{Local: &pb.Job_Local{}},
+	//	}
+	//
+	//	// Set
+	//	err := s.ProjectPut(project)
+	//	require.NoError(err)
+	//
+	//	// Get
+	//	resp, err := s.ProjectGet(&pb.Ref_Project{
+	//		Project: project.Name,
+	//	})
+	//	require.NoError(err)
+	//	require.NotNil(resp)
+	//	require.NotNil(resp.DataSource)
+	//	require.IsType(&pb.Job_DataSource_Local{}, resp.DataSource.Source)
+	//}
+
+	// Can set ds to git
+	{
+		project.DataSource = &pb.Job_DataSource{
+			Source: &pb.Job_DataSource_Git{Git: &pb.Job_Git{
+				Url:                      "test",
+				Ref:                      "test",
+				Path:                     "test",
+				IgnoreChangesOutsidePath: true,
+				RecurseSubmodules:        1,
+				Auth:                     nil,
+			}},
+		}
+
+		// Set
+		err := s.ProjectPut(project)
+		require.NoError(err)
+
+		// Get
+		resp, err := s.ProjectGet(&pb.Ref_Project{
+			Project: project.Name,
+		})
+		require.NoError(err)
+		require.NotNil(resp)
+		require.NotNil(resp.DataSource)
+		require.IsType(&pb.Job_DataSource_Git{}, resp.DataSource.Source)
+	}
+
+	// Can set ds back to nil
+	{
+		project.DataSource = nil
+
+		// Set
+		err := s.ProjectPut(project)
+		require.NoError(err)
+
+		// Get
+		resp, err := s.ProjectGet(&pb.Ref_Project{
+			Project: project.Name,
+		})
+		require.NoError(err)
+		require.NotNil(resp)
+		require.Nil(resp.DataSource)
+	}
+
+	// NOTE(izaak): we should probably make it possible to set DS to nil, but in practice nil is interpreted
+	// as local by the cli and likely other parts of the server, so setting it to local explicitly
+	// rather than nil is what we do.
 }
 
 func TestProjectGetSetAllProperties(t *testing.T, f Factory, rf RestartFactory) {
