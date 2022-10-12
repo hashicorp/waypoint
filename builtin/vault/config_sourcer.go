@@ -118,7 +118,7 @@ func (cs *ConfigSourcer) read(
 	// above where we purge the cache, we keep any with Cancel set. This keeps
 	// long-running dynamic secrets around so that they don't flap every refresh
 	// period. Instead, those are still in the cache and we use whatever value
-	// they have. A background goroutine will update those (see startRenewer).
+	// they have. A background goroutine will update those (see startLifetimeWatcher).
 	//
 	// If a config change happens, the ConfigSourcer contract states that
 	// Stop will be called. When Stop is called, we clear our full cache and
@@ -169,7 +169,7 @@ func (cs *ConfigSourcer) read(
 			// and prevents flapping values on every refresh.
 			if secret.Renewable {
 				L.Trace("secret is renewable, starting renewer")
-				cs.startRenewer(client, vaultReq.Path, secret, L)
+				cs.startLifetimeWatcher(client, vaultReq.Path, secret, L)
 			}
 		} else {
 			L.Trace("this secret has already been read and is in the cache")
@@ -243,9 +243,9 @@ func (cs *ConfigSourcer) stop() error {
 	return nil
 }
 
-func (cs *ConfigSourcer) startRenewer(client *vaultapi.Client, path string, s *vaultapi.Secret, log hclog.Logger) {
+func (cs *ConfigSourcer) startLifetimeWatcher(client *vaultapi.Client, path string, s *vaultapi.Secret, log hclog.Logger) {
 	// The secret should be in the cache. If it isn't then just ignore.
-	// The reason it should be in the cache is because we only call startRenewer
+	// The reason it should be in the cache is because we only call startLifetimeWatcher
 	// after querying the initial secret and inserting it into the cache.
 	log.Debug("checking if secret is in cache")
 	cache, ok := cs.secretCache[path]
