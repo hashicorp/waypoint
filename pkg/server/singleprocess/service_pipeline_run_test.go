@@ -176,7 +176,7 @@ func TestServicePipelineRun(t *testing.T) {
 		require.NotEmpty(runs)
 		require.Len(runs.PipelineRuns, 3)
 
-		// Get the latest run, should be sequence 2
+		// Get the latest run, should be sequence 3
 		latest, err = client.GetLatestPipelineRun(ctx, &pb.GetPipelineRequest{
 			Pipeline: pRef,
 		})
