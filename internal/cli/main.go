@@ -633,6 +633,11 @@ func Commands(
 				baseCommand: baseCommand,
 			}, nil
 		},
+		"pipeline get-run": func() (cli.Command, error) {
+			return &PipelineGetRunCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
 		"pipeline run": func() (cli.Command, error) {
 			return &PipelineRunCommand{
 				baseCommand: baseCommand,
