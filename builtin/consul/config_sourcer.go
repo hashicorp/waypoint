@@ -319,10 +319,7 @@ func (cs *ConfigSourcer) startConsulBlockingQuery(ctx context.Context, logger hc
 		cs.mu.Unlock()
 
 		// now determine the next wait index
-		if err == nil {
-			lastIndex = meta.LastIndex
-			failures = 0
-		} else {
+		if err != nil {
 			// reset the last index to 0 to do a non-blocking query
 			lastIndex = 0
 			// Set up for exponential backoff
@@ -339,6 +336,8 @@ func (cs *ConfigSourcer) startConsulBlockingQuery(ctx context.Context, logger hc
 				return
 			}
 		}
+		lastIndex = meta.LastIndex
+		failures = 0
 	}
 }
 
