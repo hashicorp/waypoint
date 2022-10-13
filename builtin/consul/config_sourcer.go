@@ -252,7 +252,7 @@ func (cs *ConfigSourcer) read(ctx context.Context, log hclog.Logger, reqs []*com
 				err:    nil,
 			}
 			cs.cache[kvReq.cacheKey()] = cacheVal
-			cs.startBlockingQuery(refreshCtx, log, kvReq, meta.LastIndex, opts)
+			go cs.startConsulBlockingQuery(refreshCtx, log, kvReq, meta.LastIndex, opts)
 		}
 
 		if cacheVal.err != nil {
@@ -277,67 +277,69 @@ func (cs *ConfigSourcer) read(ctx context.Context, log hclog.Logger, reqs []*com
 	return results, nil
 }
 
-func (cs *ConfigSourcer) startBlockingQuery(ctx context.Context, logger hclog.Logger, kvReq reqConfig, lastIndex uint64, opts *api.QueryOptions) {
-	go func() {
-		opts := opts.WithContext(ctx)
-		failures := 0
-		// Ideally we would use the github.com/hashicorp/consul/api/watch package. However that package doesn't support
-		// namespaces and partitions except with the global client defaults and thus isn't suitable for this usage.
+// startConsulBlockingQuery starts a blocking query to the Consul API to poll
+// for changes in the KV data store at the specified path. This is expected to
+// be called via a goroutine. For more information on Consul blocking queries, see:
+// https://developer.hashicorp.com/consul/api-docs/features/blocking
+func (cs *ConfigSourcer) startConsulBlockingQuery(ctx context.Context, logger hclog.Logger, kvReq reqConfig, lastIndex uint64, opts *api.QueryOptions) {
+	opts = opts.WithContext(ctx)
+	failures := 0
+	// Ideally we would use the github.com/hashicorp/consul/api/watch package. However that package doesn't support
+	// namespaces and partitions except with the global client defaults and thus isn't suitable for this usage.
 
-		for {
-			// check if we are being stopped
+	for {
+		// check if we are being stopped
+		select {
+		case <-ctx.Done():
+			return
+		default:
+		}
+
+		logger.Trace("Issuing blocking query", "wait-index", lastIndex)
+		// set the wait index to use for the query
+		opts.WaitIndex = lastIndex
+		pair, meta, err := cs.client.Get(kvReq.Key, opts)
+
+		// KV entry not updated - do nothing
+		if meta != nil && meta.LastIndex == lastIndex {
+			logger.Trace("KV value unchanged")
+			continue
+		}
+
+		// update the data within our cache
+		cs.mu.Lock()
+		val, ok := cs.cache[kvReq.cacheKey()]
+		if !ok {
+			logger.Error("KV data is not present within the cache - stopping blocking query refresher")
+			cs.mu.Unlock()
+			return
+		}
+		val.kvPair = pair
+		val.err = err
+		cs.mu.Unlock()
+
+		// now determine the next wait index
+		if err == nil {
+			lastIndex = meta.LastIndex
+			failures = 0
+		} else {
+			// reset the last index to 0 to do a non-blocking query
+			lastIndex = 0
+			// Set up for exponential backoff
+			failures++
+
+			retry := retryInterval * time.Duration(failures*failures)
+			if retry > maxBackoffTime {
+				retry = maxBackoffTime
+			}
+			logger.Error("KV Get errored", "error", err, "retry", retry.String())
 			select {
+			case <-time.After(retry):
 			case <-ctx.Done():
 				return
-			default:
-			}
-
-			logger.Trace("Issuing blocking query", "wait-index", lastIndex)
-			// set the wait index to use for the query
-			opts.WaitIndex = lastIndex
-			pair, meta, err := cs.client.Get(kvReq.Key, opts)
-
-			// KV entry not updated - do nothing
-			if meta != nil && meta.LastIndex == lastIndex {
-				logger.Trace("KV value unchanged")
-				continue
-			}
-
-			// update the data within our cache
-			cs.mu.Lock()
-			val, ok := cs.cache[kvReq.cacheKey()]
-			if !ok {
-				logger.Error("KV data is not present within the cache - stopping blocking query refresher")
-				cs.mu.Unlock()
-				return
-			}
-			val.kvPair = pair
-			val.err = err
-			cs.mu.Unlock()
-
-			// now determine the next wait index
-			if err == nil {
-				lastIndex = meta.LastIndex
-				failures = 0
-			} else {
-				// reset the last index to 0 to do a non-blocking query
-				lastIndex = 0
-				// Set up for exponential backoff
-				failures++
-
-				retry := retryInterval * time.Duration(failures*failures)
-				if retry > maxBackoffTime {
-					retry = maxBackoffTime
-				}
-				logger.Error("KV Get errored", "error", err, "retry", retry.String())
-				select {
-				case <-time.After(retry):
-				case <-ctx.Done():
-					return
-				}
 			}
 		}
-	}()
+	}
 }
 
 func (cs *ConfigSourcer) stop() error {
