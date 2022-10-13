@@ -132,7 +132,7 @@ func (cs *ConfigSourcer) ConfigSet(config interface{}) error {
 	conf, ok := config.(*ConfigSourcerConfig)
 	if !ok {
 		// The Waypoint SDK should ensure this never gets hit
-		return fmt.Errorf("expected *ConfigSourcerConfig as parameter")
+		return status.Errorf(codes.FailedPrecondition, "expected *ConfigSourcerConfig as parameter")
 	}
 
 	// attempt to create API client
