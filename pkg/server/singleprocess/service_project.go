@@ -2,6 +2,7 @@ package singleprocess
 
 import (
 	"context"
+
 	"github.com/hashicorp/go-hclog"
 
 	empty "google.golang.org/protobuf/types/known/emptypb"
@@ -89,9 +90,9 @@ func (s *Service) GetProject(
 
 func (s *Service) ListProjects(
 	ctx context.Context,
-	req *empty.Empty,
+	req *pb.ListProjectsRequest,
 ) (*pb.ListProjectsResponse, error) {
-	result, err := s.state(ctx).ProjectList(ctx)
+	result, paginationOptions, err := s.state(ctx).ProjectList(ctx, req.PaginationOptions)
 	if err != nil {
 		return nil, hcerr.Externalize(
 			hclog.FromContext(ctx),
@@ -100,7 +101,7 @@ func (s *Service) ListProjects(
 		)
 	}
 
-	return &pb.ListProjectsResponse{Projects: result}, nil
+	return &pb.ListProjectsResponse{Projects: result, PaginationOptions: paginationOptions}, nil
 }
 
 func (s *Service) DestroyProject(

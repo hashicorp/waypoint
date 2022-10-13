@@ -96,7 +96,7 @@ service Waypoint {
   // ListProjects returns a list of all the projects. There is no equivalent
   // ListApplications because applications are a part of projects and you
   // can use GetProject to get more information about the project.
-  rpc ListProjects(google.protobuf.Empty) returns (ListProjectsResponse) {}
+  rpc ListProjects(ListProjectsRequest) returns (ListProjectsResponse) {}
 
   // DestroyProject deletes a project from the database as well as (optionally)
   // destroys all resources created within a project
@@ -3127,8 +3127,13 @@ message GetProjectResponse {
   repeated Workspace.Project workspaces = 2;
 }
 
+message ListProjectsRequest {
+  PaginationRequest paginationOptions = 1;
+}
+
 message ListProjectsResponse {
   repeated Ref.Project projects = 1;
+  PaginationResponse paginationOptions = 2;
 }
 
 message DestroyProjectRequest {
@@ -5421,4 +5426,41 @@ message InlineKeepalive {
   // WARNING: NO OTHER MESSAGE MAY USE THIS FIELD NUMBER. Doing so will cause
   // that message to be confused with an inline keepalive
   string signature = 100000000;
+}
+
+// https://github.com/hashicorp/cloud-api/blob/master/hashicorp/cloud/common/pagination.proto
+// PaginationRequest are the parameters for a paginated list request.
+message PaginationRequest {
+  // The max number of results per page that should be returned. If the number
+  // of available results is larger than `page_size`, a `next_page_token` is
+  // returned which can be used to get the next page of results in subsequent
+  // requests. A value of zero will cause `page_size` to be defaulted.
+  uint32 page_size = 1  [json_name="page_size"];
+
+  // Specifies a page token to use to retrieve the next page. Set this to the
+  // `next_page_token` returned by previous list requests to get the next page of
+  // results. If set, `previous_page_token` must not be set.
+  string next_page_token = 2 [json_name="next_page_token"];
+
+  // Specifies a page token to use to retrieve the previous page. Set this to
+  // the `previous_page_token` returned by previous list requests to get the
+  // previous page of results. If set, `next_page_token` must not be set.
+  string previous_page_token = 3 [json_name="previous_page_token"];
+}
+
+// PaginationResponse is the response holding the page tokens for a paginated
+// list response.
+message PaginationResponse {
+  // This token allows you to get the next page of results for list requests.
+  // If the number of results is larger than `page_size`, use the
+  // `next_page_token` as a value for the query parameter `next_page_token` in
+  // the next request. The value will become empty when there are no more pages.
+  string next_page_token = 1 [json_name="next_page_token"];
+
+  // This token allows you to get the previous page of results for list
+  // requests. If the number of results is larger than `page_size`, use the
+  // `previous_page_token` as a value for the query parameter
+  // `previous_page_token` in the next request. The value will become empty when
+  // there are no more pages.
+  string previous_page_token = 2 [json_name="previous_page_token"];
 }

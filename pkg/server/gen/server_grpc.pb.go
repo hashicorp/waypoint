@@ -77,7 +77,7 @@ type WaypointClient interface {
 	// ListProjects returns a list of all the projects. There is no equivalent
 	// ListApplications because applications are a part of projects and you
 	// can use GetProject to get more information about the project.
-	ListProjects(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*ListProjectsResponse, error)
+	ListProjects(ctx context.Context, in *ListProjectsRequest, opts ...grpc.CallOption) (*ListProjectsResponse, error)
 	// DestroyProject deletes a project from the database as well as (optionally)
 	// destroys all resources created within a project
 	DestroyProject(ctx context.Context, in *DestroyProjectRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
@@ -499,7 +499,7 @@ func (c *waypointClient) GetProject(ctx context.Context, in *GetProjectRequest, 
 	return out, nil
 }
 
-func (c *waypointClient) ListProjects(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*ListProjectsResponse, error) {
+func (c *waypointClient) ListProjects(ctx context.Context, in *ListProjectsRequest, opts ...grpc.CallOption) (*ListProjectsResponse, error) {
 	out := new(ListProjectsResponse)
 	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/ListProjects", in, out, opts...)
 	if err != nil {
@@ -1570,7 +1570,7 @@ type WaypointServer interface {
 	// ListProjects returns a list of all the projects. There is no equivalent
 	// ListApplications because applications are a part of projects and you
 	// can use GetProject to get more information about the project.
-	ListProjects(context.Context, *emptypb.Empty) (*ListProjectsResponse, error)
+	ListProjects(context.Context, *ListProjectsRequest) (*ListProjectsResponse, error)
 	// DestroyProject deletes a project from the database as well as (optionally)
 	// destroys all resources created within a project
 	DestroyProject(context.Context, *DestroyProjectRequest) (*emptypb.Empty, error)
@@ -1881,7 +1881,7 @@ func (UnimplementedWaypointServer) UpsertProject(context.Context, *UpsertProject
 func (UnimplementedWaypointServer) GetProject(context.Context, *GetProjectRequest) (*GetProjectResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetProject not implemented")
 }
-func (UnimplementedWaypointServer) ListProjects(context.Context, *emptypb.Empty) (*ListProjectsResponse, error) {
+func (UnimplementedWaypointServer) ListProjects(context.Context, *ListProjectsRequest) (*ListProjectsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListProjects not implemented")
 }
 func (UnimplementedWaypointServer) DestroyProject(context.Context, *DestroyProjectRequest) (*emptypb.Empty, error) {
@@ -2480,7 +2480,7 @@ func _Waypoint_GetProject_Handler(srv interface{}, ctx context.Context, dec func
 }
 
 func _Waypoint_ListProjects_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(emptypb.Empty)
+	in := new(ListProjectsRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -2492,7 +2492,7 @@ func _Waypoint_ListProjects_Handler(srv interface{}, ctx context.Context, dec fu
 		FullMethod: "/hashicorp.waypoint.Waypoint/ListProjects",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(WaypointServer).ListProjects(ctx, req.(*emptypb.Empty))
+		return srv.(WaypointServer).ListProjects(ctx, req.(*ListProjectsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
