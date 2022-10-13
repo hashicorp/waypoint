@@ -240,8 +240,20 @@ http:
   - selector: hashicorp.waypoint.Waypoint.GetConfig
     get: /v1/project/{application.project}/application/{application.application}/config
 
+    # by project
   - selector: hashicorp.waypoint.Waypoint.GetConfig
     get: /v1/project/{project.project}/config
+
+    # by application
+  - selector: hashicorp.waypoint.Waypoint.GetConfig
+    get: /v1/project/{application.project}/{application.application}/config
+
+    # NOTE(izaak): it's not clear to me how to formulate the proto request to get globally scoped config vars,
+    # so omitting that for now
+
+  - selector: hashicorp.waypoint.Waypoint.SetConfig
+    put: /v1/project/config
+    body: "*"
 
   - selector: hashicorp.waypoint.Waypoint.SetConfigSource
     put: /v1/config-source
