@@ -70,7 +70,17 @@ func (conf *ConfigSourcerConfig) client() (*api.Client, error) {
 		TokenFile:  conf.TokenFile,
 		Namespace:  conf.Namespace,
 		Partition:  conf.Partition,
-		TLSConfig:  *conf.TLSConfig.toAPITLSConfig(),
+		TLSConfig: api.TLSConfig{
+			Address:            conf.TLSConfig.ServerName,
+			CAFile:             conf.TLSConfig.CAFile,
+			CAPath:             conf.TLSConfig.CAPath,
+			CAPem:              conf.TLSConfig.CAPem,
+			CertFile:           conf.TLSConfig.CertFile,
+			CertPEM:            conf.TLSConfig.CertPEM,
+			KeyFile:            conf.TLSConfig.KeyFile,
+			KeyPEM:             conf.TLSConfig.KeyPEM,
+			InsecureSkipVerify: conf.TLSConfig.InsecureHTTPs,
+		},
 	}
 
 	return api.NewClient(&apiConfig)
@@ -86,20 +96,6 @@ type tlsConfig struct {
 	KeyFile       string `hcl:"key_file,optional"`
 	KeyPEM        []byte `hcl:"key_pem,optional"`
 	InsecureHTTPs bool   `hcl:"insecure_https,optional"`
-}
-
-func (t *tlsConfig) toAPITLSConfig() *api.TLSConfig {
-	return &api.TLSConfig{
-		Address:            t.ServerName,
-		CAFile:             t.CAFile,
-		CAPath:             t.CAPath,
-		CAPem:              t.CAPem,
-		CertFile:           t.CertFile,
-		CertPEM:            t.CertPEM,
-		KeyFile:            t.KeyFile,
-		KeyPEM:             t.KeyPEM,
-		InsecureSkipVerify: t.InsecureHTTPs,
-	}
 }
 
 type consulHTTPAuth struct {
