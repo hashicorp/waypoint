@@ -43,14 +43,16 @@ type cachedVal struct {
 	err    error
 }
 
+// ConfigSourcerConfig is used to configure where to talk to Consul, and from
+// where the KV data is to be retrieved
 type ConfigSourcerConfig struct {
 	// Configuration for where to talk to Consul
 	Address   string         `hcl:"address,optional"`
 	Scheme    string         `hcl:"scheme,optional"`
-	HTTPAuth  ConsulHTTPAuth `hcl:"http_auth,optional"`
+	HTTPAuth  consulHTTPAuth `hcl:"http_auth,optional"`
 	Token     string         `hcl:"token,optional"`
 	TokenFile string         `hcl:"token_file,optional"`
-	TLSConfig TLSConfig      `hcl:"tls,optional"`
+	TLSConfig tlsConfig      `hcl:"tls,optional"`
 
 	// Default location of KV data
 	Datacenter string `hcl:"datacenter,optional"`
@@ -58,7 +60,7 @@ type ConfigSourcerConfig struct {
 	Partition  string `hcl:"partition,optional"`
 }
 
-func (conf *ConfigSourcerConfig) toAPIClient() (*api.Client, error) {
+func (conf *ConfigSourcerConfig) client() (*api.Client, error) {
 	apiConfig := api.Config{
 		Address:    conf.Address,
 		Scheme:     conf.Scheme,
@@ -74,7 +76,7 @@ func (conf *ConfigSourcerConfig) toAPIClient() (*api.Client, error) {
 	return api.NewClient(&apiConfig)
 }
 
-type TLSConfig struct {
+type tlsConfig struct {
 	ServerName    string `hcl:"server_name,optional"`
 	CAFile        string `hcl:"ca_file,optional"`
 	CAPath        string `hcl:"ca_path,optional"`
@@ -86,7 +88,7 @@ type TLSConfig struct {
 	InsecureHTTPs bool   `hcl:"insecure_https,optional"`
 }
 
-func (t *TLSConfig) toAPITLSConfig() *api.TLSConfig {
+func (t *tlsConfig) toAPITLSConfig() *api.TLSConfig {
 	return &api.TLSConfig{
 		Address:            t.ServerName,
 		CAFile:             t.CAFile,
@@ -100,12 +102,12 @@ func (t *TLSConfig) toAPITLSConfig() *api.TLSConfig {
 	}
 }
 
-type ConsulHTTPAuth struct {
+type consulHTTPAuth struct {
 	Username string `hcl:"username,optional"`
 	Password string `hcl:"password,optional"`
 }
 
-func (a *ConsulHTTPAuth) toApiAuth() *api.HttpBasicAuth {
+func (a *consulHTTPAuth) toApiAuth() *api.HttpBasicAuth {
 	if a.Username == "" && a.Password == "" {
 		return nil
 	}
@@ -124,23 +126,23 @@ type ConfigSourcer struct {
 	cache  map[string]*cachedVal
 }
 
-// Implement Configurable
+// Config implements the Configurable interface
 func (cs *ConfigSourcer) Config() (interface{}, error) {
 	return &cs.config, nil
 }
 
-// Implement ConfigurableNotify
+// ConfigSet implements the ConfigurableNotify interface
 func (cs *ConfigSourcer) ConfigSet(config interface{}) error {
 	conf, ok := config.(*ConfigSourcerConfig)
 	if !ok {
 		// The Waypoint SDK should ensure this never gets hit
-		return fmt.Errorf("Expected *ConfigSourcerConfig as parameter")
+		return fmt.Errorf("expected *ConfigSourcerConfig as parameter")
 	}
 
 	// attempt to create API client
-	client, err := conf.toAPIClient()
+	client, err := conf.client()
 	if err != nil {
-		return fmt.Errorf("Invalid configuration: %w", err)
+		return fmt.Errorf("invalid configuration: %w", err)
 	}
 
 	cs.client = client.KV()
@@ -178,7 +180,7 @@ func (cs *ConfigSourcer) StopFunc() interface{} {
 
 func (cs *ConfigSourcer) read(ctx context.Context, log hclog.Logger, reqs []*component.ConfigRequest) ([]*pb.ConfigSource_Value, error) {
 	log.Trace("Reading KV data from Consul")
-	// Setup our lock
+	// Set up our lock
 	cs.mu.Lock()
 	defer cs.mu.Unlock()
 
@@ -189,9 +191,9 @@ func (cs *ConfigSourcer) read(ctx context.Context, log hclog.Logger, reqs []*com
 
 	// Create our Consul API client if this is our first time
 	if cs.client == nil {
-		client, err := cs.config.toAPIClient()
+		client, err := cs.config.client()
 		if err != nil {
-			return nil, fmt.Errorf("Invalid Consul client configuration: %w", err)
+			return nil, fmt.Errorf("invalid Consul client configuration: %w", err)
 		}
 		cs.client = client.KV()
 	}
@@ -283,17 +285,17 @@ func (cs *ConfigSourcer) startBlockingQuery(ctx context.Context, logger hclog.Lo
 		// namespaces and partitions except with the global client defaults and thus isn't suitable for this usage.
 
 		for {
-			logger.Trace("Issuing blocking query", "wait-index", lastIndex)
-			// set the wait index to use for the query
-			opts.WaitIndex = lastIndex
-			pair, meta, err := cs.client.Get(kvReq.Key, opts)
-
 			// check if we are being stopped
 			select {
 			case <-ctx.Done():
 				return
 			default:
 			}
+
+			logger.Trace("Issuing blocking query", "wait-index", lastIndex)
+			// set the wait index to use for the query
+			opts.WaitIndex = lastIndex
+			pair, meta, err := cs.client.Get(kvReq.Key, opts)
 
 			// KV entry not updated - do nothing
 			if meta != nil && meta.LastIndex == lastIndex {
@@ -320,7 +322,7 @@ func (cs *ConfigSourcer) startBlockingQuery(ctx context.Context, logger hclog.Lo
 			} else {
 				// reset the last index to 0 to do a non-blocking query
 				lastIndex = 0
-				// Set up for exponental backoff
+				// Set up for exponential backoff
 				failures++
 
 				retry := retryInterval * time.Duration(failures*failures)
