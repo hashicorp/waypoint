@@ -616,35 +616,52 @@
     ]
   },
   {
-    "title": "Troubleshooting",
-    "path": "troubleshooting"
-  },
-  {
-    "title": "Glossary",
-    "path": "glossary"
-  },
-  {
     "divider": true
   },
   {
-    "title": "Internals",
+    "title": "Waypoint Resources",
     "routes": [
       {
-        "title": "Overview",
-        "path": "internals"
+        "title": "Internals",
+        "routes": [
+          {
+            "title": "Overview",
+            "path": "resources/internals"
+          },
+          {
+            "title": "Architecture",
+            "path": "resources/internals/architecture"
+          },
+          {
+            "title": "Operation Execution",
+            "path": "resources/internals/execution"
+          }
+        ]
       },
       {
-        "title": "Architecture",
-        "path": "internals/architecture"
+        "title": "Roadmap",
+        "path": "resources/roadmap"
       },
       {
-        "title": "Operation Execution",
-        "path": "internals/execution"
+        "title": "Community forum",
+        "href": "https://discuss.hashicorp.com/c/waypoint/"
+      },
+      {
+        "title": "Glossary",
+        "path": "resources/glossary"
+      },
+      {
+        "title": "Troubleshooting",
+        "path": "resources/troubleshooting"
+      },
+      {
+        "title": "Support",
+        "href": "https://support.hashicorp.com/"
+      },
+      {
+        "title": "GitHub",
+        "href": "https://github.com/hashicorp/waypoint"
       }
     ]
-  },
-  {
-    "title": "Roadmap",
-    "path": "roadmap"
   }
 ]
