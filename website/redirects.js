@@ -1,8 +1,7 @@
 module.exports = [
-  // This is an example redirect, it can be removed once other redirects have been added
   {
-    source: '/home',
-    destination: '/',
+    source: '/waypoint/docs/kubernetes/:path*',
+    destination: '/waypoint/docs/platforms/kubernetes/:path*',
     permanent: true,
   },
   {
