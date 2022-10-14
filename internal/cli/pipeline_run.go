@@ -18,7 +18,9 @@ import (
 type PipelineRunCommand struct {
 	*baseCommand
 
-	flagPipelineId string
+	flagPipelineId  string
+	flagReattachRun bool
+	flagRunSequence int
 }
 
 func (c *PipelineRunCommand) Run(args []string) int {
@@ -57,19 +59,28 @@ func (c *PipelineRunCommand) Run(args []string) int {
 			pipelineIdent = c.flagPipelineId
 		}
 
-		app.UI.Output("Running pipeline %q for application %q",
-			pipelineIdent, app.Ref().Application, terminal.WithHeaderStyle())
+		if c.flagReattachRun {
+			app.UI.Output("Streaming pipeline %q run for application %q",
+				pipelineIdent, app.Ref().Application, terminal.WithHeaderStyle())
+		} else {
+			app.UI.Output("Running pipeline %q for application %q",
+				pipelineIdent, app.Ref().Application, terminal.WithHeaderStyle())
+		}
 
 		sg := app.UI.StepGroup()
 		defer sg.Wait()
 
-		step := sg.Add("Syncing pipeline configs...")
+		step := sg.Add("")
 		defer step.Abort()
 
-		_, err := app.ConfigSync(ctx, &pb.Job_ConfigSyncOp{})
-		if err != nil {
-			app.UI.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
-			return ErrSentinel
+		if !c.flagReattachRun {
+			step.Update("Syncing pipeline configs...")
+
+			_, err := app.ConfigSync(ctx, &pb.Job_ConfigSyncOp{})
+			if err != nil {
+				app.UI.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+				return ErrSentinel
+			}
 		}
 
 		step.Update("Building pipeline execution request...")
@@ -104,24 +115,71 @@ func (c *PipelineRunCommand) Run(args []string) int {
 			}
 		}
 
-		step.Update("Requesting to queue run of pipeline %q...", pipelineIdent)
+		var (
+			resp       *pb.RunPipelineResponse
+			respGet    *pb.GetPipelineRunResponse
+			allRunJobs []string
+			steps      int
+			runSeq     uint64
 
-		// take pipeline id and queue a RunPipeline with a Job Template.
-		resp, err := c.project.Client().RunPipeline(c.Ctx, runPipelineReq)
-		if err != nil {
-			return err
+			err error
+		)
+		if !c.flagReattachRun {
+			step.Update("Requesting to queue run of pipeline %q...", pipelineIdent)
+
+			// take pipeline id and queue a RunPipeline with a Job Template.
+			resp, err = c.project.Client().RunPipeline(c.Ctx, runPipelineReq)
+			if err != nil {
+				return err
+			}
+
+			step.Update("Pipeline %q has started running. Attempting to read job stream sequentially in order", pipelineIdent)
+			step.Done()
+
+			steps = len(resp.JobMap)
+			allRunJobs = resp.AllJobIds
+			runSeq = resp.Sequence
+		} else {
+			getPipelineReq := &pb.GetPipelineRequest{
+				Pipeline: runPipelineReq.Pipeline,
+			}
+
+			if c.flagRunSequence == 0 {
+				// take pipeline id and queue a RunPipeline with a Job Template.
+				respGet, err = c.project.Client().GetLatestPipelineRun(c.Ctx, getPipelineReq)
+				if err != nil {
+					return err
+				}
+			} else {
+				// take pipeline id and queue a RunPipeline with a Job Template.
+				respGet, err = c.project.Client().GetPipelineRun(c.Ctx, &pb.GetPipelineRunRequest{
+					Pipeline: getPipelineReq.Pipeline,
+					Sequence: uint64(c.flagRunSequence),
+				})
+				if err != nil {
+					return err
+				}
+			}
+			if respGet == nil {
+				app.UI.Output("Getting a pipeline run returned a nil response", terminal.WithErrorStyle())
+				return fmt.Errorf("Response was empty when requesting a pipeline run for pipeline %q", pipelineIdent)
+			}
+
+			step.Update("Attempting to read job stream sequentially in order for run %q", respGet.PipelineRun.Sequence)
+			step.Done()
+
+			steps = len(respGet.PipelineRun.Jobs)
+			for _, j := range respGet.PipelineRun.Jobs {
+				allRunJobs = append(allRunJobs, j.Id)
+			}
+			runSeq = respGet.PipelineRun.Sequence
 		}
-
-		step.Update("Pipeline %q has started running. Attempting to read job stream sequentially in order", pipelineIdent)
-		step.Done()
-
 		// Receive job ids from running pipeline, use job client to attach to job stream
 		// and stream here. First pass can be linear job streaming
 		step = sg.Add("")
 		defer step.Abort()
 
-		steps := len(resp.JobMap)
-		step.Update("%d steps detected, run sequence %d", steps, resp.Sequence)
+		step.Update("%d steps detected, run sequence %d", steps, runSeq)
 		step.Done()
 
 		var (
@@ -132,7 +190,7 @@ func (c *PipelineRunCommand) Run(args []string) int {
 		)
 
 		successful := steps
-		for _, jobId := range resp.AllJobIds {
+		for _, jobId := range allRunJobs {
 			job, err := c.project.Client().GetJob(c.Ctx, &pb.GetJobRequest{
 				JobId: jobId,
 			})
@@ -151,7 +209,9 @@ func (c *PipelineRunCommand) Run(args []string) int {
 			if job.Workspace != nil {
 				ws = job.Workspace.Workspace
 			}
-			app.UI.Output("Executing Step %q in workspace: %q", resp.JobMap[jobId].Step, ws, terminal.WithHeaderStyle())
+			//app.UI.Output("Executing Step %q in workspace: %q", resp.JobMap[jobId].Step, ws, terminal.WithHeaderStyle())
+			stepName := job.Pipeline.Step
+			app.UI.Output("Executing Step %q in workspace: %q", stepName, ws, terminal.WithHeaderStyle())
 			app.UI.Output("Reading job stream (jobId: %s)...", jobId, terminal.WithInfoStyle())
 			app.UI.Output("")
 
@@ -267,6 +327,20 @@ func (c *PipelineRunCommand) Flags() *flag.Sets {
 			Default: "",
 			Usage:   "Run a pipeline by ID.",
 		})
+
+		f.BoolVar(&flag.BoolVar{
+			Name:    "reattach",
+			Target:  &c.flagReattachRun,
+			Default: false,
+			Usage: "If set, will replay or reattach to an existing pipeline run. If " +
+				"'-run' is not specified, will attempt to read the latest run.",
+		})
+
+		f.IntVar(&flag.IntVar{
+			Name:   "run",
+			Target: &c.flagRunSequence,
+			Usage:  "Replay or attach to a specific pipeline run by sequence number.",
+		})
 	})
 }
 
@@ -286,10 +360,14 @@ func (c *PipelineRunCommand) Help() string {
 	return formatHelp(`
 Usage: waypoint pipeline run [options] <pipeline-name>
 
-  Run a pipeline by name. If run outside of a project dir, a '-project' flag is
+	Run a pipeline by name. If run outside of a project dir, a '-project' flag is
 	required. Before running a requested pipeline, this command will sync
 	pipeline configs so it runs the most up to date configuration version for a
 	pipeline.
+
+	If '-reattach' is supplied, the CLI will attempt to reattach to an existing
+	pipeline run. Defaults to latest, but if '-run' is specified, it will attach
+	to that specific run by sequence number.
 
 ` + c.Flags().Help())
 }
