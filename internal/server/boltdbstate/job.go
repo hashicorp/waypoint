@@ -1772,11 +1772,25 @@ func (s *State) pipelineComplete(jobId string) error {
 	if job.State == pb.Job_ERROR {
 		run.State = pb.PipelineRun_ERROR
 	} else if job.State == pb.Job_SUCCESS {
-		// If job Id matches last job queued by pipeline.
-		// We will have to change this in the future when pipeline steps run in parallel,
-		// and the last job queued may not be the last job to complete in the pipeline
-		// TODO:XX figure out how ^
-		if job.Id == run.Jobs[len(run.Jobs)-1].Id {
+		// Look at all job ids in a run and check if any are not SUCCESS
+		runComplete := true
+		for _, j := range run.Jobs {
+			if j.Id == job.Id {
+				continue
+			}
+
+			rj, err := s.JobById(j.Id, nil)
+			if err != nil {
+				return err
+			}
+
+			if rj.State != pb.Job_SUCCESS {
+				runComplete = false
+				break
+			}
+		}
+
+		if runComplete {
 			run.State = pb.PipelineRun_SUCCESS
 			s.log.Trace("pipeline run is complete", "job", job.Id, "pipeline", job.Pipeline.PipelineId, "run", run.Sequence)
 		}
