@@ -199,10 +199,6 @@
     "path": "pipeline-run"
   },
   {
-    "title": "pipeline get-run",
-    "path": "pipeline-get-run"
-  },
-  {
     "title": "plugin",
     "path": "plugin"
   },
