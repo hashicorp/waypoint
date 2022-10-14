@@ -18,6 +18,8 @@ server. This is important because runners are designed to be run in the same
 environment that your application is deployed into because the plugins such as Deploy
 need to talk directly to your deployment platform APIs.
 
+
+
 In most deployments, there are two kinds of runners:
 
 ### Static Runner
@@ -45,13 +47,13 @@ between operations, and allow Waypoint to scale further.
 
 On-demand runners: see [on-demand runners](/docs/runner/on-demand-runner) for more information.
 
-### Deployment Diagram
+### Runner Architecture
 
-This diagram shows the relationship between Waypoint and runners on your infrastructure of choice:
+This diagram shows the relationship between Waypoint and remote static and on-demand runners, on your infrastructure of choice:
 
 <ImageConfig width={400}>
 
-![Waypoint deployment diagram](/img/waypoint-runner.jpg)
+![Runner architecture](/img/oss_runner_no_control_plane@2x.jpg)
 
 </ImageConfig>
 
@@ -88,6 +90,14 @@ any privileged access, offer more isolation between operations, and allow
 Waypoint to scale further.
 
 On-demand runners: see [on-demand runners](/docs/runner/on-demand-runner) for more information.
+
+This diagram shows a CLI runner, as well as remote static and on-demand runners:
+
+<ImageConfig width={400}>
+
+![CLI and remote runners](/img/oss_cli_and_remote_runners@2x.jpg)
+
+</ImageConfig>
 
 ## Runner Targeting
 
