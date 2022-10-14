@@ -1,0 +1,3 @@
+```release-note:bug
+pipelines: Properly mark a pipeline run as complete
+```
