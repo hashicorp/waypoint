@@ -52,6 +52,15 @@ func (c *PipelineRunCommand) Run(args []string) int {
 			terminal.WithWarningStyle())
 	}
 
+	if c.flagRunSequence > 0 && !c.flagReattachRun {
+		c.ui.Output("The '-run' flag was specified, automatically assuming '-reattach'. "+
+			"CLI will attempt to reattach to pipeline run %d",
+			c.flagRunSequence,
+			terminal.WithWarningStyle())
+
+		c.flagReattachRun = true
+	}
+
 	err := c.DoApp(c.Ctx, func(ctx context.Context, app *clientpkg.App) error {
 		// setup pipeline name to be used for UI printing
 		pipelineIdent := pipelineName
