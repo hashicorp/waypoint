@@ -9366,16 +9366,19 @@
           "description": "The sequence number for this pipeline run."
         },
         "pipeline": {
-          "$ref": "#/definitions/hashicorp.waypoint.Ref.Pipeline"
+          "$ref": "#/definitions/hashicorp.waypoint.Ref.Pipeline",
+          "description": "The pipeline this run is apart of."
         },
         "jobs": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/hashicorp.waypoint.Ref.Job"
-          }
+          },
+          "description": "The full list of jobs that are associated with this run."
         },
         "state": {
-          "$ref": "#/definitions/hashicorp.waypoint.PipelineRun.State"
+          "$ref": "#/definitions/hashicorp.waypoint.PipelineRun.State",
+          "title": "The current state of this pipeline run,"
         }
       }
     },

@@ -4854,10 +4854,13 @@ message PipelineRun {
   // The sequence number for this pipeline run.
   uint64 sequence = 2;
 
+  // The pipeline this run is apart of.
   Ref.Pipeline pipeline = 3;
 
+  // The full list of jobs that are associated with this run.
   repeated Ref.Job jobs = 4;
 
+  // The current state of this pipeline run,
   State state = 5;
 
   enum State {

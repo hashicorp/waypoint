@@ -14844,10 +14844,13 @@ type PipelineRun struct {
 
 	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	// The sequence number for this pipeline run.
-	Sequence uint64            `protobuf:"varint,2,opt,name=sequence,proto3" json:"sequence,omitempty"`
-	Pipeline *Ref_Pipeline     `protobuf:"bytes,3,opt,name=pipeline,proto3" json:"pipeline,omitempty"`
-	Jobs     []*Ref_Job        `protobuf:"bytes,4,rep,name=jobs,proto3" json:"jobs,omitempty"`
-	State    PipelineRun_State `protobuf:"varint,5,opt,name=state,proto3,enum=hashicorp.waypoint.PipelineRun_State" json:"state,omitempty"`
+	Sequence uint64 `protobuf:"varint,2,opt,name=sequence,proto3" json:"sequence,omitempty"`
+	// The pipeline this run is apart of.
+	Pipeline *Ref_Pipeline `protobuf:"bytes,3,opt,name=pipeline,proto3" json:"pipeline,omitempty"`
+	// The full list of jobs that are associated with this run.
+	Jobs []*Ref_Job `protobuf:"bytes,4,rep,name=jobs,proto3" json:"jobs,omitempty"`
+	// The current state of this pipeline run,
+	State PipelineRun_State `protobuf:"varint,5,opt,name=state,proto3,enum=hashicorp.waypoint.PipelineRun_State" json:"state,omitempty"`
 }
 
 func (x *PipelineRun) Reset() {
