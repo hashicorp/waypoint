@@ -17,10 +17,14 @@ Manually execute a pipeline by name.
 
 Usage: `waypoint pipeline run [options] <pipeline-name>`
 
-Run a pipeline by name. If run outside of a project dir, a '-project' flag is
-required. Before running a requested pipeline, this command will sync
-pipeline configs so it runs the most up to date configuration version for a
-pipeline.
+    Run a pipeline by name. If run outside of a project dir, a '-project' flag is
+    required. Before running a requested pipeline, this command will sync
+    pipeline configs so it runs the most up to date configuration version for a
+    pipeline.
+
+    If '-reattach' is supplied, the CLI will attempt to reattach to an existing
+    pipeline run. Defaults to latest, but if '-run' is specified, it will attach
+    to that specific run by sequence number.
 
 #### Global Options
 
@@ -42,5 +46,7 @@ pipeline.
 #### Command Options
 
 - `-id=<string>` - Run a pipeline by ID.
+- `-reattach` - If set, will replay or reattach to an existing pipeline run. If '-run' is not specified, will attempt to read the latest run. The default is false.
+- `-run=<int>` - Replay or attach to a specific pipeline run by sequence number.
 
 @include "commands/pipeline-run_more.mdx"
