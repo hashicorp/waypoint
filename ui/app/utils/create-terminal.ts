@@ -1,6 +1,5 @@
 import { ITerminalOptions, Terminal } from 'xterm';
 
-import { isSafari } from 'waypoint/utils/browser';
 import terminalTheme from 'waypoint/utils/terminal-theme';
 
 interface TerminalOptions {
@@ -17,12 +16,6 @@ export function createTerminal(options: TerminalOptions): Terminal {
     fontWeightBold: '700',
     theme: terminalTheme.light,
   };
-
-  // The optional boolean is used for DOM rendering in tests
-  // Because of a bug with Safari and webGL, we turn DOM rendering on in Safari only
-  if (options.domRendering === true || isSafari) {
-    terminalOptions.rendererType = 'dom';
-  }
 
   // Switch to dark theme if enabled
   if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
