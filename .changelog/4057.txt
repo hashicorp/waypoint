@@ -1,0 +1,4 @@
+```release-note:enhancement
+plugin/vault: Update Vault plugin to support authenticating to Vault with the
+approle auth method.
+```
