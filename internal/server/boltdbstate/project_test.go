@@ -1,12 +1,14 @@
 package boltdbstate
 
 import (
+	"context"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	"github.com/stretchr/testify/require"
 	"testing"
 )
 
 func TestProject(t *testing.T) {
+	ctx := context.Background()
 	t.Run("create and get and delete", func(t *testing.T) {
 		require := require.New(t)
 
@@ -16,7 +18,7 @@ func TestProject(t *testing.T) {
 		const projectName = "testproject"
 		const appName = "testapp"
 		// Create a project with one app
-		require.NoError(s.ProjectPut(&pb.Project{
+		require.NoError(s.ProjectPut(ctx, &pb.Project{
 			Name: projectName,
 			Applications: []*pb.Application{
 				{
@@ -27,7 +29,7 @@ func TestProject(t *testing.T) {
 		}))
 
 		// Read it back
-		projectBeforeDelete, err := s.ProjectGet(&pb.Ref_Project{Project: projectName})
+		projectBeforeDelete, err := s.ProjectGet(ctx, &pb.Ref_Project{Project: projectName})
 		require.NoError(err)
 		require.NotNil(projectBeforeDelete)
 
@@ -136,10 +138,10 @@ func TestProject(t *testing.T) {
 		}))
 
 		// Delete the project (this should also delete the build)
-		require.NoError(s.ProjectDelete(&pb.Ref_Project{Project: projectName}))
+		require.NoError(s.ProjectDelete(ctx, &pb.Ref_Project{Project: projectName}))
 
 		// Attempt to get the project again (expected error)
-		_, err = s.ProjectGet(&pb.Ref_Project{Project: projectName})
+		_, err = s.ProjectGet(ctx, &pb.Ref_Project{Project: projectName})
 		require.Error(err)
 
 		// Verify that all builds, artifacts, deployments, releases, status reports,
@@ -186,7 +188,7 @@ func TestProject(t *testing.T) {
 		const appName1 = "testapp1"
 		const projectName2 = "testproject2"
 		const appName2 = "testapp2"
-		require.NoError(s.ProjectPut(&pb.Project{
+		require.NoError(s.ProjectPut(ctx, &pb.Project{
 			Name: projectName1,
 			Applications: []*pb.Application{
 				{
@@ -196,7 +198,7 @@ func TestProject(t *testing.T) {
 			},
 		}))
 
-		require.NoError(s.ProjectPut(&pb.Project{
+		require.NoError(s.ProjectPut(ctx, &pb.Project{
 			Name: projectName2,
 			Applications: []*pb.Application{
 				{
@@ -229,7 +231,7 @@ func TestProject(t *testing.T) {
 			ActiveTime: nil,
 		}))
 
-		require.NoError(s.ProjectDelete(&pb.Ref_Project{Project: projectName1}))
+		require.NoError(s.ProjectDelete(ctx, &pb.Ref_Project{Project: projectName1}))
 
 		workspaces, err := s.WorkspaceList()
 		require.NoError(err)
@@ -250,7 +252,7 @@ func TestProject(t *testing.T) {
 			appName2    = "testapp2"
 		)
 		// Create a project with one app
-		require.NoError(s.ProjectPut(&pb.Project{
+		require.NoError(s.ProjectPut(ctx, &pb.Project{
 			Name: projectName,
 			Applications: []*pb.Application{
 				{
@@ -265,7 +267,7 @@ func TestProject(t *testing.T) {
 		}))
 
 		// Read it back
-		projectBeforeDelete, err := s.ProjectGet(&pb.Ref_Project{Project: projectName})
+		projectBeforeDelete, err := s.ProjectGet(ctx, &pb.Ref_Project{Project: projectName})
 		require.NoError(err)
 		require.NotNil(projectBeforeDelete)
 
@@ -457,10 +459,10 @@ func TestProject(t *testing.T) {
 		}))
 
 		// Delete the project (this should also delete the other records)
-		require.NoError(s.ProjectDelete(&pb.Ref_Project{Project: projectName}))
+		require.NoError(s.ProjectDelete(ctx, &pb.Ref_Project{Project: projectName}))
 
 		// Attempt to get the project again (expected error)
-		_, err = s.ProjectGet(&pb.Ref_Project{Project: projectName})
+		_, err = s.ProjectGet(ctx, &pb.Ref_Project{Project: projectName})
 		require.Error(err)
 
 		// Verify that all builds, artifacts, deployments, releases, and status reports were deleted with the project
@@ -534,7 +536,7 @@ func TestProject(t *testing.T) {
 		const projectName = "projecttestsequence"
 		const appName = "apptestsequence"
 		// Create a project with one app
-		require.NoError(s.ProjectPut(&pb.Project{
+		require.NoError(s.ProjectPut(ctx, &pb.Project{
 			Name: projectName,
 			Applications: []*pb.Application{
 				{
@@ -545,7 +547,7 @@ func TestProject(t *testing.T) {
 		}))
 
 		// Read it back
-		projectBeforeDelete, err := s.ProjectGet(&pb.Ref_Project{Project: projectName})
+		projectBeforeDelete, err := s.ProjectGet(ctx, &pb.Ref_Project{Project: projectName})
 		require.NoError(err)
 		require.NotNil(projectBeforeDelete)
 
@@ -570,14 +572,14 @@ func TestProject(t *testing.T) {
 		}))
 
 		// Delete the project (this should also delete the build)
-		require.NoError(s.ProjectDelete(&pb.Ref_Project{Project: projectName}))
+		require.NoError(s.ProjectDelete(ctx, &pb.Ref_Project{Project: projectName}))
 
 		// Attempt to get the project again (expected error)
-		_, err = s.ProjectGet(&pb.Ref_Project{Project: projectName})
+		_, err = s.ProjectGet(ctx, &pb.Ref_Project{Project: projectName})
 		require.Error(err)
 
 		// Re-create the project
-		require.NoError(s.ProjectPut(&pb.Project{
+		require.NoError(s.ProjectPut(ctx, &pb.Project{
 			Name: projectName,
 			Applications: []*pb.Application{
 				{
@@ -588,7 +590,7 @@ func TestProject(t *testing.T) {
 		}))
 
 		// Read it back
-		projectAfterReInit, err := s.ProjectGet(&pb.Ref_Project{Project: projectName})
+		projectAfterReInit, err := s.ProjectGet(ctx, &pb.Ref_Project{Project: projectName})
 		require.NoError(err)
 		require.NotNil(projectAfterReInit)
 

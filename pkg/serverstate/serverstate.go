@@ -159,7 +159,7 @@ type Interface interface {
 	// Job System
 
 	JobCreate(...*pb.Job) error
-	JobProjectScopedRequest(*pb.Ref_Project, *pb.Job) ([]*pb.QueueJobRequest, error)
+	JobProjectScopedRequest(context.Context, *pb.Ref_Project, *pb.Job) ([]*pb.QueueJobRequest, error)
 	JobList(*pb.ListJobsRequest) ([]*pb.Job, error)
 	JobById(string, memdb.WatchSet) (*Job, error)
 	JobPeekForRunner(context.Context, *pb.Runner) (*Job, error)

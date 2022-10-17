@@ -321,6 +321,7 @@ func TestJobsPrune(t *testing.T) {
 }
 
 func TestJobsProjectScopedRequest(t *testing.T) {
+	ctx := context.Background()
 	t.Run("returns error if no project ref found", func(t *testing.T) {
 		require := require.New(t)
 
@@ -336,7 +337,7 @@ func TestJobsProjectScopedRequest(t *testing.T) {
 		}
 
 		{
-			resp, err := s.JobProjectScopedRequest(ref, jobTemplate)
+			resp, err := s.JobProjectScopedRequest(ctx, ref, jobTemplate)
 			require.Error(err)
 			require.Nil(resp)
 		}
@@ -353,7 +354,7 @@ func TestJobsProjectScopedRequest(t *testing.T) {
 		ref := &pb.Ref_Project{Project: name}
 
 		proj := serverptypes.TestProject(t, &pb.Project{Name: name})
-		err := s.ProjectPut(proj)
+		err := s.ProjectPut(ctx, proj)
 		require.NoError(err)
 		_, err = s.AppPut(serverptypes.TestApplication(t, &pb.Application{
 			Name:    "test",
@@ -372,7 +373,7 @@ func TestJobsProjectScopedRequest(t *testing.T) {
 		}
 
 		{
-			resp, err := s.JobProjectScopedRequest(ref, jobTemplate)
+			resp, err := s.JobProjectScopedRequest(ctx, ref, jobTemplate)
 			require.NoError(err)
 			require.Len(resp, 2)
 		}
