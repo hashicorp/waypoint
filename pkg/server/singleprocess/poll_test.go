@@ -417,7 +417,7 @@ func TestProjectPollHandler(t *testing.T) {
 
 	// Grab next poll time
 	state := testServiceImpl(impl).state(ctx)
-	p, pollTime, err := state.ProjectPollPeek(nil)
+	p, pollTime, err := state.ProjectPollPeek(ctx, nil)
 	require.NoError(err)
 	require.NotNil(p)
 	require.NotNil(pollTime)
@@ -452,7 +452,7 @@ func TestProjectPollHandler(t *testing.T) {
 
 	// ensure the next poll is after the initial poll before waiting
 	// next poll time gets set when a project poll is marked complete
-	p, nextPollTime, err := state.ProjectPollPeek(nil)
+	p, nextPollTime, err := state.ProjectPollPeek(ctx, nil)
 	require.NoError(err)
 	require.NotNil(p)
 	require.NotNil(nextPollTime)

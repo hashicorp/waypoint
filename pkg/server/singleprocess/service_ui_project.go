@@ -18,7 +18,7 @@ func (s *Service) UI_GetProject(
 		return nil, err
 	}
 
-	project, err := s.state(ctx).ProjectGet(req.Project)
+	project, err := s.state(ctx).ProjectGet(ctx, req.Project)
 	if err != nil {
 		return nil, hcerr.Externalize(
 			hclog.FromContext(ctx),

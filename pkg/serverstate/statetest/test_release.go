@@ -1,6 +1,7 @@
 package statetest
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -19,6 +20,7 @@ func init() {
 }
 
 func TestRelease(t *testing.T, factory Factory, restartF RestartFactory) {
+	ctx := context.Background()
 	t.Run("CRUD operations", func(t *testing.T) {
 		require := require.New(t)
 
@@ -27,13 +29,13 @@ func TestRelease(t *testing.T, factory Factory, restartF RestartFactory) {
 
 		// Write project
 		ref := &pb.Ref_Project{Project: "foo"}
-		require.NoError(s.ProjectPut(serverptypes.TestProject(t, &pb.Project{
+		require.NoError(s.ProjectPut(ctx, serverptypes.TestProject(t, &pb.Project{
 			Name: ref.Project,
 		})))
 
 		// Has no apps
 		{
-			resp, err := s.ProjectGet(ref)
+			resp, err := s.ProjectGet(ctx, ref)
 			require.NoError(err)
 			require.NotNil(resp)
 			require.Empty(resp.Applications)

@@ -2,8 +2,8 @@ package singleprocess
 
 import (
 	"context"
-
 	"github.com/hashicorp/go-hclog"
+
 	empty "google.golang.org/protobuf/types/known/emptypb"
 
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
@@ -20,7 +20,7 @@ func (s *Service) UpsertProject(
 	}
 
 	result := req.Project
-	if err := s.state(ctx).ProjectPut(result); err != nil {
+	if err := s.state(ctx).ProjectPut(ctx, result); err != nil {
 		return nil, hcerr.Externalize(
 			hclog.FromContext(ctx),
 			err,
@@ -58,7 +58,7 @@ func (s *Service) GetProject(
 		return nil, err
 	}
 
-	result, err := s.state(ctx).ProjectGet(req.Project)
+	result, err := s.state(ctx).ProjectGet(ctx, req.Project)
 	if err != nil {
 		return nil, hcerr.Externalize(
 			hclog.FromContext(ctx),
@@ -70,7 +70,7 @@ func (s *Service) GetProject(
 	}
 
 	// Get all the workspaces that this project is part of
-	workspaces, err := s.state(ctx).ProjectListWorkspaces(req.Project)
+	workspaces, err := s.state(ctx).ProjectListWorkspaces(ctx, req.Project)
 	if err != nil {
 		return nil, hcerr.Externalize(
 			hclog.FromContext(ctx),
@@ -91,7 +91,7 @@ func (s *Service) ListProjects(
 	ctx context.Context,
 	req *empty.Empty,
 ) (*pb.ListProjectsResponse, error) {
-	result, err := s.state(ctx).ProjectList()
+	result, err := s.state(ctx).ProjectList(ctx)
 	if err != nil {
 		return nil, hcerr.Externalize(
 			hclog.FromContext(ctx),
@@ -111,7 +111,7 @@ func (s *Service) DestroyProject(
 		return nil, err
 	}
 
-	err := s.state(ctx).ProjectDelete(req.Project)
+	err := s.state(ctx).ProjectDelete(ctx, req.Project)
 	if err != nil {
 		return nil, hcerr.Externalize(
 			hclog.FromContext(ctx),
@@ -158,7 +158,7 @@ func (s *Service) UpsertApplication(
 	}
 
 	// Get the project
-	praw, err := s.state(ctx).ProjectGet(req.Project)
+	praw, err := s.state(ctx).ProjectGet(ctx, req.Project)
 	if err != nil {
 		return nil, hcerr.Externalize(
 			hclog.FromContext(ctx),

@@ -1,6 +1,7 @@
 package boltdbstate
 
 import (
+	"context"
 	"strings"
 	"time"
 
@@ -24,7 +25,7 @@ func init() {
 // ProjectPut creates or updates the given project.
 //
 // Application changes will be ignored, you must use the Application APIs.
-func (s *State) ProjectPut(p *pb.Project) error {
+func (s *State) ProjectPut(ctx context.Context, p *pb.Project) error {
 	memTxn := s.inmem.Txn(true)
 	defer memTxn.Abort()
 
@@ -51,7 +52,7 @@ func (s *State) ProjectPut(p *pb.Project) error {
 }
 
 // ProjectGet gets a project by reference.
-func (s *State) ProjectGet(ref *pb.Ref_Project) (*pb.Project, error) {
+func (s *State) ProjectGet(ctx context.Context, ref *pb.Ref_Project) (*pb.Project, error) {
 	memTxn := s.inmem.Txn(false)
 	defer memTxn.Abort()
 
@@ -68,7 +69,7 @@ func (s *State) ProjectGet(ref *pb.Ref_Project) (*pb.Project, error) {
 // ProjectDelete deletes a project by reference. This is a complete data
 // delete. This will delete all operations associated with this project
 // as well.
-func (s *State) ProjectDelete(ref *pb.Ref_Project) error {
+func (s *State) ProjectDelete(ctx context.Context, ref *pb.Ref_Project) error {
 	memTxn := s.inmem.Txn(true)
 	defer memTxn.Abort()
 	// We perform all of our reads before our write to avoid the deadlocked state
@@ -145,7 +146,7 @@ func (s *State) ProjectDelete(ref *pb.Ref_Project) error {
 			configVars = append(configVars, projectConfigVars...)
 		}
 
-		if workspaceList, err := s.ProjectListWorkspaces(ref); err != nil {
+		if workspaceList, err := s.ProjectListWorkspaces(ctx, ref); err != nil {
 			return err
 		} else {
 			for _, workspace := range workspaceList {
@@ -256,7 +257,7 @@ func (s *State) ProjectDelete(ref *pb.Ref_Project) error {
 }
 
 // ProjectList returns the list of projects.
-func (s *State) ProjectList() ([]*pb.Ref_Project, error) {
+func (s *State) ProjectList(ctx context.Context) ([]*pb.Ref_Project, error) {
 	memTxn := s.inmem.Txn(false)
 	defer memTxn.Abort()
 
@@ -264,7 +265,7 @@ func (s *State) ProjectList() ([]*pb.Ref_Project, error) {
 }
 
 // ProjectListWorkspaces returns the list of workspaces that a project is in.
-func (s *State) ProjectListWorkspaces(ref *pb.Ref_Project) ([]*pb.Workspace_Project, error) {
+func (s *State) ProjectListWorkspaces(ctx context.Context, ref *pb.Ref_Project) ([]*pb.Workspace_Project, error) {
 	memTxn := s.inmem.Txn(false)
 	defer memTxn.Abort()
 
@@ -290,7 +291,7 @@ func (s *State) ProjectListWorkspaces(ref *pb.Ref_Project) ([]*pb.Workspace_Proj
 // projects to poll are added. This is important functionality since callers
 // may be sleeping on a deadline for awhile when a new project is inserted
 // to poll immediately.
-func (s *State) ProjectPollPeek(ws memdb.WatchSet) (*pb.Project, time.Time, error) {
+func (s *State) ProjectPollPeek(ctx context.Context, ws memdb.WatchSet) (*pb.Project, time.Time, error) {
 	memTxn := s.inmem.Txn(false)
 	defer memTxn.Abort()
 
@@ -345,7 +346,7 @@ func (s *State) ProjectPollPeek(ws memdb.WatchSet) (*pb.Project, time.Time, erro
 
 // ProjectPollComplete sets the next poll time for the given project to the
 // time "t" plus the interval time for the project.
-func (s *State) ProjectPollComplete(p *pb.Project, t time.Time) error {
+func (s *State) ProjectPollComplete(ctx context.Context, p *pb.Project, t time.Time) error {
 	memTxn := s.inmem.Txn(true)
 	defer memTxn.Abort()
 
@@ -384,6 +385,7 @@ func (s *State) ProjectPollComplete(p *pb.Project, t time.Time) error {
 // ProjectUpdateDataRef updates the latest data ref used for a project.
 // This data is available via the APIs for querying workspaces.
 func (s *State) ProjectUpdateDataRef(
+	ctx context.Context,
 	ref *pb.Ref_Project,
 	ws *pb.Ref_Workspace,
 	dataRef *pb.Job_DataSource_Ref,

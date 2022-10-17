@@ -99,14 +99,14 @@ type Interface interface {
 	WorkspacePut(*pb.Workspace) error
 	WorkspaceDelete(string) error
 
-	ProjectPut(*pb.Project) error
-	ProjectGet(*pb.Ref_Project) (*pb.Project, error)
-	ProjectDelete(*pb.Ref_Project) error
-	ProjectUpdateDataRef(*pb.Ref_Project, *pb.Ref_Workspace, *pb.Job_DataSource_Ref) error
-	ProjectList() ([]*pb.Ref_Project, error)
-	ProjectListWorkspaces(*pb.Ref_Project) ([]*pb.Workspace_Project, error)
-	ProjectPollPeek(memdb.WatchSet) (*pb.Project, time.Time, error)
-	ProjectPollComplete(*pb.Project, time.Time) error
+	ProjectPut(context.Context, *pb.Project) error
+	ProjectGet(context.Context, *pb.Ref_Project) (*pb.Project, error)
+	ProjectDelete(context.Context, *pb.Ref_Project) error
+	ProjectUpdateDataRef(context.Context, *pb.Ref_Project, *pb.Ref_Workspace, *pb.Job_DataSource_Ref) error
+	ProjectList(context.Context) ([]*pb.Ref_Project, error)
+	ProjectListWorkspaces(context.Context, *pb.Ref_Project) ([]*pb.Workspace_Project, error)
+	ProjectPollPeek(context.Context, memdb.WatchSet) (*pb.Project, time.Time, error)
+	ProjectPollComplete(context.Context, *pb.Project, time.Time) error
 
 	AppPut(*pb.Application) (*pb.Application, error)
 	AppDelete(*pb.Ref_Application) error

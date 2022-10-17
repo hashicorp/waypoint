@@ -223,7 +223,7 @@ func (s *Service) ExpediteStatusReport(
 	}
 
 	// Status report jobs need the parent project to obtain its datasource
-	project, err := s.state(ctx).ProjectGet(&pb.Ref_Project{Project: applicationRef.Project})
+	project, err := s.state(ctx).ProjectGet(ctx, &pb.Ref_Project{Project: applicationRef.Project})
 	if err != nil {
 		return nil, hcerr.Externalize(
 			hclog.FromContext(ctx),
