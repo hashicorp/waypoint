@@ -9367,7 +9367,7 @@
         },
         "pipeline": {
           "$ref": "#/definitions/hashicorp.waypoint.Ref.Pipeline",
-          "description": "The pipeline this run is apart of."
+          "description": "The pipeline associated with this run."
         },
         "jobs": {
           "type": "array",
