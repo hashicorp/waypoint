@@ -35,7 +35,7 @@ uniquely configured environments.
 
 For that reason, Waypoint makes heavy usage of On-demand runners:
 
-### On-demand runners
+### On-Demand Runners
 
 While the static runner is capable of performing operations on its own, it also
 supports the ability to spawn on-demand runners for a given platform. These
@@ -44,6 +44,16 @@ They can perform container builds without any privileged access, offer more isol
 between operations, and allow Waypoint to scale further.
 
 On-demand runners: see [on-demand runners](/docs/runner/on-demand-runner) for more information.
+
+### Runner Architecture
+
+This diagram shows the relationship between Waypoint and remote static and on-demand runners, on your infrastructure of choice:
+
+<ImageConfig width={400}>
+
+![Runner architecture](/img/oss_runner_no_control_plane@2x.jpg)
+
+</ImageConfig>
 
 ## Other Runners
 
@@ -57,13 +67,21 @@ itself acts as a runner capable of performing your operation. If your deployment
 AWS credentials, or a valid kubectl context, it can access the credentials from the
 environment that is performing the CLI command.
 
+This diagram shows a CLI runner, as well as remote static and on-demand runners:
+
+<ImageConfig width={400}>
+
+![CLI and remote runners](/img/oss_cli_and_remote_runners@2x.jpg)
+
+</ImageConfig>
+
 ## Runner Targeting
 
 Runner targeting was designed with multi-environment and multi-region workflows in mind.
 Static runners can be installed with user-defined ID and labels.
 You can then set [runner profiles](/docs/runner/profiles), which tell the server which static runner to target to handle operations,
 and the configurations of the short-lived on-demand runner that will execute jobs.
-Finally, specify which` runner profile` to use for an application via
+Finally, specify which `runner profile` to use for an application via
 the `profile` option in the `runner` stanza of the `waypoint.hcl` file.
 
 ### Runner Targeting Example
