@@ -52,3 +52,34 @@ func (s *Service) GetPipelineRun(
 		PipelineRun: result,
 	}, nil
 }
+
+func (s *Service) GetLatestPipelineRun(
+	ctx context.Context,
+	req *pb.GetPipelineRequest,
+) (*pb.GetPipelineRunResponse, error) {
+	if err := serverptypes.ValidateGetPipelineRequest(req); err != nil {
+		return nil, err
+	}
+
+	pipeline, err := s.state(ctx).PipelineGet(req.Pipeline)
+	if err != nil {
+		return nil, hcerr.Externalize(
+			hclog.FromContext(ctx),
+			err,
+			"error getting pipeline",
+		)
+	}
+
+	latestPipelineRun, err := s.state(ctx).PipelineRunGetLatest(pipeline.Id)
+	if err != nil {
+		return nil, hcerr.Externalize(
+			hclog.FromContext(ctx),
+			err,
+			"failed to get latest pipeline run",
+		)
+	}
+
+	return &pb.GetPipelineRunResponse{
+		PipelineRun: latestPipelineRun,
+	}, nil
+}

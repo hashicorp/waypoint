@@ -436,6 +436,9 @@ service Waypoint {
   // GetPipelineRun returns a pipeline run proto by pipeline ref id and sequence
   rpc GetPipelineRun(GetPipelineRunRequest) returns (GetPipelineRunResponse);
 
+  // GetLatestPipelineRun returns a pipeline run proto by pipeline ref id and sequence
+  rpc GetLatestPipelineRun(GetPipelineRequest) returns (GetPipelineRunResponse);
+
   // ListPipelines takes a project and evaluates the projects config to get
   // a list of Pipeline protos to return in the response. These pipelines
   // are scoped to a single project from the request. It will return an

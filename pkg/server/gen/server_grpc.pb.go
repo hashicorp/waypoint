@@ -302,6 +302,8 @@ type WaypointClient interface {
 	GetPipeline(ctx context.Context, in *GetPipelineRequest, opts ...grpc.CallOption) (*GetPipelineResponse, error)
 	// GetPipelineRun returns a pipeline run proto by pipeline ref id and sequence
 	GetPipelineRun(ctx context.Context, in *GetPipelineRunRequest, opts ...grpc.CallOption) (*GetPipelineRunResponse, error)
+	// GetLatestPipelineRun returns a pipeline run proto by pipeline ref id and sequence
+	GetLatestPipelineRun(ctx context.Context, in *GetPipelineRequest, opts ...grpc.CallOption) (*GetPipelineRunResponse, error)
 	// ListPipelines takes a project and evaluates the projects config to get
 	// a list of Pipeline protos to return in the response. These pipelines
 	// are scoped to a single project from the request. It will return an
@@ -1427,6 +1429,15 @@ func (c *waypointClient) GetPipelineRun(ctx context.Context, in *GetPipelineRunR
 	return out, nil
 }
 
+func (c *waypointClient) GetLatestPipelineRun(ctx context.Context, in *GetPipelineRequest, opts ...grpc.CallOption) (*GetPipelineRunResponse, error) {
+	out := new(GetPipelineRunResponse)
+	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/GetLatestPipelineRun", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *waypointClient) ListPipelines(ctx context.Context, in *ListPipelinesRequest, opts ...grpc.CallOption) (*ListPipelinesResponse, error) {
 	out := new(ListPipelinesResponse)
 	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/ListPipelines", in, out, opts...)
@@ -1773,6 +1784,8 @@ type WaypointServer interface {
 	GetPipeline(context.Context, *GetPipelineRequest) (*GetPipelineResponse, error)
 	// GetPipelineRun returns a pipeline run proto by pipeline ref id and sequence
 	GetPipelineRun(context.Context, *GetPipelineRunRequest) (*GetPipelineRunResponse, error)
+	// GetLatestPipelineRun returns a pipeline run proto by pipeline ref id and sequence
+	GetLatestPipelineRun(context.Context, *GetPipelineRequest) (*GetPipelineRunResponse, error)
 	// ListPipelines takes a project and evaluates the projects config to get
 	// a list of Pipeline protos to return in the response. These pipelines
 	// are scoped to a single project from the request. It will return an
@@ -2088,6 +2101,9 @@ func (UnimplementedWaypointServer) GetPipeline(context.Context, *GetPipelineRequ
 }
 func (UnimplementedWaypointServer) GetPipelineRun(context.Context, *GetPipelineRunRequest) (*GetPipelineRunResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetPipelineRun not implemented")
+}
+func (UnimplementedWaypointServer) GetLatestPipelineRun(context.Context, *GetPipelineRequest) (*GetPipelineRunResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetLatestPipelineRun not implemented")
 }
 func (UnimplementedWaypointServer) ListPipelines(context.Context, *ListPipelinesRequest) (*ListPipelinesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListPipelines not implemented")
@@ -3911,6 +3927,24 @@ func _Waypoint_GetPipelineRun_Handler(srv interface{}, ctx context.Context, dec 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Waypoint_GetLatestPipelineRun_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetPipelineRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(WaypointServer).GetLatestPipelineRun(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/hashicorp.waypoint.Waypoint/GetLatestPipelineRun",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(WaypointServer).GetLatestPipelineRun(ctx, req.(*GetPipelineRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Waypoint_ListPipelines_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ListPipelinesRequest)
 	if err := dec(in); err != nil {
@@ -4387,6 +4421,10 @@ var Waypoint_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetPipelineRun",
 			Handler:    _Waypoint_GetPipelineRun_Handler,
+		},
+		{
+			MethodName: "GetLatestPipelineRun",
+			Handler:    _Waypoint_GetLatestPipelineRun_Handler,
 		},
 		{
 			MethodName: "ListPipelines",
