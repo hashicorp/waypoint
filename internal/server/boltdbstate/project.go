@@ -257,11 +257,11 @@ func (s *State) ProjectDelete(ctx context.Context, ref *pb.Ref_Project) error {
 }
 
 // ProjectList returns the list of projects.
-func (s *State) ProjectList(ctx context.Context) ([]*pb.Ref_Project, error) {
+func (s *State) ProjectList(ctx context.Context, paginationRequest *pb.PaginationRequest) ([]*pb.Ref_Project, error) {
 	memTxn := s.inmem.Txn(false)
 	defer memTxn.Abort()
 
-	return s.projectList(memTxn)
+	return s.projectList(memTxn, paginationRequest)
 }
 
 // ProjectListWorkspaces returns the list of workspaces that a project is in.
@@ -462,6 +462,7 @@ func (s *State) projectGet(
 
 func (s *State) projectList(
 	memTxn *memdb.Txn,
+	paginationRequest *pb.PaginationRequest,
 ) ([]*pb.Ref_Project, error) {
 	iter, err := memTxn.Get(projectIndexTableName, projectIndexIdIndexName+"_prefix", "")
 	if err != nil {

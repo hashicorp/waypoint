@@ -101,7 +101,7 @@ func (s *Service) ListProjects(
 		)
 	}
 
-	return &pb.ListProjectsResponse{Projects: result, PaginationOptions: paginationOptions}, nil
+	return &pb.ListProjectsResponse{Projects: result}, nil
 }
 
 func (s *Service) DestroyProject(

@@ -6,11 +6,11 @@ import (
 
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/posener/complete"
-	empty "google.golang.org/protobuf/types/known/emptypb"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/internal/clierrors"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
+	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 )
 
 type ProjectListCommand struct {
@@ -29,7 +29,7 @@ func (c *ProjectListCommand) Run(args []string) int {
 		return 1
 	}
 
-	resp, err := c.project.Client().ListProjects(c.Ctx, &empty.Empty{})
+	resp, err := c.project.Client().ListProjects(c.Ctx, &pb.ListProjectsRequest{PaginationOptions: &pb.PaginationRequest{}})
 	if err != nil {
 		c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 		return 1
