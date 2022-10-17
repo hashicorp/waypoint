@@ -14845,7 +14845,7 @@ type PipelineRun struct {
 	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	// The sequence number for this pipeline run.
 	Sequence uint64 `protobuf:"varint,2,opt,name=sequence,proto3" json:"sequence,omitempty"`
-	// The pipeline this run is apart of.
+	// The pipeline associated with this run.
 	Pipeline *Ref_Pipeline `protobuf:"bytes,3,opt,name=pipeline,proto3" json:"pipeline,omitempty"`
 	// The full list of jobs that are associated with this run.
 	Jobs []*Ref_Job `protobuf:"bytes,4,rep,name=jobs,proto3" json:"jobs,omitempty"`
