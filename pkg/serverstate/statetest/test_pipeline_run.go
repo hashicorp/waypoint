@@ -1,8 +1,8 @@
 package statetest
 
 import (
-	"strconv"
 	"context"
+	"strconv"
 	"testing"
 
 	"github.com/stretchr/testify/require"
