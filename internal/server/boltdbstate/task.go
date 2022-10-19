@@ -1,6 +1,7 @@
 package boltdbstate
 
 import (
+	"context"
 	"strings"
 
 	"github.com/hashicorp/go-memdb"
@@ -21,7 +22,7 @@ func init() {
 }
 
 // TaskPut creates or updates the given Task.
-func (s *State) TaskPut(t *pb.Task) error {
+func (s *State) TaskPut(ctx context.Context, t *pb.Task) error {
 	memTxn := s.inmem.Txn(true)
 	defer memTxn.Abort()
 
@@ -50,7 +51,7 @@ func (s *State) TaskPut(t *pb.Task) error {
 }
 
 // TaskGet gets a task by reference.
-func (s *State) TaskGet(ref *pb.Ref_Task) (*pb.Task, error) {
+func (s *State) TaskGet(ctx context.Context, ref *pb.Ref_Task) (*pb.Task, error) {
 	memTxn := s.inmem.Txn(false)
 	defer memTxn.Abort()
 
@@ -65,7 +66,7 @@ func (s *State) TaskGet(ref *pb.Ref_Task) (*pb.Task, error) {
 }
 
 // TaskDelete deletes a task by reference.
-func (s *State) TaskDelete(ref *pb.Ref_Task) error {
+func (s *State) TaskDelete(ctx context.Context, ref *pb.Ref_Task) error {
 	memTxn := s.inmem.Txn(true)
 	defer memTxn.Abort()
 
@@ -86,8 +87,8 @@ func (s *State) TaskDelete(ref *pb.Ref_Task) error {
 // when we cancel a job, we also call a `db.Update` on each job when we update its
 // state in the database. This caused a deadlock. For now we cancel each job
 // separately.
-func (s *State) TaskCancel(ref *pb.Ref_Task) error {
-	task, err := s.TaskGet(ref)
+func (s *State) TaskCancel(ctx context.Context, ref *pb.Ref_Task) error {
+	task, err := s.TaskGet(ctx, ref)
 	if err != nil {
 		return err
 	}
@@ -125,6 +126,7 @@ func (s *State) TaskCancel(ref *pb.Ref_Task) error {
 // memdb transaction. This is often used via the API for building out
 // a complete picture of a task beyond the job ID refs.
 func (s *State) JobsByTaskRef(
+	ctx context.Context,
 	task *pb.Task,
 ) (startJob *pb.Job, taskJob *pb.Job, stopJob *pb.Job, watchJob *pb.Job, err error) {
 	memTxn := s.inmem.Txn(true)
@@ -174,7 +176,7 @@ func (s *State) JobsByTaskRef(
 }
 
 // TaskList returns the list of tasks.
-func (s *State) TaskList(req *pb.ListTaskRequest) ([]*pb.Task, error) {
+func (s *State) TaskList(ctx context.Context, req *pb.ListTaskRequest) ([]*pb.Task, error) {
 	memTxn := s.inmem.Txn(false)
 	defer memTxn.Abort()
 
@@ -442,7 +444,8 @@ func (s *State) taskIdByRef(ref *pb.Ref_Task) ([]byte, error) {
 }
 
 func (s *State) taskByJobId(jobId string) (*pb.Task, error) {
-	trackedTasks, err := s.TaskList(&pb.ListTaskRequest{})
+	ctx := context.Background()
+	trackedTasks, err := s.TaskList(ctx, &pb.ListTaskRequest{})
 	if err != nil {
 		return nil, err
 	}

@@ -1,6 +1,7 @@
 package boltdbstate
 
 import (
+	"context"
 	"math"
 	"strings"
 
@@ -23,7 +24,7 @@ func init() {
 }
 
 // PipelineRunPut creates or updates the given PipelineRun.
-func (s *State) PipelineRunPut(pr *pb.PipelineRun) error {
+func (s *State) PipelineRunPut(ctx context.Context, pr *pb.PipelineRun) error {
 	memTxn := s.inmem.Txn(true)
 	defer memTxn.Abort()
 
@@ -95,7 +96,7 @@ func (s *State) pipelineRunPut(
 	return s.pipelineRunIndexSet(memTxn, id, value)
 }
 
-func (s *State) PipelineRunGetByJobId(jobId string) (*pb.PipelineRun, error) {
+func (s *State) PipelineRunGetByJobId(ctx context.Context, jobId string) (*pb.PipelineRun, error) {
 	memTxn := s.inmem.Txn(false)
 	defer memTxn.Abort()
 
@@ -123,7 +124,7 @@ func (s *State) PipelineRunGetByJobId(jobId string) (*pb.PipelineRun, error) {
 }
 
 // PipelineRunGet gets a PipelineRun by pipeline and sequence.
-func (s *State) PipelineRunGet(ref *pb.Ref_Pipeline, seq uint64) (*pb.PipelineRun, error) {
+func (s *State) PipelineRunGet(ctx context.Context, ref *pb.Ref_Pipeline, seq uint64) (*pb.PipelineRun, error) {
 	memTxn := s.inmem.Txn(false)
 	defer memTxn.Abort()
 
@@ -169,7 +170,7 @@ func (s *State) pipelineRunGet(
 }
 
 // PipelineRunGetLatest gets the latest PipelineRun by pipeline ID.
-func (s *State) PipelineRunGetLatest(pId string) (*pb.PipelineRun, error) {
+func (s *State) PipelineRunGetLatest(ctx context.Context, pId string) (*pb.PipelineRun, error) {
 	memTxn := s.inmem.Txn(false)
 	defer memTxn.Abort()
 
@@ -218,7 +219,7 @@ func (s *State) pipelineRunGetLatest(
 }
 
 // PipelineRunGetById gets a PipelineRun by pipeline run ID.
-func (s *State) PipelineRunGetById(id string) (*pb.PipelineRun, error) {
+func (s *State) PipelineRunGetById(ctx context.Context, id string) (*pb.PipelineRun, error) {
 	memTxn := s.inmem.Txn(false)
 	defer memTxn.Abort()
 
@@ -243,7 +244,7 @@ func (s *State) pipelineRunGetById(
 	return &result, dbGet(b, []byte(strings.ToLower(Id)), &result)
 }
 
-func (s *State) PipelineRunList(pRef *pb.Ref_Pipeline) ([]*pb.PipelineRun, error) {
+func (s *State) PipelineRunList(ctx context.Context, pRef *pb.Ref_Pipeline) ([]*pb.PipelineRun, error) {
 	memTxn := s.inmem.Txn(false)
 	defer memTxn.Abort()
 

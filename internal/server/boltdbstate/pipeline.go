@@ -1,6 +1,7 @@
 package boltdbstate
 
 import (
+	"context"
 	"strings"
 
 	"github.com/hashicorp/go-memdb"
@@ -22,7 +23,7 @@ func init() {
 }
 
 // PipelinePut creates or updates the given Pipeline.
-func (s *State) PipelinePut(p *pb.Pipeline) error {
+func (s *State) PipelinePut(ctx context.Context, p *pb.Pipeline) error {
 	memTxn := s.inmem.Txn(true)
 	defer memTxn.Abort()
 
@@ -92,7 +93,7 @@ func (s *State) pipelinePut(
 }
 
 // PipelineGet gets a pipeline by reference.
-func (s *State) PipelineGet(ref *pb.Ref_Pipeline) (*pb.Pipeline, error) {
+func (s *State) PipelineGet(ctx context.Context, ref *pb.Ref_Pipeline) (*pb.Pipeline, error) {
 	memTxn := s.inmem.Txn(false)
 	defer memTxn.Abort()
 
@@ -155,7 +156,7 @@ func (s *State) pipelineGet(
 }
 
 // PipelineDelete deletes a pipeline by reference.
-func (s *State) PipelineDelete(ref *pb.Ref_Pipeline) error {
+func (s *State) PipelineDelete(ctx context.Context, ref *pb.Ref_Pipeline) error {
 	memTxn := s.inmem.Txn(true)
 	defer memTxn.Abort()
 
@@ -197,7 +198,7 @@ func (s *State) pipelineDelete(
 	return nil
 }
 
-func (s *State) PipelineList(pRef *pb.Ref_Project) ([]*pb.Pipeline, error) {
+func (s *State) PipelineList(ctx context.Context, pRef *pb.Ref_Project) ([]*pb.Pipeline, error) {
 	memTxn := s.inmem.Txn(false)
 	defer memTxn.Abort()
 
