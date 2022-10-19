@@ -28,10 +28,32 @@
          "SubFields": null
       },
       {
+         "Field": "approle_role_id",
+         "Type": "string",
+         "Synopsis": "The role ID of the approle auth method to use for Vault.",
+         "Summary": "This is required for the `approle` auth method.",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "approle_secret_id",
+         "Type": "string",
+         "Synopsis": "The secret ID of the approle auth method to use for Vault.",
+         "Summary": "This is required for the `approle` auth method.",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
          "Field": "auth_method",
          "Type": "string",
          "Synopsis": "The authentication method to use for Vault.",
-         "Summary": "This can be one of: `aws`, `kubernetes`. When this is set, configuration fields prefixed with the auth method type should be set, if required. Configuration fields prefixed with non-matching auth method types will be ignored (except for type validation).  If no auth method is set, Vault assumes proper environment variables are set for Vault to find and connect to the Vault server. When this is set, `auth_method_mount_path` is required.",
+         "Summary": "This can be one of: `aws`, `approle`, `kubernetes`, `gcp`. When this is set, configuration fields prefixed with the auth method type should be set, if required. Configuration fields prefixed with non-matching auth method types will be ignored (except for type validation).  If no auth method is set, Vault assumes proper environment variables are set for Vault to find and connect to the Vault server. When this is set, `auth_method_mount_path` is required.",
          "Optional": true,
          "Default": "",
          "EnvVar": "",

@@ -466,7 +466,7 @@ config {
 		"auth_method",
 		"The authentication method to use for Vault.",
 		docs.Summary(
-			"This can be one of: `aws`, `kubernetes`.\n\n",
+			"This can be one of: `aws`, `approle`, `kubernetes`, `gcp`.\n\n",
 			"When this is set, configuration fields prefixed with the auth method",
 			"type should be set, if required. Configuration fields prefixed with",
 			"non-matching auth method types will be ignored (except for type validation).",
@@ -501,6 +501,22 @@ config {
 			"In standard Kubernetes environments, this doesn't have to be set.",
 		),
 		docs.Default("/var/run/secrets/kubernetes.io/serviceaccount/token"),
+	)
+
+	doc.SetField(
+		"approle_role_id",
+		"The role ID of the approle auth method to use for Vault.",
+		docs.Summary(
+			"This is required for the `approle` auth method.",
+		),
+	)
+
+	doc.SetField(
+		"approle_secret_id",
+		"The secret ID of the approle auth method to use for Vault.",
+		docs.Summary(
+			"This is required for the `approle` auth method.",
+		),
 	)
 
 	doc.SetField(
@@ -626,6 +642,9 @@ type sourceConfig struct {
 	AWSSecretKey        string `hcl:"aws_secret_key,optional"`
 	AWSRegion           string `hcl:"aws_region,optional"`
 	AWSHeaderValue      string `hcl:"aws_header_value,optional"`
+
+	ApproleRoleId   string `hcl:"approle_role_id,optional"`
+	ApproleSecretId string `hcl:"approle_secret_id,optional"`
 
 	GCPType           string `hcl:"gcp_type,optional"`
 	GCPRole           string `hcl:"gcp_role,optional"`
