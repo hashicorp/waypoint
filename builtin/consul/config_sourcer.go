@@ -299,6 +299,7 @@ func (cs *ConfigSourcer) startConsulBlockingQuery(ctx context.Context, logger hc
 		// KV entry not updated - do nothing
 		if meta != nil && meta.LastIndex == lastIndex {
 			logger.Trace("KV value unchanged")
+			time.Sleep(retryInterval)
 			continue
 		}
 
