@@ -128,7 +128,7 @@ func (s *Service) queueJobReqToJob(
 
 	// Verify the project exists and use that to set the default data source
 	log.Debug("checking job project", "project", job.Application.Project)
-	project, err := s.state(ctx).ProjectGet(&pb.Ref_Project{Project: job.Application.Project})
+	project, err := s.state(ctx).ProjectGet(ctx, &pb.Ref_Project{Project: job.Application.Project})
 	if status.Code(err) == codes.NotFound {
 		return nil, "", status.Errorf(codes.NotFound,
 			"Project %q was not found! Please ensure that 'waypoint init' was run with this project.",

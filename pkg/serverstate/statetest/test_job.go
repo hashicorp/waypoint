@@ -1674,6 +1674,7 @@ func TestJobTask_AckAndComplete(t *testing.T, factory Factory, rf RestartFactory
 }
 
 func TestJobPipeline_AckAndComplete(t *testing.T, factory Factory, rf RestartFactory) {
+	ctx := context.Background()
 	t.Run("ack and complete on-demand runner jobs", func(t *testing.T) {
 		require := require.New(t)
 
@@ -1684,7 +1685,7 @@ func TestJobPipeline_AckAndComplete(t *testing.T, factory Factory, rf RestartFac
 
 		// Write project
 		ref := &pb.Ref_Project{Project: "project"}
-		require.NoError(s.ProjectPut(serverptypes.TestProject(t, &pb.Project{
+		require.NoError(s.ProjectPut(ctx, serverptypes.TestProject(t, &pb.Project{
 			Name: ref.Project,
 		})))
 

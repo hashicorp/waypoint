@@ -1,6 +1,7 @@
 package statetest
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -25,7 +26,7 @@ func init() {
 }
 
 func TestInstance(t *testing.T, factory Factory, restartF RestartFactory) {
-
+	ctx := context.Background()
 	testInstance := func(t *testing.T, v *serverstate.Instance) *serverstate.Instance {
 		if v == nil {
 			v = &serverstate.Instance{}
@@ -49,7 +50,7 @@ func TestInstance(t *testing.T, factory Factory, restartF RestartFactory) {
 		defer s.Close()
 
 		ref := &pb.Ref_Project{Project: "foo"}
-		require.NoError(s.ProjectPut(serverptypes.TestProject(t, &pb.Project{
+		require.NoError(s.ProjectPut(ctx, serverptypes.TestProject(t, &pb.Project{
 			Name: ref.Project,
 		})))
 
@@ -117,7 +118,7 @@ func TestInstance(t *testing.T, factory Factory, restartF RestartFactory) {
 		defer s.Close()
 
 		ref := &pb.Ref_Project{Project: "foo"}
-		require.NoError(s.ProjectPut(serverptypes.TestProject(t, &pb.Project{
+		require.NoError(s.ProjectPut(ctx, serverptypes.TestProject(t, &pb.Project{
 			Name: ref.Project,
 		})))
 
@@ -179,7 +180,7 @@ func TestInstance(t *testing.T, factory Factory, restartF RestartFactory) {
 		defer s.Close()
 
 		ref := &pb.Ref_Project{Project: "foo"}
-		require.NoError(s.ProjectPut(serverptypes.TestProject(t, &pb.Project{
+		require.NoError(s.ProjectPut(ctx, serverptypes.TestProject(t, &pb.Project{
 			Name: ref.Project,
 		})))
 
@@ -237,13 +238,14 @@ func TestInstance(t *testing.T, factory Factory, restartF RestartFactory) {
 }
 
 func TestInstanceByDeployment(t *testing.T, factory Factory, _ RestartFactory) {
+	ctx := context.Background()
 	require := require.New(t)
 
 	s := factory(t)
 	defer s.Close()
 
 	ref := &pb.Ref_Project{Project: "foo"}
-	require.NoError(s.ProjectPut(serverptypes.TestProject(t, &pb.Project{
+	require.NoError(s.ProjectPut(ctx, serverptypes.TestProject(t, &pb.Project{
 		Name: ref.Project,
 	})))
 

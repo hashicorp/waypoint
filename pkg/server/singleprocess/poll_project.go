@@ -1,6 +1,7 @@
 package singleprocess
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -30,7 +31,7 @@ func (pp *projectPoll) Peek(
 	log hclog.Logger,
 	ws memdb.WatchSet,
 ) (interface{}, time.Time, error) {
-	p, pollTime, err := pp.state.ProjectPollPeek(ws)
+	p, pollTime, err := pp.state.ProjectPollPeek(context.Background(), ws)
 	if err != nil {
 		return nil, time.Time{}, err // continue loop
 	}
@@ -105,7 +106,7 @@ func (pp *projectPoll) Complete(
 	}
 
 	// Mark this as complete so the next poll gets rescheduled.
-	if err := pp.state.ProjectPollComplete(p, time.Now()); err != nil {
+	if err := pp.state.ProjectPollComplete(context.Background(), p, time.Now()); err != nil {
 		return err
 	}
 	return nil

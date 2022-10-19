@@ -1,6 +1,7 @@
 package statetest
 
 import (
+	"context"
 	"strings"
 	"testing"
 	"time"
@@ -28,6 +29,7 @@ func init() {
 }
 
 func TestProject(t *testing.T, factory Factory, restartF RestartFactory) {
+	ctx := context.Background()
 	t.Run("Get returns not found error if not exist", func(t *testing.T) {
 		require := require.New(t)
 
@@ -35,7 +37,7 @@ func TestProject(t *testing.T, factory Factory, restartF RestartFactory) {
 		defer s.Close()
 
 		// Set
-		_, err := s.ProjectGet(&pb.Ref_Project{
+		_, err := s.ProjectGet(ctx, &pb.Ref_Project{
 			Project: "foo",
 		})
 		require.Error(err)
@@ -51,14 +53,14 @@ func TestProject(t *testing.T, factory Factory, restartF RestartFactory) {
 		name := "AbCdE"
 
 		// Set
-		err := s.ProjectPut(serverptypes.TestProject(t, &pb.Project{
+		err := s.ProjectPut(ctx, serverptypes.TestProject(t, &pb.Project{
 			Name: name,
 		}))
 		require.NoError(err)
 
 		// Get exact
 		{
-			resp, err := s.ProjectGet(&pb.Ref_Project{
+			resp, err := s.ProjectGet(ctx, &pb.Ref_Project{
 				Project: name,
 			})
 			require.NoError(err)
@@ -67,7 +69,7 @@ func TestProject(t *testing.T, factory Factory, restartF RestartFactory) {
 
 		// Get case insensitive
 		{
-			resp, err := s.ProjectGet(&pb.Ref_Project{
+			resp, err := s.ProjectGet(ctx, &pb.Ref_Project{
 				Project: strings.ToLower(name),
 			})
 			require.NoError(err, "unable to use case insensitive name for: %s", name)
@@ -77,14 +79,14 @@ func TestProject(t *testing.T, factory Factory, restartF RestartFactory) {
 		// Create another one so we're sure that List can see more than one.
 
 		// Set
-		err = s.ProjectPut(serverptypes.TestProject(t, &pb.Project{
+		err = s.ProjectPut(ctx, serverptypes.TestProject(t, &pb.Project{
 			Name: name + "2",
 		}))
 		require.NoError(err)
 
 		// List
 		{
-			resp, err := s.ProjectList()
+			resp, err := s.ProjectList(ctx)
 			require.NoError(err)
 			require.Len(resp, 2)
 		}
@@ -101,7 +103,7 @@ func TestProject(t *testing.T, factory Factory, restartF RestartFactory) {
 
 		// Set
 		proj := serverptypes.TestProject(t, &pb.Project{Name: name})
-		err := s.ProjectPut(proj)
+		err := s.ProjectPut(ctx, proj)
 		require.NoError(err)
 		_, err = s.AppPut(serverptypes.TestApplication(t, &pb.Application{
 			Name:    "test",
@@ -116,7 +118,7 @@ func TestProject(t *testing.T, factory Factory, restartF RestartFactory) {
 
 		// Get exact
 		{
-			resp, err := s.ProjectGet(&pb.Ref_Project{
+			resp, err := s.ProjectGet(ctx, &pb.Ref_Project{
 				Project: "AbCdE",
 			})
 			require.NoError(err)
@@ -127,11 +129,11 @@ func TestProject(t *testing.T, factory Factory, restartF RestartFactory) {
 
 		// Update the project
 		proj.RemoteEnabled = true
-		require.NoError(s.ProjectPut(proj))
+		require.NoError(s.ProjectPut(ctx, proj))
 
 		// Get exact
 		{
-			resp, err := s.ProjectGet(&pb.Ref_Project{
+			resp, err := s.ProjectGet(ctx, &pb.Ref_Project{
 				Project: "AbCdE",
 			})
 			require.NoError(err)
@@ -148,13 +150,13 @@ func TestProject(t *testing.T, factory Factory, restartF RestartFactory) {
 		defer s.Close()
 
 		// Set
-		err := s.ProjectPut(serverptypes.TestProject(t, &pb.Project{
+		err := s.ProjectPut(ctx, serverptypes.TestProject(t, &pb.Project{
 			Name: "AbCdE",
 		}))
 		require.NoError(err)
 
 		// Read
-		resp, err := s.ProjectGet(&pb.Ref_Project{
+		resp, err := s.ProjectGet(ctx, &pb.Ref_Project{
 			Project: "AbCdE",
 		})
 		require.NoError(err)
@@ -162,7 +164,7 @@ func TestProject(t *testing.T, factory Factory, restartF RestartFactory) {
 
 		// Delete
 		{
-			err := s.ProjectDelete(&pb.Ref_Project{
+			err := s.ProjectDelete(ctx, &pb.Ref_Project{
 				Project: "AbCdE",
 			})
 			require.NoError(err)
@@ -170,7 +172,7 @@ func TestProject(t *testing.T, factory Factory, restartF RestartFactory) {
 
 		// Read
 		{
-			_, err := s.ProjectGet(&pb.Ref_Project{
+			_, err := s.ProjectGet(ctx, &pb.Ref_Project{
 				Project: "AbCdE",
 			})
 			require.Error(err)
@@ -179,7 +181,7 @@ func TestProject(t *testing.T, factory Factory, restartF RestartFactory) {
 
 		// List
 		{
-			resp, err := s.ProjectList()
+			resp, err := s.ProjectList(ctx)
 			require.NoError(err)
 			require.Len(resp, 0)
 		}
@@ -187,6 +189,7 @@ func TestProject(t *testing.T, factory Factory, restartF RestartFactory) {
 }
 
 func TestProjectGetSetAllPropertiesSansVariables(t *testing.T, f Factory, rf RestartFactory) {
+	ctx := context.Background()
 	require := require.New(t)
 
 	s := f(t)
@@ -236,11 +239,11 @@ func TestProjectGetSetAllPropertiesSansVariables(t *testing.T, f Factory, rf Res
 	initialJsonStr := string(initialJsonBytes)
 
 	// Set
-	err = s.ProjectPut(initialProject)
+	err = s.ProjectPut(ctx, initialProject)
 	require.NoError(err)
 
 	// Get
-	resp, err := s.ProjectGet(&pb.Ref_Project{
+	resp, err := s.ProjectGet(ctx, &pb.Ref_Project{
 		Project: initialProject.Name,
 	})
 	require.NoError(err)
@@ -255,6 +258,7 @@ func TestProjectGetSetAllPropertiesSansVariables(t *testing.T, f Factory, rf Res
 }
 
 func TestProjectCanTransitionDataSource(t *testing.T, f Factory, rf RestartFactory) {
+	ctx := context.Background()
 	require := require.New(t)
 
 	s := f(t)
@@ -267,11 +271,11 @@ func TestProjectCanTransitionDataSource(t *testing.T, f Factory, rf RestartFacto
 	// Can post initially
 	{
 		// Set
-		err := s.ProjectPut(project)
+		err := s.ProjectPut(ctx, project)
 		require.NoError(err)
 
 		// Get
-		resp, err := s.ProjectGet(&pb.Ref_Project{
+		resp, err := s.ProjectGet(ctx, &pb.Ref_Project{
 			Project: project.Name,
 		})
 		require.NoError(err)
@@ -289,11 +293,11 @@ func TestProjectCanTransitionDataSource(t *testing.T, f Factory, rf RestartFacto
 	//	}
 	//
 	//	// Set
-	//	err := s.ProjectPut(project)
+	//	err := s.ProjectPut(ctx, project)
 	//	require.NoError(err)
 	//
 	//	// Get
-	//	resp, err := s.ProjectGet(&pb.Ref_Project{
+	//	resp, err := s.ProjectGet(ctx, &pb.Ref_Project{
 	//		Project: project.Name,
 	//	})
 	//	require.NoError(err)
@@ -316,11 +320,11 @@ func TestProjectCanTransitionDataSource(t *testing.T, f Factory, rf RestartFacto
 		}
 
 		// Set
-		err := s.ProjectPut(project)
+		err := s.ProjectPut(ctx, project)
 		require.NoError(err)
 
 		// Get
-		resp, err := s.ProjectGet(&pb.Ref_Project{
+		resp, err := s.ProjectGet(ctx, &pb.Ref_Project{
 			Project: project.Name,
 		})
 		require.NoError(err)
@@ -334,11 +338,11 @@ func TestProjectCanTransitionDataSource(t *testing.T, f Factory, rf RestartFacto
 		project.DataSource = nil
 
 		// Set
-		err := s.ProjectPut(project)
+		err := s.ProjectPut(ctx, project)
 		require.NoError(err)
 
 		// Get
-		resp, err := s.ProjectGet(&pb.Ref_Project{
+		resp, err := s.ProjectGet(ctx, &pb.Ref_Project{
 			Project: project.Name,
 		})
 		require.NoError(err)
@@ -352,6 +356,7 @@ func TestProjectCanTransitionDataSource(t *testing.T, f Factory, rf RestartFacto
 }
 
 func TestProjectGetSetAllProperties(t *testing.T, f Factory, rf RestartFactory) {
+	ctx := context.Background()
 	require := require.New(t)
 
 	s := f(t)
@@ -432,11 +437,11 @@ func TestProjectGetSetAllProperties(t *testing.T, f Factory, rf RestartFactory) 
 	initialJsonStr := string(initialJsonBytes)
 
 	// Set
-	err = s.ProjectPut(initialProject)
+	err = s.ProjectPut(ctx, initialProject)
 	require.NoError(err)
 
 	// Get
-	resp, err := s.ProjectGet(&pb.Ref_Project{
+	resp, err := s.ProjectGet(ctx, &pb.Ref_Project{
 		Project: initialProject.Name,
 	})
 	require.NoError(err)
@@ -451,10 +456,10 @@ func TestProjectGetSetAllProperties(t *testing.T, f Factory, rf RestartFactory) 
 
 	t.Run("can delete all input vars", func(t *testing.T) {
 		initialProject.Variables = []*pb.Variable{}
-		err = s.ProjectPut(initialProject)
+		err = s.ProjectPut(ctx, initialProject)
 		require.NoError(err)
 
-		resp, err := s.ProjectGet(&pb.Ref_Project{
+		resp, err := s.ProjectGet(ctx, &pb.Ref_Project{
 			Project: initialProject.Name,
 		})
 		require.NoError(err)
@@ -466,13 +471,14 @@ func TestProjectGetSetAllProperties(t *testing.T, f Factory, rf RestartFactory) 
 }
 
 func TestProjectPollPeek(t *testing.T, factory Factory, restartF RestartFactory) {
+	ctx := context.Background()
 	t.Run("returns nil if no values", func(t *testing.T) {
 		require := require.New(t)
 
 		s := factory(t)
 		defer s.Close()
 
-		v, _, err := s.ProjectPollPeek(nil)
+		v, _, err := s.ProjectPollPeek(ctx, nil)
 		require.NoError(err)
 		require.Nil(v)
 	})
@@ -484,7 +490,7 @@ func TestProjectPollPeek(t *testing.T, factory Factory, restartF RestartFactory)
 		defer s.Close()
 
 		// Set
-		require.NoError(s.ProjectPut(serverptypes.TestProject(t, &pb.Project{
+		require.NoError(s.ProjectPut(ctx, serverptypes.TestProject(t, &pb.Project{
 			Name: "A",
 			DataSourcePoll: &pb.Project_Poll{
 				Enabled:  true,
@@ -494,7 +500,7 @@ func TestProjectPollPeek(t *testing.T, factory Factory, restartF RestartFactory)
 
 		// Set another later
 		time.Sleep(10 * time.Millisecond)
-		require.NoError(s.ProjectPut(serverptypes.TestProject(t, &pb.Project{
+		require.NoError(s.ProjectPut(ctx, serverptypes.TestProject(t, &pb.Project{
 			Name: "B",
 			DataSourcePoll: &pb.Project_Poll{
 				Enabled:  true,
@@ -504,7 +510,7 @@ func TestProjectPollPeek(t *testing.T, factory Factory, restartF RestartFactory)
 
 		// Get exact
 		{
-			resp, t, err := s.ProjectPollPeek(nil)
+			resp, t, err := s.ProjectPollPeek(ctx, nil)
 			require.NoError(err)
 			require.NotNil(resp)
 			require.Equal("A", resp.Name)
@@ -519,7 +525,7 @@ func TestProjectPollPeek(t *testing.T, factory Factory, restartF RestartFactory)
 		defer s.Close()
 
 		ws := memdb.NewWatchSet()
-		v, _, err := s.ProjectPollPeek(ws)
+		v, _, err := s.ProjectPollPeek(ctx, ws)
 		require.NoError(err)
 		require.Nil(v)
 
@@ -527,7 +533,7 @@ func TestProjectPollPeek(t *testing.T, factory Factory, restartF RestartFactory)
 		require.True(ws.Watch(time.After(10 * time.Millisecond)))
 
 		// Set
-		require.NoError(s.ProjectPut(serverptypes.TestProject(t, &pb.Project{
+		require.NoError(s.ProjectPut(ctx, serverptypes.TestProject(t, &pb.Project{
 			Name: "A",
 			DataSourcePoll: &pb.Project_Poll{
 				Enabled:  true,
@@ -540,7 +546,7 @@ func TestProjectPollPeek(t *testing.T, factory Factory, restartF RestartFactory)
 
 		// Get exact
 		{
-			resp, t, err := s.ProjectPollPeek(nil)
+			resp, t, err := s.ProjectPollPeek(ctx, nil)
 			require.NoError(err)
 			require.NotNil(resp)
 			require.Equal("A", resp.Name)
@@ -555,7 +561,7 @@ func TestProjectPollPeek(t *testing.T, factory Factory, restartF RestartFactory)
 		defer s.Close()
 
 		// Set
-		require.NoError(s.ProjectPut(serverptypes.TestProject(t, &pb.Project{
+		require.NoError(s.ProjectPut(ctx, serverptypes.TestProject(t, &pb.Project{
 			Name: "A",
 			DataSourcePoll: &pb.Project_Poll{
 				Enabled:  true,
@@ -564,7 +570,7 @@ func TestProjectPollPeek(t *testing.T, factory Factory, restartF RestartFactory)
 		})))
 
 		// Set another later
-		require.NoError(s.ProjectPut(serverptypes.TestProject(t, &pb.Project{
+		require.NoError(s.ProjectPut(ctx, serverptypes.TestProject(t, &pb.Project{
 			Name: "B",
 			DataSourcePoll: &pb.Project_Poll{
 				Enabled:  true,
@@ -573,21 +579,21 @@ func TestProjectPollPeek(t *testing.T, factory Factory, restartF RestartFactory)
 		})))
 
 		// Get
-		pA, err := s.ProjectGet(&pb.Ref_Project{Project: "A"})
+		pA, err := s.ProjectGet(ctx, &pb.Ref_Project{Project: "A"})
 		require.NoError(err)
 		require.NotNil(pA)
-		pB, err := s.ProjectGet(&pb.Ref_Project{Project: "B"})
+		pB, err := s.ProjectGet(ctx, &pb.Ref_Project{Project: "B"})
 		require.NoError(err)
 		require.NotNil(pB)
 
 		// Complete both first
 		now := time.Now()
-		require.NoError(s.ProjectPollComplete(pA, now))
-		require.NoError(s.ProjectPollComplete(pB, now))
+		require.NoError(s.ProjectPollComplete(ctx, pA, now))
+		require.NoError(s.ProjectPollComplete(ctx, pB, now))
 
 		// Peek, we should get A
 		ws := memdb.NewWatchSet()
-		p, ts, err := s.ProjectPollPeek(ws)
+		p, ts, err := s.ProjectPollPeek(ctx, ws)
 		require.NoError(err)
 		require.NotNil(p)
 		require.Equal("A", p.Name)
@@ -597,14 +603,14 @@ func TestProjectPollPeek(t *testing.T, factory Factory, restartF RestartFactory)
 		require.True(ws.Watch(time.After(10 * time.Millisecond)))
 
 		// Set
-		require.NoError(s.ProjectPollComplete(pA, now.Add(1*time.Second)))
+		require.NoError(s.ProjectPollComplete(ctx, pA, now.Add(1*time.Second)))
 
 		// Should be triggered.
 		require.False(ws.Watch(time.After(2 * time.Second)))
 
 		// Get exact
 		{
-			resp, t, err := s.ProjectPollPeek(nil)
+			resp, t, err := s.ProjectPollPeek(ctx, nil)
 			require.NoError(err)
 			require.NotNil(resp)
 			require.Equal("A", resp.Name)
@@ -614,13 +620,14 @@ func TestProjectPollPeek(t *testing.T, factory Factory, restartF RestartFactory)
 }
 
 func TestProjectPollComplete(t *testing.T, factory Factory, restartF RestartFactory) {
+	ctx := context.Background()
 	t.Run("returns nil for project that doesn't exist", func(t *testing.T) {
 		require := require.New(t)
 
 		s := factory(t)
 		defer s.Close()
 
-		require.NoError(s.ProjectPollComplete(&pb.Project{Name: "NOPE"}, time.Now()))
+		require.NoError(s.ProjectPollComplete(ctx, &pb.Project{Name: "NOPE"}, time.Now()))
 	})
 
 	t.Run("does nothing for project that has polling disabled", func(t *testing.T) {
@@ -630,7 +637,7 @@ func TestProjectPollComplete(t *testing.T, factory Factory, restartF RestartFact
 		defer s.Close()
 
 		// Set
-		require.NoError(s.ProjectPut(serverptypes.TestProject(t, &pb.Project{
+		require.NoError(s.ProjectPut(ctx, serverptypes.TestProject(t, &pb.Project{
 			Name: "A",
 			DataSourcePoll: &pb.Project_Poll{
 				Enabled: false,
@@ -638,17 +645,17 @@ func TestProjectPollComplete(t *testing.T, factory Factory, restartF RestartFact
 		})))
 
 		// Get
-		p, err := s.ProjectGet(&pb.Ref_Project{
+		p, err := s.ProjectGet(ctx, &pb.Ref_Project{
 			Project: "A",
 		})
 		require.NoError(err)
 		require.NotNil(p)
 
 		// No error
-		require.NoError(s.ProjectPollComplete(p, time.Now()))
+		require.NoError(s.ProjectPollComplete(ctx, p, time.Now()))
 
 		// Peek does nothing
-		v, _, err := s.ProjectPollPeek(nil)
+		v, _, err := s.ProjectPollPeek(ctx, nil)
 		require.NoError(err)
 		require.Nil(v)
 	})
@@ -660,7 +667,7 @@ func TestProjectPollComplete(t *testing.T, factory Factory, restartF RestartFact
 		defer s.Close()
 
 		// Set
-		require.NoError(s.ProjectPut(serverptypes.TestProject(t, &pb.Project{
+		require.NoError(s.ProjectPut(ctx, serverptypes.TestProject(t, &pb.Project{
 			Name: "A",
 			DataSourcePoll: &pb.Project_Poll{
 				Enabled:  true,
@@ -669,7 +676,7 @@ func TestProjectPollComplete(t *testing.T, factory Factory, restartF RestartFact
 		})))
 
 		// Set another later
-		require.NoError(s.ProjectPut(serverptypes.TestProject(t, &pb.Project{
+		require.NoError(s.ProjectPut(ctx, serverptypes.TestProject(t, &pb.Project{
 			Name: "B",
 			DataSourcePoll: &pb.Project_Poll{
 				Enabled:  true,
@@ -678,21 +685,21 @@ func TestProjectPollComplete(t *testing.T, factory Factory, restartF RestartFact
 		})))
 
 		// Get
-		pA, err := s.ProjectGet(&pb.Ref_Project{Project: "A"})
+		pA, err := s.ProjectGet(ctx, &pb.Ref_Project{Project: "A"})
 		require.NoError(err)
 		require.NotNil(pA)
-		pB, err := s.ProjectGet(&pb.Ref_Project{Project: "B"})
+		pB, err := s.ProjectGet(ctx, &pb.Ref_Project{Project: "B"})
 		require.NoError(err)
 		require.NotNil(pB)
 
 		// Complete both first
 		now := time.Now()
-		require.NoError(s.ProjectPollComplete(pA, now))
-		require.NoError(s.ProjectPollComplete(pB, now))
+		require.NoError(s.ProjectPollComplete(ctx, pA, now))
+		require.NoError(s.ProjectPollComplete(ctx, pB, now))
 
 		// Peek should return A, lower interval
 		{
-			resp, t, err := s.ProjectPollPeek(nil)
+			resp, t, err := s.ProjectPollPeek(ctx, nil)
 			require.NoError(err)
 			require.NotNil(resp)
 			require.Equal("A", resp.Name)
@@ -702,9 +709,9 @@ func TestProjectPollComplete(t *testing.T, factory Factory, restartF RestartFact
 		// Complete again, a minute later. The result should be A again
 		// because of the lower interval.
 		{
-			require.NoError(s.ProjectPollComplete(pA, now.Add(1*time.Minute)))
+			require.NoError(s.ProjectPollComplete(ctx, pA, now.Add(1*time.Minute)))
 
-			resp, t, err := s.ProjectPollPeek(nil)
+			resp, t, err := s.ProjectPollPeek(ctx, nil)
 			require.NoError(err)
 			require.NotNil(resp)
 			require.Equal("A", resp.Name)
@@ -713,9 +720,9 @@ func TestProjectPollComplete(t *testing.T, factory Factory, restartF RestartFact
 
 		// Complete A, now 6 minutes later. The result should be B now.
 		{
-			require.NoError(s.ProjectPollComplete(pA, now.Add(6*time.Minute)))
+			require.NoError(s.ProjectPollComplete(ctx, pA, now.Add(6*time.Minute)))
 
-			resp, t, err := s.ProjectPollPeek(nil)
+			resp, t, err := s.ProjectPollPeek(ctx, nil)
 			require.NoError(err)
 			require.NotNil(resp)
 			require.Equal("B", resp.Name)
@@ -725,13 +732,14 @@ func TestProjectPollComplete(t *testing.T, factory Factory, restartF RestartFact
 }
 
 func TestProjectListWorkspaces(t *testing.T, factory Factory, restartF RestartFactory) {
+	ctx := context.Background()
 	t.Run("empty for non-existent project", func(t *testing.T) {
 		require := require.New(t)
 
 		s := factory(t)
 		defer s.Close()
 
-		result, err := s.ProjectListWorkspaces(&pb.Ref_Project{Project: "nope"})
+		result, err := s.ProjectListWorkspaces(ctx, &pb.Ref_Project{Project: "nope"})
 		require.NoError(err)
 		require.Empty(result)
 	})
@@ -770,7 +778,7 @@ func TestProjectListWorkspaces(t *testing.T, factory Factory, restartF RestartFa
 
 		// Workspace list should only list one
 		{
-			result, err := s.ProjectListWorkspaces(&pb.Ref_Project{Project: "B"})
+			result, err := s.ProjectListWorkspaces(ctx, &pb.Ref_Project{Project: "B"})
 			require.NoError(err)
 			require.Len(result, 1)
 			require.NotNil(result[0].Workspace)

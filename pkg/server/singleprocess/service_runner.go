@@ -897,7 +897,7 @@ func (s *Service) handleJobStreamRequest(
 			return hcerr.Externalize(log, err, "failed to update the job reference", "id", job.Id)
 		}
 
-		if err := s.state(ctx).ProjectUpdateDataRef(&pb.Ref_Project{
+		if err := s.state(ctx).ProjectUpdateDataRef(ctx, &pb.Ref_Project{
 			Project: job.Application.Project,
 		}, job.Workspace, event.Download.DataSourceRef); err != nil {
 			return hcerr.Externalize(log, err, "failed to update the project", "project", job.Application.Project)

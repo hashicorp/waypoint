@@ -1,6 +1,7 @@
 package boltdbstate
 
 import (
+	"context"
 	"time"
 
 	"github.com/hashicorp/go-memdb"
@@ -100,6 +101,7 @@ func (s *State) ApplicationPollComplete(
 // GetFileChangeSignal checks the metadata for the given application and its
 // project, returning the value of FileChangeSignal that is most relevent.
 func (s *State) GetFileChangeSignal(scope *pb.Ref_Application) (string, error) {
+	ctx := context.Background()
 	app, err := s.AppGet(scope)
 	if err != nil {
 		return "", err
@@ -109,7 +111,7 @@ func (s *State) GetFileChangeSignal(scope *pb.Ref_Application) (string, error) {
 		return app.FileChangeSignal, nil
 	}
 
-	project, err := s.ProjectGet(&pb.Ref_Project{Project: scope.Project})
+	project, err := s.ProjectGet(ctx, &pb.Ref_Project{Project: scope.Project})
 	if err != nil {
 		return "", err
 	}

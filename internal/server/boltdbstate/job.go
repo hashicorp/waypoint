@@ -258,11 +258,12 @@ func (s *State) JobCreate(jobs ...*pb.Job) error {
 // Given a Project Ref and a Job Template, this function will generate a slice
 // of QueueJobRequests for every application inside the requested Project
 func (s *State) JobProjectScopedRequest(
+	ctx context.Context,
 	pRef *pb.Ref_Project,
 	jobTemplate *pb.Job,
 ) ([]*pb.QueueJobRequest, error) {
 	var result []*pb.QueueJobRequest
-	project, err := s.ProjectGet(pRef)
+	project, err := s.ProjectGet(ctx, pRef)
 	if err != nil {
 		return nil, err
 	}

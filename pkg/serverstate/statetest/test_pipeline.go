@@ -1,6 +1,7 @@
 package statetest
 
 import (
+	"context"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -19,6 +20,7 @@ func init() {
 }
 
 func TestPipeline(t *testing.T, factory Factory, _ RestartFactory) {
+	ctx := context.Background()
 	t.Run("Put and Get", func(t *testing.T) {
 		require := require.New(t)
 
@@ -27,7 +29,7 @@ func TestPipeline(t *testing.T, factory Factory, _ RestartFactory) {
 
 		// Write project
 		ref := &pb.Ref_Project{Project: "project"}
-		require.NoError(s.ProjectPut(serverptypes.TestProject(t, &pb.Project{
+		require.NoError(s.ProjectPut(ctx, serverptypes.TestProject(t, &pb.Project{
 			Name: ref.Project,
 		})))
 
@@ -67,7 +69,7 @@ func TestPipeline(t *testing.T, factory Factory, _ RestartFactory) {
 
 		// Write project
 		ref := &pb.Ref_Project{Project: "project"}
-		require.NoError(s.ProjectPut(serverptypes.TestProject(t, &pb.Project{
+		require.NoError(s.ProjectPut(ctx, serverptypes.TestProject(t, &pb.Project{
 			Name: ref.Project,
 		})))
 
@@ -87,7 +89,7 @@ func TestPipeline(t *testing.T, factory Factory, _ RestartFactory) {
 
 		// Write project
 		ref := &pb.Ref_Project{Project: "project"}
-		require.NoError(s.ProjectPut(serverptypes.TestProject(t, &pb.Project{
+		require.NoError(s.ProjectPut(ctx, serverptypes.TestProject(t, &pb.Project{
 			Name: ref.Project,
 		})))
 
@@ -116,7 +118,7 @@ func TestPipeline(t *testing.T, factory Factory, _ RestartFactory) {
 
 		// Write project
 		ref := &pb.Ref_Project{Project: "project"}
-		require.NoError(s.ProjectPut(serverptypes.TestProject(t, &pb.Project{
+		require.NoError(s.ProjectPut(ctx, serverptypes.TestProject(t, &pb.Project{
 			Name: ref.Project,
 		})))
 
@@ -148,7 +150,7 @@ func TestPipeline(t *testing.T, factory Factory, _ RestartFactory) {
 
 		// Write project
 		ref := &pb.Ref_Project{Project: "project"}
-		require.NoError(s.ProjectPut(serverptypes.TestProject(t, &pb.Project{
+		require.NoError(s.ProjectPut(ctx, serverptypes.TestProject(t, &pb.Project{
 			Name: ref.Project,
 		})))
 
@@ -176,7 +178,7 @@ func TestPipeline(t *testing.T, factory Factory, _ RestartFactory) {
 
 		// Write project
 		ref := &pb.Ref_Project{Project: "project"}
-		require.NoError(s.ProjectPut(serverptypes.TestProject(t, &pb.Project{
+		require.NoError(s.ProjectPut(ctx, serverptypes.TestProject(t, &pb.Project{
 			Name: ref.Project,
 		})))
 
@@ -220,7 +222,7 @@ func TestPipeline(t *testing.T, factory Factory, _ RestartFactory) {
 
 		// Write project
 		ref := &pb.Ref_Project{Project: "project"}
-		require.NoError(s.ProjectPut(serverptypes.TestProject(t, &pb.Project{
+		require.NoError(s.ProjectPut(ctx, serverptypes.TestProject(t, &pb.Project{
 			Name: ref.Project,
 		})))
 
@@ -265,7 +267,7 @@ func TestPipeline(t *testing.T, factory Factory, _ RestartFactory) {
 
 		// Write project
 		ref := &pb.Ref_Project{Project: "project"}
-		require.NoError(s.ProjectPut(serverptypes.TestProject(t, &pb.Project{
+		require.NoError(s.ProjectPut(ctx, serverptypes.TestProject(t, &pb.Project{
 			Name: ref.Project,
 		})))
 
@@ -334,7 +336,7 @@ func TestPipeline(t *testing.T, factory Factory, _ RestartFactory) {
 
 		// Write project
 		ref := &pb.Ref_Project{Project: "project"}
-		require.NoError(s.ProjectPut(serverptypes.TestProject(t, &pb.Project{
+		require.NoError(s.ProjectPut(ctx, serverptypes.TestProject(t, &pb.Project{
 			Name: ref.Project,
 		})))
 
@@ -358,7 +360,7 @@ func TestPipeline(t *testing.T, factory Factory, _ RestartFactory) {
 
 		// Write project
 		pref := &pb.Ref_Project{Project: "nintendo"}
-		require.NoError(s.ProjectPut(serverptypes.TestProject(t, &pb.Project{
+		require.NoError(s.ProjectPut(ctx, serverptypes.TestProject(t, &pb.Project{
 			Name: pref.Project,
 		})))
 
@@ -410,7 +412,7 @@ func TestPipeline(t *testing.T, factory Factory, _ RestartFactory) {
 
 		// Write project
 		ref := &pb.Ref_Project{Project: "project"}
-		require.NoError(s.ProjectPut(serverptypes.TestProject(t, &pb.Project{
+		require.NoError(s.ProjectPut(ctx, serverptypes.TestProject(t, &pb.Project{
 			Name: ref.Project,
 		})))
 
@@ -440,7 +442,7 @@ func TestPipeline(t *testing.T, factory Factory, _ RestartFactory) {
 
 		// Write project
 		ref := &pb.Ref_Project{Project: "project"}
-		require.NoError(s.ProjectPut(serverptypes.TestProject(t, &pb.Project{
+		require.NoError(s.ProjectPut(ctx, serverptypes.TestProject(t, &pb.Project{
 			Name: ref.Project,
 		})))
 
@@ -497,7 +499,7 @@ func TestPipeline(t *testing.T, factory Factory, _ RestartFactory) {
 
 		// Write project
 		pref := &pb.Ref_Project{Project: "not-our-project"}
-		require.NoError(s.ProjectPut(serverptypes.TestProject(t, &pb.Project{
+		require.NoError(s.ProjectPut(ctx, serverptypes.TestProject(t, &pb.Project{
 			Name: pref.Project,
 		})))
 
@@ -533,7 +535,7 @@ func TestPipeline(t *testing.T, factory Factory, _ RestartFactory) {
 
 		// Write project
 		ref := &pb.Ref_Project{Project: "project"}
-		require.NoError(s.ProjectPut(serverptypes.TestProject(t, &pb.Project{
+		require.NoError(s.ProjectPut(ctx, serverptypes.TestProject(t, &pb.Project{
 			Name: ref.Project,
 		})))
 

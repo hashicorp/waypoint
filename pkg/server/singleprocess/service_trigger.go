@@ -216,7 +216,7 @@ func (s *Service) RunTrigger(
 	if runTrigger.Application == nil || runTrigger.Application.Application == "" {
 		// we're gonna queue multiple jobs for every application in a project
 		log.Debug("building multi-jobs for all apps in project", "project", runTrigger.Project.Project)
-		jobList, err = s.state(ctx).JobProjectScopedRequest(runTrigger.Project, job)
+		jobList, err = s.state(ctx).JobProjectScopedRequest(ctx, runTrigger.Project, job)
 		if err != nil {
 			return nil, hcerr.Externalize(
 				hclog.FromContext(ctx),

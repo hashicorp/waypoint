@@ -1,6 +1,7 @@
 package singleprocess
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -84,6 +85,7 @@ func (a *applicationPoll) buildPollJobs(
 	log hclog.Logger,
 	appl interface{},
 ) ([]*pb.QueueJobRequest, error) {
+	ctx := context.Background()
 	app, ok := appl.(*pb.Application)
 	if !ok || app == nil {
 		log.Error("could not generate poll job for application, incorrect type passed in")
@@ -92,7 +94,7 @@ func (a *applicationPoll) buildPollJobs(
 	log = log.Named(app.Name)
 
 	// App polling needs the parent project to obtain its datasource
-	project, err := a.state.ProjectGet(&pb.Ref_Project{Project: app.Project.Project})
+	project, err := a.state.ProjectGet(ctx, &pb.Ref_Project{Project: app.Project.Project})
 	if err != nil {
 		return nil, err
 	}
