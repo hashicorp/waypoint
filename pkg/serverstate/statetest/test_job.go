@@ -1471,6 +1471,7 @@ func TestJobComplete(t *testing.T, factory Factory, rf RestartFactory) {
 }
 
 func TestJobTask_AckAndComplete(t *testing.T, factory Factory, rf RestartFactory) {
+	ctx := context.Background()
 	t.Run("ack and complete on-demand runner jobs", func(t *testing.T) {
 		require := require.New(t)
 
@@ -1518,7 +1519,7 @@ func TestJobTask_AckAndComplete(t *testing.T, factory Factory, rf RestartFactory
 
 		// Create a pending task. note that `service_job` does this when it wraps
 		// a requested job with an on-demand runner job triple.
-		err := s.TaskPut(&pb.Task{
+		err := s.TaskPut(ctx, &pb.Task{
 			Id:       task_id,
 			TaskJob:  &pb.Ref_Job{Id: "task_job"},
 			StartJob: &pb.Ref_Job{Id: "start_job"},
@@ -1537,7 +1538,7 @@ func TestJobTask_AckAndComplete(t *testing.T, factory Factory, rf RestartFactory
 		_, err = s.JobAck(job.Id, true)
 		require.NoError(err)
 
-		task, err := s.TaskGet(&pb.Ref_Task{
+		task, err := s.TaskGet(ctx, &pb.Ref_Task{
 			Ref: &pb.Ref_Task_Id{
 				Id: task_id,
 			},
@@ -1566,7 +1567,7 @@ func TestJobTask_AckAndComplete(t *testing.T, factory Factory, rf RestartFactory
 		require.Nil(job.Error)
 		require.NotNil(job.Result)
 
-		task, err = s.TaskGet(&pb.Ref_Task{
+		task, err = s.TaskGet(ctx, &pb.Ref_Task{
 			Ref: &pb.Ref_Task_Id{
 				Id: task_id,
 			},
@@ -1585,7 +1586,7 @@ func TestJobTask_AckAndComplete(t *testing.T, factory Factory, rf RestartFactory
 		_, err = s.JobAck(job.Id, true)
 		require.NoError(err)
 
-		task, err = s.TaskGet(&pb.Ref_Task{
+		task, err = s.TaskGet(ctx, &pb.Ref_Task{
 			Ref: &pb.Ref_Task_Id{
 				Id: task_id,
 			},
@@ -1614,7 +1615,7 @@ func TestJobTask_AckAndComplete(t *testing.T, factory Factory, rf RestartFactory
 		require.Nil(job.Error)
 		require.NotNil(job.Result)
 
-		task, err = s.TaskGet(&pb.Ref_Task{
+		task, err = s.TaskGet(ctx, &pb.Ref_Task{
 			Ref: &pb.Ref_Task_Id{
 				Id: task_id,
 			},
@@ -1633,7 +1634,7 @@ func TestJobTask_AckAndComplete(t *testing.T, factory Factory, rf RestartFactory
 		_, err = s.JobAck(job.Id, true)
 		require.NoError(err)
 
-		task, err = s.TaskGet(&pb.Ref_Task{
+		task, err = s.TaskGet(ctx, &pb.Ref_Task{
 			Ref: &pb.Ref_Task_Id{
 				Id: task_id,
 			},
@@ -1662,7 +1663,7 @@ func TestJobTask_AckAndComplete(t *testing.T, factory Factory, rf RestartFactory
 		require.Nil(job.Error)
 		require.NotNil(job.Result)
 
-		task, err = s.TaskGet(&pb.Ref_Task{
+		task, err = s.TaskGet(ctx, &pb.Ref_Task{
 			Ref: &pb.Ref_Task_Id{
 				Id: task_id,
 			},
@@ -1690,14 +1691,14 @@ func TestJobPipeline_AckAndComplete(t *testing.T, factory Factory, rf RestartFac
 		})))
 
 		p := serverptypes.TestPipeline(t, nil)
-		err := s.PipelinePut(p)
+		err := s.PipelinePut(ctx, p)
 		require.NoError(err)
 		pipeline := &pb.Ref_Pipeline{Ref: &pb.Ref_Pipeline_Id{Id: p.Id}}
 
 		// Create a new pipeline run
 		pr := &pb.PipelineRun{Pipeline: pipeline}
 		r := serverptypes.TestPipelineRun(t, pr)
-		err = s.PipelineRunPut(r)
+		err = s.PipelineRunPut(ctx, r)
 		require.NoError(err)
 
 		// Create a job
@@ -1710,7 +1711,7 @@ func TestJobPipeline_AckAndComplete(t *testing.T, factory Factory, rf RestartFac
 		})))
 
 		r.Jobs = append(r.Jobs, jobRef)
-		err = s.PipelineRunPut(r)
+		err = s.PipelineRunPut(ctx, r)
 		require.NoError(err)
 		require.Equal(uint64(1), r.Sequence)
 		require.Equal(pb.PipelineRun_PENDING, r.State)
@@ -1730,7 +1731,7 @@ func TestJobPipeline_AckAndComplete(t *testing.T, factory Factory, rf RestartFac
 		require.NoError(err)
 		require.Equal(pb.Job_RUNNING, job.Job.State)
 
-		run, err := s.PipelineRunGetById(r.Id)
+		run, err := s.PipelineRunGetById(ctx, r.Id)
 		require.NoError(err)
 		require.NotNil(run)
 		require.Equal(pb.PipelineRun_RUNNING, run.State)
@@ -1751,7 +1752,7 @@ func TestJobPipeline_AckAndComplete(t *testing.T, factory Factory, rf RestartFac
 		require.Nil(job.Error)
 		require.NotNil(job.Result)
 
-		run, err = s.PipelineRunGetById(pr.Id)
+		run, err = s.PipelineRunGetById(ctx, pr.Id)
 		require.NoError(err)
 		require.NotNil(run)
 		require.Equal(pb.PipelineRun_SUCCESS, run.State)
@@ -1973,6 +1974,7 @@ func TestJobIsAssignable(t *testing.T, factory Factory, rf RestartFactory) {
 }
 
 func TestJobCancel(t *testing.T, factory Factory, rf RestartFactory) {
+	ctx := context.Background()
 	t.Run("queued", func(t *testing.T) {
 		require := require.New(t)
 
@@ -2036,7 +2038,7 @@ func TestJobCancel(t *testing.T, factory Factory, rf RestartFactory) {
 
 		// Create a new pipeline run
 		p := serverptypes.TestPipeline(t, nil)
-		err := s.PipelinePut(p)
+		err := s.PipelinePut(ctx, p)
 		require.NoError(err)
 		pr := &pb.PipelineRun{
 			Pipeline: &pb.Ref_Pipeline{Ref: &pb.Ref_Pipeline_Id{Id: p.Id}},
@@ -2056,7 +2058,7 @@ func TestJobCancel(t *testing.T, factory Factory, rf RestartFactory) {
 
 		// Update pipeline run with jobs
 		r.Jobs = []*pb.Ref_Job{{Id: "A"}, {Id: "B"}}
-		err = s.PipelineRunPut(r)
+		err = s.PipelineRunPut(ctx, r)
 		require.NoError(err)
 		require.Equal(pb.PipelineRun_PENDING, r.State)
 
@@ -2078,7 +2080,7 @@ func TestJobCancel(t *testing.T, factory Factory, rf RestartFactory) {
 		require.NotEmpty(job.CancelTime)
 
 		// Verify pipeline run is cancelled
-		run, err := s.PipelineRunGetById(r.Id)
+		run, err := s.PipelineRunGetById(ctx, r.Id)
 		require.NoError(err)
 		require.NotNil(run)
 		require.NotEmpty(run.Jobs)

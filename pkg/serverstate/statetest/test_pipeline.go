@@ -35,16 +35,16 @@ func TestPipeline(t *testing.T, factory Factory, _ RestartFactory) {
 
 		// Set
 		p := ptypes.TestPipeline(t, nil)
-		err := s.PipelinePut(p)
+		err := s.PipelinePut(ctx, p)
 		require.NoError(err) // no job id set
 
 		// Set again, should overwrite and not error
-		err = s.PipelinePut(p)
+		err = s.PipelinePut(ctx, p)
 		require.NoError(err)
 
 		// Get exact by id
 		{
-			resp, err := s.PipelineGet(&pb.Ref_Pipeline{
+			resp, err := s.PipelineGet(ctx, &pb.Ref_Pipeline{
 				Ref: &pb.Ref_Pipeline_Id{
 					Id: p.Id,
 				},
@@ -54,7 +54,7 @@ func TestPipeline(t *testing.T, factory Factory, _ RestartFactory) {
 		}
 
 		// Delete
-		require.NoError(s.PipelineDelete(&pb.Ref_Pipeline{
+		require.NoError(s.PipelineDelete(ctx, &pb.Ref_Pipeline{
 			Ref: &pb.Ref_Pipeline_Id{
 				Id: p.Id,
 			},
@@ -76,7 +76,7 @@ func TestPipeline(t *testing.T, factory Factory, _ RestartFactory) {
 		// Set
 		p := ptypes.TestPipeline(t, nil)
 		p.Steps = nil
-		err := s.PipelinePut(p)
+		err := s.PipelinePut(ctx, p)
 		require.Error(err)
 		require.Equal(codes.FailedPrecondition, status.Code(err))
 	})
@@ -105,7 +105,7 @@ func TestPipeline(t *testing.T, factory Factory, _ RestartFactory) {
 				DependsOn: []string{"C"},
 			},
 		}
-		err := s.PipelinePut(p)
+		err := s.PipelinePut(ctx, p)
 		require.Error(err)
 		require.Equal(codes.FailedPrecondition, status.Code(err))
 	})
@@ -137,7 +137,7 @@ func TestPipeline(t *testing.T, factory Factory, _ RestartFactory) {
 				DependsOn: []string{"A"},
 			},
 		}
-		err := s.PipelinePut(p)
+		err := s.PipelinePut(ctx, p)
 		require.Error(err)
 		require.Equal(codes.FailedPrecondition, status.Code(err))
 	})
@@ -165,7 +165,7 @@ func TestPipeline(t *testing.T, factory Factory, _ RestartFactory) {
 				DependsOn: []string{"C"},
 			},
 		}
-		err := s.PipelinePut(p)
+		err := s.PipelinePut(ctx, p)
 		require.Error(err)
 		require.Equal(codes.FailedPrecondition, status.Code(err))
 	})
@@ -184,7 +184,7 @@ func TestPipeline(t *testing.T, factory Factory, _ RestartFactory) {
 
 		// Set a few pipelines
 		p := ptypes.TestPipeline(t, nil)
-		err := s.PipelinePut(p)
+		err := s.PipelinePut(ctx, p)
 		require.NoError(err)
 
 		// Update the pipeline
@@ -198,13 +198,13 @@ func TestPipeline(t *testing.T, factory Factory, _ RestartFactory) {
 			},
 		}
 		p.Id = ""
-		err = s.PipelinePut(p)
+		err = s.PipelinePut(ctx, p)
 		require.NoError(err)
 
 		// Should only be 1 pipeline
 		// List should return one pipeline
 		{
-			resp, err := s.PipelineList(&pb.Ref_Project{
+			resp, err := s.PipelineList(ctx, &pb.Ref_Project{
 				Project: "project",
 			})
 			require.NoError(err)
@@ -228,7 +228,7 @@ func TestPipeline(t *testing.T, factory Factory, _ RestartFactory) {
 
 		// Set a few pipelines
 		p := ptypes.TestPipeline(t, nil)
-		err := s.PipelinePut(p)
+		err := s.PipelinePut(ctx, p)
 		require.NoError(err)
 
 		// Update the pipeline
@@ -243,13 +243,13 @@ func TestPipeline(t *testing.T, factory Factory, _ RestartFactory) {
 		}
 		p.Id = "test"
 
-		err = s.PipelinePut(p)
+		err = s.PipelinePut(ctx, p)
 		require.NoError(err)
 
 		// Should only be 1 pipeline
 		// List should return one pipeline
 		{
-			resp, err := s.PipelineList(&pb.Ref_Project{
+			resp, err := s.PipelineList(ctx, &pb.Ref_Project{
 				Project: "project",
 			})
 			require.NoError(err)
@@ -273,7 +273,7 @@ func TestPipeline(t *testing.T, factory Factory, _ RestartFactory) {
 
 		// Set a few pipelines
 		p := ptypes.TestPipeline(t, nil)
-		err := s.PipelinePut(p)
+		err := s.PipelinePut(ctx, p)
 		require.NoError(err)
 
 		// Update the pipeline
@@ -289,12 +289,12 @@ func TestPipeline(t *testing.T, factory Factory, _ RestartFactory) {
 		p.Id = "two"
 		p.Name = "two"
 
-		err = s.PipelinePut(p)
+		err = s.PipelinePut(ctx, p)
 		require.NoError(err)
 
 		// Should only be 2 pipelines
 		{
-			resp, err := s.PipelineList(&pb.Ref_Project{
+			resp, err := s.PipelineList(ctx, &pb.Ref_Project{
 				Project: "project",
 			})
 			require.NoError(err)
@@ -314,12 +314,12 @@ func TestPipeline(t *testing.T, factory Factory, _ RestartFactory) {
 				},
 			},
 		})
-		err = s.PipelinePut(p2)
+		err = s.PipelinePut(ctx, p2)
 		require.NoError(err)
 
 		// Should be three
 		{
-			resp, err := s.PipelineList(&pb.Ref_Project{
+			resp, err := s.PipelineList(ctx, &pb.Ref_Project{
 				Project: "project",
 			})
 			require.NoError(err)
@@ -342,7 +342,7 @@ func TestPipeline(t *testing.T, factory Factory, _ RestartFactory) {
 
 		// Set a few pipelines
 		p := ptypes.TestPipeline(t, nil)
-		err := s.PipelinePut(p)
+		err := s.PipelinePut(ctx, p)
 		require.NoError(err)
 
 		// Another one
@@ -355,7 +355,7 @@ func TestPipeline(t *testing.T, factory Factory, _ RestartFactory) {
 				},
 			},
 		})
-		err = s.PipelinePut(p2)
+		err = s.PipelinePut(ctx, p2)
 		require.NoError(err)
 
 		// Write project
@@ -374,12 +374,12 @@ func TestPipeline(t *testing.T, factory Factory, _ RestartFactory) {
 				},
 			},
 		})
-		err = s.PipelinePut(p3)
+		err = s.PipelinePut(ctx, p3)
 		require.NoError(err)
 
 		// Get pipeline by Owner Ref
 		{
-			resp, err := s.PipelineGet(&pb.Ref_Pipeline{
+			resp, err := s.PipelineGet(ctx, &pb.Ref_Pipeline{
 				Ref: &pb.Ref_Pipeline_Owner{
 					Owner: &pb.Ref_PipelineOwner{Project: &pb.Ref_Project{Project: "project"}, PipelineName: "mario"},
 				},
@@ -392,7 +392,7 @@ func TestPipeline(t *testing.T, factory Factory, _ RestartFactory) {
 
 		// Get pipeline by Owner Ref
 		{
-			resp, err := s.PipelineGet(&pb.Ref_Pipeline{
+			resp, err := s.PipelineGet(ctx, &pb.Ref_Pipeline{
 				Ref: &pb.Ref_Pipeline_Owner{
 					Owner: &pb.Ref_PipelineOwner{Project: &pb.Ref_Project{Project: "nintendo"}, PipelineName: "mario"},
 				},
@@ -418,12 +418,12 @@ func TestPipeline(t *testing.T, factory Factory, _ RestartFactory) {
 
 		// Set
 		p := ptypes.TestPipeline(t, nil)
-		err := s.PipelinePut(p)
+		err := s.PipelinePut(ctx, p)
 		require.NoError(err)
 
 		// Get pipeline by Owner Ref should be nothing
 		{
-			resp, err := s.PipelineGet(&pb.Ref_Pipeline{
+			resp, err := s.PipelineGet(ctx, &pb.Ref_Pipeline{
 				Ref: &pb.Ref_Pipeline_Owner{
 					Owner: &pb.Ref_PipelineOwner{Project: &pb.Ref_Project{Project: "nope"}, PipelineName: "nope"},
 				},
@@ -448,12 +448,12 @@ func TestPipeline(t *testing.T, factory Factory, _ RestartFactory) {
 
 		// Set
 		p := ptypes.TestPipeline(t, nil)
-		err := s.PipelinePut(p)
+		err := s.PipelinePut(ctx, p)
 		require.NoError(err)
 
 		// List should return one pipeline
 		{
-			resp, err := s.PipelineList(&pb.Ref_Project{
+			resp, err := s.PipelineList(ctx, &pb.Ref_Project{
 				Project: "project",
 			})
 			require.NoError(err)
@@ -471,7 +471,7 @@ func TestPipeline(t *testing.T, factory Factory, _ RestartFactory) {
 				},
 			},
 		})
-		err = s.PipelinePut(p2)
+		err = s.PipelinePut(ctx, p2)
 		require.NoError(err)
 
 		// a third
@@ -484,12 +484,12 @@ func TestPipeline(t *testing.T, factory Factory, _ RestartFactory) {
 				},
 			},
 		})
-		err = s.PipelinePut(p3)
+		err = s.PipelinePut(ctx, p3)
 		require.NoError(err)
 
 		// List should return three pipelines
 		{
-			resp, err := s.PipelineList(&pb.Ref_Project{
+			resp, err := s.PipelineList(ctx, &pb.Ref_Project{
 				Project: "project",
 			})
 			require.NoError(err)
@@ -513,12 +513,12 @@ func TestPipeline(t *testing.T, factory Factory, _ RestartFactory) {
 				},
 			},
 		})
-		err = s.PipelinePut(p4)
+		err = s.PipelinePut(ctx, p4)
 		require.NoError(err)
 
 		// List should still return three pipelines
 		{
-			resp, err := s.PipelineList(&pb.Ref_Project{
+			resp, err := s.PipelineList(ctx, &pb.Ref_Project{
 				Project: "project",
 			})
 			require.NoError(err)
@@ -541,11 +541,11 @@ func TestPipeline(t *testing.T, factory Factory, _ RestartFactory) {
 
 		// Set
 		p := ptypes.TestPipeline(t, nil)
-		err := s.PipelinePut(p)
+		err := s.PipelinePut(ctx, p)
 		require.NoError(err)
 
 		// Get exact by id
-		resp, err := s.PipelineGet(&pb.Ref_Pipeline{
+		resp, err := s.PipelineGet(ctx, &pb.Ref_Pipeline{
 			Ref: &pb.Ref_Pipeline_Id{
 				Id: p.Id,
 			},
@@ -561,11 +561,11 @@ func TestPipeline(t *testing.T, factory Factory, _ RestartFactory) {
 		}
 
 		// Put to update
-		err = s.PipelinePut(resp)
+		err = s.PipelinePut(ctx, resp)
 		require.NoError(err) // no job id set
 
 		// Get exact by id and repeat the check
-		resp, err = s.PipelineGet(&pb.Ref_Pipeline{
+		resp, err = s.PipelineGet(ctx, &pb.Ref_Pipeline{
 			Ref: &pb.Ref_Pipeline_Id{
 				Id: p.Id,
 			},
@@ -591,11 +591,11 @@ func TestPipeline(t *testing.T, factory Factory, _ RestartFactory) {
 				Workspace: &pb.Ref_Workspace{Workspace: "staging"},
 			},
 		})
-		err = s.PipelinePut(updatedPipe)
+		err = s.PipelinePut(ctx, updatedPipe)
 		require.NoError(err)
 
 		// Get exact by id and repeat the check
-		resp, err = s.PipelineGet(&pb.Ref_Pipeline{
+		resp, err = s.PipelineGet(ctx, &pb.Ref_Pipeline{
 			Ref: &pb.Ref_Pipeline_Id{
 				Id: p.Id, // intentionally using old ID
 			},
@@ -614,7 +614,7 @@ func TestPipeline(t *testing.T, factory Factory, _ RestartFactory) {
 		}
 
 		// Delete
-		require.NoError(s.PipelineDelete(&pb.Ref_Pipeline{
+		require.NoError(s.PipelineDelete(ctx, &pb.Ref_Pipeline{
 			Ref: &pb.Ref_Pipeline_Id{
 				Id: p.Id,
 			},
@@ -623,7 +623,7 @@ func TestPipeline(t *testing.T, factory Factory, _ RestartFactory) {
 		// Verify delete with other pipe reference.
 		// For reasons unknown, the response returned here is "empty" of any
 		// values but not actually nil.
-		_, err = s.PipelineGet(&pb.Ref_Pipeline{
+		_, err = s.PipelineGet(ctx, &pb.Ref_Pipeline{
 			Ref: &pb.Ref_Pipeline_Id{
 				Id: updatedPipe.Id,
 			},

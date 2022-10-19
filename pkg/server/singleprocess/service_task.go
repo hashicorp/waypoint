@@ -20,7 +20,7 @@ func (s *Service) UpsertTask(
 	}
 
 	result := req.Task
-	if err := s.state(ctx).TaskPut(result); err != nil {
+	if err := s.state(ctx).TaskPut(ctx, result); err != nil {
 		return nil, hcerr.Externalize(hclog.FromContext(ctx), err, "failed to upsert task", "id", req.Task.Id)
 	}
 
@@ -37,7 +37,7 @@ func (s *Service) GetTask(
 		return nil, err
 	}
 
-	t, err := s.state(ctx).TaskGet(req.Ref)
+	t, err := s.state(ctx).TaskGet(ctx, req.Ref)
 	if err != nil {
 		var refArgs []interface{}
 		switch r := req.Ref.Ref.(type) {
@@ -50,7 +50,7 @@ func (s *Service) GetTask(
 	}
 
 	// Get the Start, Run, and Stop jobs
-	startJob, taskJob, stopJob, watchJob, err := s.state(ctx).JobsByTaskRef(t)
+	startJob, taskJob, stopJob, watchJob, err := s.state(ctx).JobsByTaskRef(ctx, t)
 	if err != nil {
 		return nil, hcerr.Externalize(log, err, "failed to get jobs for task", "id", t.Id)
 	}
@@ -71,14 +71,14 @@ func (s *Service) ListTask(
 	// NOTE: no ptype validation at the moment, request params are optional
 
 	log := hclog.FromContext(ctx)
-	result, err := s.state(ctx).TaskList(req)
+	result, err := s.state(ctx).TaskList(ctx, req)
 	if err != nil {
 		return nil, hcerr.Externalize(log, err, "failed to list tasks")
 	}
 
 	var tasks []*pb.GetTaskResponse
 	for _, t := range result {
-		startJob, taskJob, stopJob, watchJob, err := s.state(ctx).JobsByTaskRef(t)
+		startJob, taskJob, stopJob, watchJob, err := s.state(ctx).JobsByTaskRef(ctx, t)
 		if err != nil {
 			return nil, hcerr.Externalize(log, err, "failed to get jobs for task", "id", t.Id)
 		}
@@ -99,7 +99,7 @@ func (s *Service) CancelTask(
 		return nil, err
 	}
 
-	if err := s.state(ctx).TaskCancel(req.Ref); err != nil {
+	if err := s.state(ctx).TaskCancel(ctx, req.Ref); err != nil {
 		var refArgs []interface{}
 		switch r := req.Ref.Ref.(type) {
 		case *pb.Ref_Task_Id:

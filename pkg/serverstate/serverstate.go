@@ -118,10 +118,10 @@ type Interface interface {
 	//---------------------------------------------------------------
 	// Operations
 
-	ArtifactPut(bool, *pb.PushedArtifact) error
-	ArtifactGet(*pb.Ref_Operation) (*pb.PushedArtifact, error)
-	ArtifactLatest(*pb.Ref_Application, *pb.Ref_Workspace) (*pb.PushedArtifact, error)
-	ArtifactList(*pb.Ref_Application, ...ListOperationOption) ([]*pb.PushedArtifact, error)
+	ArtifactPut(context.Context, bool, *pb.PushedArtifact) error
+	ArtifactGet(context.Context, *pb.Ref_Operation) (*pb.PushedArtifact, error)
+	ArtifactLatest(context.Context, *pb.Ref_Application, *pb.Ref_Workspace) (*pb.PushedArtifact, error)
+	ArtifactList(context.Context, *pb.Ref_Application, ...ListOperationOption) ([]*pb.PushedArtifact, error)
 
 	BuildPut(bool, *pb.Build) error
 	BuildGet(*pb.Ref_Operation) (*pb.Build, error)
@@ -177,26 +177,26 @@ type Interface interface {
 	//---------------------------------------------------------------
 	// Task Tracking
 
-	TaskPut(*pb.Task) error
-	TaskGet(*pb.Ref_Task) (*pb.Task, error)
-	TaskDelete(*pb.Ref_Task) error
-	TaskCancel(*pb.Ref_Task) error
-	TaskList(*pb.ListTaskRequest) ([]*pb.Task, error)
-	JobsByTaskRef(*pb.Task) (*pb.Job, *pb.Job, *pb.Job, *pb.Job, error)
+	TaskPut(context.Context, *pb.Task) error
+	TaskGet(context.Context, *pb.Ref_Task) (*pb.Task, error)
+	TaskDelete(context.Context, *pb.Ref_Task) error
+	TaskCancel(context.Context, *pb.Ref_Task) error
+	TaskList(context.Context, *pb.ListTaskRequest) ([]*pb.Task, error)
+	JobsByTaskRef(context.Context, *pb.Task) (*pb.Job, *pb.Job, *pb.Job, *pb.Job, error)
 
 	//---------------------------------------------------------------
 	// Pipelines
 
-	PipelinePut(*pb.Pipeline) error
-	PipelineGet(*pb.Ref_Pipeline) (*pb.Pipeline, error)
-	PipelineDelete(*pb.Ref_Pipeline) error
-	PipelineList(*pb.Ref_Project) ([]*pb.Pipeline, error)
+	PipelinePut(context.Context, *pb.Pipeline) error
+	PipelineGet(context.Context, *pb.Ref_Pipeline) (*pb.Pipeline, error)
+	PipelineDelete(context.Context, *pb.Ref_Pipeline) error
+	PipelineList(context.Context, *pb.Ref_Project) ([]*pb.Pipeline, error)
 
-	PipelineRunPut(*pb.PipelineRun) error
-	PipelineRunGet(*pb.Ref_Pipeline, uint64) (*pb.PipelineRun, error)
-	PipelineRunGetLatest(string) (*pb.PipelineRun, error)
-	PipelineRunGetById(string) (*pb.PipelineRun, error)
-	PipelineRunList(*pb.Ref_Pipeline) ([]*pb.PipelineRun, error)
+	PipelineRunPut(context.Context, *pb.PipelineRun) error
+	PipelineRunGet(context.Context, *pb.Ref_Pipeline, uint64) (*pb.PipelineRun, error)
+	PipelineRunGetLatest(context.Context, string) (*pb.PipelineRun, error)
+	PipelineRunGetById(context.Context, string) (*pb.PipelineRun, error)
+	PipelineRunList(context.Context, *pb.Ref_Pipeline) ([]*pb.PipelineRun, error)
 }
 
 // Pruner is implemented by state storage implementations that require

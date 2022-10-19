@@ -64,7 +64,7 @@ func TestServiceTask_GetTask(t *testing.T) {
 	watchJobId := jobResp.JobId
 
 	taskId := "test_task"
-	err = testServiceImpl(impl).state(ctx).TaskPut(
+	err = testServiceImpl(impl).state(ctx).TaskPut(ctx,
 		serverptypes.TestValidTask(t, &pb.Task{
 			Id:       taskId,
 			TaskJob:  &pb.Ref_Job{Id: runJobId},
@@ -199,7 +199,7 @@ func TestServiceTask_ListTaskSimple(t *testing.T) {
 	require.NotEmpty(t, jobResp.JobId)
 	watchJobId := jobResp.JobId
 
-	err = testServiceImpl(impl).state(ctx).TaskPut(
+	err = testServiceImpl(impl).state(ctx).TaskPut(ctx,
 		serverptypes.TestValidTask(t, &pb.Task{
 			TaskJob:  &pb.Ref_Job{Id: runJobId},
 			StartJob: &pb.Ref_Job{Id: startJobId},
@@ -208,7 +208,7 @@ func TestServiceTask_ListTaskSimple(t *testing.T) {
 		}),
 	)
 	require.NoError(t, err)
-	err = testServiceImpl(impl).state(ctx).TaskPut(
+	err = testServiceImpl(impl).state(ctx).TaskPut(ctx,
 		serverptypes.TestValidTask(t, &pb.Task{
 			TaskJob:  &pb.Ref_Job{Id: runJobId},
 			StartJob: &pb.Ref_Job{Id: startJobId},
@@ -217,7 +217,7 @@ func TestServiceTask_ListTaskSimple(t *testing.T) {
 		}),
 	)
 	require.NoError(t, err)
-	err = testServiceImpl(impl).state(ctx).TaskPut(
+	err = testServiceImpl(impl).state(ctx).TaskPut(ctx,
 		serverptypes.TestValidTask(t, &pb.Task{
 			TaskJob:  &pb.Ref_Job{Id: runJobId},
 			StartJob: &pb.Ref_Job{Id: startJobId},
@@ -294,7 +294,7 @@ func TestServiceTask_ListTaskFilters(t *testing.T) {
 	require.NotEmpty(t, jobResp.JobId)
 	watchJobId := jobResp.JobId
 
-	err = testServiceImpl(impl).state(ctx).TaskPut(
+	err = testServiceImpl(impl).state(ctx).TaskPut(ctx,
 		serverptypes.TestValidTask(t, &pb.Task{
 			TaskJob:  &pb.Ref_Job{Id: runJobId},
 			StartJob: &pb.Ref_Job{Id: startJobId},
@@ -304,7 +304,7 @@ func TestServiceTask_ListTaskFilters(t *testing.T) {
 		}),
 	)
 	require.NoError(t, err)
-	err = testServiceImpl(impl).state(ctx).TaskPut(
+	err = testServiceImpl(impl).state(ctx).TaskPut(ctx,
 		serverptypes.TestValidTask(t, &pb.Task{
 			TaskJob:  &pb.Ref_Job{Id: runJobId},
 			StartJob: &pb.Ref_Job{Id: startJobId},
@@ -314,7 +314,7 @@ func TestServiceTask_ListTaskFilters(t *testing.T) {
 		}),
 	)
 	require.NoError(t, err)
-	err = testServiceImpl(impl).state(ctx).TaskPut(
+	err = testServiceImpl(impl).state(ctx).TaskPut(ctx,
 		serverptypes.TestValidTask(t, &pb.Task{
 			TaskJob:  &pb.Ref_Job{Id: runJobId},
 			StartJob: &pb.Ref_Job{Id: startJobId},
@@ -385,7 +385,7 @@ func TestServiceTask_CancelTask(t *testing.T) {
 	stopJobId := jobResp.JobId
 
 	taskId := "test_task"
-	err = testServiceImpl(impl).state(ctx).TaskPut(
+	err = testServiceImpl(impl).state(ctx).TaskPut(ctx,
 		serverptypes.TestValidTask(t, &pb.Task{
 			Id:       taskId,
 			TaskJob:  &pb.Ref_Job{Id: runJobId},

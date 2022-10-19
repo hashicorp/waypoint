@@ -1,6 +1,7 @@
 package statetest
 
 import (
+	"context"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -19,6 +20,7 @@ func init() {
 }
 
 func TestTask(t *testing.T, factory Factory, restartF RestartFactory) {
+	ctx := context.Background()
 	t.Run("Get returns not found error if not exist", func(t *testing.T) {
 		require := require.New(t)
 
@@ -26,7 +28,7 @@ func TestTask(t *testing.T, factory Factory, restartF RestartFactory) {
 		defer s.Close()
 
 		// Set
-		_, err := s.TaskGet(&pb.Ref_Task{
+		_, err := s.TaskGet(ctx, &pb.Ref_Task{
 			Ref: &pb.Ref_Task_Id{
 				Id: "foo",
 			},
@@ -42,14 +44,14 @@ func TestTask(t *testing.T, factory Factory, restartF RestartFactory) {
 		defer s.Close()
 
 		// Set
-		err := s.TaskPut(&pb.Task{
+		err := s.TaskPut(ctx, &pb.Task{
 			Id: "t_test",
 		})
 		require.Error(err) // no job id set
 		err = nil
 
 		// Set again
-		err = s.TaskPut(&pb.Task{
+		err = s.TaskPut(ctx, &pb.Task{
 			Id:      "t_test",
 			TaskJob: &pb.Ref_Job{Id: "j_test"},
 		})
@@ -58,7 +60,7 @@ func TestTask(t *testing.T, factory Factory, restartF RestartFactory) {
 
 		// Get exact by id
 		{
-			resp, err := s.TaskGet(&pb.Ref_Task{
+			resp, err := s.TaskGet(ctx, &pb.Ref_Task{
 				Ref: &pb.Ref_Task_Id{
 					Id: "t_test",
 				},
@@ -69,7 +71,7 @@ func TestTask(t *testing.T, factory Factory, restartF RestartFactory) {
 
 		// Get exact by job id
 		{
-			resp, err := s.TaskGet(&pb.Ref_Task{
+			resp, err := s.TaskGet(ctx, &pb.Ref_Task{
 				Ref: &pb.Ref_Task_JobId{
 					JobId: "j_test",
 				},
@@ -79,7 +81,7 @@ func TestTask(t *testing.T, factory Factory, restartF RestartFactory) {
 		}
 
 		// Update
-		err = s.TaskPut(&pb.Task{
+		err = s.TaskPut(ctx, &pb.Task{
 			Id:       "t_test",
 			TaskJob:  &pb.Ref_Job{Id: "j_test"},
 			StartJob: &pb.Ref_Job{Id: "start_job"},
@@ -89,7 +91,7 @@ func TestTask(t *testing.T, factory Factory, restartF RestartFactory) {
 
 		// Get exact by id
 		{
-			resp, err := s.TaskGet(&pb.Ref_Task{
+			resp, err := s.TaskGet(ctx, &pb.Ref_Task{
 				Ref: &pb.Ref_Task_Id{
 					Id: "t_test",
 				},
@@ -107,7 +109,7 @@ func TestTask(t *testing.T, factory Factory, restartF RestartFactory) {
 		defer s.Close()
 
 		// Set
-		err := s.TaskPut(&pb.Task{
+		err := s.TaskPut(ctx, &pb.Task{
 			Id:      "t_test",
 			TaskJob: &pb.Ref_Job{Id: "j_test"},
 		})
@@ -116,7 +118,7 @@ func TestTask(t *testing.T, factory Factory, restartF RestartFactory) {
 
 		// Get exact by id
 		{
-			resp, err := s.TaskGet(&pb.Ref_Task{
+			resp, err := s.TaskGet(ctx, &pb.Ref_Task{
 				Ref: &pb.Ref_Task_Id{
 					Id: "t_test",
 				},
@@ -126,7 +128,7 @@ func TestTask(t *testing.T, factory Factory, restartF RestartFactory) {
 		}
 
 		// Delete it
-		err = s.TaskDelete(&pb.Ref_Task{
+		err = s.TaskDelete(ctx, &pb.Ref_Task{
 			Ref: &pb.Ref_Task_Id{
 				Id: "t_test",
 			},
@@ -135,7 +137,7 @@ func TestTask(t *testing.T, factory Factory, restartF RestartFactory) {
 
 		// It's gone
 		{
-			_, err := s.TaskGet(&pb.Ref_Task{
+			_, err := s.TaskGet(ctx, &pb.Ref_Task{
 				Ref: &pb.Ref_Task_Id{
 					Id: "t_test",
 				},
@@ -145,7 +147,7 @@ func TestTask(t *testing.T, factory Factory, restartF RestartFactory) {
 		err = nil
 
 		// Set again
-		err = s.TaskPut(&pb.Task{
+		err = s.TaskPut(ctx, &pb.Task{
 			Id:      "t_test",
 			TaskJob: &pb.Ref_Job{Id: "j_test"},
 		})
@@ -154,7 +156,7 @@ func TestTask(t *testing.T, factory Factory, restartF RestartFactory) {
 
 		// Get exact by job id
 		{
-			resp, err := s.TaskGet(&pb.Ref_Task{
+			resp, err := s.TaskGet(ctx, &pb.Ref_Task{
 				Ref: &pb.Ref_Task_JobId{
 					JobId: "j_test",
 				},
@@ -164,7 +166,7 @@ func TestTask(t *testing.T, factory Factory, restartF RestartFactory) {
 		}
 
 		// Delete it
-		err = s.TaskDelete(&pb.Ref_Task{
+		err = s.TaskDelete(ctx, &pb.Ref_Task{
 			Ref: &pb.Ref_Task_JobId{
 				JobId: "j_test",
 			},
@@ -173,7 +175,7 @@ func TestTask(t *testing.T, factory Factory, restartF RestartFactory) {
 
 		// It's gone
 		{
-			_, err := s.TaskGet(&pb.Ref_Task{
+			_, err := s.TaskGet(ctx, &pb.Ref_Task{
 				Ref: &pb.Ref_Task_JobId{
 					JobId: "j_test",
 				},
@@ -189,19 +191,19 @@ func TestTask(t *testing.T, factory Factory, restartF RestartFactory) {
 		defer s.Close()
 
 		// Create more for listing
-		err := s.TaskPut(&pb.Task{
+		err := s.TaskPut(ctx, &pb.Task{
 			Id:      "t_test",
 			TaskJob: &pb.Ref_Job{Id: "j_test"},
 		})
 		require.NoError(err)
 
-		err = s.TaskPut(&pb.Task{
+		err = s.TaskPut(ctx, &pb.Task{
 			Id:      "t_test_part2",
 			TaskJob: &pb.Ref_Job{Id: "j2_test"},
 		})
 		require.NoError(err)
 
-		err = s.TaskPut(&pb.Task{
+		err = s.TaskPut(ctx, &pb.Task{
 			Id:      "t_test_part3",
 			TaskJob: &pb.Ref_Job{Id: "j3_test"},
 		})
@@ -209,7 +211,7 @@ func TestTask(t *testing.T, factory Factory, restartF RestartFactory) {
 
 		// List all
 		{
-			resp, err := s.TaskList(&pb.ListTaskRequest{})
+			resp, err := s.TaskList(ctx, &pb.ListTaskRequest{})
 			require.NoError(err)
 			require.Len(resp, 3)
 		}
@@ -234,7 +236,7 @@ func TestTask(t *testing.T, factory Factory, restartF RestartFactory) {
 			Id: "watch_job",
 		})))
 
-		err := s.TaskPut(&pb.Task{
+		err := s.TaskPut(ctx, &pb.Task{
 			Id:       "t_test",
 			TaskJob:  &pb.Ref_Job{Id: "j_test"},
 			StartJob: &pb.Ref_Job{Id: "start_job"},
@@ -243,7 +245,7 @@ func TestTask(t *testing.T, factory Factory, restartF RestartFactory) {
 		})
 		require.NoError(err)
 
-		task, err := s.TaskGet(&pb.Ref_Task{
+		task, err := s.TaskGet(ctx, &pb.Ref_Task{
 			Ref: &pb.Ref_Task_JobId{
 				JobId: "j_test",
 			},
@@ -251,7 +253,7 @@ func TestTask(t *testing.T, factory Factory, restartF RestartFactory) {
 		require.NoError(err)
 		require.NotNil(task)
 
-		startJob, taskJob, stopJob, watchJob, err := s.JobsByTaskRef(task)
+		startJob, taskJob, stopJob, watchJob, err := s.JobsByTaskRef(ctx, task)
 		require.NoError(err)
 		require.Equal(startJob.Id, "start_job")
 		require.Equal(taskJob.Id, "j_test")
@@ -261,6 +263,7 @@ func TestTask(t *testing.T, factory Factory, restartF RestartFactory) {
 }
 
 func TestTaskCancel(t *testing.T, factory Factory, restartF RestartFactory) {
+	ctx := context.Background()
 	t.Run("Canceling a Task by task id", func(t *testing.T) {
 		require := require.New(t)
 
@@ -280,7 +283,7 @@ func TestTaskCancel(t *testing.T, factory Factory, restartF RestartFactory) {
 			Id: "stop_job",
 		})))
 
-		err := s.TaskPut(&pb.Task{
+		err := s.TaskPut(ctx, &pb.Task{
 			Id:       "t_test",
 			TaskJob:  &pb.Ref_Job{Id: "j_test"},
 			StartJob: &pb.Ref_Job{Id: "start_job"},
@@ -289,7 +292,7 @@ func TestTaskCancel(t *testing.T, factory Factory, restartF RestartFactory) {
 		})
 		require.NoError(err)
 
-		task, err := s.TaskGet(&pb.Ref_Task{
+		task, err := s.TaskGet(ctx, &pb.Ref_Task{
 			Ref: &pb.Ref_Task_JobId{
 				JobId: "j_test",
 			},
@@ -297,7 +300,7 @@ func TestTaskCancel(t *testing.T, factory Factory, restartF RestartFactory) {
 		require.NoError(err)
 		require.NotNil(task)
 
-		require.NoError(s.TaskCancel(&pb.Ref_Task{
+		require.NoError(s.TaskCancel(ctx, &pb.Ref_Task{
 			Ref: &pb.Ref_Task_Id{
 				Id: "t_test",
 			},

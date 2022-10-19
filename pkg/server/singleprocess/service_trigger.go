@@ -351,7 +351,7 @@ func (s *Service) RunTrigger(
 		case *pb.Job_Deploy:
 			if op.Deploy.Artifact == nil {
 				// get latest pushed artifact, then set it on the operation
-				artifactLatest, err := s.state(ctx).ArtifactLatest(qJob.Job.Application, qJob.Job.Workspace)
+				artifactLatest, err := s.state(ctx).ArtifactLatest(ctx, qJob.Job.Application, qJob.Job.Workspace)
 				if err != nil {
 					return nil, hcerr.Externalize(
 						log,
@@ -372,7 +372,7 @@ func (s *Service) RunTrigger(
 			} else {
 				// Set the actual pushed artifact on the operation
 				buildSeq := op.Deploy.Artifact.Sequence
-				artifact, err := s.state(ctx).ArtifactGet(&pb.Ref_Operation{
+				artifact, err := s.state(ctx).ArtifactGet(ctx, &pb.Ref_Operation{
 					Target: &pb.Ref_Operation_Sequence{
 						Sequence: &pb.Ref_OperationSeq{
 							Application: qJob.Job.Application,

@@ -39,7 +39,7 @@ func (s *Service) UpsertPushedArtifact(
 		result.Id = id
 	}
 
-	if err := s.state(ctx).ArtifactPut(!insert, result); err != nil {
+	if err := s.state(ctx).ArtifactPut(ctx, !insert, result); err != nil {
 		return nil, hcerr.Externalize(hclog.FromContext(ctx), err, "failed to upsert artifact")
 	}
 
@@ -54,7 +54,7 @@ func (s *Service) ListPushedArtifacts(
 		return nil, err
 	}
 
-	result, err := s.state(ctx).ArtifactList(req.Application,
+	result, err := s.state(ctx).ArtifactList(ctx, req.Application,
 		serverstate.ListWithStatusFilter(req.Status...),
 		serverstate.ListWithOrder(req.Order),
 		serverstate.ListWithWorkspace(req.Workspace),
@@ -101,7 +101,7 @@ func (s *Service) GetLatestPushedArtifact(
 		return nil, err
 	}
 
-	a, err := s.state(ctx).ArtifactLatest(req.Application, req.Workspace)
+	a, err := s.state(ctx).ArtifactLatest(ctx, req.Application, req.Workspace)
 	if err != nil {
 		return nil, hcerr.Externalize(
 			hclog.FromContext(ctx),
@@ -123,7 +123,7 @@ func (s *Service) GetPushedArtifact(
 		return nil, err
 	}
 
-	a, err := s.state(ctx).ArtifactGet(req.Ref)
+	a, err := s.state(ctx).ArtifactGet(ctx, req.Ref)
 	if err != nil {
 		return nil, hcerr.Externalize(
 			hclog.FromContext(ctx),

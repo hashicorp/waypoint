@@ -178,7 +178,7 @@ func (s *Service) getDeploymentBundle(
 	bundle.LatestStatusReport = matchingStatusReport
 
 	// Find artifact
-	bundle.Artifact, err = s.state(ctx).ArtifactGet(&pb.Ref_Operation{
+	bundle.Artifact, err = s.state(ctx).ArtifactGet(ctx, &pb.Ref_Operation{
 		Target: &pb.Ref_Operation_Id{
 			Id: deploy.ArtifactId,
 		},
