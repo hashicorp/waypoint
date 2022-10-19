@@ -1,0 +1,4 @@
+```release-note:improvement
+cli/fmt: Add a `-check` flag that will determine if the `waypoint.hcl` is already
+properly formatted, similar to `terraform fmt -check`.
+```
