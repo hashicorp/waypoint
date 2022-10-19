@@ -752,7 +752,17 @@ func getJobValues(vs map[string]*Variable, values Values, salt string) (map[stri
 		} else {
 			switch value.Value.Type() {
 			case cty.String:
-				varRefs[v].Value = &pb.Variable_FinalValue_Str{Str: value.Value.AsString()}
+				var str string
+				err := gocty.FromCtyValue(value.Value, &str)
+				if err != nil {
+					diags = append(diags, &hcl.Diagnostic{
+						Severity: hcl.DiagError,
+						Summary:  "Invalid string",
+						Detail:   err.Error(),
+					})
+					return nil, diags
+				}
+				varRefs[v].Value = &pb.Variable_FinalValue_Str{Str: str}
 			case cty.Bool:
 				varRefs[v].Value = &pb.Variable_FinalValue_Bool{Bool: value.Value.True()}
 			case cty.Number:
