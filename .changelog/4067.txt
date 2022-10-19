@@ -1,0 +1,3 @@
+```release-note:bug
+core: fix panic when null value is set on a string variable
+```
