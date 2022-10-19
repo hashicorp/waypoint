@@ -130,7 +130,7 @@ func (c *FmtCommand) Flags() *flag.Sets {
 			Target:  &c.flagCheck,
 			Default: false,
 			Usage: "Check if the input is formatted. Exit status will be 0 if " +
-				"all input is properly formatted and non-zero otherwise.",
+				"all input is properly formatted and exit status 3 otherwise.",
 		})
 	})
 }
