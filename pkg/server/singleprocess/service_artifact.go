@@ -69,7 +69,7 @@ func (s *Service) ListPushedArtifacts(
 
 	if req.IncludeBuild {
 		for _, a := range result {
-			b, err := s.state(ctx).BuildGet(&pb.Ref_Operation{
+			b, err := s.state(ctx).BuildGet(ctx, &pb.Ref_Operation{
 				Target: &pb.Ref_Operation_Id{
 					Id: a.BuildId,
 				},

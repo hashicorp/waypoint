@@ -177,7 +177,7 @@ func (s *Service) releasePreloadDetails(
 		d.Preload.Artifact = pa
 
 		if req > pb.Release_ARTIFACT {
-			build, err := s.state(ctx).BuildGet(&pb.Ref_Operation{
+			build, err := s.state(ctx).BuildGet(ctx, &pb.Ref_Operation{
 				Target: &pb.Ref_Operation_Id{
 					Id: pa.BuildId,
 				},

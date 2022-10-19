@@ -123,10 +123,10 @@ type Interface interface {
 	ArtifactLatest(context.Context, *pb.Ref_Application, *pb.Ref_Workspace) (*pb.PushedArtifact, error)
 	ArtifactList(context.Context, *pb.Ref_Application, ...ListOperationOption) ([]*pb.PushedArtifact, error)
 
-	BuildPut(bool, *pb.Build) error
-	BuildGet(*pb.Ref_Operation) (*pb.Build, error)
-	BuildLatest(*pb.Ref_Application, *pb.Ref_Workspace) (*pb.Build, error)
-	BuildList(*pb.Ref_Application, ...ListOperationOption) ([]*pb.Build, error)
+	BuildPut(context.Context, bool, *pb.Build) error
+	BuildGet(context.Context, *pb.Ref_Operation) (*pb.Build, error)
+	BuildLatest(context.Context, *pb.Ref_Application, *pb.Ref_Workspace) (*pb.Build, error)
+	BuildList(context.Context, *pb.Ref_Application, ...ListOperationOption) ([]*pb.Build, error)
 
 	DeploymentPut(bool, *pb.Deployment) error
 	DeploymentGet(*pb.Ref_Operation) (*pb.Deployment, error)

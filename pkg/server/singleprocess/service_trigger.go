@@ -250,7 +250,7 @@ func (s *Service) RunTrigger(
 		switch op := qJob.Job.Operation.(type) {
 		case *pb.Job_Push:
 			if op.Push.Build.Sequence == 0 {
-				buildLatest, err := s.state(ctx).BuildLatest(qJob.Job.Application, qJob.Job.Workspace)
+				buildLatest, err := s.state(ctx).BuildLatest(ctx, qJob.Job.Application, qJob.Job.Workspace)
 				if err != nil {
 					return nil, hcerr.Externalize(
 						log,
@@ -265,7 +265,7 @@ func (s *Service) RunTrigger(
 					},
 				}
 			} else {
-				build, err := s.state(ctx).BuildGet(&pb.Ref_Operation{
+				build, err := s.state(ctx).BuildGet(ctx, &pb.Ref_Operation{
 					Target: &pb.Ref_Operation_Sequence{
 						Sequence: &pb.Ref_OperationSeq{
 							Application: qJob.Job.Application,

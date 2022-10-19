@@ -195,7 +195,7 @@ func (s *Service) getDeploymentBundle(
 
 	// Find build
 	if bundle.Artifact != nil {
-		bundle.Build, err = s.state(ctx).BuildGet(&pb.Ref_Operation{
+		bundle.Build, err = s.state(ctx).BuildGet(ctx, &pb.Ref_Operation{
 			Target: &pb.Ref_Operation_Id{
 				Id: bundle.Artifact.BuildId,
 			},
