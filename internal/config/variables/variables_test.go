@@ -455,6 +455,34 @@ func TestVariables_EvalInputValues(t *testing.T) {
 			expectedfvs: map[string]*pb.Variable_FinalValue{},
 			err:         "Unset variable",
 		},
+		{
+			name:        "null value for variable defined as string",
+			file:        "invalid_string.hcl",
+			inputValues: []*pb.Variable{},
+			expected:    Values{},
+			expectedfvs: map[string]*pb.Variable_FinalValue{},
+			err:         "Invalid string",
+		},
+		{
+			name:        "null value for variable defined as number",
+			file:        "invalid_number.hcl",
+			inputValues: []*pb.Variable{},
+			expected:    Values{},
+			expectedfvs: map[string]*pb.Variable_FinalValue{},
+			err:         "Invalid number",
+		},
+		{
+			name:        "null value for variable defined as boolean",
+			file:        "null_bool.hcl",
+			inputValues: []*pb.Variable{},
+			expected:    Values{},
+			expectedfvs: map[string]*pb.Variable_FinalValue{
+				"is_important_information_below": {
+					Value: &pb.Variable_FinalValue_Bool{Bool: false}, Source: pb.Variable_FinalValue_DEFAULT,
+				},
+			},
+			err: "",
+		},
 	}
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
