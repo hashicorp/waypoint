@@ -20,6 +20,10 @@
     "path": "azure-container-instance"
   },
   {
+    "title": "consul",
+    "path": "consul"
+  },
+  {
     "title": "docker",
     "path": "docker"
   },
