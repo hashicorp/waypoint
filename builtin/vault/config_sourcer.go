@@ -346,6 +346,18 @@ func (cs *ConfigSourcer) Documentation() (*docs.Documentation, error) {
 	doc.Description("Read configuration values from Vault.")
 
 	doc.Example(`
+# Setting an input variable dynamically with Vault
+variable "my_api_key" {
+  default = dynamic("vault", {
+    path = "secret/data/keys"
+    key  = "/data/my_api_key"
+  })
+  type        = string
+  sensitive   = true
+  description = "my api key from vault"
+}
+
+# Setting a dynamic variable for an environment variable
 config {
   env = {
     "DATABASE_USERNAME" = dynamic("vault", {
