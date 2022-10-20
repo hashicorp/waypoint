@@ -99,12 +99,12 @@ func (s *State) ProjectDelete(ctx context.Context, ref *pb.Ref_Project) error {
 				Application: app.Name,
 				Project:     project.Name,
 			}
-			if buildList, err := s.BuildList(appRef); err != nil {
+			if buildList, err := s.BuildList(ctx, appRef); err != nil {
 				return err
 			} else {
 				builds = append(builds, buildList...)
 			}
-			if artifactList, err := s.ArtifactList(appRef); err != nil {
+			if artifactList, err := s.ArtifactList(ctx, appRef); err != nil {
 				return err
 			} else {
 				artifacts = append(artifacts, artifactList...)
@@ -169,7 +169,7 @@ func (s *State) ProjectDelete(ctx context.Context, ref *pb.Ref_Project) error {
 			}
 		}
 
-		if pipelines, err = s.PipelineList(ref); err != nil {
+		if pipelines, err = s.PipelineList(ctx, ref); err != nil {
 			return err
 		}
 
