@@ -152,7 +152,7 @@ func TestServiceOnDemandRunnerConfig_GetOnDemandRunnerConfig(t *testing.T, facto
 
 	// Best way to mock for now is to make a request
 	resp, err := client.UpsertOnDemandRunnerConfig(ctx, &pb.UpsertOnDemandRunnerConfigRequest{
-		Config: serverptypes.TestOnDemandRunnerConfig(t, nil),
+		Config: serverptypes.TestOnDemandRunnerConfig(t, &pb.OnDemandRunnerConfig{Default: true}),
 	})
 
 	require.NoError(t, err)
