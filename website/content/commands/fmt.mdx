@@ -38,6 +38,7 @@ work for older and newer configuration formats.
 
 #### Command Options
 
-- `-write` - Overwrite the input file. If this is false, the formatted output will be written to STDOUT. This has no effect when formatting from STDIN. The default is true.
+- `-write` - Overwrite the input file. If this is false, the formatted output will be written to STDOUT. This has no effect when formatting from STDIN or when using the -check flag. The default is true.
+- `-check` - Check if the input is formatted. Exit status will be 0 if all input is properly formatted and exit status 3 otherwise. The default is false.
 
 @include "commands/fmt_more.mdx"
