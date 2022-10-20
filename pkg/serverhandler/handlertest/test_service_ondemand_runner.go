@@ -8,6 +8,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
+	empty "google.golang.org/protobuf/types/known/emptypb"
 
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	serverptypes "github.com/hashicorp/waypoint/pkg/server/ptypes"
@@ -156,6 +157,8 @@ func TestServiceOnDemandRunnerConfig_GetOnDemandRunnerConfig(t *testing.T, facto
 
 	require.NoError(t, err)
 
+	odr := resp.Config
+
 	// Simplify writing tests
 	type Req = pb.GetOnDemandRunnerConfigRequest
 
@@ -171,6 +174,17 @@ func TestServiceOnDemandRunnerConfig_GetOnDemandRunnerConfig(t *testing.T, facto
 		require.NoError(err)
 		require.NotNil(resp)
 		require.NotEmpty(resp.Config)
+	})
+
+	t.Run("get only default", func(t *testing.T) {
+		require := require.New(t)
+
+		// Get, should return a deployment
+		resp, err := client.GetDefaultOnDemandRunnerConfig(ctx, &empty.Empty{})
+		require.NoError(err)
+		require.NotNil(resp)
+		require.NotEmpty(resp.Config)
+		require.Equal(resp.Config.Id, odr.Id)
 	})
 
 	t.Run("get non-existing", func(t *testing.T) {
