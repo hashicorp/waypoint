@@ -258,6 +258,8 @@ type WaypointClient interface {
 	// GetOnDemandRunnerConfig returns the on-demand runner configuration.
 	GetOnDemandRunnerConfig(ctx context.Context, in *GetOnDemandRunnerConfigRequest, opts ...grpc.CallOption) (*GetOnDemandRunnerConfigResponse, error)
 	// GetOnDemandRunnerConfig returns the on-demand runner configuration.
+	GetDefaultOnDemandRunnerConfig(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*GetOnDemandRunnerConfigResponse, error)
+	// GetOnDemandRunnerConfig returns the on-demand runner configuration.
 	DeleteOnDemandRunnerConfig(ctx context.Context, in *DeleteOnDemandRunnerConfigRequest, opts ...grpc.CallOption) (*DeleteOnDemandRunnerConfigResponse, error)
 	// ListOnDemandRunnerConfigs returns a list of all the on-demand runners configs.
 	ListOnDemandRunnerConfigs(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*ListOnDemandRunnerConfigsResponse, error)
@@ -1254,6 +1256,15 @@ func (c *waypointClient) GetOnDemandRunnerConfig(ctx context.Context, in *GetOnD
 	return out, nil
 }
 
+func (c *waypointClient) GetDefaultOnDemandRunnerConfig(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*GetOnDemandRunnerConfigResponse, error) {
+	out := new(GetOnDemandRunnerConfigResponse)
+	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/GetDefaultOnDemandRunnerConfig", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *waypointClient) DeleteOnDemandRunnerConfig(ctx context.Context, in *DeleteOnDemandRunnerConfigRequest, opts ...grpc.CallOption) (*DeleteOnDemandRunnerConfigResponse, error) {
 	out := new(DeleteOnDemandRunnerConfigResponse)
 	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/DeleteOnDemandRunnerConfig", in, out, opts...)
@@ -1718,6 +1729,8 @@ type WaypointServer interface {
 	// GetOnDemandRunnerConfig returns the on-demand runner configuration.
 	GetOnDemandRunnerConfig(context.Context, *GetOnDemandRunnerConfigRequest) (*GetOnDemandRunnerConfigResponse, error)
 	// GetOnDemandRunnerConfig returns the on-demand runner configuration.
+	GetDefaultOnDemandRunnerConfig(context.Context, *emptypb.Empty) (*GetOnDemandRunnerConfigResponse, error)
+	// GetOnDemandRunnerConfig returns the on-demand runner configuration.
 	DeleteOnDemandRunnerConfig(context.Context, *DeleteOnDemandRunnerConfigRequest) (*DeleteOnDemandRunnerConfigResponse, error)
 	// ListOnDemandRunnerConfigs returns a list of all the on-demand runners configs.
 	ListOnDemandRunnerConfigs(context.Context, *emptypb.Empty) (*ListOnDemandRunnerConfigsResponse, error)
@@ -2018,6 +2031,9 @@ func (UnimplementedWaypointServer) UpsertOnDemandRunnerConfig(context.Context, *
 }
 func (UnimplementedWaypointServer) GetOnDemandRunnerConfig(context.Context, *GetOnDemandRunnerConfigRequest) (*GetOnDemandRunnerConfigResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetOnDemandRunnerConfig not implemented")
+}
+func (UnimplementedWaypointServer) GetDefaultOnDemandRunnerConfig(context.Context, *emptypb.Empty) (*GetOnDemandRunnerConfigResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetDefaultOnDemandRunnerConfig not implemented")
 }
 func (UnimplementedWaypointServer) DeleteOnDemandRunnerConfig(context.Context, *DeleteOnDemandRunnerConfigRequest) (*DeleteOnDemandRunnerConfigResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteOnDemandRunnerConfig not implemented")
@@ -3553,6 +3569,24 @@ func _Waypoint_GetOnDemandRunnerConfig_Handler(srv interface{}, ctx context.Cont
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Waypoint_GetDefaultOnDemandRunnerConfig_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(emptypb.Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(WaypointServer).GetDefaultOnDemandRunnerConfig(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/hashicorp.waypoint.Waypoint/GetDefaultOnDemandRunnerConfig",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(WaypointServer).GetDefaultOnDemandRunnerConfig(ctx, req.(*emptypb.Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Waypoint_DeleteOnDemandRunnerConfig_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(DeleteOnDemandRunnerConfigRequest)
 	if err := dec(in); err != nil {
@@ -4277,6 +4311,10 @@ var Waypoint_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetOnDemandRunnerConfig",
 			Handler:    _Waypoint_GetOnDemandRunnerConfig_Handler,
+		},
+		{
+			MethodName: "GetDefaultOnDemandRunnerConfig",
+			Handler:    _Waypoint_GetDefaultOnDemandRunnerConfig_Handler,
 		},
 		{
 			MethodName: "DeleteOnDemandRunnerConfig",

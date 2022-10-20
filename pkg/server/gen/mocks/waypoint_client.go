@@ -888,6 +888,36 @@ func (_m *WaypointClient) GetConfigSource(ctx context.Context, in *gen.GetConfig
 	return r0, r1
 }
 
+// GetDefaultOnDemandRunnerConfig provides a mock function with given fields: ctx, in, opts
+func (_m *WaypointClient) GetDefaultOnDemandRunnerConfig(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*gen.GetOnDemandRunnerConfigResponse, error) {
+	_va := make([]interface{}, len(opts))
+	for _i := range opts {
+		_va[_i] = opts[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx, in)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
+
+	var r0 *gen.GetOnDemandRunnerConfigResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *emptypb.Empty, ...grpc.CallOption) *gen.GetOnDemandRunnerConfigResponse); ok {
+		r0 = rf(ctx, in, opts...)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gen.GetOnDemandRunnerConfigResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *emptypb.Empty, ...grpc.CallOption) error); ok {
+		r1 = rf(ctx, in, opts...)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetDeployment provides a mock function with given fields: ctx, in, opts
 func (_m *WaypointClient) GetDeployment(ctx context.Context, in *gen.GetDeploymentRequest, opts ...grpc.CallOption) (*gen.Deployment, error) {
 	_va := make([]interface{}, len(opts))

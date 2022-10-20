@@ -355,6 +355,9 @@ service Waypoint {
   rpc GetOnDemandRunnerConfig(GetOnDemandRunnerConfigRequest) returns (GetOnDemandRunnerConfigResponse);
 
   // GetOnDemandRunnerConfig returns the on-demand runner configuration.
+  rpc GetDefaultOnDemandRunnerConfig(google.protobuf.Empty) returns (GetOnDemandRunnerConfigResponse);
+
+  // GetOnDemandRunnerConfig returns the on-demand runner configuration.
   rpc DeleteOnDemandRunnerConfig(DeleteOnDemandRunnerConfigRequest) returns (DeleteOnDemandRunnerConfigResponse);
 
   // ListOnDemandRunnerConfigs returns a list of all the on-demand runners configs.
