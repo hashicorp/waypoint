@@ -157,5 +157,5 @@ Usage: waypoint runner profile inspect <name>
 
   Show detailed information about a runner profile.
 
-`)
+` + c.Flags().Help())
 }
