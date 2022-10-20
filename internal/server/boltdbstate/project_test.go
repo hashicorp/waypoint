@@ -35,7 +35,7 @@ func TestProject(t *testing.T) {
 
 		// Create a build, artifact, deployment, release, trigger, workspace, and pipeline
 		// Set a config at the project and app scope
-		require.NoError(s.BuildPut(false, &pb.Build{
+		require.NoError(s.BuildPut(ctx, false, &pb.Build{
 			Id: "testBuild",
 			Application: &pb.Ref_Application{
 				Application: appName,
@@ -44,7 +44,7 @@ func TestProject(t *testing.T) {
 			Workspace: &pb.Ref_Workspace{Workspace: "default"},
 		}))
 
-		require.NoError(s.ArtifactPut(false, &pb.PushedArtifact{
+		require.NoError(s.ArtifactPut(ctx, false, &pb.PushedArtifact{
 			Id: "testArtifact",
 			Application: &pb.Ref_Application{
 				Application: appName,
@@ -112,7 +112,7 @@ func TestProject(t *testing.T) {
 			},
 		}))
 
-		require.NoError(s.PipelinePut(&pb.Pipeline{
+		require.NoError(s.PipelinePut(ctx, &pb.Pipeline{
 			Id:   "testPipeline",
 			Name: "testPipeline",
 			Owner: &pb.Pipeline_Project{
@@ -146,10 +146,10 @@ func TestProject(t *testing.T) {
 
 		// Verify that all builds, artifacts, deployments, releases, status reports,
 		// triggers, pipelines and workspaces were deleted, and that configs were unset
-		_, err = s.BuildGet(&pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testBuild"}})
+		_, err = s.BuildGet(ctx, &pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testBuild"}})
 		require.Error(err)
 
-		_, err = s.ArtifactGet(&pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testArtifact"}})
+		_, err = s.ArtifactGet(ctx, &pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testArtifact"}})
 		require.Error(err)
 
 		_, err = s.DeploymentGet(&pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testDeployment"}})
@@ -171,7 +171,7 @@ func TestProject(t *testing.T) {
 		_, err = s.TriggerGet(&pb.Ref_Trigger{Id: "testTrigger"})
 		require.Error(err)
 
-		_, err = s.PipelineGet(&pb.Ref_Pipeline{Ref: &pb.Ref_Pipeline_Owner{Owner: &pb.Ref_PipelineOwner{
+		_, err = s.PipelineGet(ctx, &pb.Ref_Pipeline{Ref: &pb.Ref_Pipeline_Owner{Owner: &pb.Ref_PipelineOwner{
 			Project:      &pb.Ref_Project{Project: projectName},
 			PipelineName: "testPipeline",
 		}}})
@@ -272,7 +272,7 @@ func TestProject(t *testing.T) {
 		require.NotNil(projectBeforeDelete)
 
 		// Create multiple builds for each app
-		require.NoError(s.BuildPut(false, &pb.Build{
+		require.NoError(s.BuildPut(ctx, false, &pb.Build{
 			Id:       "testBuild1App1",
 			Sequence: 1,
 			Application: &pb.Ref_Application{
@@ -282,7 +282,7 @@ func TestProject(t *testing.T) {
 			Workspace: &pb.Ref_Workspace{Workspace: "default"},
 		}))
 
-		require.NoError(s.BuildPut(false, &pb.Build{
+		require.NoError(s.BuildPut(ctx, false, &pb.Build{
 			Id:       "testBuild2App1",
 			Sequence: 2,
 			Application: &pb.Ref_Application{
@@ -292,7 +292,7 @@ func TestProject(t *testing.T) {
 			Workspace: &pb.Ref_Workspace{Workspace: "default"},
 		}))
 
-		require.NoError(s.BuildPut(false, &pb.Build{
+		require.NoError(s.BuildPut(ctx, false, &pb.Build{
 			Id: "testBuild1App2",
 			Application: &pb.Ref_Application{
 				Application: appName2,
@@ -301,7 +301,7 @@ func TestProject(t *testing.T) {
 			Workspace: &pb.Ref_Workspace{Workspace: "default"},
 		}))
 
-		require.NoError(s.BuildPut(false, &pb.Build{
+		require.NoError(s.BuildPut(ctx, false, &pb.Build{
 			Id: "testBuild2App2",
 			Application: &pb.Ref_Application{
 				Application: appName2,
@@ -311,7 +311,7 @@ func TestProject(t *testing.T) {
 		}))
 
 		// Create multiple artifacts for each app
-		require.NoError(s.ArtifactPut(false, &pb.PushedArtifact{
+		require.NoError(s.ArtifactPut(ctx, false, &pb.PushedArtifact{
 			Id: "testArtifact1",
 			Application: &pb.Ref_Application{
 				Application: appName1,
@@ -320,7 +320,7 @@ func TestProject(t *testing.T) {
 			Workspace: &pb.Ref_Workspace{Workspace: "default"},
 		}))
 
-		require.NoError(s.ArtifactPut(false, &pb.PushedArtifact{
+		require.NoError(s.ArtifactPut(ctx, false, &pb.PushedArtifact{
 			Id: "testArtifact2",
 			Application: &pb.Ref_Application{
 				Application: appName1,
@@ -329,7 +329,7 @@ func TestProject(t *testing.T) {
 			Workspace: &pb.Ref_Workspace{Workspace: "default"},
 		}))
 
-		require.NoError(s.ArtifactPut(false, &pb.PushedArtifact{
+		require.NoError(s.ArtifactPut(ctx, false, &pb.PushedArtifact{
 			Id: "testArtifact1",
 			Application: &pb.Ref_Application{
 				Application: appName2,
@@ -338,7 +338,7 @@ func TestProject(t *testing.T) {
 			Workspace: &pb.Ref_Workspace{Workspace: "default"},
 		}))
 
-		require.NoError(s.ArtifactPut(false, &pb.PushedArtifact{
+		require.NoError(s.ArtifactPut(ctx, false, &pb.PushedArtifact{
 			Id: "testArtifact2",
 			Application: &pb.Ref_Application{
 				Application: appName2,
@@ -466,28 +466,28 @@ func TestProject(t *testing.T) {
 		require.Error(err)
 
 		// Verify that all builds, artifacts, deployments, releases, and status reports were deleted with the project
-		_, err = s.BuildGet(&pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testBuild1App1"}})
+		_, err = s.BuildGet(ctx, &pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testBuild1App1"}})
 		require.Error(err)
 
-		_, err = s.BuildGet(&pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testBuild2App1"}})
+		_, err = s.BuildGet(ctx, &pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testBuild2App1"}})
 		require.Error(err)
 
-		_, err = s.BuildGet(&pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testBuild1App2"}})
+		_, err = s.BuildGet(ctx, &pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testBuild1App2"}})
 		require.Error(err)
 
-		_, err = s.BuildGet(&pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testBuild2App2"}})
+		_, err = s.BuildGet(ctx, &pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testBuild2App2"}})
 		require.Error(err)
 
-		_, err = s.ArtifactGet(&pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testArtifact1App1"}})
+		_, err = s.ArtifactGet(ctx, &pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testArtifact1App1"}})
 		require.Error(err)
 
-		_, err = s.ArtifactGet(&pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testArtifact2App1"}})
+		_, err = s.ArtifactGet(ctx, &pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testArtifact2App1"}})
 		require.Error(err)
 
-		_, err = s.ArtifactGet(&pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testArtifact1App2"}})
+		_, err = s.ArtifactGet(ctx, &pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testArtifact1App2"}})
 		require.Error(err)
 
-		_, err = s.ArtifactGet(&pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testArtifact2App2"}})
+		_, err = s.ArtifactGet(ctx, &pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testArtifact2App2"}})
 		require.Error(err)
 
 		_, err = s.DeploymentGet(&pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testDeployment1App1"}})
@@ -553,7 +553,7 @@ func TestProject(t *testing.T) {
 
 		// Create a build, artifact, deployment, release, trigger, workspace, and pipeline
 		// Set a config at the project and app scope
-		require.NoError(s.BuildPut(false, &pb.Build{
+		require.NoError(s.BuildPut(ctx, false, &pb.Build{
 			Id: "testBuild",
 			Application: &pb.Ref_Application{
 				Application: appName,
@@ -595,7 +595,7 @@ func TestProject(t *testing.T) {
 		require.NotNil(projectAfterReInit)
 
 		// Create new build after the project is re-initialized
-		require.NoError(s.BuildPut(false, &pb.Build{
+		require.NoError(s.BuildPut(ctx, false, &pb.Build{
 			Id: "testBuild1",
 			Application: &pb.Ref_Application{
 				Application: appName,
@@ -604,7 +604,7 @@ func TestProject(t *testing.T) {
 			Workspace: &pb.Ref_Workspace{Workspace: "default"},
 		}))
 
-		require.NoError(s.BuildPut(false, &pb.Build{
+		require.NoError(s.BuildPut(ctx, false, &pb.Build{
 			Id: "testBuild2",
 			Application: &pb.Ref_Application{
 				Application: appName,
@@ -613,7 +613,7 @@ func TestProject(t *testing.T) {
 			Workspace: &pb.Ref_Workspace{Workspace: "default"},
 		}))
 
-		require.NoError(s.BuildPut(false, &pb.Build{
+		require.NoError(s.BuildPut(ctx, false, &pb.Build{
 			Id: "testBuild3",
 			Application: &pb.Ref_Application{
 				Application: appName,
@@ -622,7 +622,7 @@ func TestProject(t *testing.T) {
 			Workspace: &pb.Ref_Workspace{Workspace: "default"},
 		}))
 
-		require.NoError(s.ArtifactPut(false, &pb.PushedArtifact{
+		require.NoError(s.ArtifactPut(ctx, false, &pb.PushedArtifact{
 			Id: "testArtifact1",
 			Application: &pb.Ref_Application{
 				Application: appName,
@@ -631,7 +631,7 @@ func TestProject(t *testing.T) {
 			Workspace: &pb.Ref_Workspace{Workspace: "default"},
 		}))
 
-		require.NoError(s.ArtifactPut(false, &pb.PushedArtifact{
+		require.NoError(s.ArtifactPut(ctx, false, &pb.PushedArtifact{
 			Id: "testArtifact2",
 			Application: &pb.Ref_Application{
 				Application: appName,
@@ -640,7 +640,7 @@ func TestProject(t *testing.T) {
 			Workspace: &pb.Ref_Workspace{Workspace: "default"},
 		}))
 
-		require.NoError(s.ArtifactPut(false, &pb.PushedArtifact{
+		require.NoError(s.ArtifactPut(ctx, false, &pb.PushedArtifact{
 			Id: "testArtifact3",
 			Application: &pb.Ref_Application{
 				Application: appName,
@@ -705,25 +705,25 @@ func TestProject(t *testing.T) {
 
 		// Verify that the app operation sequence is 1, since it is the 1st operation for the new (albeit
 		// re-initialized it was deleted) project
-		build1, err := s.BuildGet(&pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testBuild1"}})
+		build1, err := s.BuildGet(ctx, &pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testBuild1"}})
 		require.NoError(err)
 		require.Equal(1, int(build1.Sequence))
-		build2, err := s.BuildGet(&pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testBuild2"}})
+		build2, err := s.BuildGet(ctx, &pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testBuild2"}})
 		require.NoError(err)
 		require.Equal(2, int(build2.Sequence))
-		build3, err := s.BuildGet(&pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testBuild3"}})
+		build3, err := s.BuildGet(ctx, &pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testBuild3"}})
 		require.NoError(err)
 		require.Equal(3, int(build3.Sequence))
 
-		artifact1, err := s.ArtifactGet(&pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testArtifact1"}})
+		artifact1, err := s.ArtifactGet(ctx, &pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testArtifact1"}})
 		require.NoError(err)
 		require.Equal(1, int(artifact1.Sequence))
 
-		artifact2, err := s.ArtifactGet(&pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testArtifact2"}})
+		artifact2, err := s.ArtifactGet(ctx, &pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testArtifact2"}})
 		require.NoError(err)
 		require.Equal(2, int(artifact2.Sequence))
 
-		artifact3, err := s.ArtifactGet(&pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testArtifact3"}})
+		artifact3, err := s.ArtifactGet(ctx, &pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testArtifact3"}})
 		require.NoError(err)
 		require.Equal(3, int(artifact3.Sequence))
 
