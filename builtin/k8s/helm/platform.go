@@ -5,6 +5,7 @@ package helm
 
 import (
 	"context"
+	"fmt"
 	"strings"
 	"time"
 
@@ -72,6 +73,8 @@ func (p *Platform) Deploy(
 		return nil, err
 	}
 
+	log.Info("PrevRel: %#v", prevRel)
+
 	s.Update("Loading Helm chart...")
 	cpo, chartName, err := p.chartPathOptions()
 	if err != nil {
@@ -92,6 +95,7 @@ func (p *Platform) Deploy(
 		return nil, err
 	}
 
+	log.Info(fmt.Sprintf("for britt: p.config.Namespace = '%#v'", p.config.Namespace))
 	if p.config.Namespace == "" {
 		// default the namespace to "default"
 		p.config.Namespace = "default"
@@ -126,6 +130,8 @@ func (p *Platform) Deploy(
 		client.Replace = false
 		client.Description = ""
 		client.CreateNamespace = p.config.CreateNamespace
+
+		log.Info("install client: %#v", client)
 
 		s.Update("Installing Chart...")
 		rel, err := client.Run(c, values)
@@ -162,6 +168,8 @@ func (p *Platform) Deploy(
 	client.MaxHistory = 0
 	client.CleanupOnFail = false
 	client.Force = false
+
+	log.Info("upgrade client: %#v", client)
 
 	s.Update("Upgrading release...")
 	rel, err := client.Run(prevRel.Name, c, values)
