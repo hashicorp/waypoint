@@ -1,6 +1,7 @@
 package boltdbstate
 
 import (
+	"context"
 	"math/rand"
 	"strconv"
 	"testing"
@@ -14,6 +15,7 @@ import (
 )
 
 func TestBuild(t *testing.T) {
+	ctx := context.Background()
 	buildOp.Test(t)
 
 	t.Run("basic put and get", func(t *testing.T) {
@@ -23,12 +25,12 @@ func TestBuild(t *testing.T) {
 		defer s.Close()
 
 		// Create a build
-		require.NoError(s.BuildPut(false, serverptypes.TestValidBuild(t, &pb.Build{
+		require.NoError(s.BuildPut(ctx, false, serverptypes.TestValidBuild(t, &pb.Build{
 			Id: "A",
 		})))
 
 		// Read it back
-		b, err := s.BuildGet(appOpById("A"))
+		b, err := s.BuildGet(ctx, appOpById("A"))
 		require.NoError(err)
 		require.NotNil(b.Application)
 		require.Equal("A", b.Id)
@@ -56,7 +58,7 @@ func TestBuild(t *testing.T) {
 		for _, ts := range times {
 			pt := timestamppb.New(ts)
 
-			require.NoError(s.BuildPut(false, serverptypes.TestValidBuild(t, &pb.Build{
+			require.NoError(s.BuildPut(ctx, false, serverptypes.TestValidBuild(t, &pb.Build{
 				Id: strconv.FormatInt(ts.Unix(), 10),
 				Application: &pb.Ref_Application{
 					Application: "a_test",
@@ -77,12 +79,12 @@ func TestBuild(t *testing.T) {
 		}
 
 		// Get the latest
-		b, err := s.BuildLatest(ref, nil)
+		b, err := s.BuildLatest(ctx, ref, nil)
 		require.NoError(err)
 		require.Equal(strconv.FormatInt(latest.Unix(), 10), b.Id)
 
 		// Try listing
-		builds, err := s.BuildList(ref)
+		builds, err := s.BuildList(ctx, ref)
 		require.NoError(err)
 		require.Len(builds, len(times))
 
@@ -113,7 +115,7 @@ func TestBuild(t *testing.T) {
 		ts := time.Now().Add(5 * time.Hour)
 		pt := timestamppb.New(ts)
 
-		require.NoError(s.BuildPut(false, serverptypes.TestValidBuild(t, &pb.Build{
+		require.NoError(s.BuildPut(ctx, false, serverptypes.TestValidBuild(t, &pb.Build{
 			Id:          strconv.FormatInt(ts.Unix(), 10),
 			Application: ref,
 			Status: &pb.Status{
@@ -123,7 +125,7 @@ func TestBuild(t *testing.T) {
 		})))
 
 		// Get the latest
-		b, err := s.BuildLatest(ref, nil)
+		b, err := s.BuildLatest(ctx, ref, nil)
 		require.Error(err)
 		require.Nil(b)
 	})

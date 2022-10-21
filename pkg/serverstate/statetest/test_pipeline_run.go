@@ -34,13 +34,13 @@ func TestPipelineRun(t *testing.T, factory Factory, restartF RestartFactory) {
 
 		// Set Pipeline
 		p := ptypes.TestPipeline(t, nil)
-		err := s.PipelinePut(p)
+		err := s.PipelinePut(ctx, p)
 		require.NoError(err)
 		pipeline := &pb.Ref_Pipeline{Ref: &pb.Ref_Pipeline_Id{Id: p.Id}}
 
 		// Set Pipeline Run
 		r := ptypes.TestPipelineRun(t, &pb.PipelineRun{Pipeline: pipeline})
-		err = s.PipelineRunPut(r)
+		err = s.PipelineRunPut(ctx, r)
 		require.NoError(err)
 
 		// We manually add job ids to a PipelineRun over in RunPipeline, so this
@@ -57,12 +57,12 @@ func TestPipelineRun(t *testing.T, factory Factory, restartF RestartFactory) {
 
 			r.Jobs = append(r.Jobs, &pb.Ref_Job{Id: string(is)})
 		}
-		err = s.PipelineRunPut(r)
+		err = s.PipelineRunPut(ctx, r)
 		require.NoError(err)
 
 		// Get run by pipeline and sequence
 		{
-			resp, err := s.PipelineRunGet(pipeline, 1)
+			resp, err := s.PipelineRunGet(ctx, pipeline, 1)
 			require.NoError(err)
 			require.NotNil(resp)
 			require.Equal(r.Id, resp.Id)
@@ -76,7 +76,7 @@ func TestPipelineRun(t *testing.T, factory Factory, restartF RestartFactory) {
 
 		// Get run by Id
 		{
-			resp, err := s.PipelineRunGetById(r.Id)
+			resp, err := s.PipelineRunGetById(ctx, r.Id)
 			require.NoError(err)
 			require.NotNil(resp)
 			require.Equal(r.Id, resp.Id)
@@ -86,12 +86,12 @@ func TestPipelineRun(t *testing.T, factory Factory, restartF RestartFactory) {
 		// Set another pipeline run
 		r2 := ptypes.TestPipelineRun(t, &pb.PipelineRun{Pipeline: pipeline})
 		r2.Id = "ypr2"
-		err = s.PipelineRunPut(r2)
+		err = s.PipelineRunPut(ctx, r2)
 		require.NoError(err)
 
 		// Get run by pipeline and sequence, should auto increment
 		{
-			resp, err := s.PipelineRunGet(pipeline, 2)
+			resp, err := s.PipelineRunGet(ctx, pipeline, 2)
 			require.NoError(err)
 			require.NotNil(resp)
 			require.Equal(r2.Id, resp.Id)
@@ -101,12 +101,12 @@ func TestPipelineRun(t *testing.T, factory Factory, restartF RestartFactory) {
 		// Set another pipeline run
 		r3 := ptypes.TestPipelineRun(t, &pb.PipelineRun{Pipeline: pipeline})
 		r3.Id = "pr3"
-		err = s.PipelineRunPut(r3)
+		err = s.PipelineRunPut(ctx, r3)
 		require.NoError(err)
 
 		// Get latest run by pipeline ID
 		{
-			resp, err := s.PipelineRunGetLatest(pipeline.Ref.(*pb.Ref_Pipeline_Id).Id)
+			resp, err := s.PipelineRunGetLatest(ctx, pipeline.Ref.(*pb.Ref_Pipeline_Id).Id)
 			require.NoError(err)
 			require.NotNil(resp)
 			require.Equal(r3.Id, resp.Id)
@@ -115,7 +115,7 @@ func TestPipelineRun(t *testing.T, factory Factory, restartF RestartFactory) {
 
 		// Get run by pipeline and sequence, should auto increment
 		{
-			resp, err := s.PipelineRunGet(pipeline, 3)
+			resp, err := s.PipelineRunGet(ctx, pipeline, 3)
 			require.NoError(err)
 			require.NotNil(resp)
 			require.Equal(r3.Id, resp.Id)
@@ -137,7 +137,7 @@ func TestPipelineRun(t *testing.T, factory Factory, restartF RestartFactory) {
 
 		// Set Pipeline
 		p := ptypes.TestPipeline(t, nil)
-		err := s.PipelinePut(p)
+		err := s.PipelinePut(ctx, p)
 		require.NoError(err)
 		pipeline := &pb.Ref_Pipeline{Ref: &pb.Ref_Pipeline_Id{Id: p.Id}}
 
@@ -148,12 +148,12 @@ func TestPipelineRun(t *testing.T, factory Factory, restartF RestartFactory) {
 			Sequence: 1,
 		}
 		r := ptypes.TestPipelineRun(t, pr)
-		err = s.PipelineRunPut(r)
+		err = s.PipelineRunPut(ctx, r)
 		require.NoError(err)
 
 		// Get latest run by pipeline
 		{
-			resp, err := s.PipelineRunGetLatest(pipeline.Ref.(*pb.Ref_Pipeline_Id).Id)
+			resp, err := s.PipelineRunGetLatest(ctx, pipeline.Ref.(*pb.Ref_Pipeline_Id).Id)
 			require.NoError(err)
 			require.NotNil(resp)
 			require.Equal(r.Id, resp.Id)
@@ -163,12 +163,12 @@ func TestPipelineRun(t *testing.T, factory Factory, restartF RestartFactory) {
 
 		// Update existing pipeline run
 		r.State = pb.PipelineRun_ERROR
-		err = s.PipelineRunPut(r)
+		err = s.PipelineRunPut(ctx, r)
 		require.NoError(err)
 
 		// Get pipeline run, ID and sequence should not change
 		{
-			resp, err := s.PipelineRunGetLatest(pipeline.Ref.(*pb.Ref_Pipeline_Id).Id)
+			resp, err := s.PipelineRunGetLatest(ctx, pipeline.Ref.(*pb.Ref_Pipeline_Id).Id)
 			require.NoError(err)
 			require.NotNil(resp)
 			require.Equal(r.Id, resp.Id)
@@ -191,29 +191,29 @@ func TestPipelineRun(t *testing.T, factory Factory, restartF RestartFactory) {
 
 		// Set Pipeline
 		p := ptypes.TestPipeline(t, nil)
-		err := s.PipelinePut(p)
+		err := s.PipelinePut(ctx, p)
 		require.NoError(err)
 
 		pipeline := &pb.Ref_Pipeline{Ref: &pb.Ref_Pipeline_Id{Id: p.Id}}
 
 		// Set Pipeline Run
 		r := ptypes.TestPipelineRun(t, &pb.PipelineRun{Id: "test1", Pipeline: pipeline})
-		err = s.PipelineRunPut(r)
+		err = s.PipelineRunPut(ctx, r)
 		require.NoError(err)
 
 		// Set Another Pipeline Run
 		r2 := ptypes.TestPipelineRun(t, &pb.PipelineRun{Id: "test2", Pipeline: pipeline})
-		err = s.PipelineRunPut(r2)
+		err = s.PipelineRunPut(ctx, r2)
 		require.NoError(err)
 
 		// Set Another Pipeline Run
 		r3 := ptypes.TestPipelineRun(t, &pb.PipelineRun{Id: "test3", Pipeline: pipeline})
-		err = s.PipelineRunPut(r3)
+		err = s.PipelineRunPut(ctx, r3)
 		require.NoError(err)
 
 		// List all runs, check that sequence increments
 		{
-			resp, err := s.PipelineRunList(pipeline)
+			resp, err := s.PipelineRunList(ctx, pipeline)
 			require.NoError(err)
 			require.NotNil(resp)
 			require.Len(resp, 3)
