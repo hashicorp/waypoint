@@ -2541,12 +2541,16 @@ func TestJobUpdateRef(t *testing.T, factory Factory, rf RestartFactory) {
 		// Watch should block
 		require.True(ws.Watch(time.After(10 * time.Millisecond)))
 
+		inRef := &pb.Job_Git_Ref{
+			Commit:        "6ef6d5070f5d5371e9b347731bd7184e22e44f9f",
+			CommitMessage: "Initial commit, working on mappers based on reflection",
+			Timestamp:     timestamppb.New(time.Unix(1580271408, 0)),
+		}
+
 		// Update the ref
 		require.NoError(s.JobUpdateRef(job.Id, &pb.Job_DataSource_Ref{
 			Ref: &pb.Job_DataSource_Ref_Git{
-				Git: &pb.Job_Git_Ref{
-					Commit: "hello",
-				},
+				Git: inRef,
 			},
 		}))
 
@@ -2559,8 +2563,10 @@ func TestJobUpdateRef(t *testing.T, factory Factory, rf RestartFactory) {
 		require.NoError(err)
 		require.NotNil(job.DataSourceRef)
 
-		ref := job.DataSourceRef.Ref.(*pb.Job_DataSource_Ref_Git).Git
-		require.Equal(ref.Commit, "hello")
+		outRef := job.DataSourceRef.Ref.(*pb.Job_DataSource_Ref_Git).Git
+		require.Equal(inRef.Commit, outRef.Commit)
+		require.Equal(inRef.CommitMessage, outRef.CommitMessage)
+		require.Equal(inRef.Timestamp.AsTime(), outRef.Timestamp.AsTime())
 	})
 }
 
