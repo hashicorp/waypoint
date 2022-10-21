@@ -18,7 +18,9 @@ import (
 )
 
 func (p *Platform) settingsInit() (*cli.EnvSettings, error) {
-	return cli.New(), nil
+	cli := cli.New()
+	cli.SetNamespace(p.config.Namespace)
+	return cli, nil
 }
 
 func (p *Platform) actionInit(log hclog.Logger) (*action.Configuration, error) {
