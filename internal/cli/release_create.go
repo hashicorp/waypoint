@@ -182,18 +182,6 @@ func (c *ReleaseCreateCommand) Run(args []string) int {
 		tbl := fmtVariablesOutput(resp.VariableFinalValues)
 		c.ui.Table(tbl)
 
-		// Status Report
-		app.UI.Output("")
-		_, err = app.StatusReport(ctx, &pb.Job_StatusReportOp{
-			Target: &pb.Job_StatusReportOp_Release{
-				Release: result.Release,
-			},
-		})
-		if err != nil {
-			app.UI.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
-			return ErrSentinel
-		}
-
 		if result.Release.Url == "" {
 			app.UI.Output("\n"+strings.TrimSpace(releaseNoUrl),
 				deploy.Id,
