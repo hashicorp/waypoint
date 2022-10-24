@@ -265,8 +265,8 @@ func (c *PipelineRunCommand) Run(args []string) int {
 		// push the deploy/release URLs off the top of the terminal.
 		// We also use the deploy result and not the release result,
 		// because the data will be the same and this is the deployment command.
+		app.UI.Output("Pipeline %q Run v%d Complete", pipelineIdent, runSeq, terminal.WithHeaderStyle())
 		app.UI.Output("")
-		app.UI.Output("Pipeline %q Run %q Complete", pipelineIdent, runSeq, terminal.WithHeaderStyle())
 		tbl := fmtVariablesOutput(finalVariableValues)
 		c.ui.Table(tbl)
 
