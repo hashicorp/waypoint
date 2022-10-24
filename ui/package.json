@@ -119,7 +119,7 @@
     "qunit-dom": "^2.0.0",
     "sass": "^1.54.9",
     "typescript": "^4.8.3",
-    "ua-parser-js": "^0.7.24",
+    "ua-parser-js": "^1.0.32",
     "webpack": "^5.74.0",
     "webpack-bundle-analyzer": "^3.8.0",
     "xterm": "^4.16.0",
