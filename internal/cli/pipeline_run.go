@@ -3,6 +3,7 @@ package cli
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/posener/complete"
 
@@ -190,6 +191,13 @@ func (c *PipelineRunCommand) Run(args []string) int {
 		step.Update("%d steps detected, run sequence %d", steps, runSeq)
 		step.Done()
 
+		var (
+			deployUrl           string
+			releaseUrl          string
+			inplaceDeploy       bool
+			finalVariableValues map[string]*pb.Variable_FinalValue
+		)
+
 		successful := steps
 		for _, jobId := range allRunJobs {
 			job, err := c.project.Client().GetJob(c.Ctx, &pb.GetJobRequest{
@@ -232,7 +240,35 @@ func (c *PipelineRunCommand) Run(args []string) int {
 			if job.State != pb.Job_SUCCESS {
 				successful--
 			}
+
+			// Grab the deployment or release URL to display at the end of the pipeline run
+			if job.Result.Up != nil {
+				deployUrl = job.Result.Up.DeployUrl
+				releaseUrl = job.Result.Up.ReleaseUrl
+			} else if job.Result.Deploy != nil && job.Result.Deploy.Deployment.Preload != nil {
+				deployUrl = job.Result.Deploy.Deployment.Preload.DeployUrl
+
+				// inplace is true if this was an in-place deploy. We detect this
+				// if we have a generation that uses a non-matching sequence number
+				inplaceDeploy = job.Result.Deploy.Deployment.Generation != nil &&
+					job.Result.Deploy.Deployment.Generation.Id != "" &&
+					job.Result.Deploy.Deployment.Generation.InitialSequence != job.Result.Deploy.Deployment.Sequence
+			} else if job.Result.Release != nil {
+				releaseUrl = job.Result.Release.Release.Url
+			}
+
+			finalVariableValues = job.VariableFinalValues
 		}
+
+		// Show input variable values used in build
+		// We do this here so that if the list is long, it doesn't
+		// push the deploy/release URLs off the top of the terminal.
+		// We also use the deploy result and not the release result,
+		// because the data will be the same and this is the deployment command.
+		app.UI.Output("Pipeline %q Run v%d Complete", pipelineIdent, runSeq, terminal.WithHeaderStyle())
+		app.UI.Output("")
+		tbl := fmtVariablesOutput(finalVariableValues)
+		c.ui.Table(tbl)
 
 		output := fmt.Sprintf("Pipeline %q (%s) finished! %d/%d steps successfully completed.", pipelineIdent, app.Ref().Project, successful, steps)
 		if successful == 0 {
@@ -241,6 +277,44 @@ func (c *PipelineRunCommand) Run(args []string) int {
 			app.UI.Output("● %s", output, terminal.WithWarningStyle())
 		} else {
 			app.UI.Output("✔ %s", output, terminal.WithSuccessStyle())
+		}
+
+		// Try to get the hostname
+		var hostname *pb.Hostname
+		hostnamesResp, err := c.project.Client().ListHostnames(ctx, &pb.ListHostnamesRequest{
+			Target: &pb.Hostname_Target{
+				Target: &pb.Hostname_Target_Application{
+					Application: &pb.Hostname_TargetApp{
+						Application: app.Ref(),
+						Workspace:   c.project.WorkspaceRef(),
+					},
+				},
+			},
+		})
+		if err == nil && len(hostnamesResp.Hostnames) > 0 {
+			hostname = hostnamesResp.Hostnames[0]
+		}
+
+		// Output app URL
+		app.UI.Output("")
+		switch {
+		case releaseUrl != "":
+			printInplaceInfo(inplaceDeploy, app)
+			app.UI.Output("   Release URL: %s", releaseUrl, terminal.WithSuccessStyle())
+			if deployUrl != "" {
+				app.UI.Output("Deployment URL: https://%s", deployUrl, terminal.WithSuccessStyle())
+			} else {
+				app.UI.Output(strings.TrimSpace(deployNoURL)+"\n", terminal.WithSuccessStyle())
+			}
+		case hostname != nil:
+			printInplaceInfo(inplaceDeploy, app)
+			app.UI.Output("           URL: https://%s", hostname.Fqdn, terminal.WithSuccessStyle())
+			app.UI.Output("Deployment URL: https://%s", deployUrl, terminal.WithSuccessStyle())
+		case deployUrl != "":
+			printInplaceInfo(inplaceDeploy, app)
+			app.UI.Output("Deployment URL: https://%s", deployUrl, terminal.WithSuccessStyle())
+		default:
+			app.UI.Output(strings.TrimSpace(deployNoURL)+"\n", terminal.WithSuccessStyle())
 		}
 
 		return nil
