@@ -125,9 +125,10 @@ func (c *PipelineRunCommand) Run(args []string) int {
 		step.Done()
 
 		var (
-			deployUrl     string
-			releaseUrl    string
-			inplaceDeploy bool
+			deployUrl           string
+			releaseUrl          string
+			inplaceDeploy       bool
+			finalVariableValues map[string]*pb.Variable_FinalValue
 		)
 
 		successful := steps
@@ -173,8 +174,8 @@ func (c *PipelineRunCommand) Run(args []string) int {
 
 			// Grab the deployment or release URL to display at the end of the pipeline run
 			if job.Result.Up != nil {
-				deployUrl := job.Result.Up.DeployUrl
-				relesaeUrl := job.Result.Up.ReleaseUrl
+				deployUrl = job.Result.Up.DeployUrl
+				releaseUrl = job.Result.Up.ReleaseUrl
 			} else if job.Result.Deploy != nil && job.Result.Deploy.Deployment.Preload != nil {
 				deployUrl = job.Result.Deploy.Deployment.Preload.DeployUrl
 
@@ -186,7 +187,19 @@ func (c *PipelineRunCommand) Run(args []string) int {
 			} else if job.Result.Release != nil {
 				releaseUrl = job.Result.Release.Release.Url
 			}
+
+			finalVariableValues = job.VariableFinalValues
 		}
+
+		// Show input variable values used in build
+		// We do this here so that if the list is long, it doesn't
+		// push the deploy/release URLs off the top of the terminal.
+		// We also use the deploy result and not the release result,
+		// because the data will be the same and this is the deployment command.
+		app.UI.Output("")
+		app.UI.Output("Pipeline %q Run %q Complete", pipelineIdent, runSeq, terminal.WithHeaderStyle())
+		tbl := fmtVariablesOutput(finalVariableValues)
+		c.ui.Table(tbl)
 
 		output := fmt.Sprintf("Pipeline %q (%s) finished! %d/%d steps successfully completed.", pipelineIdent, app.Ref().Project, successful, steps)
 		if successful == 0 {
