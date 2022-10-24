@@ -29,7 +29,7 @@
     "@ember/optional-features": "^2.0.0",
     "@ember/render-modifiers": "^2.0.2",
     "@ember/test-helpers": "^2.6.0",
-    "@glimmer/component": "^1.0.4",
+    "@glimmer/component": "^1.1.2",
     "@glimmer/tracking": "^1.0.4",
     "@hashicorp/pds-ember": "^0.6.3",
     "@hashicorp/structure-icons": "^1.9.0-0",
