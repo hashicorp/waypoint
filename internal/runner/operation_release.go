@@ -211,5 +211,11 @@ func (r *Runner) executeReleaseOp(
 		}
 	}
 
+	// Run a status report operation on the recent release
+	_, err = app.ReleaseStatusReport(ctx, release)
+	if err != nil {
+		return nil, err
+	}
+
 	return result, nil
 }
