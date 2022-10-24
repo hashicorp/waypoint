@@ -1,0 +1,3 @@
+```release-note:bug
+cli: Remove automatic uppercasing of ids, so that future runner profiles will match
+```
