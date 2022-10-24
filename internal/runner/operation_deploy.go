@@ -52,6 +52,12 @@ func (r *Runner) executeDeployOp(
 		return nil, err
 	}
 
+	// Run a status report on the recent deployment
+	_, err = app.DeploymentStatusReport(ctx, deployment)
+	if err != nil {
+		return nil, err
+	}
+
 	return &pb.Job_Result{
 		Deploy: &pb.Job_DeployResult{
 			Deployment: deployment,
