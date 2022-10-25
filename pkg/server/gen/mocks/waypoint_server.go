@@ -647,6 +647,29 @@ func (_m *WaypointServer) GetConfigSource(_a0 context.Context, _a1 *gen.GetConfi
 	return r0, r1
 }
 
+// GetDefaultOnDemandRunnerConfig provides a mock function with given fields: _a0, _a1
+func (_m *WaypointServer) GetDefaultOnDemandRunnerConfig(_a0 context.Context, _a1 *emptypb.Empty) (*gen.GetOnDemandRunnerConfigResponse, error) {
+	ret := _m.Called(_a0, _a1)
+
+	var r0 *gen.GetOnDemandRunnerConfigResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *emptypb.Empty) *gen.GetOnDemandRunnerConfigResponse); ok {
+		r0 = rf(_a0, _a1)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gen.GetOnDemandRunnerConfigResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *emptypb.Empty) error); ok {
+		r1 = rf(_a0, _a1)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetDeployment provides a mock function with given fields: _a0, _a1
 func (_m *WaypointServer) GetDeployment(_a0 context.Context, _a1 *gen.GetDeploymentRequest) (*gen.Deployment, error) {
 	ret := _m.Called(_a0, _a1)

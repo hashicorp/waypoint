@@ -53,6 +53,36 @@ func (s *Service) GetOnDemandRunnerConfig(
 	}, nil
 }
 
+func (s *Service) GetDefaultOnDemandRunnerConfig(
+	ctx context.Context,
+	req *empty.Empty,
+) (*pb.GetOnDemandRunnerConfigResponse, error) {
+	log := hclog.FromContext(ctx)
+
+	results, err := s.state(ctx).OnDemandRunnerConfigDefault()
+	if err != nil {
+		return nil, hcerr.Externalize(log, err, "failed to get default on-demand runner config")
+	}
+
+	var result *pb.OnDemandRunnerConfig
+	if len(results) > 0 {
+		// NOTE(briancain): we only ever care about the *First* default runner profile,
+		// because we've set ODR profiles to only ever allow for ONE default. The fact
+		// that the state version returns a slice is an artifact of when it was first
+		// implemented and you could have multiple defaults.
+		odr := results[0]
+
+		result, err = s.state(ctx).OnDemandRunnerConfigGet(odr)
+		if err != nil {
+			return nil, hcerr.Externalize(log, err, "failed to get on-demand runner config", "id", odr.Id, "name", odr.Name)
+		}
+	}
+
+	return &pb.GetOnDemandRunnerConfigResponse{
+		Config: result,
+	}, nil
+}
+
 func (s *Service) ListOnDemandRunnerConfigs(
 	ctx context.Context,
 	req *empty.Empty,
