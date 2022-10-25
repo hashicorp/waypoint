@@ -1,0 +1,4 @@
+```release-note:improvement
+cli: Update `waypoint runner profile inspect` to show default runner profile
+if no name argument supplied.
+```
