@@ -285,14 +285,14 @@ func (c *RunnerInstallCommand) Run(args []string) int {
 
 		// Creating a new runner profile for the newly adopted runner
 		var odrConfig *pb.OnDemandRunnerConfig
-		s = sg.Add("Creating runner profile and targeting runner %s", strings.ToUpper(id))
+		s = sg.Add("Creating runner profile and targeting runner %s", id)
 		if odc, ok := p.(installutil.OnDemandRunnerConfigProvider); ok {
 			odrConfig = odc.OnDemandRunnerConfig()
-			odrConfig.Name = odrConfig.Name + "-" + strings.ToUpper(id)
+			odrConfig.Name = odrConfig.Name + "-" + id
 			odrConfig.OciUrl = c.runnerProfileOdrImage // Use what we got from flags (or the default)
 		} else {
 			odrConfig = &pb.OnDemandRunnerConfig{
-				Name:       platform[0] + "-" + strings.ToUpper(id),
+				Name:       platform[0] + "-" + id,
 				OciUrl:     c.runnerProfileOdrImage,
 				PluginType: platform[0],
 			}
@@ -308,9 +308,7 @@ func (c *RunnerInstallCommand) Run(args []string) int {
 		} else {
 			odrConfig.TargetRunner = &pb.Ref_Runner{
 				Target: &pb.Ref_Runner_Id{
-					Id: &pb.Ref_RunnerId{
-						Id: strings.ToUpper(id),
-					},
+					Id: &pb.Ref_RunnerId{Id: id},
 				},
 			}
 		}
