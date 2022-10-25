@@ -1,6 +1,7 @@
 package statetest
 
 import (
+	"context"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -21,6 +22,7 @@ func init() {
 }
 
 func TestWorkspace(t *testing.T, factory Factory, restartF RestartFactory) {
+	ctx := context.Background()
 	t.Run("List is empty by default", func(t *testing.T) {
 		require := require.New(t)
 
@@ -39,13 +41,13 @@ func TestWorkspace(t *testing.T, factory Factory, restartF RestartFactory) {
 		defer s.Close()
 
 		// Create a build
-		require.NoError(s.BuildPut(false, serverptypes.TestValidBuild(t, &pb.Build{
+		require.NoError(s.BuildPut(ctx, false, serverptypes.TestValidBuild(t, &pb.Build{
 			Id: "1",
 		})))
-		require.NoError(s.BuildPut(false, serverptypes.TestValidBuild(t, &pb.Build{
+		require.NoError(s.BuildPut(ctx, false, serverptypes.TestValidBuild(t, &pb.Build{
 			Id: "2",
 		})))
-		require.NoError(s.BuildPut(false, serverptypes.TestValidBuild(t, &pb.Build{
+		require.NoError(s.BuildPut(ctx, false, serverptypes.TestValidBuild(t, &pb.Build{
 			Id: "3",
 			Application: &pb.Ref_Application{
 				Application: "B",
@@ -71,7 +73,7 @@ func TestWorkspace(t *testing.T, factory Factory, restartF RestartFactory) {
 		}
 
 		// Create a new workspace
-		require.NoError(s.BuildPut(false, serverptypes.TestValidBuild(t, &pb.Build{
+		require.NoError(s.BuildPut(ctx, false, serverptypes.TestValidBuild(t, &pb.Build{
 			Id: "4",
 			Workspace: &pb.Ref_Workspace{
 				Workspace: "w2",
@@ -233,6 +235,7 @@ func TestWorkspacePut(t *testing.T, factory Factory, _ RestartFactory) {
 }
 
 func TestWorkspaceProject(t *testing.T, factory Factory, restartF RestartFactory) {
+	ctx := context.Background()
 	t.Run("List non-empty", func(t *testing.T) {
 		require := require.New(t)
 
@@ -240,13 +243,13 @@ func TestWorkspaceProject(t *testing.T, factory Factory, restartF RestartFactory
 		defer s.Close()
 
 		// Create a build
-		require.NoError(s.BuildPut(false, serverptypes.TestValidBuild(t, &pb.Build{
+		require.NoError(s.BuildPut(ctx, false, serverptypes.TestValidBuild(t, &pb.Build{
 			Id: "1",
 		})))
-		require.NoError(s.BuildPut(false, serverptypes.TestValidBuild(t, &pb.Build{
+		require.NoError(s.BuildPut(ctx, false, serverptypes.TestValidBuild(t, &pb.Build{
 			Id: "2",
 		})))
-		require.NoError(s.BuildPut(false, serverptypes.TestValidBuild(t, &pb.Build{
+		require.NoError(s.BuildPut(ctx, false, serverptypes.TestValidBuild(t, &pb.Build{
 			Id: "3",
 			Application: &pb.Ref_Application{
 				Application: "B",
@@ -271,7 +274,7 @@ func TestWorkspaceProject(t *testing.T, factory Factory, restartF RestartFactory
 		}
 
 		// Create a new workspace
-		require.NoError(s.BuildPut(false, serverptypes.TestValidBuild(t, &pb.Build{
+		require.NoError(s.BuildPut(ctx, false, serverptypes.TestValidBuild(t, &pb.Build{
 			Id: "4",
 			Application: &pb.Ref_Application{
 				Application: "B",
@@ -292,6 +295,7 @@ func TestWorkspaceProject(t *testing.T, factory Factory, restartF RestartFactory
 }
 
 func TestWorkspaceApp(t *testing.T, factory Factory, restartF RestartFactory) {
+	ctx := context.Background()
 	t.Run("List non-empty", func(t *testing.T) {
 		require := require.New(t)
 
@@ -299,17 +303,17 @@ func TestWorkspaceApp(t *testing.T, factory Factory, restartF RestartFactory) {
 		defer s.Close()
 
 		// Create a build
-		require.NoError(s.BuildPut(false, serverptypes.TestValidBuild(t, &pb.Build{
+		require.NoError(s.BuildPut(ctx, false, serverptypes.TestValidBuild(t, &pb.Build{
 			Id: "1",
 		})))
-		require.NoError(s.BuildPut(false, serverptypes.TestValidBuild(t, &pb.Build{
+		require.NoError(s.BuildPut(ctx, false, serverptypes.TestValidBuild(t, &pb.Build{
 			Id: "2",
 			Application: &pb.Ref_Application{
 				Application: "B",
 				Project:     "A",
 			},
 		})))
-		require.NoError(s.BuildPut(false, serverptypes.TestValidBuild(t, &pb.Build{
+		require.NoError(s.BuildPut(ctx, false, serverptypes.TestValidBuild(t, &pb.Build{
 			Id: "3",
 			Application: &pb.Ref_Application{
 				Application: "B",

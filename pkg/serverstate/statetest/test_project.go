@@ -751,19 +751,19 @@ func TestProjectListWorkspaces(t *testing.T, factory Factory, restartF RestartFa
 		defer s.Close()
 
 		// Create a build
-		require.NoError(s.BuildPut(false, serverptypes.TestValidBuild(t, &pb.Build{
+		require.NoError(s.BuildPut(ctx, false, serverptypes.TestValidBuild(t, &pb.Build{
 			Id: "1",
 			Workspace: &pb.Ref_Workspace{
 				Workspace: "A",
 			},
 		})))
-		require.NoError(s.BuildPut(false, serverptypes.TestValidBuild(t, &pb.Build{
+		require.NoError(s.BuildPut(ctx, false, serverptypes.TestValidBuild(t, &pb.Build{
 			Id: "2",
 			Workspace: &pb.Ref_Workspace{
 				Workspace: "B",
 			},
 		})))
-		require.NoError(s.BuildPut(false, serverptypes.TestValidBuild(t, &pb.Build{
+		require.NoError(s.BuildPut(ctx, false, serverptypes.TestValidBuild(t, &pb.Build{
 			Id: "3",
 			Application: &pb.Ref_Application{
 				Application: "B",

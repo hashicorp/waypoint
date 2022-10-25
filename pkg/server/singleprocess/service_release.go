@@ -166,7 +166,7 @@ func (s *Service) releasePreloadDetails(
 	d.Preload.Deployment = pd
 
 	if req > pb.Release_DEPLOYMENT {
-		pa, err := s.state(ctx).ArtifactGet(&pb.Ref_Operation{
+		pa, err := s.state(ctx).ArtifactGet(ctx, &pb.Ref_Operation{
 			Target: &pb.Ref_Operation_Id{
 				Id: pd.ArtifactId,
 			},
@@ -177,7 +177,7 @@ func (s *Service) releasePreloadDetails(
 		d.Preload.Artifact = pa
 
 		if req > pb.Release_ARTIFACT {
-			build, err := s.state(ctx).BuildGet(&pb.Ref_Operation{
+			build, err := s.state(ctx).BuildGet(ctx, &pb.Ref_Operation{
 				Target: &pb.Ref_Operation_Id{
 					Id: pa.BuildId,
 				},

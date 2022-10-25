@@ -385,10 +385,10 @@ func (s *Service) wrapJobWithRunner(
 		// If we're skipping, the primary task job becomes the watch.
 		task.TaskJob = &pb.Ref_Job{Id: watchJob.Id}
 	}
-	if err := s.state(ctx).TaskPut(task); err != nil {
+	if err := s.state(ctx).TaskPut(ctx, task); err != nil {
 		return nil, err
 	} else {
-		task, err := s.state(ctx).TaskGet(&pb.Ref_Task{
+		task, err := s.state(ctx).TaskGet(ctx, &pb.Ref_Task{
 			Ref: &pb.Ref_Task_JobId{
 				JobId: sourceJob.Id,
 			},

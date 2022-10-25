@@ -17,7 +17,7 @@ func (s *Service) ListPipelineRuns(
 		return nil, err
 	}
 
-	result, err := s.state(ctx).PipelineRunList(req.Pipeline)
+	result, err := s.state(ctx).PipelineRunList(ctx, req.Pipeline)
 	if err != nil {
 		return nil, hcerr.Externalize(
 			hclog.FromContext(ctx),
@@ -39,7 +39,7 @@ func (s *Service) GetPipelineRun(
 		return nil, err
 	}
 
-	result, err := s.state(ctx).PipelineRunGet(req.Pipeline, req.Sequence)
+	result, err := s.state(ctx).PipelineRunGet(ctx, req.Pipeline, req.Sequence)
 	if err != nil {
 		return nil, hcerr.Externalize(
 			hclog.FromContext(ctx),
@@ -61,7 +61,7 @@ func (s *Service) GetLatestPipelineRun(
 		return nil, err
 	}
 
-	pipeline, err := s.state(ctx).PipelineGet(req.Pipeline)
+	pipeline, err := s.state(ctx).PipelineGet(ctx, req.Pipeline)
 	if err != nil {
 		return nil, hcerr.Externalize(
 			hclog.FromContext(ctx),
@@ -70,7 +70,7 @@ func (s *Service) GetLatestPipelineRun(
 		)
 	}
 
-	latestPipelineRun, err := s.state(ctx).PipelineRunGetLatest(pipeline.Id)
+	latestPipelineRun, err := s.state(ctx).PipelineRunGetLatest(ctx, pipeline.Id)
 	if err != nil {
 		return nil, hcerr.Externalize(
 			hclog.FromContext(ctx),

@@ -189,7 +189,7 @@ func (s *Service) deploymentPreloadDetails(
 		return nil
 	}
 
-	pa, err := s.state(ctx).ArtifactGet(&pb.Ref_Operation{
+	pa, err := s.state(ctx).ArtifactGet(ctx, &pb.Ref_Operation{
 		Target: &pb.Ref_Operation_Id{
 			Id: d.ArtifactId,
 		},
@@ -201,7 +201,7 @@ func (s *Service) deploymentPreloadDetails(
 	d.Preload.Artifact = pa
 
 	if req == pb.Deployment_BUILD {
-		build, err := s.state(ctx).BuildGet(&pb.Ref_Operation{
+		build, err := s.state(ctx).BuildGet(ctx, &pb.Ref_Operation{
 			Target: &pb.Ref_Operation_Id{
 				Id: pa.BuildId,
 			},

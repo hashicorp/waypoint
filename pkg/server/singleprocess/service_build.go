@@ -40,7 +40,7 @@ func (s *Service) UpsertBuild(
 		result.Id = id
 	}
 
-	if err := s.state(ctx).BuildPut(!insert, result); err != nil {
+	if err := s.state(ctx).BuildPut(ctx, !insert, result); err != nil {
 		return nil, hcerr.Externalize(hclog.FromContext(ctx), err, "failed to insert build for app", "app", req.Build.Application, "id", req.Build.Id)
 	}
 
@@ -55,7 +55,7 @@ func (s *Service) ListBuilds(
 		return nil, err
 	}
 
-	result, err := s.state(ctx).BuildList(req.Application,
+	result, err := s.state(ctx).BuildList(ctx, req.Application,
 		serverstate.ListWithWorkspace(req.Workspace),
 		serverstate.ListWithOrder(req.Order),
 	)
@@ -74,7 +74,7 @@ func (s *Service) GetLatestBuild(
 		return nil, err
 	}
 
-	result, err := s.state(ctx).BuildLatest(req.Application, req.Workspace)
+	result, err := s.state(ctx).BuildLatest(ctx, req.Application, req.Workspace)
 	if err != nil {
 		return nil, hcerr.Externalize(hclog.FromContext(ctx), err, "failed to get latest build", "app", req.Application.Application, "project", req.Application.Project)
 	}
@@ -91,7 +91,7 @@ func (s *Service) GetBuild(
 		return nil, err
 	}
 
-	result, err := s.state(ctx).BuildGet(req.Ref)
+	result, err := s.state(ctx).BuildGet(ctx, req.Ref)
 	if err != nil {
 		return nil, hcerr.Externalize(hclog.FromContext(ctx), err, "failed to get build", "id", req.Ref.Target)
 	}

@@ -693,6 +693,7 @@ RETRY_ASSIGN:
 // this func will progress the Tasks and Pipeline state machines depending on which job
 // has currently been acked.
 func (s *State) JobAck(id string, ack bool) (*serverstate.Job, error) {
+	ctx := context.Background()
 	txn := s.inmem.Txn(true)
 	defer txn.Abort()
 
@@ -773,11 +774,11 @@ func (s *State) JobAck(id string, ack bool) (*serverstate.Job, error) {
 	txn.Commit()
 
 	// Update the task state machine if acked job is part of an on-demand runner task.
-	if err := s.taskAck(job.Id); err != nil {
+	if err := s.taskAck(ctx, job.Id); err != nil {
 		s.log.Error("error updating task state", "error", err, "job", job.Id)
 		return nil, err
 	}
-	if err := s.pipelineAck(job.Id); err != nil {
+	if err := s.pipelineAck(ctx, job.Id); err != nil {
 		s.log.Error("error updating pipeline state", "error", err, "job", job.Id)
 		return nil, err
 	}
@@ -844,6 +845,7 @@ func (s *State) JobUpdate(id string, cb func(jobpb *pb.Job) error) error {
 // the job is marked as failed (a completed state). If no error is given,
 // the job is marked as successful.
 func (s *State) JobComplete(id string, result *pb.Job_Result, cerr error) error {
+	ctx := context.Background()
 	txn := s.inmem.Txn(true)
 	defer txn.Abort()
 
@@ -905,14 +907,14 @@ func (s *State) JobComplete(id string, result *pb.Job_Result, cerr error) error 
 
 	// If the job is part of an on-demand runner task, update the task state machine
 	// to mark the job in the task as complete
-	if err := s.taskComplete(job.Id); err != nil {
+	if err := s.taskComplete(ctx, job.Id); err != nil {
 		s.log.Error("error updating task state for complete", "error", err, "job", job.Id)
 		return err
 	}
 
 	// If the job is part of a pipeline, update the pipeline state machine
 	// to mark the pipeline as complete
-	if err := s.pipelineComplete(job.Id); err != nil {
+	if err := s.pipelineComplete(ctx, job.Id); err != nil {
 		s.log.Error("error updating pipeline state for complete", "error", err, "job", job.Id)
 		return err
 	}
@@ -924,6 +926,7 @@ func (s *State) JobComplete(id string, result *pb.Job_Result, cerr error) error 
 // and request the cancel but if the job is running then it is up to downstream
 // to listen for and react to Job changes for cancellation.
 func (s *State) JobCancel(id string, force bool) error {
+	ctx := context.Background()
 	txn := s.inmem.Txn(true)
 	defer txn.Abort()
 
@@ -943,7 +946,7 @@ func (s *State) JobCancel(id string, force bool) error {
 
 	txn.Commit()
 
-	if err := s.pipelineCancel(id); err != nil {
+	if err := s.pipelineCancel(ctx, id); err != nil {
 		return err
 	}
 
@@ -1651,7 +1654,7 @@ func (s *State) jobCandidateAny(
 // taskAck checks if the referenced job id has a Task ref associated with it,
 // and if so, Ack the specific job inside the Task job triple to progress the
 // Task state machine.
-func (s *State) taskAck(jobId string) error {
+func (s *State) taskAck(ctx context.Context, jobId string) error {
 	job, err := s.JobById(jobId, nil)
 	if err != nil {
 		s.log.Error("error getting job by id", "job", jobId, "err", err)
@@ -1662,7 +1665,7 @@ func (s *State) taskAck(jobId string) error {
 	}
 
 	// grab the full task message based on the Task Ref on the job
-	task, err := s.TaskGet(job.Task)
+	task, err := s.TaskGet(ctx, job.Task)
 	if err != nil {
 		s.log.Error("failed to get task to ack job", "job", job.Id, "task", job.Task.Ref)
 		return err
@@ -1690,7 +1693,7 @@ func (s *State) taskAck(jobId string) error {
 	}
 
 	// TaskPut the new state
-	if err := s.TaskPut(task); err != nil {
+	if err := s.TaskPut(ctx, task); err != nil {
 		s.log.Error("failed to ack task state", "job", job.Id, "task", task.Id)
 		return err
 	}
@@ -1701,7 +1704,7 @@ func (s *State) taskAck(jobId string) error {
 // taskComplete will look up the referenced job to see if it has a Task ref
 // associated with it, and if so, mark the specific job inside the Task job triple
 // as complete to progress the task state machine.
-func (s *State) taskComplete(jobId string) error {
+func (s *State) taskComplete(ctx context.Context, jobId string) error {
 	job, err := s.JobById(jobId, nil)
 	if err != nil {
 		s.log.Error("error getting job by id", "job", jobId, "err", err)
@@ -1712,7 +1715,7 @@ func (s *State) taskComplete(jobId string) error {
 	}
 
 	// grab the full task message based on the Task Ref on the job
-	task, err := s.TaskGet(job.Task)
+	task, err := s.TaskGet(ctx, job.Task)
 	if err != nil {
 		s.log.Error("failed to get task to mark complete", "job", job.Id, "task", job.Task.Ref)
 		return err
@@ -1740,7 +1743,7 @@ func (s *State) taskComplete(jobId string) error {
 	}
 
 	// TaskPut the new state
-	if err := s.TaskPut(task); err != nil {
+	if err := s.TaskPut(ctx, task); err != nil {
 		s.log.Error("failed to complete task state", "job", job.Id, "task", task.Id)
 		return err
 	}
@@ -1750,7 +1753,7 @@ func (s *State) taskComplete(jobId string) error {
 
 // pipelineComplete will look up the referenced job to see if it has a PipelineStep ref
 // associated with it, and if so, progress the pipelineRun state machine.
-func (s *State) pipelineComplete(jobId string) error {
+func (s *State) pipelineComplete(ctx context.Context, jobId string) error {
 	// grab the job
 	job, err := s.JobById(jobId, nil)
 	if err != nil {
@@ -1761,7 +1764,7 @@ func (s *State) pipelineComplete(jobId string) error {
 		return nil
 	}
 	// grab the pipeline run
-	run, err := s.PipelineRunGetByJobId(jobId)
+	run, err := s.PipelineRunGetByJobId(ctx, jobId)
 	if run == nil {
 		return nil
 	}
@@ -1798,7 +1801,7 @@ func (s *State) pipelineComplete(jobId string) error {
 	}
 
 	// PipelineRunPut the new state
-	if err = s.PipelineRunPut(run); err != nil {
+	if err = s.PipelineRunPut(ctx, run); err != nil {
 		s.log.Error("failed to complete pipeline run", "job", job.Id, "pipeline", job.Pipeline.PipelineId, "run", job.Pipeline.RunSequence)
 		return err
 	}
@@ -1808,9 +1811,9 @@ func (s *State) pipelineComplete(jobId string) error {
 
 // pipelineAck checks if the referenced job id has a PipelineStep ref associated with it,
 // and if so, progress the PipelineRun state machine.
-func (s *State) pipelineAck(jobId string) error {
+func (s *State) pipelineAck(ctx context.Context, jobId string) error {
 	// grab pipeline run that triggered the job based on the PipelineTask Ref
-	run, err := s.PipelineRunGetByJobId(jobId)
+	run, err := s.PipelineRunGetByJobId(ctx, jobId)
 	if run == nil {
 		return nil
 	}
@@ -1824,7 +1827,7 @@ func (s *State) pipelineAck(jobId string) error {
 		run.State = pb.PipelineRun_RUNNING
 	}
 	s.log.Trace("pipeline is running", "job", jobId, "pipeline", run.Pipeline, "run", run.Sequence)
-	if err := s.PipelineRunPut(run); err != nil {
+	if err := s.PipelineRunPut(ctx, run); err != nil {
 		s.log.Error("failed to ack pipeline run state", "job", jobId, "pipeline", run.Pipeline, "run", run.Sequence)
 		return err
 	}
@@ -1834,7 +1837,7 @@ func (s *State) pipelineAck(jobId string) error {
 
 // pipelineCancel will look up the referenced job to see if it has a PipelineStep ref
 // associated with it, and if so, progress the pipelineRun state machine.
-func (s *State) pipelineCancel(jobId string) error {
+func (s *State) pipelineCancel(ctx context.Context, jobId string) error {
 	job, err := s.JobById(jobId, nil)
 	if err != nil {
 		s.log.Error("error getting job by id", "job", jobId, "err", err)
@@ -1844,7 +1847,7 @@ func (s *State) pipelineCancel(jobId string) error {
 		return nil
 	}
 
-	run, err := s.PipelineRunGetByJobId(jobId)
+	run, err := s.PipelineRunGetByJobId(ctx, jobId)
 	if run == nil {
 		return nil
 	}
@@ -1860,7 +1863,7 @@ func (s *State) pipelineCancel(jobId string) error {
 		s.log.Trace("pipeline run cancelled", "job", job.Id, "pipeline", job.Pipeline.PipelineId, "run", run.Sequence)
 	}
 	// PipelineRunPut the new state
-	if err := s.PipelineRunPut(run); err != nil {
+	if err := s.PipelineRunPut(ctx, run); err != nil {
 		s.log.Error("failed to cancel pipeline run", "job", job.Id, "pipeline", job.Pipeline.PipelineId, "run", job.Pipeline.RunSequence)
 		return err
 	}

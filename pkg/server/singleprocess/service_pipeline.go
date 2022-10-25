@@ -25,7 +25,7 @@ func (s *Service) UpsertPipeline(
 	}
 
 	result := req.Pipeline
-	if err := s.state(ctx).PipelinePut(result); err != nil {
+	if err := s.state(ctx).PipelinePut(ctx, result); err != nil {
 		return nil, hcerr.Externalize(
 			hclog.FromContext(ctx),
 			err,
@@ -45,7 +45,7 @@ func (s *Service) GetPipeline(
 		return nil, err
 	}
 
-	p, err := s.state(ctx).PipelineGet(req.Pipeline)
+	p, err := s.state(ctx).PipelineGet(ctx, req.Pipeline)
 	if err != nil {
 		return nil, hcerr.Externalize(
 			hclog.FromContext(ctx),
@@ -86,7 +86,7 @@ func (s *Service) ListPipelines(
 		return nil, err
 	}
 
-	result, err := s.state(ctx).PipelineList(req.Project)
+	result, err := s.state(ctx).PipelineList(ctx, req.Project)
 	if err != nil {
 		return nil, hcerr.Externalize(
 			hclog.FromContext(ctx),
@@ -110,7 +110,7 @@ func (s *Service) RunPipeline(
 	}
 
 	// Get the pipeline we should execute
-	pipeline, err := s.state(ctx).PipelineGet(req.Pipeline)
+	pipeline, err := s.state(ctx).PipelineGet(ctx, req.Pipeline)
 	if err != nil {
 		return nil, hcerr.Externalize(
 			hclog.FromContext(ctx),
@@ -133,7 +133,7 @@ func (s *Service) RunPipeline(
 	}
 
 	// Initialize a pipeline run
-	if err = s.state(ctx).PipelineRunPut(&pb.PipelineRun{
+	if err = s.state(ctx).PipelineRunPut(ctx, &pb.PipelineRun{
 		Pipeline: &pb.Ref_Pipeline{
 			Ref: &pb.Ref_Pipeline_Id{
 				Id: pipeline.Id,
@@ -150,7 +150,7 @@ func (s *Service) RunPipeline(
 		)
 	}
 
-	pipelineRun, err := s.state(ctx).PipelineRunGetLatest(pipeline.Id)
+	pipelineRun, err := s.state(ctx).PipelineRunGetLatest(ctx, pipeline.Id)
 	if err != nil {
 		return nil, hcerr.Externalize(
 			log,
@@ -220,7 +220,7 @@ func (s *Service) RunPipeline(
 	}
 
 	pipelineRun.State = pb.PipelineRun_STARTING
-	if err = s.state(ctx).PipelineRunPut(pipelineRun); err != nil {
+	if err = s.state(ctx).PipelineRunPut(ctx, pipelineRun); err != nil {
 		return nil, hcerr.Externalize(
 			log,
 			err,
@@ -451,7 +451,7 @@ func (s *Service) buildStepJobs(
 				},
 			}
 		case *pb.Pipeline_Step_Pipeline_:
-			embeddedPipeline, err := s.state(ctx).PipelineGet(o.Pipeline.Ref)
+			embeddedPipeline, err := s.state(ctx).PipelineGet(ctx, o.Pipeline.Ref)
 			if err != nil {
 				return nil, nil, nil, err
 			}
@@ -660,7 +660,7 @@ func (s *Service) pipelineGraphFull(
 		if embedRef, ok := step.Kind.(*pb.Pipeline_Step_Pipeline_); ok {
 			// This is only a "ref" to the pipeline, we have to
 			// look it up here to get the actual steps.
-			embeddedPipeline, err := s.state(ctx).PipelineGet(embedRef.Pipeline.Ref)
+			embeddedPipeline, err := s.state(ctx).PipelineGet(ctx, embedRef.Pipeline.Ref)
 			if err != nil {
 				return nil, nil, err
 			}
