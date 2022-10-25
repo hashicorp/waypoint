@@ -42,3 +42,26 @@ func (s *Service) GetPipelineRun(
 		PipelineRun: result,
 	}, nil
 }
+
+func (s *Service) GetLatestPipelineRun(
+	ctx context.Context,
+	req *pb.GetPipelineRequest,
+) (*pb.GetPipelineRunResponse, error) {
+	if err := serverptypes.ValidateGetPipelineRequest(req); err != nil {
+		return nil, err
+	}
+
+	pipeline, err := s.state(ctx).PipelineGet(req.Pipeline)
+	if err != nil {
+		return nil, err
+	}
+
+	latestPipelineRun, err := s.state(ctx).PipelineRunGetLatest(pipeline.Id)
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.GetPipelineRunResponse{
+		PipelineRun: latestPipelineRun,
+	}, nil
+}
