@@ -255,7 +255,7 @@ func (c *JobListCommand) Run(args []string) int {
 		}
 
 		pipeline := ""
-		if j.Pipeline != nil {
+		if j.Pipeline != nil && j.Pipeline.RunSequence != 0 {
 			pipeline = "name: " + j.Pipeline.PipelineName + ", run: " + strconv.FormatUint(j.Pipeline.RunSequence, 10) + ", step: " + j.Pipeline.Step
 		}
 
