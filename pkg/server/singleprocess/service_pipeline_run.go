@@ -53,20 +53,12 @@ func (s *Service) GetLatestPipelineRun(
 
 	pipeline, err := s.state(ctx).PipelineGet(req.Pipeline)
 	if err != nil {
-		return nil, hcerr.Externalize(
-			hclog.FromContext(ctx),
-			err,
-			"error getting pipeline",
-		)
+		return nil, err
 	}
 
 	latestPipelineRun, err := s.state(ctx).PipelineRunGetLatest(pipeline.Id)
 	if err != nil {
-		return nil, hcerr.Externalize(
-			hclog.FromContext(ctx),
-			err,
-			"failed to get latest pipeline run",
-		)
+		return nil, err
 	}
 
 	return &pb.GetPipelineRunResponse{
