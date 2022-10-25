@@ -445,6 +445,7 @@ func (s *Service) buildStepJobs(
 			}
 		}
 
+		// Include a list of all associated jobs for this specific run
 		pipelineRun.Jobs = append(pipelineRun.Jobs, &pb.Ref_Job{Id: job.Id})
 		stepJobs = append(stepJobs, &pb.QueueJobRequest{
 			Job: job,
