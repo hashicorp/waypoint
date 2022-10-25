@@ -31,6 +31,8 @@ import (
 	"github.com/pkg/errors"
 )
 
+var ExistsError = errors.New("already exists")
+
 type session struct {
 	remote string
 	buf    *bytes.Buffer
@@ -265,19 +267,8 @@ func (s *Server) FetchBlob(name string, id string) ([]byte, error) {
 }
 
 func (s *Server) uploadEntrypoint() error {
-	found, err := s.probeBlob(s.entrypointRepo, s.entrypointId)
-	if err != nil {
-		return err
-	}
-
-	if found {
-		s.Logger.Debug("entrypoint layer already exists, not reuploading")
-		return nil
-	}
-
 	s.Logger.Debug("uploading entrypoint layer")
-	_, err = s.writeBlob(s.entrypointRepo, s.entrypointData)
-	if err != nil {
+	if _, err := s.writeBlob(s.entrypointRepo, s.entrypointData); err != nil {
 		return err
 	}
 
@@ -477,7 +468,7 @@ func (s *Server) writeBlob(name string, data []byte) (digest.Digest, error) {
 	defer resp.Body.Close()
 
 	if resp.StatusCode >= 300 {
-		return "", fmt.Errorf("Error starting blob upload: %s", resp.Status)
+		return "", fmt.Errorf("error starting blob upload: %s", resp.Status)
 	}
 
 	loc := resp.Header.Get("Location")
@@ -501,7 +492,7 @@ func (s *Server) writeBlob(name string, data []byte) (digest.Digest, error) {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != 201 {
-		return "", fmt.Errorf("error attempting to entrypoint layer: %s", resp.Status)
+		return "", fmt.Errorf("error attempting to put entrypoint layer: %s", resp.Status)
 	}
 
 	return dig, nil
@@ -564,15 +555,6 @@ func (s *Server) updateManifest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Ok, now delete the config from the jsonBlobs and upload any remaining json
-	// blobs so the upstream knows about them.
-
-	delete(s.jsonBlobs, conKey)
-
-	for id, data := range s.jsonBlobs {
-		s.writeBlob(id, data)
-	}
-
 	var config v1.Image
 	err = json.Unmarshal(configData, &config)
 	if err != nil {
@@ -583,22 +565,33 @@ func (s *Server) updateManifest(w http.ResponseWriter, r *http.Request) {
 
 	// detect if the entrypoint injection already took place
 
+	performInjection := true
 	for _, h := range config.History {
 		if h.CreatedBy == createdBy {
-			r.Body = ioutil.NopCloser(bytes.NewReader(data))
-			s.proxy(w, r)
-			return
+			s.Logger.Debug("### in createdby equality ###")
+			performInjection = false
 		}
+	}
+
+	// Ok, now delete the config from the jsonBlobs and upload any remaining json
+	// blobs so the upstream knows about them.
+
+	delete(s.jsonBlobs, conKey)
+
+	for id, data := range s.jsonBlobs {
+		s.writeBlob(id, data)
 	}
 
 	now := time.Now()
 
-	config.RootFS.DiffIDs = append(config.RootFS.DiffIDs, s.entrypointDiffId)
-	config.History = append(config.History, v1.History{
-		Created:   &now,
-		CreatedBy: createdBy,
-		Author:    "waypoint",
-	})
+	if performInjection {
+		config.RootFS.DiffIDs = append(config.RootFS.DiffIDs, s.entrypointDiffId)
+		config.History = append(config.History, v1.History{
+			Created:   &now,
+			CreatedBy: createdBy,
+			Author:    "waypoint",
+		})
+	}
 
 	// By default we want to prepend waypoint-entrypoint to the Entrypoint and
 	// inject the CEB. If the Entrypoint is empty, or the first element is
@@ -631,20 +624,22 @@ func (s *Server) updateManifest(w http.ResponseWriter, r *http.Request) {
 		mediaType = dockerRootFSMediaType
 	}
 
-	// Upload it again just to be sure the layer is still there before we go and reference
-	// it. This protects against the repo deleting the layer blob between server start and
-	// here.
-	err = s.uploadEntrypoint()
-	if err != nil {
-		http.Error(w, "error uploading entrypoint", http.StatusInternalServerError)
-		return
-	}
+	if performInjection {
+		// Upload it again just to be sure the layer is still there before we go and reference
+		// it. This protects against the repo deleting the layer blob between server start and
+		// here.
+		err = s.uploadEntrypoint()
+		if err != nil {
+			http.Error(w, "error uploading entrypoint", http.StatusInternalServerError)
+			return
+		}
 
-	man.Layers = append(man.Layers, v1.Descriptor{
-		MediaType: mediaType,
-		Digest:    s.entrypointId,
-		Size:      s.entrypointSize,
-	})
+		man.Layers = append(man.Layers, v1.Descriptor{
+			MediaType: mediaType,
+			Digest:    s.entrypointId,
+			Size:      s.entrypointSize,
+		})
+	}
 
 	newMan, err := json.MarshalIndent(man, "", "  ")
 	if err != nil {
