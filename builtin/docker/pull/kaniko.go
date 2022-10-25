@@ -131,11 +131,80 @@ func (b *Builder) pullWithKaniko(
 
 	localRef := fmt.Sprintf("localhost:%d/%s:%s", port, refPath, ai.Tag)
 
-	dockerfileBS := []byte(fmt.Sprintf("FROM %s:%s\n", b.config.Image, b.config.Tag))
+	////// setup pull ref
+	var remoteRef string
+	var rci ociregistry.Server
+	rci.DisableEntrypoint = b.config.DisableCEB
+	rci.Logger = log
+	{
+		if b.config.EncodedAuth != "" {
+			//If EncodedAuth is set, use that
+			user, pass, err := wpdocker.CredentialsFromConfig(b.config.EncodedAuth)
+			if err != nil {
+				return nil, err
+			}
+			rci.AuthConfig.Username = user
+			rci.AuthConfig.Password = pass
+		} else if *b.config.Auth != (wpdocker.Auth{}) {
+			//If EncodedAuth is not set, and Auth is, use Auth
+			rci.AuthConfig.Username = b.config.Auth.Username
+			rci.AuthConfig.Password = b.config.Auth.Password
+			rci.AuthConfig.Auth = b.config.Auth.Auth
+			rci.AuthConfig.IdentityToken = b.config.Auth.IdentityToken
+			rci.AuthConfig.RegistryToken = b.config.Auth.RegistryToken
+		}
+
+		// Determine the host that we're setting auth for. We have to parse the
+		// image for this cause it may not contain a host. Luckily Docker has
+		// libs to normalize this all for us.
+		log.Trace("determining host for pull-auth configuration", "image", b.config.Image)
+		ref, err := reference.ParseNormalizedNamed(b.config.Image)
+		if err != nil {
+			return nil, status.Errorf(codes.Internal, "unable to parse image name: %s", err)
+		}
+
+		host := reference.Domain(ref)
+		if host == "docker.io" {
+			// The normalized name parse above will turn short names like "foo/bar"
+			// into "docker.io/foo/bar" but the actual registry host for these
+			// is "index.docker.io".
+			host = "index.docker.io"
+		}
+
+		// we dont support insecure docker-pull it seems
+		// if b.config.Insecure {
+		// 	oci.Upstream = "http://" + host
+		// } else {
+		rci.Upstream = "https://" + host
+		// }
+
+		refPath := reference.Path(ref)
+
+		err = rci.Negotiate(ref.Name())
+		if err != nil {
+			return nil, errors.Wrapf(err, "unable to negotiate with upstream")
+		}
+
+		// Setting up local registry to which Kaniko will push
+		li, err := net.Listen("tcp", "localhost:0")
+		if err != nil {
+			return nil, err
+		}
+
+		defer li.Close()
+		go http.Serve(li, &rci)
+
+		port := li.Addr().(*net.TCPAddr).Port
+
+		remoteRef = fmt.Sprintf("localhost:%d/%s:%s", port, refPath, b.config.Tag)
+	}
+
+	dockerfileBS := []byte(fmt.Sprintf("FROM %s\n", remoteRef))
 	err = os.WriteFile("Dockerfile", dockerfileBS, 0644)
 	if err != nil {
 		return nil, err
 	}
+	/////
 
 	contextDir, relDockerfile, err := build.GetContextFromLocalDir(".", "Dockerfile")
 	if err != nil {
