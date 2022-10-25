@@ -83,6 +83,7 @@ func TestPipelineRun(t *testing.T, factory Factory, restartF RestartFactory) {
 
 		// Set another pipeline run
 		r2 := ptypes.TestPipelineRun(t, &pb.PipelineRun{Pipeline: pipeline})
+		r2.Id = "ypr2"
 		err = s.PipelineRunPut(r2)
 		require.NoError(err)
 
@@ -97,6 +98,7 @@ func TestPipelineRun(t *testing.T, factory Factory, restartF RestartFactory) {
 
 		// Set another pipeline run
 		r3 := ptypes.TestPipelineRun(t, &pb.PipelineRun{Pipeline: pipeline})
+		r3.Id = "pr3"
 		err = s.PipelineRunPut(r3)
 		require.NoError(err)
 
@@ -193,17 +195,17 @@ func TestPipelineRun(t *testing.T, factory Factory, restartF RestartFactory) {
 		pipeline := &pb.Ref_Pipeline{Ref: &pb.Ref_Pipeline_Id{Id: p.Id}}
 
 		// Set Pipeline Run
-		r := ptypes.TestPipelineRun(t, &pb.PipelineRun{Id: "1", Pipeline: pipeline})
+		r := ptypes.TestPipelineRun(t, &pb.PipelineRun{Id: "test1", Pipeline: pipeline})
 		err = s.PipelineRunPut(r)
 		require.NoError(err)
 
 		// Set Another Pipeline Run
-		r2 := ptypes.TestPipelineRun(t, &pb.PipelineRun{Id: "2", Pipeline: pipeline})
+		r2 := ptypes.TestPipelineRun(t, &pb.PipelineRun{Id: "test2", Pipeline: pipeline})
 		err = s.PipelineRunPut(r2)
 		require.NoError(err)
 
 		// Set Another Pipeline Run
-		r3 := ptypes.TestPipelineRun(t, &pb.PipelineRun{Id: "3", Pipeline: pipeline})
+		r3 := ptypes.TestPipelineRun(t, &pb.PipelineRun{Id: "test3", Pipeline: pipeline})
 		err = s.PipelineRunPut(r3)
 		require.NoError(err)
 
