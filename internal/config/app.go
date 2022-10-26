@@ -278,6 +278,8 @@ func (c *App) Release(ctx *hcl.EvalContext) (*Release, error) {
 func (c *App) BuildUse(ctx *hcl.EvalContext) (string, error) {
 	if c.BuildRaw == nil {
 		return "", nil
+	} else if c.BuildRaw.Use == nil {
+		return "", nil
 	}
 
 	useType := c.BuildRaw.Use.Type
@@ -295,6 +297,8 @@ func (c *App) BuildUse(ctx *hcl.EvalContext) (string, error) {
 // RegistryUse returns the plugin "use" value.
 func (c *App) RegistryUse(ctx *hcl.EvalContext) (string, error) {
 	if c.BuildRaw == nil || c.BuildRaw.Registry == nil {
+		return "", nil
+	} else if c.BuildRaw.Registry.Use == nil {
 		return "", nil
 	}
 
@@ -314,6 +318,8 @@ func (c *App) RegistryUse(ctx *hcl.EvalContext) (string, error) {
 func (c *App) DeployUse(ctx *hcl.EvalContext) (string, error) {
 	if c.DeployRaw == nil {
 		return "", nil
+	} else if c.DeployRaw.Use == nil {
+		return "", nil
 	}
 
 	useType := c.DeployRaw.Use.Type
@@ -331,6 +337,8 @@ func (c *App) DeployUse(ctx *hcl.EvalContext) (string, error) {
 // ReleaseUse returns the plugin "use" value.
 func (c *App) ReleaseUse(ctx *hcl.EvalContext) (string, error) {
 	if c.ReleaseRaw == nil {
+		return "", nil
+	} else if c.ReleaseRaw.Use == nil {
 		return "", nil
 	}
 

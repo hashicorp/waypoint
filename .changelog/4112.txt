@@ -1,0 +1,4 @@
+```release-note:bug
+core: Fix panic if no Use stanza found for given workspace scope on a build,
+deploy, release, or registry stanza.
+```
