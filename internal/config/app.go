@@ -1,7 +1,6 @@
 package config
 
 import (
-	"fmt"
 	"path/filepath"
 	"sort"
 
@@ -280,7 +279,7 @@ func (c *App) BuildUse(ctx *hcl.EvalContext) (string, error) {
 	if c.BuildRaw == nil {
 		return "", nil
 	} else if c.BuildRaw.Use == nil {
-		return "", fmt.Errorf("app %q has a build stanza, but no valid 'use' stanza!", c.Name)
+		return "", nil
 	}
 
 	useType := c.BuildRaw.Use.Type
@@ -300,7 +299,7 @@ func (c *App) RegistryUse(ctx *hcl.EvalContext) (string, error) {
 	if c.BuildRaw == nil || c.BuildRaw.Registry == nil {
 		return "", nil
 	} else if c.BuildRaw.Registry.Use == nil {
-		return "", fmt.Errorf("app %q has a registry stanza, but no valid 'use' stanza!", c.Name)
+		return "", nil
 	}
 
 	useType := c.BuildRaw.Registry.Use.Type
@@ -320,7 +319,7 @@ func (c *App) DeployUse(ctx *hcl.EvalContext) (string, error) {
 	if c.DeployRaw == nil {
 		return "", nil
 	} else if c.DeployRaw.Use == nil {
-		return "", fmt.Errorf("app %q has a deploy stanza, but no valid 'use' stanza!", c.Name)
+		return "", nil
 	}
 
 	useType := c.DeployRaw.Use.Type
@@ -340,7 +339,7 @@ func (c *App) ReleaseUse(ctx *hcl.EvalContext) (string, error) {
 	if c.ReleaseRaw == nil {
 		return "", nil
 	} else if c.ReleaseRaw.Use == nil {
-		return "", fmt.Errorf("app %q has a release stanza, but no valid 'use' stanza!", c.Name)
+		return "", nil
 	}
 
 	useType := c.ReleaseRaw.Use.Type
