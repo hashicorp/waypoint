@@ -1,0 +1,66 @@
+{
+   "description": "Read configuration values from the Consul KV store.",
+   "mappers": null,
+   "name": "consul",
+   "optionalFields": [
+      {
+         "Field": "allow_stale",
+         "Type": "bool",
+         "Synopsis": "whether to perform a stale query for retrieving the KV data",
+         "Summary": "If not set this will default to true. It must explicitly be set to false in order to use consistent queries.",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "datacenter",
+         "Type": "string",
+         "Synopsis": "the datacenter to load the KV value from.",
+         "Summary": "If not specified then it will default to the plugin's global datacenter configuration. If that is also not specified then Consul will default the datacenter like it would any other request.",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "namespace",
+         "Type": "string",
+         "Synopsis": "the namespace to load the KV value from.",
+         "Summary": "If not specified then it will default to the plugin's global namespace configuration. If that is also not specified then Consul will default the namespace like it would any other request.",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "partition",
+         "Type": "string",
+         "Synopsis": "the partition to load the KV value from.",
+         "Summary": "If not specified then it will default to the plugin's global partition configuration. If that is also not specified then Consul will default the partition like it would any other request.",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      }
+   ],
+   "requiredFields": [
+      {
+         "Field": "key",
+         "Type": "string",
+         "Synopsis": "the KV path to retrieve",
+         "Summary": "",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      }
+   ],
+   "type": "configsourcer",
+   "use": "`dynamic` for sourcing [configuration values](/docs/app-config/dynamic) or [input variable values](/docs/waypoint-hcl/variables/dynamic)."
+}
