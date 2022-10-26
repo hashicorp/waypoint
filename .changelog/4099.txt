@@ -1,0 +1,4 @@
+```release-note:improvement
+core: Auto run a status report after a deployment or release operation rather
+than only if `waypoint deploy` or `waypoint release` CLI is run.
+```

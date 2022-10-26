@@ -70,18 +70,6 @@ func (c *DeploymentCreateCommand) Run(args []string) int {
 			hostname = hostnamesResp.Hostnames[0]
 		}
 
-		// Status Report
-		app.UI.Output("")
-		_, err = app.StatusReport(ctx, &pb.Job_StatusReportOp{
-			Target: &pb.Job_StatusReportOp_Deployment{
-				Deployment: deployment,
-			},
-		})
-		if err != nil {
-			app.UI.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
-			return ErrSentinel
-		}
-
 		// Release if we're releasing
 		var releaseUrl string
 		if c.flagRelease {
