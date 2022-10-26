@@ -297,7 +297,7 @@ func (s *GitSource) Get(
 
 	// Output additinoal git info
 	ui.Output("Git Commit: %s", commit.Hash.String(), terminal.WithInfoStyle())
-	ui.Output(" Timestamp: %s", commitTs, terminal.WithInfoStyle())
+	ui.Output(" Timestamp: %s", commitTs.AsTime(), terminal.WithInfoStyle())
 	ui.Output("   Message: %s", commit.Message, terminal.WithInfoStyle())
 
 	return result, &pb.Job_DataSource_Ref{
