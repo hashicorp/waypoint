@@ -1,0 +1,4 @@
+```release-note:bug
+cli: Only show "CompleteTime" on `waypoint pipeline list` if the job has a valid
+complete time.
+```
