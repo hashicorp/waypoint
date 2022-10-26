@@ -131,7 +131,9 @@ func (c *PipelineListCommand) Run(args []string) int {
 				return 1
 			}
 
-			lastRunEnd = humanize.Time(j.CompleteTime.AsTime())
+			if j.CompleteTime != nil {
+				lastRunEnd = humanize.Time(j.CompleteTime.AsTime())
+			}
 			state = strings.ToLower(lastRun.State.String())
 		}
 
