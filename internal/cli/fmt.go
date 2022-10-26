@@ -72,12 +72,17 @@ func (c *FmtCommand) Run(args []string) int {
 		return 1
 	}
 
+	fileChanged := false
+	if !bytes.Equal(src, out) {
+		fileChanged = true
+	}
+
 	if c.flagCheck {
 		// In the case where we're checking formatting, don't persist data
 		// ultimately this shouldn't even be used because we should return
 		// in this block
 		c.flagWrite = false
-		if bytes.Equal(src, out) {
+		if !fileChanged {
 			return 0
 		} else {
 			return 3
@@ -93,7 +98,9 @@ func (c *FmtCommand) Run(args []string) int {
 			)
 			return 1
 		}
-		fmt.Println(c.args[0])
+		if fileChanged {
+			fmt.Println(c.args[0])
+		}
 	} else {
 		// We must use fmt here and not c.ui since c.ui may wordwrap and trim.
 		fmt.Print(string(out))
