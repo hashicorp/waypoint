@@ -140,16 +140,12 @@ func (s *stream) Run(ctx context.Context) (*pb.Job_Result, error) {
 			return nil, st.Err()
 
 		case *pb.GetJobStreamResponse_Download_:
-			if ui != nil {
-				ui.Output("Downloading from Git", terminal.WithHeaderStyle())
+			// Assume git type for now
+			git := event.Download.DataSourceRef.Ref.(*pb.Job_DataSource_Ref_Git)
 
-				// Assume git type for now
-				git := event.Download.DataSourceRef.Ref.(*pb.Job_DataSource_Ref_Git)
-
-				ui.Output("Git Commit: %s", git.Git.Commit, terminal.WithInfoStyle())
-				ui.Output(" Timestamp: %s", git.Git.Timestamp.AsTime(), terminal.WithInfoStyle())
-				ui.Output("   Message: %s", git.Git.CommitMessage, terminal.WithInfoStyle())
-			}
+			log.Debug("downloading from git",
+				"commit", git.Git.Commit, "timestamp", git.Git.Timestamp.AsTime(),
+				"message", git.Git.CommitMessage)
 
 		case *pb.GetJobStreamResponse_Terminal_:
 			if s.ignoreTerminal {
