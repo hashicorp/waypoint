@@ -46,5 +46,7 @@ can be disabled by using the "-release=false" flag.
 #### Command Options
 
 - `-release` - Release this deployment immediately. The default is true.
+- `-prune` - Prune old unreleased deployments. The default is true.
+- `-prune-retain=<int>` - The number of unreleased deployments to keep. If this isn't set or is set to any negative number, then this will default to 1 on the server. If you want to prune all unreleased deployments, set this to 0. The default is -1.
 
 @include "commands/deploy_more.mdx"
