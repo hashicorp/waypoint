@@ -169,11 +169,14 @@ func (s *GitSource) Get(
 		return os.RemoveAll(td)
 	}
 
-	// Output
+	// Output git info
+	// NOTE(briancain): The leading whitespace here is to fit the formatting
+	// for when we display the commit, timestamp, and message later on so that the
+	// messages are all aligned.
 	ui.Output("Cloning data from Git", terminal.WithHeaderStyle())
-	ui.Output("URL: %s", source.Git.Url, terminal.WithInfoStyle())
+	ui.Output("       URL: %s", source.Git.Url, terminal.WithInfoStyle())
 	if source.Git.Ref != "" {
-		ui.Output("Ref: %s", source.Git.Ref, terminal.WithInfoStyle())
+		ui.Output("       Ref: %s", source.Git.Ref, terminal.WithInfoStyle())
 	}
 
 	// Setup auth information
@@ -291,6 +294,11 @@ func (s *GitSource) Get(
 	if p := source.Git.Path; p != "" {
 		result = filepath.Join(result, p)
 	}
+
+	// Output additinoal git info
+	ui.Output("Git Commit: %s", commit.Hash.String(), terminal.WithInfoStyle())
+	ui.Output(" Timestamp: %s", commitTs.AsTime(), terminal.WithInfoStyle())
+	ui.Output("   Message: %s", commit.Message, terminal.WithInfoStyle())
 
 	return result, &pb.Job_DataSource_Ref{
 		Ref: &pb.Job_DataSource_Ref_Git{

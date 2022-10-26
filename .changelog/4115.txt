@@ -1,0 +1,3 @@
+```release-note:improvement
+core: Combine git clone messages from job stream into a single message
+```
