@@ -31,8 +31,6 @@ import (
 	"github.com/pkg/errors"
 )
 
-var ExistsError = errors.New("already exists")
-
 type session struct {
 	remote string
 	buf    *bytes.Buffer
@@ -565,26 +563,25 @@ func (s *Server) updateManifest(w http.ResponseWriter, r *http.Request) {
 
 	// detect if the entrypoint injection already took place
 
-	performInjection := true
+	// injectEntrypoint is used to determine if the image has or should have
+	// Entrypoint injected.
+	injectEntrypoint := true
 	for _, h := range config.History {
 		if h.CreatedBy == createdBy {
-			s.Logger.Debug("### in createdby equality ###")
-			performInjection = false
+			injectEntrypoint = false
 		}
 	}
 
 	// Ok, now delete the config from the jsonBlobs and upload any remaining json
 	// blobs so the upstream knows about them.
-
 	delete(s.jsonBlobs, conKey)
-
 	for id, data := range s.jsonBlobs {
 		s.writeBlob(id, data)
 	}
 
 	now := time.Now()
 
-	if performInjection {
+	if injectEntrypoint {
 		config.RootFS.DiffIDs = append(config.RootFS.DiffIDs, s.entrypointDiffId)
 		config.History = append(config.History, v1.History{
 			Created:   &now,
@@ -624,11 +621,11 @@ func (s *Server) updateManifest(w http.ResponseWriter, r *http.Request) {
 		mediaType = dockerRootFSMediaType
 	}
 
-	if performInjection {
-		// Upload it again just to be sure the layer is still there before we go and reference
-		// it. This protects against the repo deleting the layer blob between server start and
-		// here.
-		err = s.uploadEntrypoint()
+	if injectEntrypoint {
+		// Upload Entrypoint again just to be sure the layer is still there
+		// before we go and reference it. This protects against the repo
+		// deleting the layer blob between server start and here.
+		err := s.uploadEntrypoint()
 		if err != nil {
 			http.Error(w, "error uploading entrypoint", http.StatusInternalServerError)
 			return
