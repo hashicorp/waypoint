@@ -160,7 +160,7 @@ func (b *Builder) pullWithKaniko(
 			}
 			sourceProxy.AuthConfig.Username = user
 			sourceProxy.AuthConfig.Password = pass
-		} else if *b.config.Auth != (wpdocker.Auth{}) {
+		} else if b.config.Auth != nil && *b.config.Auth != (wpdocker.Auth{}) {
 			//If EncodedAuth is not set, and Auth is, use Auth
 			sourceProxy.AuthConfig.Username = b.config.Auth.Username
 			sourceProxy.AuthConfig.Password = b.config.Auth.Password
