@@ -31,10 +31,14 @@ and their associated documentation:
 - [Kubernetes](/plugins/kubernetes#kubernetes-configsourcer) - Read values from ConfigMaps and Secrets.
 - [Vault](/plugins/vault#vault-configsourcer) - Read values from Vault secrets,
   including dynamic secrets such as database credentials.
+- [Terraform Cloud](/plugins/terraform-cloud#vault-configsourcer) - Read outputs
+  directly from Workspaces on [Terraform Cloud](https://app.terraform.io).
+- [AWS SSM](/plugins/aws-ssm#aws-ssm-configsourcer) - Read configuration values
+  from AWS SSM Parameter Store.
 
--> **Custom configuration source plugins are coming soon.** The groundwork for
-this was set in Waypoint 0.2.0 and a future release will enable custom configuration
-source plugins.
+-> **Custom configuration source plugins are coming soon.** Currently it's overly
+difficult to get configuration source plugins into a place that they can be execute.
+In the future, we will enable this in a straightforward way.
 
 ## Setting Dynamic Values via `waypoint.hcl`
 
