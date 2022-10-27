@@ -265,6 +265,15 @@ func (s *Server) FetchBlob(name string, id string) ([]byte, error) {
 }
 
 func (s *Server) uploadEntrypoint() error {
+	found, err := s.probeBlob(s.entrypointRepo, s.entrypointId)
+	if err != nil {
+		return err
+	}
+
+	if found {
+		s.Logger.Debug("entrypoint layer already exists, not reuploading")
+		return nil
+	}
 	s.Logger.Debug("uploading entrypoint layer")
 	if _, err := s.writeBlob(s.entrypointRepo, s.entrypointData); err != nil {
 		return err
