@@ -1,0 +1,3 @@
+```release-note:improvement
+pipelines: Add ability to evaluate input variables in pipelines stanzas.
+```
