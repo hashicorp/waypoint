@@ -412,7 +412,7 @@ func (c *InitCommand) validateProject() bool {
 	for _, pn := range pipeNames {
 		sp.Update("Registering Pipeline %q with the server...", pn)
 
-		baseStep := map[string]*pb.Pipeline_Step{"root": &pb.Pipeline_Step{
+		baseStep := map[string]*pb.Pipeline_Step{"root": {
 			Name: "root",
 			Kind: &pb.Pipeline_Step_Pipeline_{},
 		}}
