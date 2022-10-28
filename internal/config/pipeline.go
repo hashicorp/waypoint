@@ -32,8 +32,12 @@ type hclPipeline struct {
 	Remain hcl.Body `hcl:",remain"`
 }
 
-// hclStep represents a raw HCL version of a step stanza in a pipeline config
-type hclStep struct {
+// Step are the step settings for pipelines
+type Step struct {
+	Labels map[string]string `hcl:"labels,optional"`
+	Use    *Use              `hcl:"use,block"`
+
+	// Give this step a name
 	Name string `hcl:",label"`
 
 	// If set, this step will depend on the defined step. The default step
@@ -44,14 +48,24 @@ type hclStep struct {
 	// The OCI image to use for executing this step
 	ImageURL string `hcl:"image_url,optional"`
 
-	// The plugin to use for this Step
-	Use *Use `hcl:"use,block"`
+	// An optional embedded pipeline stanza
+	Pipeline *Pipeline `hcl:"pipeline,block"`
+
+	ctx *hcl.EvalContext
+
+	// Optional workspace scoping
+	Workspace string `hcl:"workspace,optional"`
+}
+
+// hclStep represents a raw HCL version of a step stanza in a pipeline config
+type hclStep struct {
+	Name string `hcl:",label"`
 
 	// An optional embedded pipeline stanza
 	PipelineRaw *hclPipeline `hcl:"pipeline,block"`
 
-	// An optional embedded pipeline stanza
-	Workspace string `hcl:"workspace,optional"`
+	Body   hcl.Body `hcl:",body"`
+	Remain hcl.Body `hcl:",remain"`
 }
 
 // Pipelines returns the id of all the defined pipelines
@@ -99,14 +113,12 @@ func (c *Config) Pipeline(id string, ctx *hcl.EvalContext) (*Pipeline, error) {
 	var steps []*Step
 	for _, stepRaw := range pipeline.StepRaw {
 		// turn stepRaw into a staged Step
-		s := Step{
-			ctx:       ctx,
-			Name:      stepRaw.Name,
-			DependsOn: stepRaw.DependsOn,
-			ImageURL:  stepRaw.ImageURL,
-			Use:       stepRaw.Use,
-			Workspace: stepRaw.Workspace,
+		var step Step
+		if diag := gohcl.DecodeBody(stepRaw.Body, finalizeContext(ctx), &step); diag.HasErrors() {
+			return nil, diag
 		}
+		step.ctx = ctx
+		step.Name = stepRaw.Name
 
 		// Parse a nested pipeline step if defined
 		// TODO(briancain): At the moment, we're supporting singly nestested Pipeline
@@ -118,13 +130,13 @@ func (c *Config) Pipeline(id string, ctx *hcl.EvalContext) (*Pipeline, error) {
 				return nil, diag
 			}
 
-			s.Pipeline = &Pipeline{
+			step.Pipeline = &Pipeline{
 				Name:   stepRaw.PipelineRaw.Name,
 				ctx:    ctx,
 				Config: c,
 			}
-			if s.Pipeline.Config != nil {
-				s.Pipeline.Config.ctx = ctx
+			if step.Pipeline.Config != nil {
+				step.Pipeline.Config.ctx = ctx
 			}
 
 			// Parse all the steps
@@ -154,21 +166,19 @@ func (c *Config) Pipeline(id string, ctx *hcl.EvalContext) (*Pipeline, error) {
 				}
 
 				// turn stepRaw into a staged Step
-				s := Step{
-					ctx:       ctx,
-					Name:      embedStepRaw.Name,
-					DependsOn: embedStepRaw.DependsOn,
-					ImageURL:  embedStepRaw.ImageURL,
-					Use:       embedStepRaw.Use,
-					Workspace: embedStepRaw.Workspace,
+				var embedStep Step
+				if diag := gohcl.DecodeBody(embedStepRaw.Body, finalizeContext(ctx), &embedStep); diag.HasErrors() {
+					return nil, diag
 				}
-				embSteps = append(embSteps, &s)
+				embedStep.ctx = ctx
+				embedStep.Name = embedStepRaw.Name
+				embSteps = append(embSteps, &embedStep)
 			}
 
-			s.Pipeline.Steps = embSteps
+			step.Pipeline.Steps = embSteps
 		}
 
-		steps = append(steps, &s)
+		steps = append(steps, &step)
 	}
 
 	pipeline.Steps = steps
@@ -191,7 +201,12 @@ func (c *Config) PipelineProtos() ([]*pb.Pipeline, error) {
 	// Load HCL config and convert to a Pipeline proto
 	var result []*pb.Pipeline
 	for _, pl := range c.hclConfig.Pipelines {
-		pipes, err := c.buildPipelineProto(pl)
+		pipeline, err := c.Pipeline(pl.Name, c.ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		pipes, err := c.buildPipelineProto(pipeline)
 		if err != nil {
 			return nil, err
 		}
@@ -206,7 +221,7 @@ func (c *Config) PipelineProtos() ([]*pb.Pipeline, error) {
 
 // buildPipelineProto will recursively translate an hclPipeline into a protobuf
 // Pipeline message.
-func (c *Config) buildPipelineProto(pl *hclPipeline) ([]*pb.Pipeline, error) {
+func (c *Config) buildPipelineProto(pl *Pipeline) ([]*pb.Pipeline, error) {
 	var result []*pb.Pipeline
 	pipe := &pb.Pipeline{
 		Name: pl.Name,
@@ -218,7 +233,7 @@ func (c *Config) buildPipelineProto(pl *hclPipeline) ([]*pb.Pipeline, error) {
 	}
 
 	steps := make(map[string]*pb.Pipeline_Step)
-	for i, step := range pl.StepRaw {
+	for i, step := range pl.Steps {
 		s := &pb.Pipeline_Step{
 			Name:      step.Name,
 			DependsOn: step.DependsOn,
@@ -233,23 +248,23 @@ func (c *Config) buildPipelineProto(pl *hclPipeline) ([]*pb.Pipeline, error) {
 
 		// If no dependency was explictily set, we rely on the previous step
 		if i != 0 && len(step.DependsOn) == 0 {
-			s.DependsOn = []string{pl.StepRaw[i-1].Name}
+			s.DependsOn = []string{pl.Steps[i-1].Name}
 		}
 
 		// We have an embeded pipeline for this step. This can either be an hclPipeline
 		// defined directly in the step, or a pipeline reference to another pipeline
 		// defined else where. If this is a ref, the raw hcl for the pipeline should
 		// be a "built-in" step of type "pipeline"
-		if step.PipelineRaw != nil {
+		if step.Pipeline != nil {
 			// Parse the embedded pipeline assuming it has steps
-			if len(step.PipelineRaw.StepRaw) > 0 {
+			if len(step.Pipeline.Steps) > 0 {
 				// This means this is an embedded pipeline, i.e. the HCL definition
 				// is nested within the step PipelineRaw. we parse that pipeline
 				// directly and store it as a separate pipeline, and make _this_ step
 				// a reference to the pipeline
 
 				// Parse nested pipeline steps
-				pipelines, err := c.buildPipelineProto(step.PipelineRaw)
+				pipelines, err := c.buildPipelineProto(step.Pipeline)
 				if err != nil {
 					return nil, err
 				}
@@ -257,7 +272,7 @@ func (c *Config) buildPipelineProto(pl *hclPipeline) ([]*pb.Pipeline, error) {
 				result = append(result, pipelines...)
 
 				// We check if this step references a separate pipeline by Owner
-				pipeName := step.PipelineRaw.Name
+				pipeName := step.Pipeline.Name
 				pipeProject := c.hclConfig.Project
 
 				// Add pipeline reference as a pipeline ref step for parent pipeline
