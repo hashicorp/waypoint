@@ -404,17 +404,29 @@ func (c *InitCommand) validateProject() bool {
 	}
 
 	sp := sg.Add("Registering all pipelines for project %q", ref.Project)
-	protoPipes, err := c.cfg.PipelineProtos()
-	if err != nil {
-		c.stepError(s, initStepPipeline, err)
-		return false
-	}
+	pipeNames := c.cfg.Pipelines()
 
-	for _, pipeline := range protoPipes {
-		sp.Update("Registering Pipeline %q with the server...", pipeline.Name)
+	// We do a shallow sync of pipelines on the init phase in the same way we
+	// shallow sync Applications. Prior to running a pipeline - we do a full
+	// HCL eval and protobuf sync that will upsert over this data.
+	for _, pn := range pipeNames {
+		sp.Update("Registering Pipeline %q with the server...", pn)
+
+		baseStep := map[string]*pb.Pipeline_Step{"root": &pb.Pipeline_Step{
+			Name: "root",
+			Kind: &pb.Pipeline_Step_Pipeline_{},
+		}}
 
 		_, err := client.UpsertPipeline(c.Ctx, &pb.UpsertPipelineRequest{
-			Pipeline: pipeline,
+			Pipeline: &pb.Pipeline{
+				Name: pn,
+				Owner: &pb.Pipeline_Project{
+					Project: &pb.Ref_Project{
+						Project: ref.Project,
+					},
+				},
+				Steps: baseStep,
+			},
 		})
 		if err != nil {
 			c.stepError(sp, initStepPipeline, err)
