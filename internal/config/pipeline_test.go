@@ -4,6 +4,8 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/hashicorp/go-hclog"
+	"github.com/hashicorp/waypoint/internal/config/variables"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc/codes"
@@ -38,6 +40,29 @@ func TestPipeline(t *testing.T) {
 
 		{
 			"pipeline_step.hcl",
+			"foo",
+			func(t *testing.T, c *Pipeline) {
+				require := require.New(t)
+
+				require.NotNil(t, c)
+				require.Equal("foo", c.Name)
+
+				steps := c.Steps
+				s := steps[0]
+
+				var p testStepPluginConfig
+				diag := s.Configure(&p, nil)
+				if diag.HasErrors() {
+					t.Fatal(diag.Error())
+				}
+
+				require.NotEmpty(t, p.config.Foo)
+				require.Equal("example.com/test", s.ImageURL)
+			},
+		},
+
+		{
+			"pipeline_input_var.hcl",
 			"foo",
 			func(t *testing.T, c *Pipeline) {
 				require := require.New(t)
@@ -222,7 +247,11 @@ func TestPipeline(t *testing.T) {
 			})
 			require.NoError(err)
 
-			pipeline, err := cfg.Pipeline(tt.Pipeline, nil)
+			evalCtx := EvalContext(nil, "").NewChild()
+			inputVars, _, _ := variables.EvaluateVariables(hclog.L(), nil, cfg.InputVariables, "")
+			AddVariables(evalCtx, inputVars)
+
+			pipeline, err := cfg.Pipeline(tt.Pipeline, evalCtx)
 			require.NoError(err)
 
 			tt.Func(t, pipeline)
@@ -306,6 +335,7 @@ func TestPipelineProtos(t *testing.T) {
 				require.Len(pipelines[0].Steps, 1)
 
 				nestedStep := pipelines[0].Steps["test_nested"]
+				require.NotNil(nestedStep)
 				require.Equal(nestedStep.Name, "test_nested")
 			},
 		},

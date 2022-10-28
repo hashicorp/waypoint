@@ -326,20 +326,20 @@ func (c *Config) validatePipeline(b *hcl.Block) []ValidationResult {
 func (c *Pipeline) Validate() error {
 	var result error
 
-	for _, stepRaw := range c.StepRaw {
-		if stepRaw == nil {
+	for _, step := range c.Steps {
+		if step == nil {
 			result = multierror.Append(result, fmt.Errorf(
 				"step stage in pipeline is nil, this is an internal error"))
-		} else if stepRaw != nil && (stepRaw.Use == nil && stepRaw.PipelineRaw == nil) {
+		} else if step != nil && (step.Use == nil && step.Pipeline == nil) {
 			result = multierror.Append(result, fmt.Errorf(
 				"step stage with a default 'use' stanza or a 'pipeline' stanza is required"))
-		} else if stepRaw.Use != nil && stepRaw.PipelineRaw != nil {
+		} else if step.Use != nil && step.Pipeline != nil {
 			result = multierror.Append(result, fmt.Errorf(
 				"step stage with both a 'use' stanza and pipeline stanza is not valid"))
-		} else if stepRaw.PipelineRaw == nil && (stepRaw.Use == nil || stepRaw.Use.Type == "") {
+		} else if step.Pipeline == nil && (step.Use == nil || step.Use.Type == "") {
 			result = multierror.Append(result, fmt.Errorf(
 				"step stage %q is required to define a 'use' stanza and label or a "+
-					"pipeline stanza but neither were found", stepRaw.Name))
+					"pipeline stanza but neither were found", step.Name))
 		}
 
 		// else, other step validations?

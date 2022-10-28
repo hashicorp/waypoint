@@ -152,8 +152,9 @@ func NewProject(ctx context.Context, os ...Option) (*Project, error) {
 
 	// configure pipelines for project and its apps
 	for _, name := range opts.Config.Pipelines() {
+		// Set input variables for pipelines and steps in context
 		evalCtx := config.EvalContext(nil, p.dir.DataDir()).NewChild()
-		// TODO: Add variables
+		config.AddVariables(evalCtx, p.variables)
 
 		pipelineConfig, err := opts.Config.Pipeline(name, evalCtx)
 		if err != nil {
