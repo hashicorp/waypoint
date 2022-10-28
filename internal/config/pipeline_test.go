@@ -306,6 +306,7 @@ func TestPipelineProtos(t *testing.T) {
 				require.Len(pipelines[0].Steps, 1)
 
 				nestedStep := pipelines[0].Steps["test_nested"]
+				require.NotNil(nestedStep)
 				require.Equal(nestedStep.Name, "test_nested")
 			},
 		},

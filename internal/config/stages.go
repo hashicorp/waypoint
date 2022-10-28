@@ -41,31 +41,6 @@ type scopedStage struct {
 	Remain hcl.Body `hcl:",remain"`
 }
 
-// Step are the step settings for pipelines
-type Step struct {
-	Labels map[string]string `hcl:"labels,optional"`
-	Use    *Use              `hcl:"use,block"`
-
-	// Give this step a name
-	Name string `hcl:",label"`
-
-	// If set, this step will depend on the defined step. The default step
-	// will be the previously defined step in order that it was defined
-	// in a waypoint.hcl
-	DependsOn []string `hcl:"depends_on,optional"`
-
-	// The OCI image to use for executing this step
-	ImageURL string `hcl:"image_url,optional"`
-
-	// An optional embedded pipeline stanza
-	Pipeline *Pipeline `hcl:"pipeline,block"`
-
-	ctx *hcl.EvalContext
-
-	// Optional workspace scoping
-	Workspace string `hcl:"workspace,optional"`
-}
-
 // Build are the build settings.
 type Build struct {
 	Labels map[string]string `hcl:"labels,optional"`
