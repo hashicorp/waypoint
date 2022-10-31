@@ -1,0 +1,3 @@
+```release-note:bug
+cli: Fix bug where input variables were not included on pipeline run jobs.
+```
