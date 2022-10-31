@@ -5,7 +5,7 @@
   data-test-oidc-provider={{authMethod.name}}
   {{on "click" (perform this.initializeOIDCFlow authMethod)}}>
     {{#if this.initializeOIDCFlow.isRunning}}
-      <Spinner @size="16"/>
+      <FlightIcon @name="loading" @size="16" />
     {{/if}}
     {{authMethod.displayName}}
   </Pds::Button>

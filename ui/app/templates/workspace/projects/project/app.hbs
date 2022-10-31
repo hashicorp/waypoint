@@ -16,7 +16,7 @@
       />
       {{#if this.isSwitchingWorkspace}}
         <span class="workspace-switching-indicator">
-          <Spinner @size={{20}} />
+          <FlightIcon @name="loading" @size="24" />
           {{t "page.app.switching-workspace"}}
         </span>
       {{/if}}
