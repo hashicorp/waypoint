@@ -193,7 +193,11 @@ func Connect(ctx context.Context, opts ...ConnectOption) (*grpc.ClientConn, erro
 	cfg.Log.Debug("connection information", logArgs...)
 
 	// Connect to this server
-	return grpc.DialContext(ctx, cfg.Addr, grpcOpts...)
+	conn, err := grpc.DialContext(ctx, cfg.Addr, grpcOpts...)
+	if err != nil {
+		return nil, fmt.Errorf("error connecting to server: %s", err)
+	}
+	return conn, err
 }
 
 // ContextConfig will return the context configuration for the given connection
