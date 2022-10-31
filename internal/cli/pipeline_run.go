@@ -99,6 +99,7 @@ func (c *PipelineRunCommand) Run(args []string) int {
 			Application:  app.Ref(),
 			Workspace:    c.project.WorkspaceRef(),
 			TargetRunner: &pb.Ref_Runner{Target: &pb.Ref_Runner_Any{}},
+			Variables:    c.variables,
 		}
 
 		// build the base api request
