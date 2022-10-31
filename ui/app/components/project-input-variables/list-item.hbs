@@ -13,6 +13,7 @@
             <Pds::Input
               @type='text'
               data-test-input-variables-var-name
+              required
               id='input-variable-name'
               placeholder={{t 'form.project_variables_settings.variable_name_placeholder'}}
               value={{this.variable.name}}
@@ -28,6 +29,7 @@
                 <Pds::Input
                   @type='text'
                   data-test-input-variables-var-hcl
+                  required
                   id='input-variable-value'
                   placeholder={{if
                     this.writeOnly
@@ -42,6 +44,7 @@
                   @type='text'
                   id='input-variable-value'
                   data-test-input-variables-var-str
+                  required
                   placeholder={{if
                     this.writeOnly
                     (t 'form.project_variables_settings.variable_form_placeholder_sensitive')
