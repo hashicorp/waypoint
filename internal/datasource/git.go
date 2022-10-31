@@ -599,7 +599,7 @@ func (s *GitSource) auth(
 	switch authcfg := source.Git.Auth.(type) {
 	case *pb.Job_Git_Basic_:
 		if ui != nil {
-			ui.Output("Auth: username/password", terminal.WithInfoStyle())
+			ui.Output("      Auth: username/password", terminal.WithInfoStyle())
 		}
 		return &http.BasicAuth{
 			Username: authcfg.Basic.Username,
@@ -614,7 +614,7 @@ func (s *GitSource) auth(
 		}
 
 		if ui != nil {
-			ui.Output("Auth: ssh", terminal.WithInfoStyle())
+			ui.Output("      Auth: ssh", terminal.WithInfoStyle())
 		}
 		auth, err := ssh.NewPublicKeys(
 			user,
