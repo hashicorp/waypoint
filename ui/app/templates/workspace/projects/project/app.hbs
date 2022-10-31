@@ -15,10 +15,12 @@
         @models={{this.workspaceSwitcherTargetModels}}
       />
       {{#if this.isSwitchingWorkspace}}
-        <span class="workspace-switching-indicator">
-          <FlightIcon @name="loading" @size="24" />
+        <div class="workspace-switching-indicator">
+          <div>
+            <FlightIcon @name="loading" @size="24" />
+          </div>
           {{t "page.app.switching-workspace"}}
-        </span>
+        </div>
       {{/if}}
     </div>
   </div>
