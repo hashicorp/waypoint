@@ -150,6 +150,9 @@ form:
     variable_name_placeholder: 'var_key'
     variable_value: 'Value'
     variable_value_placeholder: 'var_value'
+    variable_set_sensitive: Set as sensitive
+    variable_value_placeholder_sensitive: 'Sensitive - write only'
+    variable_form_placeholder_sensitive: 'sensitive - write only'
     button_submit: 'Save variable'
     button_cancel: 'Cancel'
   config_variables_settings:
@@ -315,7 +318,7 @@ image-ref:
 workspace-switcher:
   error: Failed to load workspaces
 
-runner-alert: 
+runner-alert:
   title: Remote runner required
   description: In order to connect to a repository, you must install a remote runner first.
   link: Waypoint Runners documentation
