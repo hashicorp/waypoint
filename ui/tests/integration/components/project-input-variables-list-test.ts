@@ -103,4 +103,29 @@ module('Integration | Component | project-input-variables-list', function (hooks
       'the updated variable value is correct'
     );
   });
+
+  test('sensitive variables are hidden in list', async function (assert) {
+    let dbproj = await this.server.create('project', { name: 'Proj3' });
+    this.server.create('variable', 'is-sensitive', { project: dbproj });
+    let project = dbproj.toProtobuf();
+    this.set('project', project.toObject());
+
+    await render(hbs`<ProjectInputVariables::List @project={{this.project}}/>`);
+
+    assert.dom('[data-test-sensitive-var-badge]').exists();
+  });
+
+  test('sensitive variables are hidden in forms', async function (assert) {
+    let dbproj = await this.server.create('project', { name: 'Proj3' });
+    this.server.create('variable', 'is-sensitive', { project: dbproj });
+    let project = dbproj.toProtobuf();
+    this.set('project', project.toObject());
+
+    await render(hbs`<ProjectInputVariables::List @project={{this.project}}/>`);
+
+    await page.variablesList.objectAt(0).dropdown();
+    await page.variablesList.objectAt(0).dropdownEdit();
+
+    assert.dom('[data-test-input-variables-var-str]').hasAttribute('placeholder', 'sensitive - write only');
+  });
 });
