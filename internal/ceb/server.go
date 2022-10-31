@@ -191,6 +191,7 @@ func (ceb *CEB) dialServer(ctx context.Context, cfg *config, isRetry bool) error
 		ceb.logger.Debug("reconnecting to server with authentication")
 		conn, err = grpc.DialContext(ctx, cfg.ServerAddr, grpcOpts...)
 		if err != nil {
+			ceb.logger.Warn("failed to connect to server", "err", err)
 			return err
 		}
 		client = pb.NewWaypointClient(conn)
