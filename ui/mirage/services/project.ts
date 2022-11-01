@@ -38,6 +38,12 @@ export function uiGet(this: RouteHandler, schema: any, { requestBody }: Request)
   resp.setProject(project);
 
   // TODO(jgwhite): sideload latest init job
+  if (model.name === 'init-test') {
+    let initJob = new Job();
+    initJob.setInit(new Job.InitOp());
+    initJob.setState(Job.State.RUNNING);
+    resp.setLatestInitJob(initJob);
+  }
 
   return this.serialize(resp, 'application');
 }
