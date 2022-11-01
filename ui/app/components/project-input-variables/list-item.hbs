@@ -13,6 +13,7 @@
             <Pds::Input
               @type="text"
               data-test-input-variables-var-name
+              required
               id="input-variable-name"
               placeholder={{t "form.project_variables_settings.variable_name_placeholder"}}
               value={{this.variable.name}}
@@ -28,9 +29,14 @@
                 <Pds::Input
                   @type="text"
                   data-test-input-variables-var-hcl
+                  required
                   id="input-variable-value"
-                  placeholder={{t "form.project_variables_settings.variable_value_placeholder"}}
-                  value={{this.variable.hcl}}
+                  placeholder={{if
+                    this.writeOnly
+                    (t "form.project_variables_settings.variable_value_placeholder_sensitive")
+                    (t "form.project_variables_settings.variable_value_placeholder")
+                  }}
+                  value={{if this.writeOnly "" this.variable.hcl}}
                   {{on "input" (pick "target.value" (set this "variable.hcl"))}}
                 />
               {{else}}
@@ -38,8 +44,13 @@
                   @type="text"
                   id="input-variable-value"
                   data-test-input-variables-var-str
-                  placeholder={{t "form.project_variables_settings.variable_value_placeholder"}}
-                  value={{this.variable.str}}
+                  required
+                  placeholder={{if
+                    this.writeOnly
+                    (t "form.project_variables_settings.variable_form_placeholder_sensitive")
+                    (t "form.project_variables_settings.variable_value_placeholder")
+                  }}
+                  value={{if this.writeOnly "" this.variable.str}}
                   {{on "input" (pick "target.value" (set this "variable.str"))}}
                 />
               {{/if}}
@@ -49,26 +60,35 @@
                   data-test-input-variables-toggle-hcl
                   id="input-variable-hcl"
                   checked={{this.isHcl}}
-                  {{on "change" (fn this.toggleHcl this.variable)}}>
-                  <label for="input-variable-hcl">HCL</label>
+                  {{on "change" (fn this.toggleHcl this.variable)}}
+                />
+                <label for="input-variable-hcl">HCL</label>
               </span>
+            </div>
+            <div class="pds-formField__input-inline-toggle">
+              <Hds::Form::Toggle::Field
+                data-test-input-variables-toggle-sensitive
+                checked={{this.isSensitive}}
+                {{on "change" (fn this.toggleSensitive this.variable)}}
+                as |F|
+              >
+                <F.Label>
+                  {{t "form.project_variables_settings.variable_set_sensitive"}}
+                </F.Label>
+              </Hds::Form::Toggle::Field>
             </div>
           </div>
         </fieldset>
         <div class="card-footer">
           <Pds::ButtonSet>
-            <Pds::Button
-              data-test-input-variables-edit-save
-              @variant="primary"
-              @type="submit">
+            <Pds::Button data-test-input-variables-edit-save @variant="primary" @type="submit">
               {{t "form.project_variables_settings.button_submit"}}
             </Pds::Button>
             <Pds::Button
               data-test-input-variables-edit-cancel
               @variant="secondary"
-              {{on "click"
-                (if this.isCreating this.cancelCreate this.cancelEdit)
-              }}>
+              {{on "click" (if this.isCreating this.cancelCreate this.cancelEdit)}}
+            >
               {{t "form.project_variables_settings.button_cancel"}}
             </Pds::Button>
           </Pds::ButtonSet>
@@ -79,7 +99,13 @@
     <div class="variables--list-item">
       <span class="variables--list-item-name" data-test-input-variables-var-name>{{this.variable.name}}</span>
       <span class="variables--list-item-value" data-test-input-variables-var-value>
-        {{#if this.isHcl}}
+        {{#if this.isSensitive}}
+          <Hds::Badge
+            data-test-sensitive-var-badge
+            @icon="eye-off"
+            @text={{t "form.project_variables_settings.variable_value_placeholder_sensitive"}}
+          />
+        {{else if this.isHcl}}
           <b class="badge" data-test-input-variables-list-item-is-hcl>
             HCL
           </b>
@@ -89,23 +115,23 @@
         {{/if}}
       </span>
       <Pds::Dropdown @align="right" as |D|>
-        <D.Trigger
-          data-test-input-variables-dropdown
-          @variant="ghost">
+        <D.Trigger data-test-input-variables-dropdown @variant="ghost">
           Actions
         </D.Trigger>
-        <D.Dialog >
+        <D.Dialog>
           <section>
             <Pds::Button
               data-test-input-variables-dropdown-edit
               @variant="secondary"
-              {{on "click" (fn this.editVariable this.variable)}}>
+              {{on "click" (fn this.editVariable this.variable)}}
+            >
               Edit
             </Pds::Button>
             <Pds::Button
               data-test-input-variables-dropdown-delete
               @variant="warning"
-              {{on "click" (fn this.deleteVariable this.variable)}}>
+              {{on "click" (fn this.deleteVariable this.variable)}}
+            >
               Delete
             </Pds::Button>
           </section>
