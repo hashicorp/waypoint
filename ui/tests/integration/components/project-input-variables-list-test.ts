@@ -39,7 +39,7 @@ module('Integration | Component | project-input-variables-list', function (hooks
 
     await render(hbs`<ProjectInputVariables::List @project={{this.project}}/>`);
     assert.dom('.variables-list').exists('The list renders');
-    assert.equal(page.variablesList.length, 3, 'the list contains all variables');
+    assert.equal(page.variablesList.length, 4, 'the list contains all variables');
     assert.notOk(page.variablesList.objectAt(0).isHcl, 'the list contains a string variable');
     assert.ok(page.variablesList.objectAt(2).isHcl, 'the list contains a hcl variable');
   });
@@ -51,23 +51,23 @@ module('Integration | Component | project-input-variables-list', function (hooks
 
     await render(hbs`<ProjectInputVariables::List @project={{this.project}}/>`);
     assert.dom('.variables-list').exists('The list renders');
-    assert.equal(page.variablesList.length, 3, 'the list contains all variables');
+    assert.equal(page.variablesList.length, 4, 'the list contains all variables');
     await page.createButton();
     assert.ok(page.hasForm, 'Attempt to create: the form appears when the Add Variable button is clicked');
     await page.cancelButton();
     assert.equal(
       page.variablesList.length,
-      3,
+      4,
       'Attempt to create: the list still has the normal count of variables after cancelling'
     );
     await page.createButton();
     await page.varName('var_name');
     await page.varStr('foozbarz');
     await page.saveButton();
-    assert.equal(page.variablesList.length, 4, 'Create Variable: the list has the new variable');
+    assert.equal(page.variablesList.length, 5, 'Create Variable: the list has the new variable');
     await page.variablesList.objectAt(0).dropdown();
     await page.variablesList.objectAt(0).dropdownDelete();
-    assert.equal(page.variablesList.length, 3, 'Delete Variable: the variable has been removed');
+    assert.equal(page.variablesList.length, 4, 'Delete Variable: the variable has been removed');
   });
 
   test('editing variables works', async function (assert) {
@@ -102,5 +102,30 @@ module('Integration | Component | project-input-variables-list', function (hooks
       'foozbarz_edited',
       'the updated variable value is correct'
     );
+  });
+
+  test('sensitive variables are hidden in list', async function (assert) {
+    let dbproj = await this.server.create('project', { name: 'Proj3' });
+    this.server.create('variable', 'is-sensitive', { project: dbproj });
+    let project = dbproj.toProtobuf();
+    this.set('project', project.toObject());
+
+    await render(hbs`<ProjectInputVariables::List @project={{this.project}}/>`);
+
+    assert.dom('[data-test-sensitive-var-badge]').exists();
+  });
+
+  test('sensitive variables are hidden in forms', async function (assert) {
+    let dbproj = await this.server.create('project', { name: 'Proj3' });
+    this.server.create('variable', 'is-sensitive', { project: dbproj });
+    let project = dbproj.toProtobuf();
+    this.set('project', project.toObject());
+
+    await render(hbs`<ProjectInputVariables::List @project={{this.project}}/>`);
+
+    await page.variablesList.objectAt(0).dropdown();
+    await page.variablesList.objectAt(0).dropdownEdit();
+
+    assert.dom('[data-test-input-variables-var-str]').hasAttribute('placeholder', 'sensitive - write only');
   });
 });

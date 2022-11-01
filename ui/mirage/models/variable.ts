@@ -9,6 +9,7 @@ export default Model.extend({
 
     result.setServer();
     result.setName(this.name);
+    result.setSensitive(this.sensitive);
     if (this.hcl) {
       result.setStr('');
       result.setHcl(this.hcl);
