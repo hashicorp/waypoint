@@ -75,7 +75,7 @@ func (c *ConfigSyncCommand) Run(args []string) int {
 }
 
 func (c *ConfigSyncCommand) Flags() *flag.Sets {
-	return c.flagSet(0, nil)
+	return c.flagSet(flagSetOperation, nil)
 }
 
 func (c *ConfigSyncCommand) AutocompleteArgs() complete.Predictor {
