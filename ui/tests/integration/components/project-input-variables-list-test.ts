@@ -39,7 +39,7 @@ module('Integration | Component | project-input-variables-list', function (hooks
 
     await render(hbs`<ProjectInputVariables::List @project={{this.project}}/>`);
     assert.dom('.variables-list').exists('The list renders');
-    assert.equal(page.variablesList.length, 3, 'the list contains all variables');
+    assert.equal(page.variablesList.length, 4, 'the list contains all variables');
     assert.notOk(page.variablesList.objectAt(0).isHcl, 'the list contains a string variable');
     assert.ok(page.variablesList.objectAt(2).isHcl, 'the list contains a hcl variable');
   });
@@ -51,23 +51,23 @@ module('Integration | Component | project-input-variables-list', function (hooks
 
     await render(hbs`<ProjectInputVariables::List @project={{this.project}}/>`);
     assert.dom('.variables-list').exists('The list renders');
-    assert.equal(page.variablesList.length, 3, 'the list contains all variables');
+    assert.equal(page.variablesList.length, 4, 'the list contains all variables');
     await page.createButton();
     assert.ok(page.hasForm, 'Attempt to create: the form appears when the Add Variable button is clicked');
     await page.cancelButton();
     assert.equal(
       page.variablesList.length,
-      3,
+      4,
       'Attempt to create: the list still has the normal count of variables after cancelling'
     );
     await page.createButton();
     await page.varName('var_name');
     await page.varStr('foozbarz');
     await page.saveButton();
-    assert.equal(page.variablesList.length, 4, 'Create Variable: the list has the new variable');
+    assert.equal(page.variablesList.length, 5, 'Create Variable: the list has the new variable');
     await page.variablesList.objectAt(0).dropdown();
     await page.variablesList.objectAt(0).dropdownDelete();
-    assert.equal(page.variablesList.length, 3, 'Delete Variable: the variable has been removed');
+    assert.equal(page.variablesList.length, 4, 'Delete Variable: the variable has been removed');
   });
 
   test('editing variables works', async function (assert) {
