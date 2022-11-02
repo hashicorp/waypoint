@@ -21,29 +21,12 @@ To improve the user experience, Waypoint simplifies what is required and
 automatically runs certain components as needed. We will cover all of these
 cases on this page.
 
-## Most Common: CLI and a Remote Server
+## Most Common: CLI, Remote Server, Static Runner, On-Demand Runner
 
-In most cases, you use a CLI directly with a Waypoint server. In this
-model, there are no standalone "runner" processes running. This is the
-usage style in the getting started guide that we introduce to new users of
-Waypoint.
-
-For this execution, the CLI transparently spins up a runner in-process.
-This runner registers with the server like any other runner process but
-advertises that it can only accept jobs that are directly assigned to it.
-The CLI queues a job with the server for the operation and directly assigns
-this to the runner it is running in-process. See the diagram below.
-The dotted
-boxes represent process boundaries (perhaps on different computers) and
-the white boxes are logical components within a single process.
-
-![CLI and a Remote Server](/img/execution-cli-server.png)
-
-## Most Advanced: CLI, Remote Server, Remote Runner
-
-The most advanced case is using a CLI to execute an operation that
-is executed on a remote runner. This scenario is most common to try to
-hide credentials, access internal systems the CLI may not be able to, etc.
+The common case is using a CLI to execute an operation that
+is executed remotely, which causes the static runner to spawn an on-demand
+runner to execute your operation. This provides the most stable and performant way to
+use Waypoint.
 
 For this style of execution, the CLI queues the job with the server, the server
 assigns the job to a runner, and the job executes it.
@@ -56,6 +39,22 @@ the white boxes are logical components within a single process.
 In this mode, the CLI does not need to remain attached to the server
 after queueing the job. The CLI may exit and the job will continue
 executing in the background.
+
+## Less Common: CLI Runner and a Remote Server
+
+In some cases, you use a CLI directly with a Waypoint server where there is no
+standalone "static runner" processes running.
+
+For this execution, the CLI transparently spins up a runner in-process.
+This runner registers with the server like any other runner process but
+advertises that it can only accept jobs that are directly assigned to it.
+The CLI queues a job with the server for the operation and directly assigns
+this to the runner it is running in-process. See the diagram below.
+The dotted
+boxes represent process boundaries (perhaps on different computers) and
+the white boxes are logical components within a single process.
+
+![CLI and a Remote Server](/img/execution-cli-server.png)
 
 ## Most Limited: CLI, No Server
 

@@ -8,7 +8,7 @@ description: |-
 # Waypoint Runners
 
 Waypoint utilizes "runners" to execute operations. A runner is a program executing
-[`waypoint runner agent`](/commands/runner-agent) that is configured with the details
+[`waypoint runner agent`](/command/runner-agent) that is configured with the details
 of the Waypoint server.
 
 Every operation that Waypoint runs (build, deploy, release, etc) is executed by a Waypoint runner.
@@ -25,7 +25,7 @@ In most deployments, there are two kinds of runners:
 Static runners are long-lived runners that are installed into your deployment
 environment once, likely when you setup Waypoint for the first time.
 
-The [`waypoint install`](/commands/install) and [`waypoint runner install`](/commands/runner-install)
+The [`waypoint install`](/commands/install) and [`waypoint runner install`](/commands/install)
 commands can install these runners for you, using details about your deployment
 environment.
 
@@ -61,11 +61,11 @@ One runner behavior is used less often, the CLI runner:
 
 ### CLI Runner
 
-When you trigger an action with the CLI, i.e. by running `waypoint deploy`, the CLI acts as a runner
-capable of performing your operation. If your deployment needs AWS credentials, or a valid kubectl context,
-it can access the credentials on the developer workstation that it's running on.
-
-If you only use Waypoint from the CLI, this is the only kind of runner that is used.
+When you trigger an action with the CLI, i.e. by running `waypoint deploy`, and
+either specify `-local` or do not have any runners registered on the server, the CLI
+itself acts as a runner capable of performing your operation. If your deployment needs
+AWS credentials, or a valid kubectl context, it can access the credentials from the
+environment that is performing the CLI command.
 
 ### Remote Runner
 
@@ -101,43 +101,47 @@ This diagram shows a CLI runner, as well as remote static and on-demand runners:
 
 Runner targeting was designed with multi-environment and multi-region workflows in mind.
 Static runners can be installed with user-defined ID and labels.
-You can then set [runner profiles](/docs/runner/profiles), which tell the server which static runner to target to handle operations,
+You can then set [runner profiles](docs/runner/profiles), which tell the server which static runner to target to handle operations,
 and the configurations of the short-lived on-demand runner that will execute jobs.
-Finally, specify which `runner profile` to use for an application via
+Finally, specify which` runner profile` to use for an application via
 the `profile` option in the `runner` stanza of the `waypoint.hcl` file.
 
 ### Runner Targeting Example
 
-Runners can have labels applied to them with the `-label` flag provided
-alongside the `waypoint runner agent` command.
+If you install a runner with the `runner install` or `server install` commands,
+it comes with a preset `runner profile` and adopted static runner.
+
+The following example illustrates a custom local setup of a Waypoint runner and profile.
 
 ```terminal
-$ waypoint runner agent -label=org=hashicorp -label=env=dev
+$ waypoint runner agent -id=test -label=org=hashicorp -label=env=dev
 ```
 
-After the runner has started, it can be adopted by the server for use in remote
-operations. With `waypoint runner list`, you can see the full list of available
+Static runners need a valid runner token and server adoption in order to receive jobs.
+For more information on runner adoption, see [adoption workflow](/docs/runner/adoption).
+
+With `waypoint runner list`, you can see the full list of available
 runners and their labels.
 
 ```shell-session
 $ waypoint runner list
-              ID             |  STATE   |  KIND  |         LABELS         | LAST REGISTERED
------------------------------+----------+--------+------------------------+------------------
-  01G4N53X8DCJR3DJ9R56D6KZKH | pending  | remote | env:dev org:hashicorp  |
+    ID   |   STATE    |  KIND  |         LABELS         | LAST REGISTERED
+---------+------------+--------+------------------------+------------------
+  test   | preadopted | remote | org:hashicorp env:dev  | 6 seconds ago
 
-$ waypoint runner adopt 01G4N53X8DCJR3DJ9R56D6KZKH
-Runner "01G4N53X8DCJR3DJ9R56D6KZKH" adopted.
+$ waypoint runner adopt test
+Runner "test" adopted.
 
 $ waypoint runner list
-              ID             |  STATE   |  KIND  |         LABELS         | LAST REGISTERED
------------------------------+----------+--------+------------------------+------------------
-  01G4N53X8DCJR3DJ9R56D6KZKH | adopted  | remote | env:dev org:hashicorp  |
+    ID   |  STATE  |  KIND  |         LABELS         | LAST REGISTERED
+---------+---------+--------+------------------------+------------------
+  test   | adopted | remote | org:hashicorp env:dev  | 1 minute ago
 ```
 
-With a runner that has labels applied, you can then create a runner profile to
-target that runner (or runners). When this runner profile is used, Waypoint
-will only generate on-demand runners using a runner whose labels match those
-specified in the runner profile.
+You can now set a runner profile to target that specific static runner by ID,
+or any static runner that has matching labels. When there is a runner profile specified
+in the `waypoint.hcl` configurations, only a matching static runner can receive jobs
+for that application and generate on-demand runners to execute them.
 
 ```terminal
 $ waypoint runner profile set -name=docker-hashicorp-dev -plugin-type=docker -target-runner-label=org=hashicorp -target-runner-label=env=dev
@@ -150,11 +154,11 @@ $ waypoint runner profile set -name=docker-hashicorp-dev -plugin-type=docker -ta
   docker-hashicorp-dev                  | docker      | hashicorp/waypoint-odr:latest        | labels: {"env":"dev","org":"hashicorp"} |
 ```
 
-In the `waypoint.hcl` file, you can specify the runner profile to use with the
-`runner` stanza. In this example, a user variable "org" and the built-in
-`workspace` variable are interpolated into the runner profile name, so that at
-the time of execution of remote operations, Waypoint uses the desired runner
-profile.
+Specify the runner profile to use with the `runner` stanza in the `waypoint.hcl` file.
+In this example, a user variable "org" and the built-in
+`workspace` variable are interpolated into the runner profile name.
+At the time of execution of remote operations, Waypoint uses the desired runner
+profile based on the workspace and configuration variables.
 
 ```hcl
 project = "example-nodejs"
@@ -182,30 +186,36 @@ variable "org" {
 }
 ```
 
-An operation which would use the runner profile created in this example could
-be initiated with `waypoint build -w=dev -var=org=hashicorp -local=false`.
+Our runner targeting is all set up! An example operation that would use this runner profile:
+
+`waypoint build -w=dev -var=org=hashicorp -local=false`.
 
 ### Runner Targeting Advantages
 
-The example above demonstrates basic usage of runner targeting. However, in a
-production environment, runner targeting may be essential to achieving high
-availability. Multiple runners could be deployed with the same labels, and
-then a runner profile which targets runners with those labels would "round
-robin" between the available runners. If one goes down, as long as another with
-the same labels is still online, remote operations will continue to work.
+#### Multi-Cluster, Multi-Environment, Multi-Region
 
-Also shown in the above example is runner targeting for multi-environment
-operations. The workspace of the operation dev, is interpolated into the runner
-profile name dynamically at operation runtime. Additional runners and runner
-profiles could be created for a "test" or "prod" environment so that a runner
-can deploy to the right environment at runtime.
+As shown in the example above, enabling multi-environment operations is
+the most straightforward use-case for runner targeting. Waypoint dynamically interpolates
+the "dev" workspace into the runner profile name at operation runtime,
+which then targets the matching static runner for the "dev" environment.
+You could create additional runners and runner profiles for the "prod" and "test" environments,
+and Waypoint would target the correct runners automagically with a simple `-workspace` flag.
 
-Runner targeting is useful for workflows where you deploy to multiple clusters
-in a platform. For example, if you have a runner in one Kubernetes cluster,
-that runner could potentially only perform remote operations within that
-cluster. However, if there were a runner in multiple Kubernetes clusters, you
-would have the ability to deploy to any of the clusters with Waypoint remote
-operations by targeting the appropriate runners in each cluster.
+Runner targeting is also useful for workflows where you deploy to multiple clusters
+on a platform. A static runner pod in one Kubernetes cluster
+would only perform remote operations within that cluster.
+With runners in multiple Kubernetes clusters, you can easily target and deploy
+to any cluster with Waypoint remote operations.
+
+#### High Availability and Performance
+
+In a production environment, runner targeting may be essential to achieving high availability.
+Deploying multiple runners with the same labels and a runner profile that targets
+those same labels will cause Waypoint to "round-robin" between the available
+runners. This approach reduces bottleneck of one static runner handling a large job
+queue, and ensures continued availability if one of the runners goes down. As long as
+one of the static runners with matching labels remains online, remote operations on
+the application continue uninterrupted.
 
 ## Disabling Runners
 
@@ -219,10 +229,15 @@ With runners disabled, certain functionality becomes unavailable:
 
 - Remote operations
 - Git polling
+- Status Checks
 
 In addition to disabled functionality, consider that all clients must now
 have proper credentials for the target platforms (such as AWS, GCP, etc.)
 since without runners they must execute all operations locally.
+
+The reason this functionality is not available is the server creates jobs to
+perform these operations itself and without a long lived runner to execute them, the
+functionality is not available.
 
 ### Disabling Runner Installation
 
@@ -230,12 +245,20 @@ Prior to installation, runners can be disabled by specifying the
 `-runner=false` flag to the [`waypoint install`](/commands/install) command.
 This will not install a runner.
 
-To uninstall a runner that is already installed, the only option today is
-to uninstall and reinstall Waypoint with a
-[data snapshot and restore](/docs/server/run/maintenance#backup-restore). You
-may also manually go into your platform and delete the runner, but Waypoint
-can't automate this for you today.
+### Removing a Runner
 
 If there is a runner which you'd no longer like your server to use for remote
 operations, this runner can be "invalidated" for use by the server with the
-`waypoint runner forget` command, with the ID of the runner provided.
+`waypoint runner reject` command, with the ID of the runner provided.
+
+With the runner forgotten, the server will no longer send any jobs to it. To cleanup
+the resources being used by that runner though, there are two options:
+
+To uninstall a runner that is already installed, there are two options:
+
+1. You may also manually go into your platform and delete the runner. For instance
+   with kubernetes, you'd delete the StatefulSet that maintains the static runner.
+2. Uninstall and reinstall Waypoint with a
+   [data snapshot and restore](/docs/server/run/maintenance#backup-restore). This is
+   a fairly substantial action and should only be undertaken if there is no other
+   options.
