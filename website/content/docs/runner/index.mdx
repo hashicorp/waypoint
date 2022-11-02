@@ -35,7 +35,7 @@ uniquely configured environments.
 
 For that reason, Waypoint makes heavy usage of On-demand runners:
 
-### On-demand runners
+### On-Demand Runners
 
 While the static runner is capable of performing operations on its own, it also
 supports the ability to spawn on-demand runners for a given platform. These
@@ -44,14 +44,6 @@ They can perform container builds without any privileged access, offer more isol
 between operations, and allow Waypoint to scale further.
 
 On-demand runners: see [on-demand runners](/docs/runner/on-demand-runner) for more information.
-
-This diagram shows a CLI runner, as well as remote static and on-demand runners:
-
-<ImageConfig width={400}>
-
-  ![CLI and remote runners](/img/oss_cli_and_remote_runners@2x.jpg)
-
-</ImageConfig>
 
 ### Runner Architecture
 
@@ -74,6 +66,36 @@ either specify `-local` or do not have any runners registered on the server, the
 itself acts as a runner capable of performing your operation. If your deployment needs
 AWS credentials, or a valid kubectl context, it can access the credentials from the
 environment that is performing the CLI command.
+
+### Remote Runner
+
+Not every operation in Waypoint needs to happen in response to a CLI invocation
+from a privileged workstation. Waypoint can trigger deployments from the UI or
+automatically based on git changes, or automatically poll the status of
+applications in the background. In these cases, Waypoint needs a "remote
+runner", a long-lived runner that is always available to run these operations.
+
+Waypoint automatically installs a single remote runner by default when the Waypoint
+server is installed with [`waypoint install`](/commands/install).
+
+### On-demand runners
+
+While the remote runner is capable of performing operations on its own, it also
+supports plugins to spawn on-demand runners for a given platform. These
+on-demand runners are ephemeral container instances that perform one operation
+before exiting. These on-demand runners can perform container builds without
+any privileged access, offer more isolation between operations, and allow
+Waypoint to scale further.
+
+On-demand runners: see [on-demand runners](/docs/runner/on-demand-runner) for more information.
+
+This diagram shows a CLI runner, as well as remote static and on-demand runners:
+
+<ImageConfig width={400}>
+
+![CLI and remote runners](/img/oss_cli_and_remote_runners@2x.jpg)
+
+</ImageConfig>
 
 ## Runner Targeting
 
