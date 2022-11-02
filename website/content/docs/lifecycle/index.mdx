@@ -11,20 +11,15 @@ Waypoint has an opinionated view on the minimum application lifecycle:
 build, deploy, and release. These are the core elements that Waypoint
 orchestrates during a `waypoint up`.
 
-**Each stage in Waypoint is optional.** Waypoint doesn't need to own or run
-each stage. For example, your builds may happen in CI using other tools.
-Waypoint can use the result of that build to perform only the "deploy"
-and "release" steps. Any combination can be mixed.
-
-These stages can also be broken down to the individual commands
-`waypoint build`, `waypoint deploy`, and `waypoint release`. This allows
-customization of the application lifecycle by inserting your own phases
-into the Waypoint workflow.
+These build, deploy, and release stages can be broken down to the individual
+commands of `waypoint build`, `waypoint deploy`, and `waypoint release`. This allows
+customization of the application lifecycle by inserting your own phases into the
+Waypoint workflow.
 
 ## Overview
 
 - A **build** takes application source and converts it to an _artifact_.
-  The build process may also include an optional **push** operation to push
+  The build process may also include **registry** configuration to push
   the built artifact to a registry so that it is available for the deployment
   platform.
 
@@ -51,7 +46,7 @@ the API.
 A **build** takes application source and converts it to an _artifact_.
 An artifact is the packaged form of an application required for deployment on
 your target platform: a container image, VM image, or maybe a simple zip file.
-The build process may also include an optional **push** operation to push
+The build process may also include **registry** configuration to push
 the built artifact to a registry so that it is available for the deployment
 platform.
 
@@ -87,8 +82,8 @@ DNS, configuring a service mesh, etc.
 
 A **hook** is a customizable command that executes before or after the `build`,
 `registry`, `deploy`, or `release` operations.
-Hooks execute on the [Waypoint Runner](/docs/internals/execution#most-common-cli-and-a-remote-server),
-which is typically the Waypoint CLI.
+Hooks execute on the [Waypoint Runner](/docs/resources/internals/execution),
+which is typically an on-demand runner.
 Hooks can be useful to do things such as perform a security scan on an image,
 run database migrations on a deploy, etc.
 
