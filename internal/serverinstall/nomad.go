@@ -642,6 +642,7 @@ func (i *NomadInstaller) InstallRunner(
 			CsiFS:                 i.config.csiFS,
 			CsiTopologies:         i.config.csiTopologies,
 			CsiExternalId:         i.config.csiExternalId,
+			CsiParams:             i.config.csiParams,
 			CsiPluginId:           i.config.csiPluginId,
 			CsiSecrets:            i.config.csiSecrets,
 			CsiVolume:             i.config.runnerCsiVolume,

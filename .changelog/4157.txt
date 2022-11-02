@@ -1,0 +1,3 @@
+```release-note:bug
+install/nomad: Update installation with Nomad to use CSI parameters.
+```

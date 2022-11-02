@@ -44,6 +44,7 @@ type NomadConfig struct {
 	CsiFS                string            `hcl:"csi_fs,optional"`
 	CsiTopologies        map[string]string `hcl:"nomad_csi_topologies,optional"`
 	CsiExternalId        string            `hcl:"nomad_csi_external_id,optional"`
+	CsiParams            map[string]string `hcl:"nomad_csi_params,optional"`
 	CsiPluginId          string            `hcl:"nomad_csi_plugin_id"`
 	CsiSecrets           map[string]string `hcl:"nomad_csi_secrets,optional"`
 	CsiVolume            string            `hcl:"nomad_csi_volume,optional"`
@@ -101,7 +102,7 @@ func (i *NomadRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) e
 			i.Config.CsiVolumeCapacityMax,
 			i.Config.CsiTopologies,
 			i.Config.CsiSecrets,
-			map[string]string{},
+			i.Config.CsiParams,
 		)
 		if err != nil {
 			return fmt.Errorf("error creating Nomad persistent volume: %s", clierrors.Humanize(err))
@@ -279,6 +280,12 @@ func (i *NomadRunnerInstaller) InstallFlags(set *flag.Set) {
 		Target:  &i.Config.CsiFS,
 		Usage:   "Nomad CSI volume mount option file system.",
 		Default: nomadutil.DefaultCSIVolumeMountFS,
+	})
+
+	set.StringMapVar(&flag.StringMapVar{
+		Name:   "nomad-csi-params",
+		Target: &i.Config.CsiParams,
+		Usage:  "Parameters passed directly to the CSI plugin to configure the volume.",
 	})
 
 	set.StringMapVar(&flag.StringMapVar{
