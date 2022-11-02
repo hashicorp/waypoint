@@ -1,0 +1,4 @@
+```release-note:bug
+plugin/docker: fix issue with authenticating with registries when using
+docker-pull
+```

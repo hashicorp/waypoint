@@ -41,98 +41,177 @@ func (b *Builder) pullWithKaniko(
 		Location: &wpdocker.Image_Registry{Registry: &wpdocker.Image_RegistryLocation{}},
 	}
 
-	var oci ociregistry.Server
-	oci.DisableEntrypoint = b.config.DisableCEB
-	oci.Logger = log
+	// destinationProxy is the OCI Proxy server that the Kaniko process will push the
+	// resulting docker container to. It authenticates and proxies the image to
+	// the location specified in the build->registry block of a waypoint.hcl file.
+	var destinationProxy ociregistry.Server
+	// localRef represents the destination of the resulting image for use with
+	// Kaniko
+	var localRef string
+	destinationProxy.DisableEntrypoint = b.config.DisableCEB
+	destinationProxy.Logger = log
+	{
+		// Setup the proxy authentication for the destination registry. This
+		// information comes from the "registry" block via the docker AccessInfo
+		if ai.Auth != nil {
+			switch sv := ai.Auth.(type) {
+			case *wpdocker.AccessInfo_Encoded:
+				user, pass, err := wpdocker.CredentialsFromConfig(sv.Encoded)
+				if err != nil {
+					return nil, err
+				}
+				destinationProxy.AuthConfig.Username = user
+				destinationProxy.AuthConfig.Password = pass
+			case *wpdocker.AccessInfo_Header:
+				destinationProxy.AuthConfig.Auth = sv.Header
+			case *wpdocker.AccessInfo_UserPass_:
+				destinationProxy.AuthConfig.Username = sv.UserPass.Username
+				destinationProxy.AuthConfig.Password = sv.UserPass.Password
+			default:
+				return nil, status.Error(codes.Unauthenticated, "Unexpected auth type.")
+			}
+		}
 
-	if ai.Auth != nil {
-		switch sv := ai.Auth.(type) {
-		case *wpdocker.AccessInfo_Encoded:
-			user, pass, err := wpdocker.CredentialsFromConfig(sv.Encoded)
+		// Determine the host that we're setting auth for. We have to parse the
+		// image for this cause it may not contain a host. Luckily Docker has
+		// libs to normalize this all for us.
+		log.Trace("determining host for auth configuration", "image", target.Name())
+		ref, err := reference.ParseNormalizedNamed(target.Image)
+		if err != nil {
+			return nil, status.Errorf(codes.Internal, "unable to parse image name: %s", err)
+		}
+
+		host := reference.Domain(ref)
+		if host == "docker.io" {
+			// The normalized name parse above will turn short names like "foo/bar"
+			// into "docker.io/foo/bar" but the actual registry host for these
+			// is "index.docker.io".
+			host = "index.docker.io"
+		}
+
+		if ai.Insecure {
+			destinationProxy.Upstream = "http://" + host
+		} else {
+			destinationProxy.Upstream = "https://" + host
+		}
+
+		refPath := reference.Path(ref)
+
+		err = destinationProxy.Negotiate(ref.Name())
+		if err != nil {
+			return nil, errors.Wrapf(err, "unable to negotiate with upstream")
+		}
+
+		if !b.config.DisableCEB {
+			step.Update("Injecting entrypoint...")
+			// For Kaniko we can use our runtime arch because the image we build
+			// always matches the architecture of our Kaniko environment.
+			assetName, ok := assets.CEBArch[runtime.GOARCH]
+			if !ok {
+				return nil, status.Errorf(codes.FailedPrecondition,
+					"automatic entrypoint injection not supported for architecture: %s", runtime.GOARCH)
+			}
+
+			data, err := assets.Asset(assetName)
+			if err != nil {
+				return nil, status.Errorf(codes.Internal, "unable to restore custom entrypoint binary: %s", err)
+			}
+			step.Done()
+
+			step = sg.Add("Testing registry and uploading entrypoint layer")
+			err = destinationProxy.SetupEntrypointLayer(refPath, data)
+			if err != nil {
+				return nil, status.Errorf(codes.Internal, "error setting up entrypoint layer to host: %q, err: %s", destinationProxy.Upstream, err)
+			}
+			step.Done()
+		}
+
+		// Setting up local registry to which Kaniko will push
+		li, err := net.Listen("tcp", "localhost:0")
+		if err != nil {
+			return nil, err
+		}
+
+		defer li.Close()
+		go http.Serve(li, &destinationProxy)
+
+		port := li.Addr().(*net.TCPAddr).Port
+
+		localRef = fmt.Sprintf("localhost:%d/%s:%s", port, refPath, ai.Tag)
+	}
+
+	// sourceProxy is the OCI Proxy server that the Kaniko process will pull the
+	// base docker container from. It authenticates and proxies the image from
+	// the location specified in the build->docker-pull block.
+	var sourceProxy ociregistry.Server
+	// remoteRef represents the address of the pullProxy that will be inserted
+	// into an on-demand Docker file: ex "FROM localhost:1234/image:tag"
+	var remoteRef string
+	// DisableEntrypoint shouldn't matter on the source, but we set it to be
+	// consistent with the destination proxy
+	sourceProxy.DisableEntrypoint = b.config.DisableCEB
+	sourceProxy.Logger = log
+	{
+		if b.config.EncodedAuth != "" {
+			//If EncodedAuth is set, use that
+			user, pass, err := wpdocker.CredentialsFromConfig(b.config.EncodedAuth)
 			if err != nil {
 				return nil, err
 			}
-			oci.AuthConfig.Username = user
-			oci.AuthConfig.Password = pass
-		case *wpdocker.AccessInfo_Header:
-			oci.AuthConfig.Auth = sv.Header
-		case *wpdocker.AccessInfo_UserPass_:
-			oci.AuthConfig.Username = sv.UserPass.Username
-			oci.AuthConfig.Password = sv.UserPass.Password
-		default:
-			return nil, status.Error(codes.Unauthenticated, "Unexpected auth type.")
-		}
-	}
-
-	// Determine the host that we're setting auth for. We have to parse the
-	// image for this cause it may not contain a host. Luckily Docker has
-	// libs to normalize this all for us.
-	log.Trace("determining host for auth configuration", "image", target.Name())
-	ref, err := reference.ParseNormalizedNamed(target.Image)
-	if err != nil {
-		return nil, status.Errorf(codes.Internal, "unable to parse image name: %s", err)
-	}
-
-	host := reference.Domain(ref)
-	if host == "docker.io" {
-		// The normalized name parse above will turn short names like "foo/bar"
-		// into "docker.io/foo/bar" but the actual registry host for these
-		// is "index.docker.io".
-		host = "index.docker.io"
-	}
-
-	if ai.Insecure {
-		oci.Upstream = "http://" + host
-	} else {
-		oci.Upstream = "https://" + host
-	}
-
-	refPath := reference.Path(ref)
-
-	err = oci.Negotiate(ref.Name())
-	if err != nil {
-		return nil, errors.Wrapf(err, "unable to negotiate with upstream")
-	}
-
-	if !b.config.DisableCEB {
-		step.Update("Injecting entrypoint...")
-		// For Kaniko we can use our runtime arch because the image we build
-		// always matches the architecture of our Kaniko environment.
-		assetName, ok := assets.CEBArch[runtime.GOARCH]
-		if !ok {
-			return nil, status.Errorf(codes.FailedPrecondition,
-				"automatic entrypoint injection not supported for architecture: %s", runtime.GOARCH)
+			sourceProxy.AuthConfig.Username = user
+			sourceProxy.AuthConfig.Password = pass
+		} else if b.config.Auth != nil && *b.config.Auth != (wpdocker.Auth{}) {
+			//If EncodedAuth is not set, and Auth is, use Auth
+			sourceProxy.AuthConfig.Username = b.config.Auth.Username
+			sourceProxy.AuthConfig.Password = b.config.Auth.Password
+			sourceProxy.AuthConfig.Auth = b.config.Auth.Auth
+			sourceProxy.AuthConfig.IdentityToken = b.config.Auth.IdentityToken
+			sourceProxy.AuthConfig.RegistryToken = b.config.Auth.RegistryToken
 		}
 
-		data, err := assets.Asset(assetName)
+		// Determine the host that we're setting auth for. We have to parse the
+		// image for this cause it may not contain a host. Luckily Docker has
+		// libs to normalize this all for us.
+		log.Trace("determining host for pull-auth configuration", "image", b.config.Image)
+		ref, err := reference.ParseNormalizedNamed(b.config.Image)
 		if err != nil {
-			return nil, status.Errorf(codes.Internal, "unable to restore custom entrypoint binary: %s", err)
+			return nil, status.Errorf(codes.Internal, "unable to parse image name: %s", err)
 		}
-		step.Done()
 
-		step = sg.Add("Testing registry and uploading entrypoint layer")
-		err = oci.SetupEntrypointLayer(refPath, data)
+		host := reference.Domain(ref)
+		if host == "docker.io" {
+			// The normalized name parse above will turn short names like "foo/bar"
+			// into "docker.io/foo/bar" but the actual registry host for these
+			// is "index.docker.io".
+			host = "index.docker.io"
+		}
+
+		// we dont support insecure docker-pull
+		sourceProxy.Upstream = "https://" + host
+
+		refPath := reference.Path(ref)
+
+		err = sourceProxy.Negotiate(ref.Name())
 		if err != nil {
-			return nil, status.Errorf(codes.Internal, "error setting up entrypoint layer to host: %q, err: %s", oci.Upstream, err)
+			return nil, errors.Wrapf(err, "unable to negotiate with upstream")
 		}
-		step.Done()
+
+		// Setting up local registry to which Kaniko will push
+		li, err := net.Listen("tcp", "localhost:0")
+		if err != nil {
+			return nil, err
+		}
+
+		defer li.Close()
+		go http.Serve(li, &sourceProxy)
+
+		port := li.Addr().(*net.TCPAddr).Port
+
+		remoteRef = fmt.Sprintf("localhost:%d/%s:%s", port, refPath, b.config.Tag)
 	}
 
-	// Setting up local registry to which Kaniko will push
-	li, err := net.Listen("tcp", "localhost:0")
-	if err != nil {
-		return nil, err
-	}
-
-	defer li.Close()
-	go http.Serve(li, &oci)
-
-	port := li.Addr().(*net.TCPAddr).Port
-
-	localRef := fmt.Sprintf("localhost:%d/%s:%s", port, refPath, ai.Tag)
-
-	dockerfileBS := []byte(fmt.Sprintf("FROM %s:%s\n", b.config.Image, b.config.Tag))
-	err = os.WriteFile("Dockerfile", dockerfileBS, 0644)
+	dockerfileBS := []byte(fmt.Sprintf("FROM %s\n", remoteRef))
+	err := os.WriteFile("Dockerfile", dockerfileBS, 0644)
 	if err != nil {
 		return nil, err
 	}
