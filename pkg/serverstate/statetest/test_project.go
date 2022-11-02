@@ -105,12 +105,12 @@ func TestProject(t *testing.T, factory Factory, restartF RestartFactory) {
 		proj := serverptypes.TestProject(t, &pb.Project{Name: name})
 		err := s.ProjectPut(ctx, proj)
 		require.NoError(err)
-		_, err = s.AppPut(serverptypes.TestApplication(t, &pb.Application{
+		_, err = s.AppPut(ctx, serverptypes.TestApplication(t, &pb.Application{
 			Name:    "test",
 			Project: ref,
 		}))
 		require.NoError(err)
-		_, err = s.AppPut(serverptypes.TestApplication(t, &pb.Application{
+		_, err = s.AppPut(ctx, serverptypes.TestApplication(t, &pb.Application{
 			Name:    "test2",
 			Project: ref,
 		}))
@@ -772,7 +772,7 @@ func TestProjectListWorkspaces(t *testing.T, factory Factory, restartF RestartFa
 		})))
 
 		// Create some other resources
-		require.NoError(s.DeploymentPut(false, serverptypes.TestValidDeployment(t, &pb.Deployment{
+		require.NoError(s.DeploymentPut(ctx, false, serverptypes.TestValidDeployment(t, &pb.Deployment{
 			Id: "1",
 		})))
 
