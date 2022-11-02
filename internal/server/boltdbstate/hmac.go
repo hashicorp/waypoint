@@ -1,6 +1,7 @@
 package boltdbstate
 
 import (
+	"context"
 	"crypto/rand"
 	"io"
 	"sync/atomic"
@@ -22,13 +23,13 @@ func init() {
 
 // HMACKeyEmpty returns true if no HMAC keys have been created. This will
 // be true only when the server is in a bootstrap state.
-func (s *State) HMACKeyEmpty() bool {
+func (s *State) HMACKeyEmpty(ctx context.Context) bool {
 	return atomic.LoadUint32(&s.hmacKeyNotEmpty) == 0
 }
 
 // HMACKeyCreateIfNotExist creates a new HMAC key with the given ID and size. If a
 // key with the given ID exists already it will be returned.
-func (s *State) HMACKeyCreateIfNotExist(id string, size int) (*pb.HMACKey, error) {
+func (s *State) HMACKeyCreateIfNotExist(ctx context.Context, id string, size int) (*pb.HMACKey, error) {
 	memTxn := s.inmem.Txn(true)
 	defer memTxn.Abort()
 
@@ -85,7 +86,7 @@ func (s *State) hmacKeyCreate(
 
 // HMACKeyGet gets an HMAC key by ID. This will return a nil value if it
 // doesn't exist.
-func (s *State) HMACKeyGet(id string) (*pb.HMACKey, error) {
+func (s *State) HMACKeyGet(ctx context.Context, id string) (*pb.HMACKey, error) {
 	memTxn := s.inmem.Txn(false)
 	defer memTxn.Abort()
 	return s.hmacKeyGet(nil, memTxn, id)

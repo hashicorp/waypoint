@@ -40,7 +40,7 @@ func (s *Service) ListOIDCAuthMethods(
 	// index OIDC methods specifically and do this more efficiently but
 	// realistically we don't expect there to ever be that many auth methods.
 	// Even if there were thousands (why????) this would be okay.
-	values, err := s.state(ctx).AuthMethodList()
+	values, err := s.state(ctx).AuthMethodList(ctx)
 	if err != nil {
 		return nil, hcerr.Externalize(
 			hclog.FromContext(ctx),
@@ -76,7 +76,7 @@ func (s *Service) GetOIDCAuthURL(
 	}
 
 	// Get the auth method
-	am, err := s.state(ctx).AuthMethodGet(req.AuthMethod)
+	am, err := s.state(ctx).AuthMethodGet(ctx, req.AuthMethod)
 	if err != nil {
 		return nil, hcerr.Externalize(
 			hclog.FromContext(ctx),
@@ -101,7 +101,7 @@ func (s *Service) GetOIDCAuthURL(
 	}
 
 	// We need our server config.
-	sc, err := s.state(ctx).ServerConfigGet()
+	sc, err := s.state(ctx).ServerConfigGet(ctx)
 	if err != nil {
 		return nil, hcerr.Externalize(
 			hclog.FromContext(ctx),
@@ -172,7 +172,7 @@ func (s *Service) CompleteOIDCAuth(
 	}
 
 	// Get the auth method
-	am, err := s.state(ctx).AuthMethodGet(req.AuthMethod)
+	am, err := s.state(ctx).AuthMethodGet(ctx, req.AuthMethod)
 	if err != nil {
 		return nil, hcerr.Externalize(
 			hclog.FromContext(ctx),
@@ -197,7 +197,7 @@ func (s *Service) CompleteOIDCAuth(
 	}
 
 	// We need our server config.
-	sc, err := s.state(ctx).ServerConfigGet()
+	sc, err := s.state(ctx).ServerConfigGet(ctx)
 	if err != nil {
 		return nil, hcerr.Externalize(
 			hclog.FromContext(ctx),
@@ -416,7 +416,7 @@ func (s *Service) oidcInitUser(ctx context.Context, log hclog.Logger, claims *id
 	}
 
 	// First look up by exact account link.
-	user, err := s.state(ctx).UserGetOIDC(claims.Iss, claims.Sub)
+	user, err := s.state(ctx).UserGetOIDC(ctx, claims.Iss, claims.Sub)
 	if err != nil {
 		if status.Code(err) != codes.NotFound {
 			return nil, err
@@ -431,7 +431,7 @@ func (s *Service) oidcInitUser(ctx context.Context, log hclog.Logger, claims *id
 
 	// Look up the user by email if we don't have a user by sub.
 	if email != "" {
-		user, err = s.state(ctx).UserGetEmail(email)
+		user, err = s.state(ctx).UserGetEmail(ctx, email)
 		if err != nil {
 			if status.Code(err) != codes.NotFound {
 				return nil, err
@@ -466,7 +466,7 @@ func (s *Service) oidcInitUser(ctx context.Context, log hclog.Logger, claims *id
 		},
 	})
 
-	if err := s.state(ctx).UserPut(user); err != nil {
+	if err := s.state(ctx).UserPut(ctx, user); err != nil {
 		return nil, err
 	}
 

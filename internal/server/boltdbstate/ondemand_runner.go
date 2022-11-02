@@ -1,6 +1,7 @@
 package boltdbstate
 
 import (
+	"context"
 	"strings"
 
 	"github.com/hashicorp/go-memdb"
@@ -24,7 +25,7 @@ func init() {
 // OnDemandRunnerConfigPut creates or updates the given ondemandRunner.
 //
 // Application changes will be ignored, you must use the Application APIs.
-func (s *State) OnDemandRunnerConfigPut(o *pb.OnDemandRunnerConfig) (*pb.OnDemandRunnerConfig, error) {
+func (s *State) OnDemandRunnerConfigPut(ctx context.Context, o *pb.OnDemandRunnerConfig) (*pb.OnDemandRunnerConfig, error) {
 	memTxn := s.inmem.Txn(true)
 	defer memTxn.Abort()
 
@@ -74,7 +75,7 @@ func (s *State) OnDemandRunnerConfigPut(o *pb.OnDemandRunnerConfig) (*pb.OnDeman
 		return nil, err
 	}
 
-	ret, err := s.OnDemandRunnerConfigGet(&pb.Ref_OnDemandRunnerConfig{Id: o.Id, Name: o.Name})
+	ret, err := s.OnDemandRunnerConfigGet(ctx, &pb.Ref_OnDemandRunnerConfig{Id: o.Id, Name: o.Name})
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed getting on-demand runner config after setting it.")
 	}
@@ -82,7 +83,7 @@ func (s *State) OnDemandRunnerConfigPut(o *pb.OnDemandRunnerConfig) (*pb.OnDeman
 }
 
 // OnDemandRunnerConfigGet gets a ondemandRunner by reference.
-func (s *State) OnDemandRunnerConfigGet(ref *pb.Ref_OnDemandRunnerConfig) (*pb.OnDemandRunnerConfig, error) {
+func (s *State) OnDemandRunnerConfigGet(ctx context.Context, ref *pb.Ref_OnDemandRunnerConfig) (*pb.OnDemandRunnerConfig, error) {
 	memTxn := s.inmem.Txn(false)
 	defer memTxn.Abort()
 
@@ -99,7 +100,7 @@ func (s *State) OnDemandRunnerConfigGet(ref *pb.Ref_OnDemandRunnerConfig) (*pb.O
 // OnDemandRunnerConfigDelete deletes a ondemandRunner by reference. This is a complete data
 // delete. This will delete all operations associated with this ondemandRunner
 // as well.
-func (s *State) OnDemandRunnerConfigDelete(ref *pb.Ref_OnDemandRunnerConfig) error {
+func (s *State) OnDemandRunnerConfigDelete(ctx context.Context, ref *pb.Ref_OnDemandRunnerConfig) error {
 	memTxn := s.inmem.Txn(true)
 	defer memTxn.Abort()
 
@@ -114,7 +115,7 @@ func (s *State) OnDemandRunnerConfigDelete(ref *pb.Ref_OnDemandRunnerConfig) err
 }
 
 // OnDemandRunnerConfigList returns the list of ondemandRunners.
-func (s *State) OnDemandRunnerConfigList() ([]*pb.OnDemandRunnerConfig, error) {
+func (s *State) OnDemandRunnerConfigList(ctx context.Context) ([]*pb.OnDemandRunnerConfig, error) {
 	memTxn := s.inmem.Txn(false)
 	defer memTxn.Abort()
 
@@ -146,7 +147,7 @@ func (s *State) OnDemandRunnerConfigList() ([]*pb.OnDemandRunnerConfig, error) {
 }
 
 // OnDemandRunnerConfigDefault returns the list of ondemandRunners that are defaults.
-func (s *State) OnDemandRunnerConfigDefault() ([]*pb.Ref_OnDemandRunnerConfig, error) {
+func (s *State) OnDemandRunnerConfigDefault(ctx context.Context) ([]*pb.Ref_OnDemandRunnerConfig, error) {
 	memTxn := s.inmem.Txn(false)
 	defer memTxn.Abort()
 

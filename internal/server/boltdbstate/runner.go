@@ -1,6 +1,7 @@
 package boltdbstate
 
 import (
+	"context"
 	"github.com/hashicorp/go-memdb"
 	bolt "go.etcd.io/bbolt"
 	"google.golang.org/grpc/codes"
@@ -55,7 +56,7 @@ type runnerIndex struct {
 	AdoptionState pb.Runner_AdoptionState
 }
 
-func (s *State) RunnerCreate(r *pb.Runner) error {
+func (s *State) RunnerCreate(ctx context.Context, r *pb.Runner) error {
 	txn := s.inmem.Txn(true)
 	defer txn.Abort()
 
@@ -72,7 +73,7 @@ func (s *State) RunnerCreate(r *pb.Runner) error {
 // RunnerDelete permanently deletes the runner record including any
 // on-disk state such as adoption state. This effectively "forgets" the
 // runner.
-func (s *State) RunnerDelete(id string) error {
+func (s *State) RunnerDelete(ctx context.Context, id string) error {
 	txn := s.inmem.Txn(true)
 	defer txn.Abort()
 
@@ -86,7 +87,7 @@ func (s *State) RunnerDelete(id string) error {
 	return err
 }
 
-func (s *State) RunnerById(id string, ws memdb.WatchSet) (*pb.Runner, error) {
+func (s *State) RunnerById(ctx context.Context, id string, ws memdb.WatchSet) (*pb.Runner, error) {
 	// We only grab a read txn to memdb if we want a watch. Otherwise,
 	// we just load the runner from disk.
 	if ws != nil {
@@ -116,7 +117,7 @@ func (s *State) RunnerById(id string, ws memdb.WatchSet) (*pb.Runner, error) {
 
 // RunnerList lists all the runners. This isn't a list of only online runners;
 // this is ALL runners the database currently knows about.
-func (s *State) RunnerList() ([]*pb.Runner, error) {
+func (s *State) RunnerList(ctx context.Context) ([]*pb.Runner, error) {
 	var result []*pb.Runner
 	err := s.db.View(func(dbTxn *bolt.Tx) error {
 		bucket := dbTxn.Bucket(runnerBucket)
@@ -140,7 +141,7 @@ func (s *State) RunnerList() ([]*pb.Runner, error) {
 // RunnerOffline marks that a runner has gone offline. This is the preferred
 // approach to deregistering a runner, since this will keep the adoption state
 // around.
-func (s *State) RunnerOffline(id string) error {
+func (s *State) RunnerOffline(ctx context.Context, id string) error {
 	txn := s.inmem.Txn(true)
 	defer txn.Abort()
 
@@ -160,7 +161,7 @@ func (s *State) RunnerOffline(id string) error {
 // state goes to "PREADOPTED". This means that the runner instance itself
 // was never explicitly adopted, but it already has a valid token so it is
 // accepted.
-func (s *State) RunnerAdopt(id string, implicit bool) error {
+func (s *State) RunnerAdopt(ctx context.Context, id string, implicit bool) error {
 	state := pb.Runner_ADOPTED
 	if implicit {
 		state = pb.Runner_PREADOPTED
@@ -180,7 +181,7 @@ func (s *State) RunnerAdopt(id string, implicit bool) error {
 }
 
 // RunnerReject marks a runner as rejected.
-func (s *State) RunnerReject(id string) error {
+func (s *State) RunnerReject(ctx context.Context, id string) error {
 	txn := s.inmem.Txn(true)
 	defer txn.Abort()
 

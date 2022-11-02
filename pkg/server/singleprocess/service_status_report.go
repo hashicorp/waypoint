@@ -42,7 +42,7 @@ func (s *Service) UpsertStatusReport(
 		result.Id = id
 	}
 
-	if err := s.state(ctx).StatusReportPut(!insert, result); err != nil {
+	if err := s.state(ctx).StatusReportPut(ctx, !insert, result); err != nil {
 		return nil, hcerr.Externalize(
 			hclog.FromContext(ctx),
 			err,
@@ -61,7 +61,7 @@ func (s *Service) ListStatusReports(
 		return nil, err
 	}
 
-	result, err := s.state(ctx).StatusReportList(req.Application,
+	result, err := s.state(ctx).StatusReportList(ctx, req.Application,
 		serverstate.ListWithStatusFilter(req.Status...),
 		serverstate.ListWithOrder(req.Order),
 		serverstate.ListWithWorkspace(req.Workspace),
@@ -143,7 +143,7 @@ func (s *Service) GetLatestStatusReport(
 		}
 	}
 
-	r, err := s.state(ctx).StatusReportLatest(req.Application, req.Workspace, filter)
+	r, err := s.state(ctx).StatusReportLatest(ctx, req.Application, req.Workspace, filter)
 	if err != nil {
 		return nil, hcerr.Externalize(
 			hclog.FromContext(ctx),
@@ -166,7 +166,7 @@ func (s *Service) GetStatusReport(
 		return nil, err
 	}
 
-	r, err := s.state(ctx).StatusReportGet(req.Ref)
+	r, err := s.state(ctx).StatusReportGet(ctx, req.Ref)
 	if err != nil {
 		return nil, hcerr.Externalize(
 			hclog.FromContext(ctx),
@@ -191,7 +191,7 @@ func (s *Service) ExpediteStatusReport(
 	var applicationRef *pb.Ref_Application
 	switch target := req.Target.(type) {
 	case *pb.ExpediteStatusReportRequest_Deployment:
-		d, err := s.state(ctx).DeploymentGet(target.Deployment)
+		d, err := s.state(ctx).DeploymentGet(ctx, target.Deployment)
 		if err != nil {
 			return nil, hcerr.Externalize(
 				hclog.FromContext(ctx),
@@ -205,7 +205,7 @@ func (s *Service) ExpediteStatusReport(
 			Deployment: d,
 		}
 	case *pb.ExpediteStatusReportRequest_Release:
-		r, err := s.state(ctx).ReleaseGet(target.Release)
+		r, err := s.state(ctx).ReleaseGet(ctx, target.Release)
 		if err != nil {
 			return nil, hcerr.Externalize(
 				hclog.FromContext(ctx),

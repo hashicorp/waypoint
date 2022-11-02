@@ -1,6 +1,7 @@
 package boltdbstate
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -15,6 +16,7 @@ import (
 )
 
 func TestInstance_crud(t *testing.T) {
+	ctx := context.Background()
 	require := require.New(t)
 
 	s := TestState(t)
@@ -22,34 +24,38 @@ func TestInstance_crud(t *testing.T) {
 
 	// Create an instance
 	rec := &serverstate.Instance{Id: "A", DeploymentId: "B", Project: "C", Application: "D", Workspace: "E"}
-	require.NoError(s.InstanceCreate(rec))
+	require.NoError(s.InstanceCreate(ctx, rec))
 
 	// We should be able to find it
-	found, err := s.InstanceById(rec.Id)
+	found, err := s.InstanceById(ctx, rec.Id)
 	require.NoError(err)
 	require.Equal(rec, found)
 
 	// Delete that instance
-	require.NoError(s.InstanceDelete(rec.Id))
+	require.NoError(s.InstanceDelete(ctx, rec.Id))
 
 	// Delete again should be fine
-	require.NoError(s.InstanceDelete(rec.Id))
+	require.NoError(s.InstanceDelete(ctx, rec.Id))
 }
 
 func TestInstanceById_notFound(t *testing.T) {
+	ctx := context.Background()
+
 	require := require.New(t)
 
 	s := TestState(t)
 	defer s.Close()
 
 	// We should be able to find it
-	found, err := s.InstanceById("nope")
+	found, err := s.InstanceById(ctx, "nope")
 	require.Error(err)
 	require.Nil(found)
 	require.Equal(codes.NotFound, status.Code(err))
 }
 
 func TestInstancesByApp(t *testing.T) {
+	ctx := context.Background()
+
 	require := require.New(t)
 
 	s := TestState(t)
@@ -72,7 +78,7 @@ func TestInstancesByApp(t *testing.T) {
 
 	// Create an instance
 	rec := testInstance(t, &serverstate.Instance{Project: ref.Project, Application: ref.Application})
-	require.NoError(s.InstanceCreate(rec))
+	require.NoError(s.InstanceCreate(ctx, rec))
 
 	// Should be triggered
 	require.False(ws.Watch(time.After(100 * time.Millisecond)))
@@ -92,6 +98,7 @@ func TestInstancesByApp(t *testing.T) {
 }
 
 func TestInstancesByAppWorkspace(t *testing.T) {
+	ctx := context.Background()
 	require := require.New(t)
 
 	s := TestState(t)
@@ -119,7 +126,7 @@ func TestInstancesByAppWorkspace(t *testing.T) {
 	// Create an instance
 	rec := testInstance(t, &serverstate.Instance{
 		Project: ref.Project, Application: ref.Application, Workspace: refWs.Workspace})
-	require.NoError(s.InstanceCreate(rec))
+	require.NoError(s.InstanceCreate(ctx, rec))
 
 	// Should be triggered
 	require.False(ws.Watch(time.After(100 * time.Millisecond)))

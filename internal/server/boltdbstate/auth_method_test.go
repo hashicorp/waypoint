@@ -1,6 +1,7 @@
 package boltdbstate
 
 import (
+	"context"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -12,13 +13,14 @@ import (
 )
 
 func TestAuthMethod(t *testing.T) {
+	ctx := context.Background()
 	t.Run("Get returns not found error if not exist", func(t *testing.T) {
 		require := require.New(t)
 
 		s := TestState(t)
 		defer s.Close()
 
-		_, err := s.AuthMethodGet(&pb.Ref_AuthMethod{Name: "foo"})
+		_, err := s.AuthMethodGet(ctx, &pb.Ref_AuthMethod{Name: "foo"})
 		require.Error(err)
 		require.Equal(codes.NotFound, status.Code(err))
 	})
@@ -30,28 +32,28 @@ func TestAuthMethod(t *testing.T) {
 		defer s.Close()
 
 		// Set
-		err := s.AuthMethodPut(serverptypes.TestAuthMethod(t, &pb.AuthMethod{
+		err := s.AuthMethodPut(ctx, serverptypes.TestAuthMethod(t, &pb.AuthMethod{
 			Name: "foo",
 		}))
 		require.NoError(err)
 
 		// Get by name
 		{
-			resp, err := s.AuthMethodGet(&pb.Ref_AuthMethod{Name: "foo"})
+			resp, err := s.AuthMethodGet(ctx, &pb.Ref_AuthMethod{Name: "foo"})
 			require.NoError(err)
 			require.NotNil(resp)
 		}
 
 		// Get by name, case insensitive
 		{
-			resp, err := s.AuthMethodGet(&pb.Ref_AuthMethod{Name: "Foo"})
+			resp, err := s.AuthMethodGet(ctx, &pb.Ref_AuthMethod{Name: "Foo"})
 			require.NoError(err)
 			require.NotNil(resp)
 		}
 
 		// List
 		{
-			resp, err := s.AuthMethodList()
+			resp, err := s.AuthMethodList(ctx)
 			require.NoError(err)
 			require.NotNil(resp)
 			require.Len(resp, 1)
@@ -65,37 +67,37 @@ func TestAuthMethod(t *testing.T) {
 		defer s.Close()
 
 		// We need two methods
-		require.NoError(s.AuthMethodPut(serverptypes.TestAuthMethod(t, &pb.AuthMethod{
+		require.NoError(s.AuthMethodPut(ctx, serverptypes.TestAuthMethod(t, &pb.AuthMethod{
 			Name: "bar",
 		})))
 
 		// Set
-		err := s.AuthMethodPut(serverptypes.TestAuthMethod(t, &pb.AuthMethod{
+		err := s.AuthMethodPut(ctx, serverptypes.TestAuthMethod(t, &pb.AuthMethod{
 			Name: "baz",
 		}))
 		require.NoError(err)
 
 		// Read
-		resp, err := s.AuthMethodGet(&pb.Ref_AuthMethod{Name: "bar"})
+		resp, err := s.AuthMethodGet(ctx, &pb.Ref_AuthMethod{Name: "bar"})
 		require.NoError(err)
 		require.NotNil(resp)
 
 		// Delete
 		{
-			err := s.AuthMethodDelete(&pb.Ref_AuthMethod{Name: "bar"})
+			err := s.AuthMethodDelete(ctx, &pb.Ref_AuthMethod{Name: "bar"})
 			require.NoError(err)
 		}
 
 		// Read
 		{
-			_, err := s.AuthMethodGet(&pb.Ref_AuthMethod{Name: "bar"})
+			_, err := s.AuthMethodGet(ctx, &pb.Ref_AuthMethod{Name: "bar"})
 			require.Error(err)
 			require.Equal(codes.NotFound, status.Code(err))
 		}
 
 		// List
 		{
-			resp, err := s.AuthMethodList()
+			resp, err := s.AuthMethodList(ctx)
 			require.NoError(err)
 			require.NotNil(resp)
 			require.Len(resp, 1)

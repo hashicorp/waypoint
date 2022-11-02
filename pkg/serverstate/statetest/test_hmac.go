@@ -1,6 +1,7 @@
 package statetest
 
 import (
+	"context"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -11,6 +12,7 @@ func init() {
 }
 
 func TestHMAC(t *testing.T, factory Factory, restartF RestartFactory) {
+	ctx := context.Background()
 	t.Run("Get returns nil if not exist", func(t *testing.T) {
 		require := require.New(t)
 
@@ -18,7 +20,7 @@ func TestHMAC(t *testing.T, factory Factory, restartF RestartFactory) {
 		defer s.Close()
 
 		// Set
-		result, err := s.HMACKeyGet("foo")
+		result, err := s.HMACKeyGet(ctx, "foo")
 		require.NoError(err)
 		require.Nil(result)
 	})
@@ -30,14 +32,14 @@ func TestHMAC(t *testing.T, factory Factory, restartF RestartFactory) {
 		defer s.Close()
 
 		// Set
-		key, err := s.HMACKeyCreateIfNotExist("foo", 32)
+		key, err := s.HMACKeyCreateIfNotExist(ctx, "foo", 32)
 		require.NoError(err)
 		require.NotNil(key)
 		require.NotEmpty(key.Key)
 
 		// Get exact
 		{
-			resp, err := s.HMACKeyGet("foo")
+			resp, err := s.HMACKeyGet(ctx, "foo")
 			require.NoError(err)
 			require.NotNil(resp)
 			require.Equal(resp.Key, key.Key)
@@ -45,7 +47,7 @@ func TestHMAC(t *testing.T, factory Factory, restartF RestartFactory) {
 
 		// Get case insensitive
 		{
-			resp, err := s.HMACKeyGet("fOo")
+			resp, err := s.HMACKeyGet(ctx, "fOo")
 			require.NoError(err)
 			require.NotNil(resp)
 			require.Equal(resp.Key, key.Key)
@@ -53,7 +55,7 @@ func TestHMAC(t *testing.T, factory Factory, restartF RestartFactory) {
 
 		{
 			// Set should return identical key
-			key2, err := s.HMACKeyCreateIfNotExist("foo", 32)
+			key2, err := s.HMACKeyCreateIfNotExist(ctx, "foo", 32)
 			require.NoError(err)
 			require.NotNil(key2)
 			require.Equal(key2.Key, key.Key)

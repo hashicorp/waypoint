@@ -93,7 +93,7 @@ func instanceSchema() *memdb.TableSchema {
 	}
 }
 
-func (s *State) InstanceCreate(rec *serverstate.Instance) error {
+func (s *State) InstanceCreate(ctx context.Context, rec *serverstate.Instance) error {
 	txn := s.inmem.Txn(true)
 	defer txn.Abort()
 
@@ -112,7 +112,7 @@ func (s *State) InstanceCreate(rec *serverstate.Instance) error {
 	return nil
 }
 
-func (s *State) InstanceDelete(id string) error {
+func (s *State) InstanceDelete(ctx context.Context, id string) error {
 	txn := s.inmem.Txn(true)
 	defer txn.Abort()
 	if _, err := txn.DeleteAll(instanceTableName, instanceIdIndexName, id); err != nil {
@@ -123,7 +123,7 @@ func (s *State) InstanceDelete(id string) error {
 	return nil
 }
 
-func (s *State) InstanceById(id string) (*serverstate.Instance, error) {
+func (s *State) InstanceById(ctx context.Context, id string) (*serverstate.Instance, error) {
 	txn := s.inmem.Txn(false)
 	raw, err := txn.First(instanceTableName, instanceIdIndexName, id)
 	txn.Abort()
@@ -181,7 +181,7 @@ func (s *State) instanceByIdWaiting(ctx context.Context, id string) (*serverstat
 	}
 }
 
-func (s *State) InstancesByDeployment(id string, ws memdb.WatchSet) ([]*serverstate.Instance, error) {
+func (s *State) InstancesByDeployment(ctx context.Context, id string, ws memdb.WatchSet) ([]*serverstate.Instance, error) {
 	txn := s.inmem.Txn(false)
 	defer txn.Abort()
 	iter, err := txn.Get(instanceTableName, instanceDeploymentIdIndexName, id)
@@ -199,6 +199,7 @@ func (s *State) InstancesByDeployment(id string, ws memdb.WatchSet) ([]*serverst
 }
 
 func (s *State) InstancesByApp(
+	ctx context.Context,
 	ref *pb.Ref_Application,
 	refws *pb.Ref_Workspace,
 	ws memdb.WatchSet,

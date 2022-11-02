@@ -1,6 +1,7 @@
 package boltdbstate
 
 import (
+	"context"
 	"sync/atomic"
 
 	"github.com/hashicorp/go-memdb"
@@ -58,7 +59,7 @@ type InstanceLogs struct {
 	LogBuffer *logbuffer.Buffer
 }
 
-func (s *State) InstanceLogsCreate(id string, logs *InstanceLogs) error {
+func (s *State) InstanceLogsCreate(ctx context.Context, id string, logs *InstanceLogs) error {
 	txn := s.inmem.Txn(true)
 	defer txn.Abort()
 
@@ -75,7 +76,7 @@ func (s *State) InstanceLogsCreate(id string, logs *InstanceLogs) error {
 	return nil
 }
 
-func (s *State) InstanceLogsDelete(id int64) error {
+func (s *State) InstanceLogsDelete(ctx context.Context, id int64) error {
 	txn := s.inmem.Txn(true)
 	defer txn.Abort()
 	if _, err := txn.DeleteAll(instanceLogsTableName, instanceLogsIdIndexName, id); err != nil {
@@ -86,7 +87,7 @@ func (s *State) InstanceLogsDelete(id int64) error {
 	return nil
 }
 
-func (s *State) InstanceLogsById(id int64) (*InstanceLogs, error) {
+func (s *State) InstanceLogsById(ctx context.Context, id int64) (*InstanceLogs, error) {
 	txn := s.inmem.Txn(false)
 	raw, err := txn.First(instanceLogsTableName, instanceLogsIdIndexName, id)
 	txn.Abort()
@@ -100,7 +101,7 @@ func (s *State) InstanceLogsById(id int64) (*InstanceLogs, error) {
 	return raw.(*InstanceLogs), nil
 }
 
-func (s *State) InstanceLogsByInstanceId(id string) (*InstanceLogs, error) {
+func (s *State) InstanceLogsByInstanceId(ctx context.Context, id string) (*InstanceLogs, error) {
 	txn := s.inmem.Txn(false)
 	raw, err := txn.First(instanceLogsTableName, instanceLogsInstanceIdIndexName, id)
 	txn.Abort()
@@ -114,7 +115,7 @@ func (s *State) InstanceLogsByInstanceId(id string) (*InstanceLogs, error) {
 	return raw.(*InstanceLogs), nil
 }
 
-func (s *State) InstanceLogsListByInstanceId(id string, ws memdb.WatchSet) ([]*InstanceLogs, error) {
+func (s *State) InstanceLogsListByInstanceId(ctx context.Context, id string, ws memdb.WatchSet) ([]*InstanceLogs, error) {
 	txn := s.inmem.Txn(false)
 	defer txn.Abort()
 	return s.instanceLogsListByInstanceId(txn, id, ws)

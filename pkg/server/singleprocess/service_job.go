@@ -27,7 +27,7 @@ func (s *Service) GetJob(
 	ctx context.Context,
 	req *pb.GetJobRequest,
 ) (*pb.Job, error) {
-	job, err := s.state(ctx).JobById(req.JobId, nil)
+	job, err := s.state(ctx).JobById(ctx, req.JobId, nil)
 	if err != nil {
 		return nil, hcerr.Externalize(
 			hclog.FromContext(ctx),
@@ -48,7 +48,7 @@ func (s *Service) ListJobs(
 	ctx context.Context,
 	req *pb.ListJobsRequest,
 ) (*pb.ListJobsResponse, error) {
-	jobs, err := s.state(ctx).JobList(req)
+	jobs, err := s.state(ctx).JobList(ctx, req)
 	if err != nil {
 		return nil, hcerr.Externalize(
 			hclog.FromContext(ctx),
@@ -66,7 +66,7 @@ func (s *Service) CancelJob(
 	ctx context.Context,
 	req *pb.CancelJobRequest,
 ) (*empty.Empty, error) {
-	if err := s.state(ctx).JobCancel(req.JobId, req.Force); err != nil {
+	if err := s.state(ctx).JobCancel(ctx, req.JobId, req.Force); err != nil {
 		return nil, hcerr.Externalize(
 			hclog.FromContext(ctx),
 			err,
@@ -100,7 +100,7 @@ func (s *Service) queueJobMulti(
 	}
 
 	// Queue the jobs
-	if err := s.state(ctx).JobCreate(jobQueue...); err != nil {
+	if err := s.state(ctx).JobCreate(ctx, jobQueue...); err != nil {
 		return nil, err
 	}
 
@@ -201,7 +201,7 @@ func (s *Service) queueJobReqToJob(
 	// Use a default ODR profile if it doesn't already have one assigned.
 	if _, ok := job.TargetRunner.Target.(*pb.Ref_Runner_Any); ok {
 		if job.OndemandRunner == nil {
-			ods, err := s.state(ctx).OnDemandRunnerConfigDefault()
+			ods, err := s.state(ctx).OnDemandRunnerConfigDefault(ctx)
 			if err != nil {
 				return nil, "", err
 			}
@@ -268,7 +268,7 @@ func (s *Service) QueueJob(
 	}
 
 	// Queue the job
-	if err := s.state(ctx).JobCreate(jobs...); err != nil {
+	if err := s.state(ctx).JobCreate(ctx, jobs...); err != nil {
 		return nil, err
 	}
 
@@ -312,7 +312,7 @@ func (s *Service) wrapJobWithRunner(
 	source *pb.Job,
 ) ([]*pb.Job, error) {
 	// Get the runner profile we're going to use for this runner.
-	od, err := s.state(ctx).OnDemandRunnerConfigGet(source.OndemandRunner)
+	od, err := s.state(ctx).OnDemandRunnerConfigGet(ctx, source.OndemandRunner)
 	if err != nil {
 		return nil, err
 	}
@@ -684,7 +684,7 @@ func (s *Service) GetJobStream(
 
 	// Get the job
 	ws := memdb.NewWatchSet()
-	job, err := s.state(ctx).JobById(req.JobId, ws)
+	job, err := s.state(ctx).JobById(ctx, req.JobId, ws)
 	if err != nil {
 		return err
 	}
@@ -725,7 +725,7 @@ func (s *Service) GetJobStream(
 
 			// Updated job, requery it
 			ws = memdb.NewWatchSet()
-			job, err = s.state(ctx).JobById(job.Id, ws)
+			job, err = s.state(ctx).JobById(ctx, job.Id, ws)
 			if err != nil {
 				log.Error("error acquiring job by id", "error", err, "id", req.JobId)
 				errCh <- err

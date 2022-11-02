@@ -64,7 +64,7 @@ func TestInstance(t *testing.T, factory Factory, restartF RestartFactory) {
 		}
 
 		// Add
-		err := s.DeploymentPut(false, serverptypes.TestDeployment(t, &pb.Deployment{
+		err := s.DeploymentPut(ctx, false, serverptypes.TestDeployment(t, &pb.Deployment{
 			Id:          "B",
 			Application: app,
 			Workspace:   ws,
@@ -84,18 +84,18 @@ func TestInstance(t *testing.T, factory Factory, restartF RestartFactory) {
 			Workspace:    ws.Workspace,
 		}
 
-		require.NoError(s.InstanceCreate(rec))
+		require.NoError(s.InstanceCreate(ctx, rec))
 
 		// We should be able to find it
-		found, err := s.InstanceById(rec.Id)
+		found, err := s.InstanceById(ctx, rec.Id)
 		require.NoError(err)
 		require.Equal(rec, found)
 
 		// Delete that instance
-		require.NoError(s.InstanceDelete(rec.Id))
+		require.NoError(s.InstanceDelete(ctx, rec.Id))
 
 		// Delete again should be fine
-		require.NoError(s.InstanceDelete(rec.Id))
+		require.NoError(s.InstanceDelete(ctx, rec.Id))
 	})
 
 	t.Run("not found", func(t *testing.T) {
@@ -105,7 +105,7 @@ func TestInstance(t *testing.T, factory Factory, restartF RestartFactory) {
 		defer s.Close()
 
 		// We should be able to find it
-		found, err := s.InstanceById("nope")
+		found, err := s.InstanceById(ctx, "nope")
 		require.Error(err)
 		require.Nil(found)
 		require.Equal(codes.NotFound, status.Code(err))
@@ -132,7 +132,7 @@ func TestInstance(t *testing.T, factory Factory, restartF RestartFactory) {
 		}
 
 		// Add
-		err := s.DeploymentPut(false, serverptypes.TestDeployment(t, &pb.Deployment{
+		err := s.DeploymentPut(ctx, false, serverptypes.TestDeployment(t, &pb.Deployment{
 			Id:          "B",
 			Application: app,
 			Workspace:   wsRef,
@@ -145,7 +145,7 @@ func TestInstance(t *testing.T, factory Factory, restartF RestartFactory) {
 
 		// Empty with nothing
 		ws := memdb.NewWatchSet()
-		list, err := s.InstancesByApp(app, nil, ws)
+		list, err := s.InstancesByApp(ctx, app, nil, ws)
 		require.NoError(err)
 		require.Empty(list)
 
@@ -154,13 +154,13 @@ func TestInstance(t *testing.T, factory Factory, restartF RestartFactory) {
 
 		// Create an instance
 		rec := testInstance(t, &serverstate.Instance{Project: ref.Project, Application: app.Application})
-		require.NoError(s.InstanceCreate(rec))
+		require.NoError(s.InstanceCreate(ctx, rec))
 
 		// Should be triggered
 		require.False(ws.Watch(time.After(3 * time.Second)))
 
 		// Should have values
-		list, err = s.InstancesByApp(app, nil, nil)
+		list, err = s.InstancesByApp(ctx, app, nil, nil)
 		require.NoError(err)
 		require.Len(list, 1)
 
@@ -168,7 +168,7 @@ func TestInstance(t *testing.T, factory Factory, restartF RestartFactory) {
 		//nolint:govet,copylocks
 		ref2 := *app
 		ref2.Application = "NO"
-		list, err = s.InstancesByApp(&ref2, nil, nil)
+		list, err = s.InstancesByApp(ctx, &ref2, nil, nil)
 		require.NoError(err)
 		require.Empty(list)
 	})
@@ -194,7 +194,7 @@ func TestInstance(t *testing.T, factory Factory, restartF RestartFactory) {
 		}
 
 		// Add
-		err := s.DeploymentPut(false, serverptypes.TestDeployment(t, &pb.Deployment{
+		err := s.DeploymentPut(ctx, false, serverptypes.TestDeployment(t, &pb.Deployment{
 			Id:          "B",
 			Application: app,
 			Workspace:   wsRef,
@@ -207,7 +207,7 @@ func TestInstance(t *testing.T, factory Factory, restartF RestartFactory) {
 
 		// Empty with nothing
 		ws := memdb.NewWatchSet()
-		list, err := s.InstancesByApp(app, wsRef, ws)
+		list, err := s.InstancesByApp(ctx, app, wsRef, ws)
 		require.NoError(err)
 		require.Empty(list)
 
@@ -217,13 +217,13 @@ func TestInstance(t *testing.T, factory Factory, restartF RestartFactory) {
 		// Create an instance
 		rec := testInstance(t, &serverstate.Instance{
 			Project: ref.Project, Application: app.Application, Workspace: wsRef.Workspace})
-		require.NoError(s.InstanceCreate(rec))
+		require.NoError(s.InstanceCreate(ctx, rec))
 
 		// Should be triggered
 		require.False(ws.Watch(time.After(3 * time.Second)))
 
 		// Should have values
-		list, err = s.InstancesByApp(app, wsRef, nil)
+		list, err = s.InstancesByApp(ctx, app, wsRef, nil)
 		require.NoError(err)
 		require.Len(list, 1)
 
@@ -231,7 +231,7 @@ func TestInstance(t *testing.T, factory Factory, restartF RestartFactory) {
 		//nolint:govet,copylocks
 		ref2 := *wsRef
 		ref2.Workspace = "NO"
-		list, err = s.InstancesByApp(app, &ref2, nil)
+		list, err = s.InstancesByApp(ctx, app, &ref2, nil)
 		require.NoError(err)
 		require.Empty(list)
 	})
@@ -259,7 +259,7 @@ func TestInstanceByDeployment(t *testing.T, factory Factory, _ RestartFactory) {
 	}
 
 	// Add two deployments
-	require.NoError(s.DeploymentPut(false, serverptypes.TestDeployment(t, &pb.Deployment{
+	require.NoError(s.DeploymentPut(ctx, false, serverptypes.TestDeployment(t, &pb.Deployment{
 		Id:          "A",
 		Application: app,
 		Workspace:   ws,
@@ -269,7 +269,7 @@ func TestInstanceByDeployment(t *testing.T, factory Factory, _ RestartFactory) {
 		},
 	})))
 
-	require.NoError(s.DeploymentPut(false, serverptypes.TestDeployment(t, &pb.Deployment{
+	require.NoError(s.DeploymentPut(ctx, false, serverptypes.TestDeployment(t, &pb.Deployment{
 		Id:          "B",
 		Application: app,
 		Workspace:   ws,
@@ -289,9 +289,9 @@ func TestInstanceByDeployment(t *testing.T, factory Factory, _ RestartFactory) {
 		Workspace:    ws.Workspace,
 		DisableExec:  true,
 	}
-	require.NoError(s.InstanceCreate(initialAInst))
+	require.NoError(s.InstanceCreate(ctx, initialAInst))
 
-	require.NoError(s.InstanceCreate(&serverstate.Instance{
+	require.NoError(s.InstanceCreate(ctx, &serverstate.Instance{
 		Id:           "B1",
 		DeploymentId: "B",
 		Project:      ref.Project,
@@ -299,7 +299,7 @@ func TestInstanceByDeployment(t *testing.T, factory Factory, _ RestartFactory) {
 		Workspace:    ws.Workspace,
 	}))
 
-	require.NoError(s.InstanceCreate(&serverstate.Instance{
+	require.NoError(s.InstanceCreate(ctx, &serverstate.Instance{
 		Id:           "B2",
 		DeploymentId: "B",
 		Project:      ref.Project,
@@ -308,7 +308,7 @@ func TestInstanceByDeployment(t *testing.T, factory Factory, _ RestartFactory) {
 	}))
 
 	t.Run("can get deployment A's instance", func(t *testing.T) {
-		inst, err := s.InstancesByDeployment("A", nil)
+		inst, err := s.InstancesByDeployment(ctx, "A", nil)
 		require.NoError(err)
 		require.Len(inst, 1)
 
@@ -321,7 +321,7 @@ func TestInstanceByDeployment(t *testing.T, factory Factory, _ RestartFactory) {
 	})
 
 	t.Run("can get deployment B's instances", func(t *testing.T) {
-		inst, err := s.InstancesByDeployment("B", nil)
+		inst, err := s.InstancesByDeployment(ctx, "B", nil)
 		require.NoError(err)
 		require.Len(inst, 2)
 

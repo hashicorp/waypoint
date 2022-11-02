@@ -39,7 +39,7 @@ func (s *Service) UpsertRelease(
 		result.Id = id
 	}
 
-	if err := s.state(ctx).ReleasePut(!insert, result); err != nil {
+	if err := s.state(ctx).ReleasePut(ctx, !insert, result); err != nil {
 		return nil, hcerr.Externalize(
 			hclog.FromContext(ctx),
 			err,
@@ -57,7 +57,7 @@ func (s *Service) ListReleases(
 	ctx context.Context,
 	req *pb.ListReleasesRequest,
 ) (*pb.ListReleasesResponse, error) {
-	result, err := s.state(ctx).ReleaseList(req.Application,
+	result, err := s.state(ctx).ReleaseList(ctx, req.Application,
 		serverstate.ListWithStatusFilter(req.Status...),
 		serverstate.ListWithOrder(req.Order),
 		serverstate.ListWithWorkspace(req.Workspace),
@@ -93,7 +93,7 @@ func (s *Service) GetLatestRelease(
 		return nil, err
 	}
 
-	r, err := s.state(ctx).ReleaseLatest(req.Application, req.Workspace)
+	r, err := s.state(ctx).ReleaseLatest(ctx, req.Application, req.Workspace)
 	if err != nil {
 		return nil, hcerr.Externalize(
 			hclog.FromContext(ctx),
@@ -122,7 +122,7 @@ func (s *Service) GetRelease(
 		return nil, err
 	}
 
-	r, err := s.state(ctx).ReleaseGet(req.Ref)
+	r, err := s.state(ctx).ReleaseGet(ctx, req.Ref)
 	if err != nil {
 		return nil, hcerr.Externalize(
 			hclog.FromContext(ctx),
@@ -155,7 +155,7 @@ func (s *Service) releasePreloadDetails(
 		return nil
 	}
 
-	pd, err := s.state(ctx).DeploymentGet(&pb.Ref_Operation{
+	pd, err := s.state(ctx).DeploymentGet(ctx, &pb.Ref_Operation{
 		Target: &pb.Ref_Operation_Id{
 			Id: d.DeploymentId,
 		},

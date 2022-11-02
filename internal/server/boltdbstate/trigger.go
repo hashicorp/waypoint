@@ -1,6 +1,7 @@
 package boltdbstate
 
 import (
+	"context"
 	"strings"
 
 	bolt "go.etcd.io/bbolt"
@@ -21,7 +22,7 @@ func init() {
 }
 
 // TriggerPut creates or updates the given Trigger.
-func (s *State) TriggerPut(t *pb.Trigger) error {
+func (s *State) TriggerPut(ctx context.Context, t *pb.Trigger) error {
 	memTxn := s.inmem.Txn(true)
 	defer memTxn.Abort()
 
@@ -53,7 +54,7 @@ func (s *State) TriggerPut(t *pb.Trigger) error {
 }
 
 // TriggerGet gets a trigger by reference.
-func (s *State) TriggerGet(ref *pb.Ref_Trigger) (*pb.Trigger, error) {
+func (s *State) TriggerGet(ctx context.Context, ref *pb.Ref_Trigger) (*pb.Trigger, error) {
 	memTxn := s.inmem.Txn(false)
 	defer memTxn.Abort()
 
@@ -68,7 +69,7 @@ func (s *State) TriggerGet(ref *pb.Ref_Trigger) (*pb.Trigger, error) {
 }
 
 // TriggerDelete deletes a trigger by reference.
-func (s *State) TriggerDelete(ref *pb.Ref_Trigger) error {
+func (s *State) TriggerDelete(ctx context.Context, ref *pb.Ref_Trigger) error {
 	memTxn := s.inmem.Txn(true)
 	defer memTxn.Abort()
 
@@ -84,6 +85,7 @@ func (s *State) TriggerDelete(ref *pb.Ref_Trigger) error {
 
 // TriggerList returns the list of triggers.
 func (s *State) TriggerList(
+	ctx context.Context,
 	refws *pb.Ref_Workspace,
 	refproj *pb.Ref_Project,
 	refapp *pb.Ref_Application,

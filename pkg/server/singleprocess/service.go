@@ -127,21 +127,21 @@ func New(opts ...Option) (pb.WaypointServer, error) {
 	s.state = cfg.stateProvider
 
 	// If we don't have a server ID, set that.
-
+	ctx := context.Background()
 	// TODO(izaak): the serverstate interface doesn't currently support
 	// the ServerId methods, but I think it probably needs to.
-	state := s.state(context.Background())
+	state := s.state(ctx)
 
 	// If a server ID was configured, set that
 	if cfg.serverId != "" {
-		if err := state.ServerIdSet(cfg.serverId); err != nil {
+		if err := state.ServerIdSet(ctx, cfg.serverId); err != nil {
 			return nil, err
 		}
 		s.id = cfg.serverId
 	} else {
 		// If no server ID was configured, check if we already have one.
 		// If not, generate a new random one and set it.
-		id, err := state.ServerIdGet()
+		id, err := state.ServerIdGet(ctx)
 		if err != nil {
 			return nil, err
 		}
@@ -151,7 +151,7 @@ func New(opts ...Option) (pb.WaypointServer, error) {
 				return nil, err
 			}
 
-			if err := state.ServerIdSet(id); err != nil {
+			if err := state.ServerIdSet(ctx, id); err != nil {
 				return nil, err
 			}
 		}
@@ -160,12 +160,12 @@ func New(opts ...Option) (pb.WaypointServer, error) {
 
 	if !cfg.skipServerConfigInit {
 		// If we haven't initialized our server config before, do that once.
-		conf, err := state.ServerConfigGet()
+		conf, err := state.ServerConfigGet(ctx)
 		if err != nil {
 			return nil, err
 		}
 		if conf.Cookie == "" {
-			err := state.ServerConfigSet(conf)
+			err := state.ServerConfigSet(ctx, conf)
 			if err != nil && status.Convert(err).Code() != codes.Unimplemented {
 				return nil, err
 			}
@@ -219,7 +219,7 @@ func New(opts ...Option) (pb.WaypointServer, error) {
 			AdvertiseAddrs: []*pb.ServerConfig_AdvertiseAddr{addr},
 		}
 
-		if err := state.ServerConfigSet(conf); err != nil {
+		if err := state.ServerConfigSet(ctx, conf); err != nil {
 			return nil, err
 		}
 	}

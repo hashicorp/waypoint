@@ -60,7 +60,7 @@ func (s *Service) EntrypointConfig(
 		Type:         req.Type,
 		DisableExec:  req.DisableExec,
 	}
-	if err := s.state(ctx).InstanceCreate(record); err != nil {
+	if err := s.state(ctx).InstanceCreate(ctx, record); err != nil {
 		return hcerr.Externalize(
 			log,
 			err,
@@ -87,7 +87,7 @@ func (s *Service) EntrypointConfig(
 
 		// Delete the entrypoint first
 		log.Trace("deleting entrypoint")
-		if err := s.state(ctx).InstanceDelete(record.Id); err != nil {
+		if err := s.state(ctx).InstanceDelete(ctx, record.Id); err != nil {
 			log.Error("failed to delete instance data. This should not happen.", "err", err)
 		}
 
@@ -126,7 +126,7 @@ func (s *Service) EntrypointConfig(
 		}
 
 		// Refresh the application record in case it's been deleted
-		_, err = s.state(ctx).AppGet(deployment.Application)
+		_, err = s.state(ctx).AppGet(ctx, deployment.Application)
 		if err != nil {
 			log.Warn("detected removed application in entrypoint",
 				"project", deployment.Application.Project,
@@ -155,7 +155,7 @@ func (s *Service) EntrypointConfig(
 		}
 
 		// Get the config vars in use
-		vars, err := s.state(ctx).ConfigGetWatch(&pb.ConfigGetRequest{
+		vars, err := s.state(ctx).ConfigGetWatch(ctx, &pb.ConfigGetRequest{
 			Scope: &pb.ConfigGetRequest_Application{
 				Application: deployment.Application,
 			},
@@ -172,7 +172,7 @@ func (s *Service) EntrypointConfig(
 		config.EnvVars = vars
 
 		config.FileChangeSignal, err = s.state(ctx).GetFileChangeSignal(
-			deployment.Application,
+			ctx, deployment.Application,
 		)
 		if err != nil {
 			return hcerr.Externalize(
@@ -188,7 +188,7 @@ func (s *Service) EntrypointConfig(
 			// NOTE(mitchellh): For now we query all the types and always send it
 			// all down. In the future we may want to consider filtering this
 			// by only the types we actually need above.
-			sources, err := s.state(ctx).ConfigSourceGetWatch(&pb.GetConfigSourceRequest{
+			sources, err := s.state(ctx).ConfigSourceGetWatch(ctx, &pb.GetConfigSourceRequest{
 				Scope: &pb.GetConfigSourceRequest_Global{
 					Global: &pb.Ref_Global{},
 				},
@@ -304,7 +304,7 @@ func (s *Service) EntrypointLogStream(
 			log = log.With("instance_id", batch.InstanceId)
 
 			// Read our instance record
-			instance, err := s.state(ctx).InstanceById(batch.InstanceId)
+			instance, err := s.state(ctx).InstanceById(ctx, batch.InstanceId)
 			if err != nil {
 				if status.Code(err) == codes.NotFound {
 					// See if we have a instance logs entry to use instead.

@@ -43,7 +43,7 @@ func (s *Service) UpsertDeployment(
 		result.Id = id
 	}
 
-	if err := s.state(ctx).DeploymentPut(!insert, result); err != nil {
+	if err := s.state(ctx).DeploymentPut(ctx, !insert, result); err != nil {
 		return nil, hcerr.Externalize(hclog.FromContext(ctx), err, "failed to insert deployment for app", "app", req.Deployment.Application, "id", req.Deployment.Id)
 	}
 
@@ -87,7 +87,7 @@ func (s *Service) ListDeployments(
 	ctx context.Context,
 	req *pb.ListDeploymentsRequest,
 ) (*pb.ListDeploymentsResponse, error) {
-	result, err := s.state(ctx).DeploymentList(req.Application,
+	result, err := s.state(ctx).DeploymentList(ctx, req.Application,
 		serverstate.ListWithStatusFilter(req.Status...),
 		serverstate.ListWithOrder(req.Order),
 		serverstate.ListWithWorkspace(req.Workspace),
@@ -129,7 +129,7 @@ func (s *Service) GetDeployment(
 		return nil, err
 	}
 
-	d, err := s.state(ctx).DeploymentGet(req.Ref)
+	d, err := s.state(ctx).DeploymentGet(ctx, req.Ref)
 	if err != nil {
 		return nil, hcerr.Externalize(hclog.FromContext(ctx), err, "failed to get deployment", "target", req.Ref.Target)
 	}

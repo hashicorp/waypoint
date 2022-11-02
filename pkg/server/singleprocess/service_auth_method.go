@@ -19,7 +19,7 @@ func (s *Service) GetAuthMethod(
 		return nil, err
 	}
 
-	value, err := s.state(ctx).AuthMethodGet(req.AuthMethod)
+	value, err := s.state(ctx).AuthMethodGet(ctx, req.AuthMethod)
 	if err != nil {
 		return nil, hcerr.Externalize(
 			hclog.FromContext(ctx),
@@ -49,7 +49,7 @@ func (s *Service) UpsertAuthMethod(
 	}
 
 	// Write it
-	if err := s.state(ctx).AuthMethodPut(req.AuthMethod); err != nil {
+	if err := s.state(ctx).AuthMethodPut(ctx, req.AuthMethod); err != nil {
 		return nil, hcerr.Externalize(
 			hclog.FromContext(ctx),
 			err,
@@ -73,7 +73,7 @@ func (s *Service) DeleteAuthMethod(
 	}
 
 	// Validate that the auth method exists
-	if _, err := s.state(ctx).AuthMethodGet(req.AuthMethod); err != nil {
+	if _, err := s.state(ctx).AuthMethodGet(ctx, req.AuthMethod); err != nil {
 		return nil, hcerr.Externalize(
 			hclog.FromContext(ctx),
 			err,
@@ -85,7 +85,7 @@ func (s *Service) DeleteAuthMethod(
 
 	// There may be a race between deleting and checking above, but that
 	// is okay because the delete is idempotent.
-	if err := s.state(ctx).AuthMethodDelete(req.AuthMethod); err != nil {
+	if err := s.state(ctx).AuthMethodDelete(ctx, req.AuthMethod); err != nil {
 		return nil, hcerr.Externalize(
 			hclog.FromContext(ctx),
 			err,
@@ -106,7 +106,7 @@ func (s *Service) ListAuthMethods(
 	ctx context.Context,
 	req *empty.Empty,
 ) (*pb.ListAuthMethodsResponse, error) {
-	values, err := s.state(ctx).AuthMethodList()
+	values, err := s.state(ctx).AuthMethodList(ctx)
 	if err != nil {
 		return nil, hcerr.Externalize(
 			hclog.FromContext(ctx),

@@ -21,7 +21,7 @@ func (s *Service) GetWorkspace(
 		return nil, err
 	}
 
-	result, err := s.state(ctx).WorkspaceGet(req.Workspace.Workspace)
+	result, err := s.state(ctx).WorkspaceGet(ctx, req.Workspace.Workspace)
 	if err != nil {
 		return nil, hcerr.Externalize(
 			hclog.FromContext(ctx),
@@ -46,16 +46,16 @@ func (s *Service) ListWorkspaces(
 	switch v := req.Scope.(type) {
 	case nil:
 		// This is the same as Global for backwards compat reasons.
-		result, err = s.state(ctx).WorkspaceList()
+		result, err = s.state(ctx).WorkspaceList(ctx)
 
 	case *pb.ListWorkspacesRequest_Global:
-		result, err = s.state(ctx).WorkspaceList()
+		result, err = s.state(ctx).WorkspaceList(ctx)
 
 	case *pb.ListWorkspacesRequest_Project:
-		result, err = s.state(ctx).WorkspaceListByProject(v.Project)
+		result, err = s.state(ctx).WorkspaceListByProject(ctx, v.Project)
 
 	case *pb.ListWorkspacesRequest_Application:
-		result, err = s.state(ctx).WorkspaceListByApp(v.Application)
+		result, err = s.state(ctx).WorkspaceListByApp(ctx, v.Application)
 
 	default:
 		return nil, status.Errorf(codes.FailedPrecondition,
@@ -81,7 +81,7 @@ func (s *Service) UpsertWorkspace(
 		return nil, err
 	}
 
-	if err := s.state(ctx).WorkspacePut(req.Workspace); err != nil {
+	if err := s.state(ctx).WorkspacePut(ctx, req.Workspace); err != nil {
 		return nil, hcerr.Externalize(
 			hclog.FromContext(ctx),
 			err,

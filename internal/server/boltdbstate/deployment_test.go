@@ -1,6 +1,7 @@
 package boltdbstate
 
 import (
+	"context"
 	"testing"
 
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
@@ -14,21 +15,23 @@ func TestDeployment(t *testing.T) {
 }
 
 func TestDeploymentPrune(t *testing.T) {
+	ctx := context.Background()
+
 	t.Run("prunes old records", func(t *testing.T) {
 		require := require.New(t)
 
 		s := TestState(t)
 		defer s.Close()
 
-		require.NoError(s.DeploymentPut(false, serverptypes.TestValidDeployment(t, &pb.Deployment{
+		require.NoError(s.DeploymentPut(ctx, false, serverptypes.TestValidDeployment(t, &pb.Deployment{
 			Id: "A",
 		})))
 
-		require.NoError(s.DeploymentPut(false, serverptypes.TestValidDeployment(t, &pb.Deployment{
+		require.NoError(s.DeploymentPut(ctx, false, serverptypes.TestValidDeployment(t, &pb.Deployment{
 			Id: "B",
 		})))
 
-		require.NoError(s.DeploymentPut(false, serverptypes.TestValidDeployment(t, &pb.Deployment{
+		require.NoError(s.DeploymentPut(ctx, false, serverptypes.TestValidDeployment(t, &pb.Deployment{
 			Id: "C",
 		})))
 
@@ -43,7 +46,7 @@ func TestDeploymentPrune(t *testing.T) {
 		require.Equal(1, cnt)
 		require.Equal(2, deploymentOp.indexedRecords)
 
-		dep, err := s.DeploymentGet(&pb.Ref_Operation{
+		dep, err := s.DeploymentGet(ctx, &pb.Ref_Operation{
 			Target: &pb.Ref_Operation_Id{
 				Id: "A",
 			},

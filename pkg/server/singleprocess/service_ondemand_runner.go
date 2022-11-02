@@ -26,7 +26,7 @@ func (s *Service) UpsertOnDemandRunnerConfig(
 		}
 	}
 
-	result, err := s.state(ctx).OnDemandRunnerConfigPut(req.Config)
+	result, err := s.state(ctx).OnDemandRunnerConfigPut(ctx, req.Config)
 	if err != nil {
 		return nil, hcerr.Externalize(log, err, "failed setting on-demand runner config", "id", req.Config.Id, "name", req.Config.Name)
 	}
@@ -43,7 +43,7 @@ func (s *Service) GetOnDemandRunnerConfig(
 		return nil, err
 	}
 
-	result, err := s.state(ctx).OnDemandRunnerConfigGet(req.Config)
+	result, err := s.state(ctx).OnDemandRunnerConfigGet(ctx, req.Config)
 	if err != nil {
 		return nil, hcerr.Externalize(log, err, "failed to get on-demand runner config", "id", req.Config.Id, "name", req.Config.Name)
 	}
@@ -59,7 +59,7 @@ func (s *Service) GetDefaultOnDemandRunnerConfig(
 ) (*pb.GetOnDemandRunnerConfigResponse, error) {
 	log := hclog.FromContext(ctx)
 
-	results, err := s.state(ctx).OnDemandRunnerConfigDefault()
+	results, err := s.state(ctx).OnDemandRunnerConfigDefault(ctx)
 	if err != nil {
 		return nil, hcerr.Externalize(log, err, "failed to get default on-demand runner config")
 	}
@@ -72,7 +72,7 @@ func (s *Service) GetDefaultOnDemandRunnerConfig(
 		// implemented and you could have multiple defaults.
 		odr := results[0]
 
-		result, err = s.state(ctx).OnDemandRunnerConfigGet(odr)
+		result, err = s.state(ctx).OnDemandRunnerConfigGet(ctx, odr)
 		if err != nil {
 			return nil, hcerr.Externalize(log, err, "failed to get on-demand runner config", "id", odr.Id, "name", odr.Name)
 		}
@@ -88,7 +88,7 @@ func (s *Service) ListOnDemandRunnerConfigs(
 	req *empty.Empty,
 ) (*pb.ListOnDemandRunnerConfigsResponse, error) {
 	log := hclog.FromContext(ctx)
-	result, err := s.state(ctx).OnDemandRunnerConfigList()
+	result, err := s.state(ctx).OnDemandRunnerConfigList(ctx)
 	if err != nil {
 		return nil, hcerr.Externalize(log, err, "failed to list on-demand runner configs")
 	}
@@ -115,7 +115,7 @@ func (s *Service) DeleteOnDemandRunnerConfig(
 	}
 
 	// Delete the runner config
-	err = s.state(ctx).OnDemandRunnerConfigDelete(req.Config)
+	err = s.state(ctx).OnDemandRunnerConfigDelete(ctx, req.Config)
 	if err != nil {
 		return nil, hcerr.Externalize(
 			hclog.FromContext(ctx),
