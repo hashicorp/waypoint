@@ -69,7 +69,7 @@ func TestInstancesByApp(t *testing.T) {
 
 	// Empty with nothing
 	ws := memdb.NewWatchSet()
-	list, err := s.InstancesByApp(ref, nil, ws)
+	list, err := s.InstancesByApp(ctx, ref, nil, ws)
 	require.NoError(err)
 	require.Empty(list)
 
@@ -84,7 +84,7 @@ func TestInstancesByApp(t *testing.T) {
 	require.False(ws.Watch(time.After(100 * time.Millisecond)))
 
 	// Should have values
-	list, err = s.InstancesByApp(ref, nil, nil)
+	list, err = s.InstancesByApp(ctx, ref, nil, nil)
 	require.NoError(err)
 	require.Len(list, 1)
 
@@ -92,7 +92,7 @@ func TestInstancesByApp(t *testing.T) {
 	//nolint:govet,copylocks
 	ref2 := *ref
 	ref2.Application = "NO"
-	list, err = s.InstancesByApp(&ref2, nil, nil)
+	list, err = s.InstancesByApp(ctx, &ref2, nil, nil)
 	require.NoError(err)
 	require.Empty(list)
 }
@@ -116,7 +116,7 @@ func TestInstancesByAppWorkspace(t *testing.T) {
 
 	// Empty with nothing
 	ws := memdb.NewWatchSet()
-	list, err := s.InstancesByApp(ref, refWs, ws)
+	list, err := s.InstancesByApp(ctx, ref, refWs, ws)
 	require.NoError(err)
 	require.Empty(list)
 
@@ -132,7 +132,7 @@ func TestInstancesByAppWorkspace(t *testing.T) {
 	require.False(ws.Watch(time.After(100 * time.Millisecond)))
 
 	// Should have values
-	list, err = s.InstancesByApp(ref, refWs, nil)
+	list, err = s.InstancesByApp(ctx, ref, refWs, nil)
 	require.NoError(err)
 	require.Len(list, 1)
 
@@ -140,7 +140,7 @@ func TestInstancesByAppWorkspace(t *testing.T) {
 	//nolint:govet,copylocks
 	ref2 := *refWs
 	ref2.Workspace = "NO"
-	list, err = s.InstancesByApp(ref, &ref2, nil)
+	list, err = s.InstancesByApp(ctx, ref, &ref2, nil)
 	require.NoError(err)
 	require.Empty(list)
 }
