@@ -1,6 +1,7 @@
 package statetest
 
 import (
+	"context"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -19,6 +20,7 @@ func init() {
 }
 
 func TestUser(t *testing.T, factory Factory, restartF RestartFactory) {
+	ctx := context.Background()
 	id, err := ulid()
 	require.NoError(t, err)
 
@@ -28,7 +30,7 @@ func TestUser(t *testing.T, factory Factory, restartF RestartFactory) {
 		s := factory(t)
 		defer s.Close()
 
-		_, err := s.UserGet(&pb.Ref_User{
+		_, err := s.UserGet(ctx, &pb.Ref_User{
 			Ref: &pb.Ref_User_Id{
 				Id: &pb.Ref_UserId{Id: "foo"},
 			},
@@ -44,20 +46,20 @@ func TestUser(t *testing.T, factory Factory, restartF RestartFactory) {
 		defer s.Close()
 
 		{
-			empty, err := s.UserEmpty()
+			empty, err := s.UserEmpty(ctx)
 			require.NoError(err)
 			require.True(empty)
 		}
 
 		// Set
-		err = s.UserPut(serverptypes.TestUser(t, &pb.User{
+		err = s.UserPut(ctx, serverptypes.TestUser(t, &pb.User{
 			Id:       id,
 			Username: "foo",
 		}))
 		require.NoError(err)
 
 		{
-			empty, err := s.UserEmpty()
+			empty, err := s.UserEmpty(ctx)
 			require.NoError(err)
 			require.False(empty)
 		}
@@ -70,7 +72,7 @@ func TestUser(t *testing.T, factory Factory, restartF RestartFactory) {
 		defer s.Close()
 
 		// Set
-		err = s.UserPut(serverptypes.TestUser(t, &pb.User{
+		err = s.UserPut(ctx, serverptypes.TestUser(t, &pb.User{
 			Id:       id,
 			Username: "foo",
 		}))
@@ -78,7 +80,7 @@ func TestUser(t *testing.T, factory Factory, restartF RestartFactory) {
 
 		// Get exact
 		{
-			resp, err := s.UserGet(&pb.Ref_User{
+			resp, err := s.UserGet(ctx, &pb.Ref_User{
 				Ref: &pb.Ref_User_Id{
 					Id: &pb.Ref_UserId{Id: id},
 				},
@@ -89,7 +91,7 @@ func TestUser(t *testing.T, factory Factory, restartF RestartFactory) {
 
 		// Get by username
 		{
-			resp, err := s.UserGet(&pb.Ref_User{
+			resp, err := s.UserGet(ctx, &pb.Ref_User{
 				Ref: &pb.Ref_User_Username{
 					Username: &pb.Ref_UserUsername{
 						Username: "foo",
@@ -102,7 +104,7 @@ func TestUser(t *testing.T, factory Factory, restartF RestartFactory) {
 
 		// Get by username, case insensitive
 		{
-			resp, err := s.UserGet(&pb.Ref_User{
+			resp, err := s.UserGet(ctx, &pb.Ref_User{
 				Ref: &pb.Ref_User_Username{
 					Username: &pb.Ref_UserUsername{
 						Username: "Foo",
@@ -115,7 +117,7 @@ func TestUser(t *testing.T, factory Factory, restartF RestartFactory) {
 
 		// List
 		{
-			resp, err := s.UserList()
+			resp, err := s.UserList(ctx)
 			require.NoError(err)
 			require.NotNil(resp)
 			require.Len(resp, 1)
@@ -129,19 +131,19 @@ func TestUser(t *testing.T, factory Factory, restartF RestartFactory) {
 		defer s.Close()
 
 		// We need two users
-		require.NoError(s.UserPut(serverptypes.TestUser(t, &pb.User{
+		require.NoError(s.UserPut(ctx, serverptypes.TestUser(t, &pb.User{
 			Username: "bar",
 		})))
 
 		// Set
-		err := s.UserPut(serverptypes.TestUser(t, &pb.User{
+		err := s.UserPut(ctx, serverptypes.TestUser(t, &pb.User{
 			Id:       id,
 			Username: "foo",
 		}))
 		require.NoError(err)
 
 		// Read
-		resp, err := s.UserGet(&pb.Ref_User{
+		resp, err := s.UserGet(ctx, &pb.Ref_User{
 			Ref: &pb.Ref_User_Id{
 				Id: &pb.Ref_UserId{Id: id},
 			},
@@ -151,7 +153,7 @@ func TestUser(t *testing.T, factory Factory, restartF RestartFactory) {
 
 		// Delete
 		{
-			err := s.UserDelete(&pb.Ref_User{
+			err := s.UserDelete(ctx, &pb.Ref_User{
 				Ref: &pb.Ref_User_Id{
 					Id: &pb.Ref_UserId{Id: id},
 				},
@@ -161,7 +163,7 @@ func TestUser(t *testing.T, factory Factory, restartF RestartFactory) {
 
 		// Read
 		{
-			_, err := s.UserGet(&pb.Ref_User{
+			_, err := s.UserGet(ctx, &pb.Ref_User{
 				Ref: &pb.Ref_User_Id{
 					Id: &pb.Ref_UserId{Id: id},
 				},
@@ -172,7 +174,7 @@ func TestUser(t *testing.T, factory Factory, restartF RestartFactory) {
 
 		// List
 		{
-			resp, err := s.UserList()
+			resp, err := s.UserList(ctx)
 			require.NoError(err)
 			require.NotNil(resp)
 			require.Len(resp, 1)
@@ -186,14 +188,14 @@ func TestUser(t *testing.T, factory Factory, restartF RestartFactory) {
 		defer s.Close()
 
 		// Set
-		err := s.UserPut(serverptypes.TestUser(t, &pb.User{
+		err := s.UserPut(ctx, serverptypes.TestUser(t, &pb.User{
 			Id:       id,
 			Username: "foo",
 		}))
 		require.NoError(err)
 
 		// Read
-		resp, err := s.UserGet(&pb.Ref_User{
+		resp, err := s.UserGet(ctx, &pb.Ref_User{
 			Ref: &pb.Ref_User_Id{
 				Id: &pb.Ref_UserId{Id: id},
 			},
@@ -203,7 +205,7 @@ func TestUser(t *testing.T, factory Factory, restartF RestartFactory) {
 
 		// Delete
 		{
-			err := s.UserDelete(&pb.Ref_User{
+			err := s.UserDelete(ctx, &pb.Ref_User{
 				Ref: &pb.Ref_User_Id{
 					Id: &pb.Ref_UserId{Id: id},
 				},
@@ -220,7 +222,7 @@ func TestUser(t *testing.T, factory Factory, restartF RestartFactory) {
 		defer s.Close()
 
 		// Set
-		err := s.UserPut(serverptypes.TestUser(t, &pb.User{
+		err := s.UserPut(ctx, serverptypes.TestUser(t, &pb.User{
 			Id:       serverstate.DefaultUserId,
 			Username: "foo",
 		}))
@@ -228,7 +230,7 @@ func TestUser(t *testing.T, factory Factory, restartF RestartFactory) {
 
 		// Delete
 		{
-			err := s.UserDelete(&pb.Ref_User{
+			err := s.UserDelete(ctx, &pb.Ref_User{
 				Ref: &pb.Ref_User_Id{
 					Id: &pb.Ref_UserId{Id: serverstate.DefaultUserId},
 				},
@@ -245,7 +247,7 @@ func TestUser(t *testing.T, factory Factory, restartF RestartFactory) {
 		defer s.Close()
 
 		// Set
-		require.NoError(s.UserPut(serverptypes.TestUser(t, &pb.User{
+		require.NoError(s.UserPut(ctx, serverptypes.TestUser(t, &pb.User{
 			Id:       id,
 			Username: "foo",
 			Links: []*pb.User_Link{
@@ -262,14 +264,14 @@ func TestUser(t *testing.T, factory Factory, restartF RestartFactory) {
 
 		// Read
 		{
-			resp, err := s.UserGetOIDC("A", "B")
+			resp, err := s.UserGetOIDC(ctx, "A", "B")
 			require.NoError(err)
 			require.NotNil(resp)
 		}
 
 		// Not matching issuer
 		{
-			resp, err := s.UserGetOIDC("B", "B")
+			resp, err := s.UserGetOIDC(ctx, "B", "B")
 			require.Error(err)
 			require.Nil(resp)
 			require.Equal(codes.NotFound, status.Code(err))
@@ -277,7 +279,7 @@ func TestUser(t *testing.T, factory Factory, restartF RestartFactory) {
 
 		// Not matching sub
 		{
-			resp, err := s.UserGetOIDC("A", "C")
+			resp, err := s.UserGetOIDC(ctx, "A", "C")
 			require.Error(err)
 			require.Nil(resp)
 			require.Equal(codes.NotFound, status.Code(err))

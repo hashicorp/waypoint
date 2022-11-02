@@ -47,7 +47,7 @@ func TestPipelineRun(t *testing.T, factory Factory, restartF RestartFactory) {
 		// replicates how job ids are added to a run messasge
 		for i := 1; i < 4; i++ {
 			is := strconv.Itoa(i)
-			require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
+			require.NoError(s.JobCreate(ctx, serverptypes.TestJobNew(t, &pb.Job{
 				Id: is,
 				Pipeline: &pb.Ref_PipelineStep{
 					PipelineId:  p.Id,

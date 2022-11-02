@@ -41,7 +41,7 @@ func TestSnapshotRestore(t *testing.T, factory Factory, factoryRestart RestartFa
 
 	// Snapshot
 	var buf bytes.Buffer
-	err = s.CreateSnapshot(&buf)
+	err = s.CreateSnapshot(ctx, &buf)
 	if err != nil {
 		s, ok := status.FromError(err)
 		require.True(ok)
@@ -56,7 +56,7 @@ func TestSnapshotRestore(t *testing.T, factory Factory, factoryRestart RestartFa
 	require.NoError(err)
 
 	// Restore
-	require.NoError(s.StageRestoreSnapshot(bytes.NewReader(buf.Bytes())))
+	require.NoError(s.StageRestoreSnapshot(ctx, bytes.NewReader(buf.Bytes())))
 
 	// Reboot!
 	s = factoryRestart(t, s)
@@ -104,13 +104,14 @@ func TestSnapshotRestore(t *testing.T, factory Factory, factoryRestart RestartFa
 }
 
 func TestSnapshotRestore_corrupt(t *testing.T, factory Factory, factoryRestart RestartFactory) {
+	ctx := context.Background()
 	require := require.New(t)
 
 	s := factory(t)
 	defer s.Close()
 
 	// Restore with garbage data
-	require.Error(s.StageRestoreSnapshot(strings.NewReader(
+	require.Error(s.StageRestoreSnapshot(ctx, strings.NewReader(
 		"I am probably not a valid BoltDB file.")))
 
 	// Reboot!

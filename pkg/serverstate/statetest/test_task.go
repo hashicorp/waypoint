@@ -223,16 +223,16 @@ func TestTask(t *testing.T, factory Factory, restartF RestartFactory) {
 		s := factory(t)
 		defer s.Close()
 
-		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
+		require.NoError(s.JobCreate(ctx, serverptypes.TestJobNew(t, &pb.Job{
 			Id: "start_job",
 		})))
-		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
+		require.NoError(s.JobCreate(ctx, serverptypes.TestJobNew(t, &pb.Job{
 			Id: "j_test",
 		})))
-		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
+		require.NoError(s.JobCreate(ctx, serverptypes.TestJobNew(t, &pb.Job{
 			Id: "stop_job",
 		})))
-		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
+		require.NoError(s.JobCreate(ctx, serverptypes.TestJobNew(t, &pb.Job{
 			Id: "watch_job",
 		})))
 
@@ -270,16 +270,16 @@ func TestTaskCancel(t *testing.T, factory Factory, restartF RestartFactory) {
 		s := factory(t)
 		defer s.Close()
 
-		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
+		require.NoError(s.JobCreate(ctx, serverptypes.TestJobNew(t, &pb.Job{
 			Id: "start_job",
 		})))
-		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
+		require.NoError(s.JobCreate(ctx, serverptypes.TestJobNew(t, &pb.Job{
 			Id: "j_test",
 		})))
-		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
+		require.NoError(s.JobCreate(ctx, serverptypes.TestJobNew(t, &pb.Job{
 			Id: "watch_job",
 		})))
-		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
+		require.NoError(s.JobCreate(ctx, serverptypes.TestJobNew(t, &pb.Job{
 			Id: "stop_job",
 		})))
 
@@ -307,25 +307,25 @@ func TestTaskCancel(t *testing.T, factory Factory, restartF RestartFactory) {
 		}))
 
 		// Verify it is canceled
-		job, err := s.JobById("start_job", nil)
+		job, err := s.JobById(ctx, "start_job", nil)
 		require.NoError(err)
 		require.Equal(pb.Job_ERROR, job.Job.State)
 		require.NotNil(job.Job.Error)
 		require.NotEmpty(job.CancelTime)
 
-		job, err = s.JobById("j_test", nil)
+		job, err = s.JobById(ctx, "j_test", nil)
 		require.NoError(err)
 		require.Equal(pb.Job_ERROR, job.Job.State)
 		require.NotNil(job.Job.Error)
 		require.NotEmpty(job.CancelTime)
 
-		job, err = s.JobById("watch_job", nil)
+		job, err = s.JobById(ctx, "watch_job", nil)
 		require.NoError(err)
 		require.Equal(pb.Job_ERROR, job.Job.State)
 		require.NotNil(job.Job.Error)
 		require.NotEmpty(job.CancelTime)
 
-		job, err = s.JobById("stop_job", nil)
+		job, err = s.JobById(ctx, "stop_job", nil)
 		require.NoError(err)
 		require.Equal(pb.Job_ERROR, job.Job.State)
 		require.NotNil(job.Job.Error)
