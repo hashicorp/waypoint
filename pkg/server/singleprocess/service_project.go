@@ -133,7 +133,7 @@ func (s *Service) GetApplication(
 		return nil, err
 	}
 
-	result, err := s.state(ctx).AppGet(req.Application)
+	result, err := s.state(ctx).AppGet(ctx, req.Application)
 	if err != nil {
 		return nil, hcerr.Externalize(
 			hclog.FromContext(ctx),
@@ -182,7 +182,7 @@ func (s *Service) UpsertApplication(
 
 	app.FileChangeSignal = req.FileChangeSignal
 
-	app, err = s.state(ctx).AppPut(app)
+	app, err = s.state(ctx).AppPut(ctx, app)
 	if err != nil {
 		return nil, hcerr.Externalize(
 			hclog.FromContext(ctx),
@@ -197,7 +197,7 @@ func (s *Service) UpsertApplication(
 }
 
 func queueInitOps(s *Service, ctx context.Context, project *pb.Project) error {
-	workspaces, err := s.state(ctx).WorkspaceList()
+	workspaces, err := s.state(ctx).WorkspaceList(ctx)
 	if err != nil {
 		return err
 	}

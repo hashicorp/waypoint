@@ -58,11 +58,11 @@ type InstanceExec struct {
 type InstanceExecHandler interface {
 	// InstanceExecCreateByTargetedInstance registers an exec request for a specific instance,
 	// identified by it's database id.
-	InstanceExecCreateByTargetedInstance(id string, exec *InstanceExec) error
+	InstanceExecCreateByTargetedInstance(ctx context.Context, id string, exec *InstanceExec) error
 
 	// InstanceExecCreateByDeployment looks up the instances running the given deployment,
 	// picks an instance, and assigns the exec to that instance.
-	InstanceExecCreateByDeployment(did string, exec *InstanceExec) error
+	InstanceExecCreateByDeployment(ctx context.Context, did string, exec *InstanceExec) error
 
 	// InstanceExecCreateForVirtualInstance is used for plugins that require instances to be
 	// created just to handle exec requests. The given instance id doesn't have to exist yet,
@@ -70,13 +70,13 @@ type InstanceExecHandler interface {
 	InstanceExecCreateForVirtualInstance(ctx context.Context, id string, exec *InstanceExec) error
 
 	// InstanceExecDelete deletes an exec request, identified by it's numeric id (InstanceExec.Id)
-	InstanceExecDelete(id int64) error
+	InstanceExecDelete(ctx context.Context, id int64) error
 
 	// InstanceExecById retrieves an exec request, identified by it's numeric id (InstanceExec.Id)
-	InstanceExecById(id int64) (*InstanceExec, error)
+	InstanceExecById(ctx context.Context, id int64) (*InstanceExec, error)
 
 	// InstanceExecListByInstanceId returns any exec requests for the given instance id.
-	InstanceExecListByInstanceId(id string, ws memdb.WatchSet) ([]*InstanceExec, error)
+	InstanceExecListByInstanceId(ctx context.Context, id string, ws memdb.WatchSet) ([]*InstanceExec, error)
 
 	// InstanceExecById retrieves an exec request, identified by it's numeric id (InstanceExec.Id).
 	// The implementer also can use this opertunity to do any sychronization of state, such as

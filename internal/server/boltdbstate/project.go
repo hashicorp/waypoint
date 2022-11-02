@@ -109,24 +109,24 @@ func (s *State) ProjectDelete(ctx context.Context, ref *pb.Ref_Project) error {
 			} else {
 				artifacts = append(artifacts, artifactList...)
 			}
-			if deploymentList, err := s.DeploymentList(appRef); err != nil {
+			if deploymentList, err := s.DeploymentList(ctx, appRef); err != nil {
 				return err
 			} else {
 				deployments = append(deployments, deploymentList...)
 			}
-			if releaseList, err := s.ReleaseList(appRef); err != nil {
+			if releaseList, err := s.ReleaseList(ctx, appRef); err != nil {
 				return err
 			} else {
 				releases = append(releases, releaseList...)
 			}
-			if statusReportList, err := s.StatusReportList(appRef); err != nil {
+			if statusReportList, err := s.StatusReportList(ctx, appRef); err != nil {
 				return err
 			} else {
 				statusReports = append(statusReports, statusReportList...)
 			}
 
 			// Get app-scoped config
-			if appConfigVars, err := s.ConfigGet(&pb.ConfigGetRequest{
+			if appConfigVars, err := s.ConfigGet(ctx, &pb.ConfigGetRequest{
 				Scope: &pb.ConfigGetRequest_Application{Application: &pb.Ref_Application{
 					Project:     project.Name,
 					Application: app.Name,
@@ -138,7 +138,7 @@ func (s *State) ProjectDelete(ctx context.Context, ref *pb.Ref_Project) error {
 			}
 		}
 		// Get project-scoped config
-		if projectConfigVars, err := s.ConfigGet(&pb.ConfigGetRequest{
+		if projectConfigVars, err := s.ConfigGet(ctx, &pb.ConfigGetRequest{
 			Scope: &pb.ConfigGetRequest_Project{Project: ref},
 		}); err != nil {
 			return err
@@ -151,12 +151,12 @@ func (s *State) ProjectDelete(ctx context.Context, ref *pb.Ref_Project) error {
 		} else {
 			for _, workspace := range workspaceList {
 				// Get the triggers for a project in the workspace
-				if triggerList, err := s.TriggerList(workspace.Workspace, &pb.Ref_Project{Project: project.Name}, nil, []string{}); err != nil {
+				if triggerList, err := s.TriggerList(ctx, workspace.Workspace, &pb.Ref_Project{Project: project.Name}, nil, []string{}); err != nil {
 					return err
 				} else {
 					triggers = append(triggers, triggerList...)
 				}
-				if workspaceDetail, err := s.WorkspaceGet(workspace.Workspace.Workspace); err != nil {
+				if workspaceDetail, err := s.WorkspaceGet(ctx, workspace.Workspace.Workspace); err != nil {
 					return err
 				} else {
 					// If the project we're deleting is the only project in the workspace, we delete the workspace

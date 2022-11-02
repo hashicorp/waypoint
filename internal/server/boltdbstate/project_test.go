@@ -53,7 +53,7 @@ func TestProject(t *testing.T) {
 			Workspace: &pb.Ref_Workspace{Workspace: "default"},
 		}))
 
-		require.NoError(s.DeploymentPut(false, &pb.Deployment{
+		require.NoError(s.DeploymentPut(ctx, false, &pb.Deployment{
 			Id: "testDeployment",
 			Application: &pb.Ref_Application{
 				Application: appName,
@@ -62,7 +62,7 @@ func TestProject(t *testing.T) {
 			Workspace: &pb.Ref_Workspace{Workspace: "default"},
 		}))
 
-		require.NoError(s.ReleasePut(false, &pb.Release{
+		require.NoError(s.ReleasePut(ctx, false, &pb.Release{
 			Id: "testRelease",
 			Application: &pb.Ref_Application{
 				Application: appName,
@@ -71,7 +71,7 @@ func TestProject(t *testing.T) {
 			Workspace: &pb.Ref_Workspace{Workspace: "default"},
 		}))
 
-		require.NoError(s.StatusReportPut(false, &pb.StatusReport{
+		require.NoError(s.StatusReportPut(ctx, false, &pb.StatusReport{
 			Id: "testStatusReport",
 			Application: &pb.Ref_Application{
 				Application: appName,
@@ -80,7 +80,7 @@ func TestProject(t *testing.T) {
 			Workspace: &pb.Ref_Workspace{Workspace: "default"},
 		}))
 
-		require.NoError(s.ConfigSet(&pb.ConfigVar{
+		require.NoError(s.ConfigSet(ctx, &pb.ConfigVar{
 			Target: &pb.ConfigVar_Target{
 				AppScope: &pb.ConfigVar_Target_Project{Project: &pb.Ref_Project{Project: projectName}},
 			},
@@ -90,7 +90,7 @@ func TestProject(t *testing.T) {
 			NameIsPath: false,
 		}))
 
-		require.NoError(s.ConfigSet(&pb.ConfigVar{
+		require.NoError(s.ConfigSet(ctx, &pb.ConfigVar{
 			Target: &pb.ConfigVar_Target{
 				AppScope: &pb.ConfigVar_Target_Application{Application: &pb.Ref_Application{
 					Project:     projectName,
@@ -103,7 +103,7 @@ func TestProject(t *testing.T) {
 			NameIsPath: false,
 		}))
 
-		require.NoError(s.WorkspacePut(&pb.Workspace{
+		require.NoError(s.WorkspacePut(ctx, &pb.Workspace{
 			Name: "testWorkspace",
 			Projects: []*pb.Workspace_Project{
 				{
@@ -130,7 +130,7 @@ func TestProject(t *testing.T) {
 			},
 		}))
 
-		require.NoError(s.TriggerPut(&pb.Trigger{
+		require.NoError(s.TriggerPut(ctx, &pb.Trigger{
 			Id:        "testTrigger",
 			Name:      "testTrigger",
 			Project:   &pb.Ref_Project{Project: projectName},
@@ -152,23 +152,23 @@ func TestProject(t *testing.T) {
 		_, err = s.ArtifactGet(ctx, &pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testArtifact"}})
 		require.Error(err)
 
-		_, err = s.DeploymentGet(&pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testDeployment"}})
+		_, err = s.DeploymentGet(ctx, &pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testDeployment"}})
 		require.Error(err)
 
-		_, err = s.ReleaseGet(&pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testRelease"}})
+		_, err = s.ReleaseGet(ctx, &pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testRelease"}})
 		require.Error(err)
 
-		_, err = s.StatusReportGet(&pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testStatusReport"}})
+		_, err = s.StatusReportGet(ctx, &pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testStatusReport"}})
 		require.Error(err)
 
-		configVars, err := s.ConfigGet(&pb.ConfigGetRequest{})
+		configVars, err := s.ConfigGet(ctx, &pb.ConfigGetRequest{})
 		require.NoError(err)
 		require.Equal(0, len(configVars))
 
-		_, err = s.WorkspaceGet("testWorkspace")
+		_, err = s.WorkspaceGet(ctx, "testWorkspace")
 		require.Error(err)
 
-		_, err = s.TriggerGet(&pb.Ref_Trigger{Id: "testTrigger"})
+		_, err = s.TriggerGet(ctx, &pb.Ref_Trigger{Id: "testTrigger"})
 		require.Error(err)
 
 		_, err = s.PipelineGet(ctx, &pb.Ref_Pipeline{Ref: &pb.Ref_Pipeline_Owner{Owner: &pb.Ref_PipelineOwner{
@@ -208,7 +208,7 @@ func TestProject(t *testing.T) {
 			},
 		}))
 
-		require.NoError(s.WorkspacePut(&pb.Workspace{
+		require.NoError(s.WorkspacePut(ctx, &pb.Workspace{
 			Name: "one-project-workspace",
 			Projects: []*pb.Workspace_Project{
 				{
@@ -218,7 +218,7 @@ func TestProject(t *testing.T) {
 			ActiveTime: nil,
 		}))
 
-		require.NoError(s.WorkspacePut(&pb.Workspace{
+		require.NoError(s.WorkspacePut(ctx, &pb.Workspace{
 			Name: "two-project-workspace",
 			Projects: []*pb.Workspace_Project{
 				{
@@ -233,7 +233,7 @@ func TestProject(t *testing.T) {
 
 		require.NoError(s.ProjectDelete(ctx, &pb.Ref_Project{Project: projectName1}))
 
-		workspaces, err := s.WorkspaceList()
+		workspaces, err := s.WorkspaceList(ctx)
 		require.NoError(err)
 
 		// After the project is deleted, only the 2nd workspace should exist
@@ -348,7 +348,7 @@ func TestProject(t *testing.T) {
 		}))
 
 		// Create multiple deployments for each app
-		require.NoError(s.DeploymentPut(false, &pb.Deployment{
+		require.NoError(s.DeploymentPut(ctx, false, &pb.Deployment{
 			Id: "testDeployment1App1",
 			Application: &pb.Ref_Application{
 				Application: appName1,
@@ -357,7 +357,7 @@ func TestProject(t *testing.T) {
 			Workspace: &pb.Ref_Workspace{Workspace: "default"},
 		}))
 
-		require.NoError(s.DeploymentPut(false, &pb.Deployment{
+		require.NoError(s.DeploymentPut(ctx, false, &pb.Deployment{
 			Id: "testDeployment2App1",
 			Application: &pb.Ref_Application{
 				Application: appName1,
@@ -366,7 +366,7 @@ func TestProject(t *testing.T) {
 			Workspace: &pb.Ref_Workspace{Workspace: "default"},
 		}))
 
-		require.NoError(s.DeploymentPut(false, &pb.Deployment{
+		require.NoError(s.DeploymentPut(ctx, false, &pb.Deployment{
 			Id: "testDeployment1App2",
 			Application: &pb.Ref_Application{
 				Application: appName2,
@@ -375,7 +375,7 @@ func TestProject(t *testing.T) {
 			Workspace: &pb.Ref_Workspace{Workspace: "default"},
 		}))
 
-		require.NoError(s.DeploymentPut(false, &pb.Deployment{
+		require.NoError(s.DeploymentPut(ctx, false, &pb.Deployment{
 			Id: "testDeployment2App2",
 			Application: &pb.Ref_Application{
 				Application: appName2,
@@ -385,7 +385,7 @@ func TestProject(t *testing.T) {
 		}))
 
 		// Create multiple releases for each app
-		require.NoError(s.ReleasePut(false, &pb.Release{
+		require.NoError(s.ReleasePut(ctx, false, &pb.Release{
 			Id: "testRelease1App1",
 			Application: &pb.Ref_Application{
 				Application: appName1,
@@ -394,7 +394,7 @@ func TestProject(t *testing.T) {
 			Workspace: &pb.Ref_Workspace{Workspace: "default"},
 		}))
 
-		require.NoError(s.ReleasePut(false, &pb.Release{
+		require.NoError(s.ReleasePut(ctx, false, &pb.Release{
 			Id: "testRelease2App1",
 			Application: &pb.Ref_Application{
 				Application: appName1,
@@ -403,7 +403,7 @@ func TestProject(t *testing.T) {
 			Workspace: &pb.Ref_Workspace{Workspace: "default"},
 		}))
 
-		require.NoError(s.ReleasePut(false, &pb.Release{
+		require.NoError(s.ReleasePut(ctx, false, &pb.Release{
 			Id: "testRelease1App2",
 			Application: &pb.Ref_Application{
 				Application: appName2,
@@ -412,7 +412,7 @@ func TestProject(t *testing.T) {
 			Workspace: &pb.Ref_Workspace{Workspace: "default"},
 		}))
 
-		require.NoError(s.ReleasePut(false, &pb.Release{
+		require.NoError(s.ReleasePut(ctx, false, &pb.Release{
 			Id: "testRelease2App2",
 			Application: &pb.Ref_Application{
 				Application: appName2,
@@ -422,7 +422,7 @@ func TestProject(t *testing.T) {
 		}))
 
 		// Create multiple status reports for each app
-		require.NoError(s.StatusReportPut(false, &pb.StatusReport{
+		require.NoError(s.StatusReportPut(ctx, false, &pb.StatusReport{
 			Id: "testStatusReport1App1",
 			Application: &pb.Ref_Application{
 				Application: appName1,
@@ -431,7 +431,7 @@ func TestProject(t *testing.T) {
 			Workspace: &pb.Ref_Workspace{Workspace: "default"},
 		}))
 
-		require.NoError(s.StatusReportPut(false, &pb.StatusReport{
+		require.NoError(s.StatusReportPut(ctx, false, &pb.StatusReport{
 			Id: "testStatusReport2App1",
 			Application: &pb.Ref_Application{
 				Application: appName1,
@@ -440,7 +440,7 @@ func TestProject(t *testing.T) {
 			Workspace: &pb.Ref_Workspace{Workspace: "default"},
 		}))
 
-		require.NoError(s.StatusReportPut(false, &pb.StatusReport{
+		require.NoError(s.StatusReportPut(ctx, false, &pb.StatusReport{
 			Id: "testStatusReport1App2",
 			Application: &pb.Ref_Application{
 				Application: appName2,
@@ -449,7 +449,7 @@ func TestProject(t *testing.T) {
 			Workspace: &pb.Ref_Workspace{Workspace: "default"},
 		}))
 
-		require.NoError(s.StatusReportPut(false, &pb.StatusReport{
+		require.NoError(s.StatusReportPut(ctx, false, &pb.StatusReport{
 			Id: "testStatusReport2App2",
 			Application: &pb.Ref_Application{
 				Application: appName2,
@@ -490,40 +490,40 @@ func TestProject(t *testing.T) {
 		_, err = s.ArtifactGet(ctx, &pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testArtifact2App2"}})
 		require.Error(err)
 
-		_, err = s.DeploymentGet(&pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testDeployment1App1"}})
+		_, err = s.DeploymentGet(ctx, &pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testDeployment1App1"}})
 		require.Error(err)
 
-		_, err = s.DeploymentGet(&pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testDeployment2App1"}})
+		_, err = s.DeploymentGet(ctx, &pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testDeployment2App1"}})
 		require.Error(err)
 
-		_, err = s.DeploymentGet(&pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testDeployment1App2"}})
+		_, err = s.DeploymentGet(ctx, &pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testDeployment1App2"}})
 		require.Error(err)
 
-		_, err = s.DeploymentGet(&pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testDeployment2App2"}})
+		_, err = s.DeploymentGet(ctx, &pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testDeployment2App2"}})
 		require.Error(err)
 
-		_, err = s.ReleaseGet(&pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testRelease1App1"}})
+		_, err = s.ReleaseGet(ctx, &pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testRelease1App1"}})
 		require.Error(err)
 
-		_, err = s.ReleaseGet(&pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testRelease2App1"}})
+		_, err = s.ReleaseGet(ctx, &pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testRelease2App1"}})
 		require.Error(err)
 
-		_, err = s.ReleaseGet(&pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testRelease1App2"}})
+		_, err = s.ReleaseGet(ctx, &pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testRelease1App2"}})
 		require.Error(err)
 
-		_, err = s.ReleaseGet(&pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testRelease2App2"}})
+		_, err = s.ReleaseGet(ctx, &pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testRelease2App2"}})
 		require.Error(err)
 
-		_, err = s.StatusReportGet(&pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testStatusReport1App1"}})
+		_, err = s.StatusReportGet(ctx, &pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testStatusReport1App1"}})
 		require.Error(err)
 
-		_, err = s.StatusReportGet(&pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testStatusReport2App1"}})
+		_, err = s.StatusReportGet(ctx, &pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testStatusReport2App1"}})
 		require.Error(err)
 
-		_, err = s.StatusReportGet(&pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testStatusReport1App2"}})
+		_, err = s.StatusReportGet(ctx, &pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testStatusReport1App2"}})
 		require.Error(err)
 
-		_, err = s.StatusReportGet(&pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testStatusReport2App2"}})
+		_, err = s.StatusReportGet(ctx, &pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testStatusReport2App2"}})
 		require.Error(err)
 	})
 
@@ -562,7 +562,7 @@ func TestProject(t *testing.T) {
 			Workspace: &pb.Ref_Workspace{Workspace: "default"},
 		}))
 
-		require.NoError(s.DeploymentPut(false, &pb.Deployment{
+		require.NoError(s.DeploymentPut(ctx, false, &pb.Deployment{
 			Id: "testDeployment",
 			Application: &pb.Ref_Application{
 				Application: appName,
@@ -649,7 +649,7 @@ func TestProject(t *testing.T) {
 			Workspace: &pb.Ref_Workspace{Workspace: "default"},
 		}))
 
-		require.NoError(s.DeploymentPut(false, &pb.Deployment{
+		require.NoError(s.DeploymentPut(ctx, false, &pb.Deployment{
 			Id: "testDeployment1",
 			Application: &pb.Ref_Application{
 				Application: appName,
@@ -658,7 +658,7 @@ func TestProject(t *testing.T) {
 			Workspace: &pb.Ref_Workspace{Workspace: "default"},
 		}))
 
-		require.NoError(s.DeploymentPut(false, &pb.Deployment{
+		require.NoError(s.DeploymentPut(ctx, false, &pb.Deployment{
 			Id: "testDeployment2",
 			Application: &pb.Ref_Application{
 				Application: appName,
@@ -667,7 +667,7 @@ func TestProject(t *testing.T) {
 			Workspace: &pb.Ref_Workspace{Workspace: "default"},
 		}))
 
-		require.NoError(s.DeploymentPut(false, &pb.Deployment{
+		require.NoError(s.DeploymentPut(ctx, false, &pb.Deployment{
 			Id: "testDeployment3",
 			Application: &pb.Ref_Application{
 				Application: appName,
@@ -676,7 +676,7 @@ func TestProject(t *testing.T) {
 			Workspace: &pb.Ref_Workspace{Workspace: "default"},
 		}))
 
-		require.NoError(s.ReleasePut(false, &pb.Release{
+		require.NoError(s.ReleasePut(ctx, false, &pb.Release{
 			Id: "testRelease1",
 			Application: &pb.Ref_Application{
 				Application: appName,
@@ -685,7 +685,7 @@ func TestProject(t *testing.T) {
 			Workspace: &pb.Ref_Workspace{Workspace: "default"},
 		}))
 
-		require.NoError(s.ReleasePut(false, &pb.Release{
+		require.NoError(s.ReleasePut(ctx, false, &pb.Release{
 			Id: "testRelease2",
 			Application: &pb.Ref_Application{
 				Application: appName,
@@ -694,7 +694,7 @@ func TestProject(t *testing.T) {
 			Workspace: &pb.Ref_Workspace{Workspace: "default"},
 		}))
 
-		require.NoError(s.ReleasePut(false, &pb.Release{
+		require.NoError(s.ReleasePut(ctx, false, &pb.Release{
 			Id: "testRelease3",
 			Application: &pb.Ref_Application{
 				Application: appName,
@@ -727,27 +727,27 @@ func TestProject(t *testing.T) {
 		require.NoError(err)
 		require.Equal(3, int(artifact3.Sequence))
 
-		deployment1, err := s.DeploymentGet(&pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testDeployment1"}})
+		deployment1, err := s.DeploymentGet(ctx, &pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testDeployment1"}})
 		require.NoError(err)
 		require.Equal(1, int(deployment1.Sequence))
 
-		deployment2, err := s.DeploymentGet(&pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testDeployment2"}})
+		deployment2, err := s.DeploymentGet(ctx, &pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testDeployment2"}})
 		require.NoError(err)
 		require.Equal(2, int(deployment2.Sequence))
 
-		deployment3, err := s.DeploymentGet(&pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testDeployment3"}})
+		deployment3, err := s.DeploymentGet(ctx, &pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testDeployment3"}})
 		require.NoError(err)
 		require.Equal(3, int(deployment3.Sequence))
 
-		release1, err := s.ReleaseGet(&pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testRelease1"}})
+		release1, err := s.ReleaseGet(ctx, &pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testRelease1"}})
 		require.NoError(err)
 		require.Equal(1, int(release1.Sequence))
 
-		release2, err := s.ReleaseGet(&pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testRelease2"}})
+		release2, err := s.ReleaseGet(ctx, &pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testRelease2"}})
 		require.NoError(err)
 		require.Equal(2, int(release2.Sequence))
 
-		release3, err := s.ReleaseGet(&pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testRelease3"}})
+		release3, err := s.ReleaseGet(ctx, &pb.Ref_Operation{Target: &pb.Ref_Operation_Id{Id: "testRelease3"}})
 		require.NoError(err)
 		require.Equal(3, int(release3.Sequence))
 	})

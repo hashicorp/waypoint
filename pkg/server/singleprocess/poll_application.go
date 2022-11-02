@@ -37,7 +37,8 @@ func (a *applicationPoll) Peek(
 	log hclog.Logger,
 	ws memdb.WatchSet,
 ) (interface{}, time.Time, error) {
-	project, pollTime, err := a.state.ApplicationPollPeek(ws)
+	ctx := context.Background()
+	project, pollTime, err := a.state.ApplicationPollPeek(ctx, ws)
 	if err != nil {
 		log.Warn("error peeking for next application to poll", "err", err)
 		return nil, time.Time{}, err // continue loop
@@ -114,12 +115,12 @@ func (a *applicationPoll) buildPollJobs(
 	}
 
 	log.Trace("looking at latest deployment and release to generate status report on")
-	latestDeployment, err := a.state.DeploymentLatest(appRef, &pb.Ref_Workspace{Workspace: a.workspace})
+	latestDeployment, err := a.state.DeploymentLatest(ctx, appRef, &pb.Ref_Workspace{Workspace: a.workspace})
 	// If the deployment isn't found, it's ok
 	if err != nil && status.Code(err) != codes.NotFound {
 		return nil, err
 	}
-	latestRelease, err := a.state.ReleaseLatest(appRef, &pb.Ref_Workspace{Workspace: a.workspace})
+	latestRelease, err := a.state.ReleaseLatest(ctx, appRef, &pb.Ref_Workspace{Workspace: a.workspace})
 	// If the release isn't found, it's ok.
 	if err != nil && status.Code(err) != codes.NotFound {
 		return nil, err
@@ -218,6 +219,7 @@ func (a *applicationPoll) Complete(
 	log hclog.Logger,
 	p interface{},
 ) error {
+	ctx := context.Background()
 	project, ok := p.(*pb.Project)
 	if !ok || project == nil {
 		log.Error("could not mark application poll as complete, incorrect type passed in")
@@ -227,7 +229,7 @@ func (a *applicationPoll) Complete(
 
 	// Mark this as complete so the next poll gets rescheduled.
 	log.Trace("marking app poll as complete")
-	if err := a.state.ApplicationPollComplete(project, time.Now()); err != nil {
+	if err := a.state.ApplicationPollComplete(ctx, project, time.Now()); err != nil {
 		return err
 	}
 	return nil

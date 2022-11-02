@@ -63,7 +63,7 @@ func (s *Service) StartExecStream(
 	switch t := start.Start.Target.(type) {
 	case *pb.ExecStreamRequest_Start_InstanceId:
 		log = log.With("instance_id", t.InstanceId)
-		err = iexec.InstanceExecCreateByTargetedInstance(t.InstanceId, execRec)
+		err = iexec.InstanceExecCreateByTargetedInstance(ctx, t.InstanceId, execRec)
 		if err != nil {
 			return err
 		}
@@ -177,7 +177,7 @@ func (s *Service) StartExecStream(
 				return err
 			}
 		} else {
-			err = iexec.InstanceExecCreateByDeployment(t.DeploymentId, execRec)
+			err = iexec.InstanceExecCreateByDeployment(ctx, t.DeploymentId, execRec)
 			if err != nil {
 				return err
 			}
@@ -192,7 +192,7 @@ func (s *Service) StartExecStream(
 	log.Debug("exec requested", "args", start.Start.Args)
 
 	// Make sure we always deregister it
-	defer iexec.InstanceExecDelete(execRec.Id)
+	defer iexec.InstanceExecDelete(ctx, execRec.Id)
 
 	// Always send the open message. In the future we'll send some metadata here.
 	if err := srv.Send(&pb.ExecStreamResponse{

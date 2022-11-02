@@ -54,7 +54,7 @@ func (s *Service) spawnLogPlugin(
 	var lo boltdbstate.InstanceLogs
 	lo.LogBuffer = logbuffer.New()
 
-	err = inmemstate.InstanceLogsCreate(instId, &lo)
+	err = inmemstate.InstanceLogsCreate(ctx, instId, &lo)
 	if err != nil {
 		return nil, "", err
 	}
@@ -209,7 +209,7 @@ func (s *Service) GetLogStream(
 
 			// Because we spawned the writer, we can safely delete the whole thing
 			// when the reader is done.
-			defer inmemstate.InstanceLogsDelete(inst.Id)
+			defer inmemstate.InstanceLogsDelete(ctx, inst.Id)
 
 			log.Debug("log plugin spawned", "job_id", jobId)
 			instanceFunc = func(ws memdb.WatchSet) ([]*streamRec, error) {
@@ -273,7 +273,7 @@ func (s *Service) GetLogStream(
 		// Be sure to cleanup all our detritus when done!
 		defer func() {
 			for _, il := range deploymentToInstance {
-				inmemstate.InstanceLogsDelete(il.InstanceLogsId)
+				inmemstate.InstanceLogsDelete(ctx, il.InstanceLogsId)
 				s.state(ctx).JobCancel(ctx, il.JobId, false)
 			}
 		}()

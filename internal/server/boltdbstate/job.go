@@ -1170,7 +1170,7 @@ func (s *State) JobIsAssignable(ctx context.Context, jobpb *pb.Job) (bool, error
 }
 
 // jobIndexInit initializes the config index from persisted data.
-func (s *State) jobIndexInit(ctx context.Context, dbTxn *bolt.Tx, memTxn *memdb.Txn) error {
+func (s *State) jobIndexInit(dbTxn *bolt.Tx, memTxn *memdb.Txn) error {
 	bucket := dbTxn.Bucket(jobBucket)
 	c := bucket.Cursor()
 
@@ -1186,7 +1186,7 @@ func (s *State) jobIndexInit(ctx context.Context, dbTxn *bolt.Tx, memTxn *memdb.
 		// index it.
 		if cnt < maximumJobsIndexed || !jobIsCompleted(value.State) {
 			cnt++
-			idx, err := s.jobIndexSet(ctx, memTxn, k, &value)
+			idx, err := s.jobIndexSet(memTxn, k, &value)
 			if err != nil {
 				return err
 			}
@@ -1204,7 +1204,8 @@ func (s *State) jobIndexInit(ctx context.Context, dbTxn *bolt.Tx, memTxn *memdb.
 }
 
 // jobIndexSet writes an index record for a single job.
-func (s *State) jobIndexSet(ctx context.Context, txn *memdb.Txn, id []byte, jobpb *pb.Job) (*jobIndex, error) {
+func (s *State) jobIndexSet(txn *memdb.Txn, id []byte, jobpb *pb.Job) (*jobIndex, error) {
+	ctx := context.Background()
 	rec := &jobIndex{
 		Id:          jobpb.Id,
 		SingletonId: jobpb.SingletonId,
@@ -1322,7 +1323,7 @@ func (s *State) jobCreate(ctx context.Context, dbTxn *bolt.Tx, memTxn *memdb.Txn
 			if err := dbPut(bucket, []byte(old.Id), oldpb); err != nil {
 				return err
 			}
-			if _, err = s.jobIndexSet(ctx, memTxn, []byte(old.Id), oldpb); err != nil {
+			if _, err = s.jobIndexSet(memTxn, []byte(old.Id), oldpb); err != nil {
 				return err
 			}
 
@@ -1369,7 +1370,7 @@ func (s *State) jobCreate(ctx context.Context, dbTxn *bolt.Tx, memTxn *memdb.Txn
 	}
 
 	// Insert into the DB
-	_, err = s.jobIndexSet(ctx, memTxn, id, jobpb)
+	_, err = s.jobIndexSet(memTxn, id, jobpb)
 	if err != nil {
 		return err
 	}

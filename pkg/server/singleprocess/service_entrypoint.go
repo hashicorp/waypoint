@@ -95,7 +95,7 @@ func (s *Service) EntrypointConfig(
 			// Delete any active but unconnected exec requests. This can happen
 			// if the entrypoint crashed after an exec was assigned to the entrypoint.
 			log.Trace("closing any unconnected exec requests")
-			execs, err := iexec.InstanceExecListByInstanceId(record.Id, nil)
+			execs, err := iexec.InstanceExecListByInstanceId(ctx, record.Id, nil)
 			if err != nil {
 				log.Error("failed to query instance exec list. This should not happen.", "err", err)
 			} else {
@@ -115,7 +115,7 @@ func (s *Service) EntrypointConfig(
 		// Get our exec requests
 		var execs []*serverstate.InstanceExec
 		if iexec != nil {
-			execs, err = iexec.InstanceExecListByInstanceId(req.InstanceId, ws)
+			execs, err = iexec.InstanceExecListByInstanceId(ctx, req.InstanceId, ws)
 			if err != nil {
 				return hcerr.Externalize(
 					log,
@@ -313,7 +313,7 @@ func (s *Service) EntrypointLogStream(
 					// without generating a full Instance.
 
 					log.Info("no Instance found, attempting to lookup InstanceLogs record instead")
-					il, err := inmemstate.InstanceLogsByInstanceId(batch.InstanceId)
+					il, err := inmemstate.InstanceLogsByInstanceId(ctx, batch.InstanceId)
 					if err != nil {
 						return hcerr.Externalize(
 							log,

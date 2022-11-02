@@ -38,7 +38,7 @@ func init() {
 // ConfigSet writes a configuration variable to the data store. Deletes
 // are always ordered before writes so that you can't delete a new value
 // in a single ConfigSet (you should never want to do this).
-func (s *State) ConfigSet(vs ...*pb.ConfigVar) error {
+func (s *State) ConfigSet(ctx context.Context, vs ...*pb.ConfigVar) error {
 	// Sort the variables so that deletes are handled before writes.
 	sort.Slice(vs, func(i, j int) bool {
 		// i < j if i is a delete request.
