@@ -22,10 +22,10 @@ type Interface interface {
 	io.Closer
 
 	HMACKeyEmpty(context.Context) bool
-	HMACKeyCreateIfNotExist(context.Context, id string, size int) (*pb.HMACKey, error)
-	HMACKeyGet(context.Context, id string) (*pb.HMACKey, error)
-	TokenSignature(context.Context, tokenBody []byte, keyId string) (signature []byte, err error)
-	TokenSignatureVerify(context.Context, tokenBody []byte, signature []byte, keyId string) (isValid bool, err error)
+	HMACKeyCreateIfNotExist(ctx context.Context, id string, size int) (*pb.HMACKey, error)
+	HMACKeyGet(ctx context.Context, id string) (*pb.HMACKey, error)
+	TokenSignature(ctx context.Context, tokenBody []byte, keyId string) (signature []byte, err error)
+	TokenSignatureVerify(ctx context.Context, tokenBody []byte, signature []byte, keyId string) (isValid bool, err error)
 
 	ServerConfigSet(context.Context, *pb.ServerConfig) error
 	ServerConfigGet(context.Context) (*pb.ServerConfig, error)
@@ -35,7 +35,7 @@ type Interface interface {
 	UserDelete(context.Context, *pb.Ref_User) error
 	UserList(context.Context) ([]*pb.User, error)
 	UserEmpty(context.Context) (bool, error)
-	UserGetOIDC(context.Context, iss, sub string) (*pb.User, error)
+	UserGetOIDC(ctx context.Context, iss, sub string) (*pb.User, error)
 	UserGetEmail(context.Context, string) (*pb.User, error)
 
 	//---------------------------------------------------------------
@@ -63,7 +63,7 @@ type Interface interface {
 	ServerURLTokenSet(context.Context, string) error
 	ServerURLTokenGet(context.Context) (string, error)
 
-	ServerIdSet(context.Context, id string) error
+	ServerIdSet(ctx context.Context, id string) error
 	ServerIdGet(context.Context) (string, error)
 
 	CreateSnapshot(context.Context, io.Writer) error
