@@ -44,14 +44,14 @@ func TestApplication(t *testing.T, factory Factory, restartF RestartFactory) {
 		}
 
 		// Add
-		app, err := s.AppPut(serverptypes.TestApplication(t, &pb.Application{
+		app, err := s.AppPut(ctx, serverptypes.TestApplication(t, &pb.Application{
 			Project: ref,
 		}))
 		require.NoError(err)
 
 		// Can read
 		{
-			resp, err := s.AppGet(&pb.Ref_Application{
+			resp, err := s.AppGet(ctx, &pb.Ref_Application{
 				Project:     ref.Project,
 				Application: app.Name,
 			})
@@ -78,14 +78,14 @@ func TestApplication(t *testing.T, factory Factory, restartF RestartFactory) {
 		ref := &pb.Ref_Project{Project: "foo"}
 
 		// Add
-		app, err := s.AppPut(serverptypes.TestApplication(t, &pb.Application{
+		app, err := s.AppPut(ctx, serverptypes.TestApplication(t, &pb.Application{
 			Project: ref,
 		}))
 		require.NoError(err)
 
 		// Can read
 		{
-			resp, err := s.AppGet(&pb.Ref_Application{
+			resp, err := s.AppGet(ctx, &pb.Ref_Application{
 				Project:     ref.Project,
 				Application: app.Name,
 			})
@@ -118,7 +118,7 @@ func TestApplication(t *testing.T, factory Factory, restartF RestartFactory) {
 		})))
 
 		// Add
-		_, err := s.AppPut(serverptypes.TestApplication(t, &pb.Application{
+		_, err := s.AppPut(ctx, serverptypes.TestApplication(t, &pb.Application{
 			Project: ref,
 			Name:    "next",
 		}))
@@ -151,7 +151,7 @@ func TestApplication(t *testing.T, factory Factory, restartF RestartFactory) {
 		})))
 
 		// Add
-		_, err := s.AppPut(serverptypes.TestApplication(t, &pb.Application{
+		_, err := s.AppPut(ctx, serverptypes.TestApplication(t, &pb.Application{
 			Project: ref,
 			Name:    "foo",
 		}))
@@ -179,7 +179,7 @@ func TestApplication(t *testing.T, factory Factory, restartF RestartFactory) {
 		}))
 		require.NoError(err)
 
-		_, err = s.AppPut(&pb.Application{
+		_, err = s.AppPut(ctx, &pb.Application{
 			Project: &pb.Ref_Project{Project: name},
 			Name:    "app",
 		})
@@ -191,7 +191,7 @@ func TestApplication(t *testing.T, factory Factory, restartF RestartFactory) {
 		}))
 		require.NoError(err)
 
-		sig, err := s.GetFileChangeSignal(&pb.Ref_Application{
+		sig, err := s.GetFileChangeSignal(ctx, &pb.Ref_Application{
 			Project:     name,
 			Application: "app",
 		})
@@ -199,14 +199,14 @@ func TestApplication(t *testing.T, factory Factory, restartF RestartFactory) {
 
 		require.Equal("HUP", sig)
 
-		_, err = s.AppPut(&pb.Application{
+		_, err = s.AppPut(ctx, &pb.Application{
 			Project:          &pb.Ref_Project{Project: name},
 			Name:             "app",
 			FileChangeSignal: "TERM",
 		})
 		require.NoError(err)
 
-		sig, err = s.GetFileChangeSignal(&pb.Ref_Application{
+		sig, err = s.GetFileChangeSignal(ctx, &pb.Ref_Application{
 			Project:     name,
 			Application: "app",
 		})
@@ -224,7 +224,7 @@ func TestApplicationPollPeek(t *testing.T, factory Factory, restartF RestartFact
 		s := factory(t)
 		defer s.Close()
 
-		v, _, err := s.ApplicationPollPeek(nil)
+		v, _, err := s.ApplicationPollPeek(ctx, nil)
 		require.NoError(err)
 		require.Nil(v)
 	})
@@ -244,7 +244,7 @@ func TestApplicationPollPeek(t *testing.T, factory Factory, restartF RestartFact
 				Interval: "10s",
 			},
 		})))
-		_, err := s.AppPut(serverptypes.TestApplication(t, &pb.Application{
+		_, err := s.AppPut(ctx, serverptypes.TestApplication(t, &pb.Application{
 			Project: ref,
 			Name:    ref.Project,
 		}))
@@ -267,7 +267,7 @@ func TestApplicationPollPeek(t *testing.T, factory Factory, restartF RestartFact
 
 		// Get exact
 		{
-			resp, t, err := s.ApplicationPollPeek(nil)
+			resp, t, err := s.ApplicationPollPeek(ctx, nil)
 			require.NoError(err)
 			require.NotNil(resp)
 			require.Equal("apple", resp.Name)
@@ -282,7 +282,7 @@ func TestApplicationPollPeek(t *testing.T, factory Factory, restartF RestartFact
 		defer s.Close()
 
 		ws := memdb.NewWatchSet()
-		v, _, err := s.ApplicationPollPeek(ws)
+		v, _, err := s.ApplicationPollPeek(ctx, ws)
 		require.NoError(err)
 		require.Nil(v)
 
@@ -298,7 +298,7 @@ func TestApplicationPollPeek(t *testing.T, factory Factory, restartF RestartFact
 				Interval: "30s",
 			},
 		})))
-		_, err = s.AppPut(serverptypes.TestApplication(t, &pb.Application{
+		_, err = s.AppPut(ctx, serverptypes.TestApplication(t, &pb.Application{
 			Project: ref,
 			Name:    ref.Project,
 		}))
@@ -309,7 +309,7 @@ func TestApplicationPollPeek(t *testing.T, factory Factory, restartF RestartFact
 
 		// Get exact
 		{
-			resp, t, err := s.ApplicationPollPeek(nil)
+			resp, t, err := s.ApplicationPollPeek(ctx, nil)
 			require.NoError(err)
 			require.NotNil(resp)
 			require.Equal("apple", resp.Name)
@@ -332,7 +332,7 @@ func TestApplicationPollPeek(t *testing.T, factory Factory, restartF RestartFact
 				Interval: "5s",
 			},
 		})))
-		_, err := s.AppPut(serverptypes.TestApplication(t, &pb.Application{
+		_, err := s.AppPut(ctx, serverptypes.TestApplication(t, &pb.Application{
 			Project: ref,
 			Name:    ref.Project,
 		}))
@@ -347,7 +347,7 @@ func TestApplicationPollPeek(t *testing.T, factory Factory, restartF RestartFact
 				Interval: "5m", // 5 MINUTES, longer than A
 			},
 		})))
-		_, err = s.AppPut(serverptypes.TestApplication(t, &pb.Application{
+		_, err = s.AppPut(ctx, serverptypes.TestApplication(t, &pb.Application{
 			Project: refOrg,
 			Name:    refOrg.Project,
 		}))
@@ -363,12 +363,12 @@ func TestApplicationPollPeek(t *testing.T, factory Factory, restartF RestartFact
 
 		// Complete both first
 		now := time.Now()
-		require.NoError(s.ApplicationPollComplete(pA, now))
-		require.NoError(s.ApplicationPollComplete(pB, now))
+		require.NoError(s.ApplicationPollComplete(ctx, pA, now))
+		require.NoError(s.ApplicationPollComplete(ctx, pB, now))
 
 		// Peek, we should get A
 		ws := memdb.NewWatchSet()
-		p, ts, err := s.ApplicationPollPeek(ws)
+		p, ts, err := s.ApplicationPollPeek(ctx, ws)
 		require.NoError(err)
 		require.NotNil(p)
 		require.Equal("apple", p.Name)
@@ -378,14 +378,14 @@ func TestApplicationPollPeek(t *testing.T, factory Factory, restartF RestartFact
 		require.True(ws.Watch(time.After(10 * time.Millisecond)))
 
 		// Set
-		require.NoError(s.ApplicationPollComplete(pA, now.Add(1*time.Second)))
+		require.NoError(s.ApplicationPollComplete(ctx, pA, now.Add(1*time.Second)))
 
 		// Should be triggered.
 		require.False(ws.Watch(time.After(2 * time.Second)))
 
 		// Get exact
 		{
-			resp, t, err := s.ApplicationPollPeek(nil)
+			resp, t, err := s.ApplicationPollPeek(ctx, nil)
 			require.NoError(err)
 			require.NotNil(resp)
 			require.Equal("apple", resp.Name)
@@ -402,7 +402,7 @@ func TestApplicationPollComplete(t *testing.T, factory Factory, restartF Restart
 		s := factory(t)
 		defer s.Close()
 
-		err := s.ApplicationPollComplete(&pb.Project{Name: "NOPE"}, time.Now())
+		err := s.ApplicationPollComplete(ctx, &pb.Project{Name: "NOPE"}, time.Now())
 		require.NoError(err)
 	})
 
@@ -420,7 +420,7 @@ func TestApplicationPollComplete(t *testing.T, factory Factory, restartF Restart
 				Enabled: false,
 			},
 		})))
-		_, err := s.AppPut(serverptypes.TestApplication(t, &pb.Application{
+		_, err := s.AppPut(ctx, serverptypes.TestApplication(t, &pb.Application{
 			Project: ref,
 			Name:    ref.Project,
 		}))
@@ -432,10 +432,10 @@ func TestApplicationPollComplete(t *testing.T, factory Factory, restartF Restart
 		require.NotNil(pA)
 
 		// No error
-		require.NoError(s.ApplicationPollComplete(pA, time.Now()))
+		require.NoError(s.ApplicationPollComplete(ctx, pA, time.Now()))
 
 		// Peek does nothing
-		_, _, err = s.ApplicationPollPeek(nil)
+		_, _, err = s.ApplicationPollPeek(ctx, nil)
 		require.NoError(err)
 		//require.False(v.StatusReportPoll.Enabled)
 	})
@@ -455,7 +455,7 @@ func TestApplicationPollComplete(t *testing.T, factory Factory, restartF Restart
 				Interval: "5s",
 			},
 		})))
-		_, err := s.AppPut(serverptypes.TestApplication(t, &pb.Application{
+		_, err := s.AppPut(ctx, serverptypes.TestApplication(t, &pb.Application{
 			Project: ref,
 			Name:    ref.Project,
 		}))
@@ -470,7 +470,7 @@ func TestApplicationPollComplete(t *testing.T, factory Factory, restartF Restart
 				Interval: "5m", // 5 MINUTES, longer than A
 			},
 		})))
-		_, err = s.AppPut(serverptypes.TestApplication(t, &pb.Application{
+		_, err = s.AppPut(ctx, serverptypes.TestApplication(t, &pb.Application{
 			Project: refOrg,
 			Name:    refOrg.Project,
 		}))
@@ -486,12 +486,12 @@ func TestApplicationPollComplete(t *testing.T, factory Factory, restartF Restart
 
 		// Complete both first
 		now := time.Now()
-		require.NoError(s.ApplicationPollComplete(pA, now))
-		require.NoError(s.ApplicationPollComplete(pB, now))
+		require.NoError(s.ApplicationPollComplete(ctx, pA, now))
+		require.NoError(s.ApplicationPollComplete(ctx, pB, now))
 
 		// Peek should return A, lower interval
 		{
-			resp, t, err := s.ApplicationPollPeek(nil)
+			resp, t, err := s.ApplicationPollPeek(ctx, nil)
 			require.NoError(err)
 			require.NotNil(resp)
 			require.Equal("apple", resp.Name)
@@ -501,9 +501,9 @@ func TestApplicationPollComplete(t *testing.T, factory Factory, restartF Restart
 		// Complete again, a minute later. The result should be A again
 		// because of the lower interval.
 		{
-			require.NoError(s.ApplicationPollComplete(pA, now.Add(1*time.Minute)))
+			require.NoError(s.ApplicationPollComplete(ctx, pA, now.Add(1*time.Minute)))
 
-			resp, t, err := s.ApplicationPollPeek(nil)
+			resp, t, err := s.ApplicationPollPeek(ctx, nil)
 			require.NoError(err)
 			require.NotNil(resp)
 			require.Equal("apple", resp.Name)
@@ -512,9 +512,9 @@ func TestApplicationPollComplete(t *testing.T, factory Factory, restartF Restart
 
 		// Complete A, now 6 minutes later. The result should be B now.
 		{
-			require.NoError(s.ApplicationPollComplete(pA, now.Add(6*time.Minute)))
+			require.NoError(s.ApplicationPollComplete(ctx, pA, now.Add(6*time.Minute)))
 
-			resp, t, err := s.ApplicationPollPeek(nil)
+			resp, t, err := s.ApplicationPollPeek(ctx, nil)
 			require.NoError(err)
 			require.NotNil(resp)
 			require.Equal("orange", resp.Name)

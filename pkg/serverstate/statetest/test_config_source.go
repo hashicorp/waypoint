@@ -1,6 +1,7 @@
 package statetest
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -15,6 +16,7 @@ func init() {
 }
 
 func TestConfigSource(t *testing.T, factory Factory, restartF RestartFactory) {
+	ctx := context.Background()
 	t.Run("basic put and get", func(t *testing.T) {
 		require := require.New(t)
 
@@ -22,7 +24,7 @@ func TestConfigSource(t *testing.T, factory Factory, restartF RestartFactory) {
 		defer s.Close()
 
 		// Create
-		require.NoError(s.ConfigSourceSet(&pb.ConfigSource{
+		require.NoError(s.ConfigSourceSet(ctx, &pb.ConfigSource{
 			Scope: &pb.ConfigSource_Global{
 				Global: &pb.Ref_Global{},
 			},
@@ -33,7 +35,7 @@ func TestConfigSource(t *testing.T, factory Factory, restartF RestartFactory) {
 
 		{
 			// Get it exactly
-			vs, err := s.ConfigSourceGet(&pb.GetConfigSourceRequest{
+			vs, err := s.ConfigSourceGet(ctx, &pb.GetConfigSourceRequest{
 				Scope: &pb.GetConfigSourceRequest_Global{
 					Global: &pb.Ref_Global{},
 				},
@@ -46,7 +48,7 @@ func TestConfigSource(t *testing.T, factory Factory, restartF RestartFactory) {
 
 		{
 			// Get it via any type
-			vs, err := s.ConfigSourceGet(&pb.GetConfigSourceRequest{
+			vs, err := s.ConfigSourceGet(ctx, &pb.GetConfigSourceRequest{
 				Scope: &pb.GetConfigSourceRequest_Global{
 					Global: &pb.Ref_Global{},
 				},
@@ -57,7 +59,7 @@ func TestConfigSource(t *testing.T, factory Factory, restartF RestartFactory) {
 
 		{
 			// non-matching type
-			vs, err := s.ConfigSourceGet(&pb.GetConfigSourceRequest{
+			vs, err := s.ConfigSourceGet(ctx, &pb.GetConfigSourceRequest{
 				Scope: &pb.GetConfigSourceRequest_Global{
 					Global: &pb.Ref_Global{},
 				},
@@ -76,7 +78,7 @@ func TestConfigSource(t *testing.T, factory Factory, restartF RestartFactory) {
 		defer s.Close()
 
 		// Create
-		require.NoError(s.ConfigSourceSet(&pb.ConfigSource{
+		require.NoError(s.ConfigSourceSet(ctx, &pb.ConfigSource{
 			Scope: &pb.ConfigSource_Global{
 				Global: &pb.Ref_Global{},
 			},
@@ -87,7 +89,7 @@ func TestConfigSource(t *testing.T, factory Factory, restartF RestartFactory) {
 
 		{
 			// Get it exactly
-			vs, err := s.ConfigSourceGet(&pb.GetConfigSourceRequest{
+			vs, err := s.ConfigSourceGet(ctx, &pb.GetConfigSourceRequest{
 				Scope: &pb.GetConfigSourceRequest_Global{
 					Global: &pb.Ref_Global{},
 				},
@@ -99,7 +101,7 @@ func TestConfigSource(t *testing.T, factory Factory, restartF RestartFactory) {
 		}
 
 		// Create
-		require.NoError(s.ConfigSourceSet(&pb.ConfigSource{
+		require.NoError(s.ConfigSourceSet(ctx, &pb.ConfigSource{
 			Scope: &pb.ConfigSource_Global{
 				Global: &pb.Ref_Global{},
 			},
@@ -111,7 +113,7 @@ func TestConfigSource(t *testing.T, factory Factory, restartF RestartFactory) {
 
 		{
 			// Get it exactly
-			vs, err := s.ConfigSourceGet(&pb.GetConfigSourceRequest{
+			vs, err := s.ConfigSourceGet(ctx, &pb.GetConfigSourceRequest{
 				Scope: &pb.GetConfigSourceRequest_Global{
 					Global: &pb.Ref_Global{},
 				},
@@ -130,7 +132,7 @@ func TestConfigSource(t *testing.T, factory Factory, restartF RestartFactory) {
 		defer s.Close()
 
 		// Create
-		require.NoError(s.ConfigSourceSet(&pb.ConfigSource{
+		require.NoError(s.ConfigSourceSet(ctx, &pb.ConfigSource{
 			Scope: &pb.ConfigSource_Global{
 				Global: &pb.Ref_Global{},
 			},
@@ -143,7 +145,7 @@ func TestConfigSource(t *testing.T, factory Factory, restartF RestartFactory) {
 
 		// Get it exactly
 		{
-			vs, err := s.ConfigSourceGet(&pb.GetConfigSourceRequest{
+			vs, err := s.ConfigSourceGet(ctx, &pb.GetConfigSourceRequest{
 				Scope: &pb.GetConfigSourceRequest_Global{
 					Global: &pb.Ref_Global{},
 				},
@@ -158,7 +160,7 @@ func TestConfigSource(t *testing.T, factory Factory, restartF RestartFactory) {
 		}
 
 		// Modify without change
-		require.NoError(s.ConfigSourceSet(&pb.ConfigSource{
+		require.NoError(s.ConfigSourceSet(ctx, &pb.ConfigSource{
 			Scope: &pb.ConfigSource_Global{
 				Global: &pb.Ref_Global{},
 			},
@@ -169,7 +171,7 @@ func TestConfigSource(t *testing.T, factory Factory, restartF RestartFactory) {
 
 		// Get it exactly
 		{
-			vs, err := s.ConfigSourceGet(&pb.GetConfigSourceRequest{
+			vs, err := s.ConfigSourceGet(ctx, &pb.GetConfigSourceRequest{
 				Scope: &pb.GetConfigSourceRequest_Global{
 					Global: &pb.Ref_Global{},
 				},
@@ -184,7 +186,7 @@ func TestConfigSource(t *testing.T, factory Factory, restartF RestartFactory) {
 		}
 
 		// Modify
-		require.NoError(s.ConfigSourceSet(&pb.ConfigSource{
+		require.NoError(s.ConfigSourceSet(ctx, &pb.ConfigSource{
 			Scope: &pb.ConfigSource_Global{
 				Global: &pb.Ref_Global{},
 			},
@@ -195,7 +197,7 @@ func TestConfigSource(t *testing.T, factory Factory, restartF RestartFactory) {
 
 		// Get it exactly
 		{
-			vs, err := s.ConfigSourceGet(&pb.GetConfigSourceRequest{
+			vs, err := s.ConfigSourceGet(ctx, &pb.GetConfigSourceRequest{
 				Scope: &pb.GetConfigSourceRequest_Global{
 					Global: &pb.Ref_Global{},
 				},
@@ -212,6 +214,7 @@ func TestConfigSource(t *testing.T, factory Factory, restartF RestartFactory) {
 }
 
 func TestConfigSourceWatch(t *testing.T, factory Factory, restartF RestartFactory) {
+	ctx := context.Background()
 	t.Run("basic put and get", func(t *testing.T) {
 		require := require.New(t)
 
@@ -221,7 +224,7 @@ func TestConfigSourceWatch(t *testing.T, factory Factory, restartF RestartFactor
 		ws := memdb.NewWatchSet()
 
 		// Get it with watch
-		vs, err := s.ConfigSourceGetWatch(&pb.GetConfigSourceRequest{
+		vs, err := s.ConfigSourceGetWatch(ctx, &pb.GetConfigSourceRequest{
 			Scope: &pb.GetConfigSourceRequest_Global{
 				Global: &pb.Ref_Global{},
 			},
@@ -235,7 +238,7 @@ func TestConfigSourceWatch(t *testing.T, factory Factory, restartF RestartFactor
 		require.True(ws.Watch(time.After(10 * time.Millisecond)))
 
 		// Create
-		require.NoError(s.ConfigSourceSet(&pb.ConfigSource{
+		require.NoError(s.ConfigSourceSet(ctx, &pb.ConfigSource{
 			Scope: &pb.ConfigSource_Global{
 				Global: &pb.Ref_Global{},
 			},
