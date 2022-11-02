@@ -101,6 +101,7 @@ func (i *NomadRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) e
 			i.Config.CsiVolumeCapacityMax,
 			i.Config.CsiTopologies,
 			i.Config.CsiSecrets,
+			map[string]string{},
 		)
 		if err != nil {
 			return fmt.Errorf("error creating Nomad persistent volume: %s", clierrors.Humanize(err))
