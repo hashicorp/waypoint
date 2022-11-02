@@ -168,7 +168,7 @@ func CreatePersistentVolume(
 	client *api.Client,
 	id, name, csiPluginId, csiVolumeProvider, csiFS, csiExternalId string,
 	csiVolumeCapacityMin, csiVolumeCapacityMax int64,
-	csiTopologies, csiSecrets map[string]string,
+	csiTopologies, csiSecrets, csiParams map[string]string,
 ) error {
 	vol := api.CSIVolume{
 		ID:         id,
@@ -187,6 +187,7 @@ func CreatePersistentVolume(
 		RequestedCapacityMin: DefaultCSIVolumeCapacityMin,
 		RequestedCapacityMax: DefaultCSIVolumeCapacityMax,
 		PluginID:             csiPluginId,
+		Parameters:           csiParams,
 		Provider:             csiVolumeProvider,
 		RequestedTopologies: &api.CSITopologyRequest{
 			Required:  nil,

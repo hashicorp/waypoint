@@ -226,6 +226,7 @@ func (i *NomadInstaller) Install(
 			i.config.csiVolumeCapacityMax,
 			i.config.csiTopologies,
 			i.config.csiSecrets,
+			i.config.csiParams,
 		)
 		if err != nil {
 			return nil, "", status.Errorf(codes.Internal, "Failed creating Nomad persistent volume: %s", err)
