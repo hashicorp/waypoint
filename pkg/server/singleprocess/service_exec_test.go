@@ -136,11 +136,11 @@ func TestServiceStartExecStream_eventExit(t *testing.T) {
 
 	// Get the record
 	ws := memdb.NewWatchSet()
-	list, err := testStateInmem(impl).InstanceExecListByInstanceId(instanceId, ws)
+	list, err := testStateInmem(impl).InstanceExecListByInstanceId(ctx, instanceId, ws)
 	require.NoError(err)
 	if len(list) == 0 {
 		ws.Watch(time.After(1 * time.Second))
-		list, err = testStateInmem(impl).InstanceExecListByInstanceId(instanceId, ws)
+		list, err = testStateInmem(impl).InstanceExecListByInstanceId(ctx, instanceId, ws)
 		require.NoError(err)
 	}
 	require.Len(list, 1)
@@ -211,11 +211,11 @@ func TestServiceStartExecStream_eventError(t *testing.T) {
 
 	// Get the record
 	ws := memdb.NewWatchSet()
-	list, err := testStateInmem(impl).InstanceExecListByInstanceId(instanceId, ws)
+	list, err := testStateInmem(impl).InstanceExecListByInstanceId(ctx, instanceId, ws)
 	require.NoError(err)
 	if len(list) == 0 {
 		ws.Watch(time.After(1 * time.Second))
-		list, err = testStateInmem(impl).InstanceExecListByInstanceId(instanceId, ws)
+		list, err = testStateInmem(impl).InstanceExecListByInstanceId(ctx, instanceId, ws)
 		require.NoError(err)
 	}
 	require.Len(list, 1)
@@ -287,11 +287,11 @@ func TestServiceStartExecStream_entrypointEventChClose(t *testing.T) {
 
 	// Get the record
 	ws := memdb.NewWatchSet()
-	list, err := testStateInmem(impl).InstanceExecListByInstanceId(instanceId, ws)
+	list, err := testStateInmem(impl).InstanceExecListByInstanceId(ctx, instanceId, ws)
 	require.NoError(err)
 	if len(list) == 0 {
 		ws.Watch(time.After(1 * time.Second))
-		list, err = testStateInmem(impl).InstanceExecListByInstanceId(instanceId, ws)
+		list, err = testStateInmem(impl).InstanceExecListByInstanceId(ctx, instanceId, ws)
 		require.NoError(err)
 	}
 	require.Len(list, 1)
@@ -312,12 +312,13 @@ func TestServiceStartExecStream_entrypointEventChClose(t *testing.T) {
 }
 
 func testGetInstanceExec(t *testing.T, impl pb.WaypointServer, instanceId string) *serverstate.InstanceExec {
+	ctx := context.Background()
 	ws := memdb.NewWatchSet()
-	list, err := testStateInmem(impl).InstanceExecListByInstanceId(instanceId, ws)
+	list, err := testStateInmem(impl).InstanceExecListByInstanceId(ctx, instanceId, ws)
 	require.NoError(t, err)
 	if len(list) == 0 {
 		ws.Watch(time.After(1 * time.Second))
-		list, err = testStateInmem(impl).InstanceExecListByInstanceId(instanceId, ws)
+		list, err = testStateInmem(impl).InstanceExecListByInstanceId(ctx, instanceId, ws)
 		require.NoError(t, err)
 	}
 	require.Len(t, list, 1)
@@ -424,7 +425,7 @@ func TestServiceStartExecStream_startPlugin(t *testing.T) {
 	// Observe that a job to start the exec plugin has been queued
 	time.Sleep(time.Second)
 
-	jobs, err := testServiceImpl(impl).state(ctx).JobList(&pb.ListJobsRequest{})
+	jobs, err := testServiceImpl(impl).state(ctx).JobList(ctx, &pb.ListJobsRequest{})
 	require.NoError(err)
 
 	require.True(len(jobs) == 1)
@@ -480,12 +481,12 @@ func TestService_waitOnJobStarted(t *testing.T) {
 	s := testServiceImpl(impl)
 
 	// Queue the job
-	err = s.state(ctx).JobCreate(job)
+	err = s.state(ctx).JobCreate(ctx, job)
 	require.NoError(err)
 
 	go func() {
 		time.Sleep(time.Second)
-		s.state(ctx).JobExpire(job.Id)
+		s.state(ctx).JobExpire(ctx, job.Id)
 	}()
 
 	ts := time.Now()

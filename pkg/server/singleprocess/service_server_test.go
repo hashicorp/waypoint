@@ -1,6 +1,7 @@
 package singleprocess
 
 import (
+	"context"
 	"testing"
 
 	"github.com/hashicorp/go-hclog"
@@ -12,6 +13,7 @@ import (
 )
 
 func TestServerConfigWithStartupConfig(t *testing.T) {
+	ctx := context.Background()
 	cfg := &serverconfig.Config{
 		CEBConfig: &serverconfig.CEBConfig{
 			Addr:          "myendpoint",
@@ -35,7 +37,7 @@ func TestServerConfigWithStartupConfig(t *testing.T) {
 	t.Run("Check config defaults are set", func(t *testing.T) {
 		require := require.New(t)
 
-		retCfg, err := st.ServerConfigGet()
+		retCfg, err := st.ServerConfigGet(ctx)
 		require.NoError(err)
 		require.NotNil(retCfg)
 
@@ -47,6 +49,7 @@ func TestServerConfigWithStartupConfig(t *testing.T) {
 }
 
 func TestServerConfigWithNoStartupConfig(t *testing.T) {
+	ctx := context.Background()
 	db := testDB(t)
 	// Create our server
 	impl, err := New(
@@ -61,7 +64,7 @@ func TestServerConfigWithNoStartupConfig(t *testing.T) {
 	t.Run("Check config defaults are not set", func(t *testing.T) {
 		require := require.New(t)
 
-		retCfg, err := st.ServerConfigGet()
+		retCfg, err := st.ServerConfigGet(ctx)
 		require.NoError(err)
 		require.NotNil(retCfg)
 		require.Len(retCfg.AdvertiseAddrs, 0)
