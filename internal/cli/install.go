@@ -377,7 +377,7 @@ func (c *InstallCommand) Run(args []string) int {
 			existingODRConfigSetup = true
 		}
 		// we pass nil for the ODR config because it's a fresh install
-		if code := installRunner(c.Ctx, log, client, c.ui, p, advertiseAddr, nil, existingODRConfigSetup); code > 0 {
+		if code := installRunner(c.Ctx, log, client, c.ui, p, advertiseAddr, nil, existingODRConfigSetup, false); code > 0 {
 			return code
 		}
 	}
@@ -502,8 +502,7 @@ Alias: waypoint install
 //
 // This returns an exit code. If it is 0 it is success. Any other value is an
 // error. The function itself handles outputting error messages to the terminal.
-func installRunner(
-	ctx context.Context,
+func installRunner(ctx context.Context,
 	log hclog.Logger,
 	client pb.WaypointClient,
 	ui terminal.UI,
@@ -511,6 +510,7 @@ func installRunner(
 	advertiseAddr *pb.ServerConfig_AdvertiseAddr,
 	odrConfig *pb.OnDemandRunnerConfig,
 	existingODRConfigSetup bool,
+	isUpgrade bool,
 ) int {
 	sg := ui.StepGroup()
 	defer sg.Wait()
@@ -577,7 +577,7 @@ func installRunner(
 	// NOTE(briancain): Some installers like the Kubernetes Helm install already sets up a runner profile
 	// when the server is installed. For this reason, we shouldn't create another
 	// bootstrap runner profile.
-	if !existingODRConfigSetup {
+	if !existingODRConfigSetup || isUpgrade {
 		// If this installation platform supports an out-of-the-box ODR
 		// config then we set that up. This enables on-demand runners to
 		// work immediately.

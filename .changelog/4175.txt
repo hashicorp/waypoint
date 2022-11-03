@@ -1,0 +1,3 @@
+```release-note:bug
+cli/upgrade: Update the OCI URL for the bootstrap runner profile during `server upgrade`
+```
