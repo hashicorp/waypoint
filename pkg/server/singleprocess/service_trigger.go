@@ -23,7 +23,7 @@ func (s *Service) UpsertTrigger(
 	}
 
 	result := req.Trigger
-	if err := s.state(ctx).TriggerPut(result); err != nil {
+	if err := s.state(ctx).TriggerPut(ctx, result); err != nil {
 		return nil, hcerr.Externalize(
 			hclog.FromContext(ctx),
 			err,
@@ -45,7 +45,7 @@ func (s *Service) GetTrigger(
 		return nil, err
 	}
 
-	t, err := s.state(ctx).TriggerGet(req.Ref)
+	t, err := s.state(ctx).TriggerGet(ctx, req.Ref)
 	if err != nil {
 		return nil, hcerr.Externalize(
 			hclog.FromContext(ctx),
@@ -68,7 +68,7 @@ func (s *Service) DeleteTrigger(
 		return nil, err
 	}
 
-	err := s.state(ctx).TriggerDelete(req.Ref)
+	err := s.state(ctx).TriggerDelete(ctx, req.Ref)
 	if err != nil {
 		return nil, hcerr.Externalize(
 			hclog.FromContext(ctx),
@@ -88,7 +88,7 @@ func (s *Service) ListTriggers(
 ) (*pb.ListTriggerResponse, error) {
 	// NOTE: no ptype validation at the moment, as all Ref fields are optional
 
-	result, err := s.state(ctx).TriggerList(req.Workspace, req.Project, req.Application, req.Tags)
+	result, err := s.state(ctx).TriggerList(ctx, req.Workspace, req.Project, req.Application, req.Tags)
 	if err != nil {
 		return nil, hcerr.Externalize(
 			hclog.FromContext(ctx),
@@ -116,7 +116,7 @@ func (s *Service) NoAuthRunTrigger(
 	log := hclog.FromContext(ctx)
 	log.Trace("attempting to find and run trigger from authless func", "trigger_id", req.Ref.Id)
 
-	trigger, err := s.state(ctx).TriggerGet(req.Ref)
+	trigger, err := s.state(ctx).TriggerGet(ctx, req.Ref)
 	if err != nil {
 		log.Error("failed to get requested trigger", "trigger_id", req.Ref.Id, "error", err)
 		return nil, status.Errorf(codes.NotFound,
@@ -144,7 +144,7 @@ func (s *Service) RunTrigger(
 	}
 	log := hclog.FromContext(ctx)
 
-	runTrigger, err := s.state(ctx).TriggerGet(req.Ref)
+	runTrigger, err := s.state(ctx).TriggerGet(ctx, req.Ref)
 	if err != nil {
 		return nil, hcerr.Externalize(
 			log,
@@ -294,7 +294,7 @@ func (s *Service) RunTrigger(
 			case *pb.Job_DestroyOp_Deployment:
 				if destroyTarget.Deployment.Sequence == 0 {
 					// get latest deployment
-					deployLatest, err := s.state(ctx).DeploymentLatest(destroyTarget.Deployment.Application, destroyTarget.Deployment.Workspace)
+					deployLatest, err := s.state(ctx).DeploymentLatest(ctx, destroyTarget.Deployment.Application, destroyTarget.Deployment.Workspace)
 					if err != nil {
 						return nil, hcerr.Externalize(
 							log,
@@ -316,7 +316,7 @@ func (s *Service) RunTrigger(
 					}
 				} else {
 					// get deployment by id seq
-					deploy, err := s.state(ctx).DeploymentGet(&pb.Ref_Operation{
+					deploy, err := s.state(ctx).DeploymentGet(ctx, &pb.Ref_Operation{
 						Target: &pb.Ref_Operation_Sequence{
 							Sequence: &pb.Ref_OperationSeq{
 								Application: qJob.Job.Application,
@@ -403,7 +403,7 @@ func (s *Service) RunTrigger(
 			// take a ref. This is a similar issue that Deployments have with artifacts
 			if op.Release.Deployment.Sequence == 0 {
 				// get latest deployment
-				deployLatest, err := s.state(ctx).DeploymentLatest(op.Release.Deployment.Application, op.Release.Deployment.Workspace)
+				deployLatest, err := s.state(ctx).DeploymentLatest(ctx, op.Release.Deployment.Application, op.Release.Deployment.Workspace)
 				if err != nil {
 					return nil, hcerr.Externalize(
 						log,
@@ -426,7 +426,7 @@ func (s *Service) RunTrigger(
 				}
 			} else {
 				// get deployment by id seq
-				deploy, err := s.state(ctx).DeploymentGet(&pb.Ref_Operation{
+				deploy, err := s.state(ctx).DeploymentGet(ctx, &pb.Ref_Operation{
 					Target: &pb.Ref_Operation_Sequence{
 						Sequence: &pb.Ref_OperationSeq{
 							Application: qJob.Job.Application,
@@ -461,7 +461,7 @@ func (s *Service) RunTrigger(
 			case *pb.Job_StatusReportOp_Deployment:
 				if srTarget.Deployment.Sequence == 0 {
 					// get latest deployment
-					deployLatest, err := s.state(ctx).DeploymentLatest(srTarget.Deployment.Application, srTarget.Deployment.Workspace)
+					deployLatest, err := s.state(ctx).DeploymentLatest(ctx, srTarget.Deployment.Application, srTarget.Deployment.Workspace)
 					if err != nil {
 						return nil, hcerr.Externalize(
 							log,
@@ -483,7 +483,7 @@ func (s *Service) RunTrigger(
 					}
 				} else {
 					// get deployment by id seq
-					deploy, err := s.state(ctx).DeploymentGet(&pb.Ref_Operation{
+					deploy, err := s.state(ctx).DeploymentGet(ctx, &pb.Ref_Operation{
 						Target: &pb.Ref_Operation_Sequence{
 							Sequence: &pb.Ref_OperationSeq{
 								Application: qJob.Job.Application,
@@ -513,7 +513,7 @@ func (s *Service) RunTrigger(
 				}
 			case *pb.Job_StatusReportOp_Release:
 				if srTarget.Release.Sequence == 0 {
-					releaseLatest, err := s.state(ctx).ReleaseLatest(srTarget.Release.Application, srTarget.Release.Workspace)
+					releaseLatest, err := s.state(ctx).ReleaseLatest(ctx, srTarget.Release.Application, srTarget.Release.Workspace)
 					if err != nil {
 						return nil, hcerr.Externalize(
 							log,
@@ -535,7 +535,7 @@ func (s *Service) RunTrigger(
 					}
 				} else {
 					// get deployment by id seq
-					release, err := s.state(ctx).ReleaseGet(&pb.Ref_Operation{
+					release, err := s.state(ctx).ReleaseGet(ctx, &pb.Ref_Operation{
 						Target: &pb.Ref_Operation_Sequence{
 							Sequence: &pb.Ref_OperationSeq{
 								Application: qJob.Job.Application,
@@ -596,7 +596,7 @@ func (s *Service) RunTrigger(
 
 	// Trigger has been requested to queue jobs, update active time
 	runTrigger.ActiveTime = timestamppb.Now()
-	err = s.state(ctx).TriggerPut(runTrigger)
+	err = s.state(ctx).TriggerPut(ctx, runTrigger)
 	if err != nil {
 		return nil, err
 	}

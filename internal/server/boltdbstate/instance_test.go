@@ -1,6 +1,7 @@
 package boltdbstate
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -15,6 +16,7 @@ import (
 )
 
 func TestInstance_crud(t *testing.T) {
+	ctx := context.Background()
 	require := require.New(t)
 
 	s := TestState(t)
@@ -22,34 +24,38 @@ func TestInstance_crud(t *testing.T) {
 
 	// Create an instance
 	rec := &serverstate.Instance{Id: "A", DeploymentId: "B", Project: "C", Application: "D", Workspace: "E"}
-	require.NoError(s.InstanceCreate(rec))
+	require.NoError(s.InstanceCreate(ctx, rec))
 
 	// We should be able to find it
-	found, err := s.InstanceById(rec.Id)
+	found, err := s.InstanceById(ctx, rec.Id)
 	require.NoError(err)
 	require.Equal(rec, found)
 
 	// Delete that instance
-	require.NoError(s.InstanceDelete(rec.Id))
+	require.NoError(s.InstanceDelete(ctx, rec.Id))
 
 	// Delete again should be fine
-	require.NoError(s.InstanceDelete(rec.Id))
+	require.NoError(s.InstanceDelete(ctx, rec.Id))
 }
 
 func TestInstanceById_notFound(t *testing.T) {
+	ctx := context.Background()
+
 	require := require.New(t)
 
 	s := TestState(t)
 	defer s.Close()
 
 	// We should be able to find it
-	found, err := s.InstanceById("nope")
+	found, err := s.InstanceById(ctx, "nope")
 	require.Error(err)
 	require.Nil(found)
 	require.Equal(codes.NotFound, status.Code(err))
 }
 
 func TestInstancesByApp(t *testing.T) {
+	ctx := context.Background()
+
 	require := require.New(t)
 
 	s := TestState(t)
@@ -63,7 +69,7 @@ func TestInstancesByApp(t *testing.T) {
 
 	// Empty with nothing
 	ws := memdb.NewWatchSet()
-	list, err := s.InstancesByApp(ref, nil, ws)
+	list, err := s.InstancesByApp(ctx, ref, nil, ws)
 	require.NoError(err)
 	require.Empty(list)
 
@@ -72,13 +78,13 @@ func TestInstancesByApp(t *testing.T) {
 
 	// Create an instance
 	rec := testInstance(t, &serverstate.Instance{Project: ref.Project, Application: ref.Application})
-	require.NoError(s.InstanceCreate(rec))
+	require.NoError(s.InstanceCreate(ctx, rec))
 
 	// Should be triggered
 	require.False(ws.Watch(time.After(100 * time.Millisecond)))
 
 	// Should have values
-	list, err = s.InstancesByApp(ref, nil, nil)
+	list, err = s.InstancesByApp(ctx, ref, nil, nil)
 	require.NoError(err)
 	require.Len(list, 1)
 
@@ -86,12 +92,13 @@ func TestInstancesByApp(t *testing.T) {
 	//nolint:govet,copylocks
 	ref2 := *ref
 	ref2.Application = "NO"
-	list, err = s.InstancesByApp(&ref2, nil, nil)
+	list, err = s.InstancesByApp(ctx, &ref2, nil, nil)
 	require.NoError(err)
 	require.Empty(list)
 }
 
 func TestInstancesByAppWorkspace(t *testing.T) {
+	ctx := context.Background()
 	require := require.New(t)
 
 	s := TestState(t)
@@ -109,7 +116,7 @@ func TestInstancesByAppWorkspace(t *testing.T) {
 
 	// Empty with nothing
 	ws := memdb.NewWatchSet()
-	list, err := s.InstancesByApp(ref, refWs, ws)
+	list, err := s.InstancesByApp(ctx, ref, refWs, ws)
 	require.NoError(err)
 	require.Empty(list)
 
@@ -119,13 +126,13 @@ func TestInstancesByAppWorkspace(t *testing.T) {
 	// Create an instance
 	rec := testInstance(t, &serverstate.Instance{
 		Project: ref.Project, Application: ref.Application, Workspace: refWs.Workspace})
-	require.NoError(s.InstanceCreate(rec))
+	require.NoError(s.InstanceCreate(ctx, rec))
 
 	// Should be triggered
 	require.False(ws.Watch(time.After(100 * time.Millisecond)))
 
 	// Should have values
-	list, err = s.InstancesByApp(ref, refWs, nil)
+	list, err = s.InstancesByApp(ctx, ref, refWs, nil)
 	require.NoError(err)
 	require.Len(list, 1)
 
@@ -133,7 +140,7 @@ func TestInstancesByAppWorkspace(t *testing.T) {
 	//nolint:govet,copylocks
 	ref2 := *refWs
 	ref2.Workspace = "NO"
-	list, err = s.InstancesByApp(ref, &ref2, nil)
+	list, err = s.InstancesByApp(ctx, ref, &ref2, nil)
 	require.NoError(err)
 	require.Empty(list)
 }

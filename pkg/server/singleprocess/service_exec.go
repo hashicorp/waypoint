@@ -63,14 +63,14 @@ func (s *Service) StartExecStream(
 	switch t := start.Start.Target.(type) {
 	case *pb.ExecStreamRequest_Start_InstanceId:
 		log = log.With("instance_id", t.InstanceId)
-		err = iexec.InstanceExecCreateByTargetedInstance(t.InstanceId, execRec)
+		err = iexec.InstanceExecCreateByTargetedInstance(ctx, t.InstanceId, execRec)
 		if err != nil {
 			return err
 		}
 	case *pb.ExecStreamRequest_Start_DeploymentId:
 		log = log.With("deployment_id", t.DeploymentId)
 
-		deployment, err := s.state(ctx).DeploymentGet(&pb.Ref_Operation{
+		deployment, err := s.state(ctx).DeploymentGet(ctx, &pb.Ref_Operation{
 			Target: &pb.Ref_Operation_Id{
 				Id: t.DeploymentId,
 			},
@@ -147,7 +147,7 @@ func (s *Service) StartExecStream(
 
 			// Be sure that if we decide things aren't going well, the job doesn't outlive
 			// its usefulness.
-			defer s.state(ctx).JobCancel(jobId, false)
+			defer s.state(ctx).JobCancel(ctx, jobId, false)
 
 			log.Debug("waiting on job state", "job-id", jobId)
 
@@ -177,7 +177,7 @@ func (s *Service) StartExecStream(
 				return err
 			}
 		} else {
-			err = iexec.InstanceExecCreateByDeployment(t.DeploymentId, execRec)
+			err = iexec.InstanceExecCreateByDeployment(ctx, t.DeploymentId, execRec)
 			if err != nil {
 				return err
 			}
@@ -192,7 +192,7 @@ func (s *Service) StartExecStream(
 	log.Debug("exec requested", "args", start.Start.Args)
 
 	// Make sure we always deregister it
-	defer iexec.InstanceExecDelete(execRec.Id)
+	defer iexec.InstanceExecDelete(ctx, execRec.Id)
 
 	// Always send the open message. In the future we'll send some metadata here.
 	if err := srv.Send(&pb.ExecStreamResponse{
@@ -318,7 +318,7 @@ func (s *Service) waitOnJobStarted(ctx context.Context, jobId string) (pb.Job_St
 
 	// Get the job
 	ws := memdb.NewWatchSet()
-	job, err := s.state(ctx).JobById(jobId, ws)
+	job, err := s.state(ctx).JobById(ctx, jobId, ws)
 	if err != nil {
 		return 0, err
 	}
@@ -346,7 +346,7 @@ func (s *Service) waitOnJobStarted(ctx context.Context, jobId string) (pb.Job_St
 
 		// Updated job, requery it
 		ws = memdb.NewWatchSet()
-		job, err = s.state(ctx).JobById(job.Id, ws)
+		job, err = s.state(ctx).JobById(ctx, job.Id, ws)
 		if err != nil {
 			return 0, err
 		}

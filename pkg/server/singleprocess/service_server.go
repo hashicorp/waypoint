@@ -21,7 +21,7 @@ func (s *Service) SetServerConfig(
 		return nil, status.Errorf(codes.FailedPrecondition, err.Error())
 	}
 
-	if err := s.state(ctx).ServerConfigSet(req.Config); err != nil {
+	if err := s.state(ctx).ServerConfigSet(ctx, req.Config); err != nil {
 		return nil, hcerr.Externalize(hclog.FromContext(ctx), err, "failed to set server config", "platform", req.Config.Platform)
 	}
 
@@ -32,7 +32,7 @@ func (s *Service) GetServerConfig(
 	ctx context.Context,
 	req *empty.Empty,
 ) (*pb.GetServerConfigResponse, error) {
-	cfg, err := s.state(ctx).ServerConfigGet()
+	cfg, err := s.state(ctx).ServerConfigGet(ctx)
 	if err != nil {
 		return nil, hcerr.Externalize(hclog.FromContext(ctx), err, "failed to get server config")
 	}

@@ -1,6 +1,7 @@
 package boltdbstate
 
 import (
+	"context"
 	"strings"
 	"time"
 
@@ -26,7 +27,7 @@ func init() {
 // WorkspacePut creates or updates the given Workspace.
 //
 // Project changes will be ignored
-func (s *State) WorkspacePut(workspace *pb.Workspace) error {
+func (s *State) WorkspacePut(ctx context.Context, workspace *pb.Workspace) error {
 	memTxn := s.inmem.Txn(true)
 	defer memTxn.Abort()
 
@@ -41,7 +42,7 @@ func (s *State) WorkspacePut(workspace *pb.Workspace) error {
 }
 
 // WorkspaceList lists all the workspaces.
-func (s *State) WorkspaceList() ([]*pb.Workspace, error) {
+func (s *State) WorkspaceList(ctx context.Context) ([]*pb.Workspace, error) {
 	memTxn := s.inmem.Txn(false)
 	defer memTxn.Abort()
 
@@ -54,7 +55,7 @@ func (s *State) WorkspaceList() ([]*pb.Workspace, error) {
 }
 
 // WorkspaceListByProject lists all the workspaces used by a project.
-func (s *State) WorkspaceListByProject(ref *pb.Ref_Project) ([]*pb.Workspace, error) {
+func (s *State) WorkspaceListByProject(ctx context.Context, ref *pb.Ref_Project) ([]*pb.Workspace, error) {
 	memTxn := s.inmem.Txn(false)
 	defer memTxn.Abort()
 
@@ -71,11 +72,11 @@ func (s *State) WorkspaceListByProject(ref *pb.Ref_Project) ([]*pb.Workspace, er
 }
 
 // WorkspaceListByApp lists all the workspaces used by a specific application.
-func (s *State) WorkspaceListByApp(ref *pb.Ref_Application) ([]*pb.Workspace, error) {
+func (s *State) WorkspaceListByApp(ctx context.Context, ref *pb.Ref_Application) ([]*pb.Workspace, error) {
 	// To implement this, we just list by project and filter. Projects
 	// don't have that many applications, and the index structure to do this
 	// more efficiently would be complicated so its not worth it.
-	projectWorkspaces, err := s.WorkspaceListByProject(&pb.Ref_Project{Project: ref.Project})
+	projectWorkspaces, err := s.WorkspaceListByProject(ctx, &pb.Ref_Project{Project: ref.Project})
 	if err != nil {
 		return nil, err
 	}
@@ -166,9 +167,9 @@ func (s *State) workspaceListFromIter(iter memdb.ResultIterator) ([]*pb.Workspac
 
 // WorkspaceGet gets a workspace with a specific name. If it doesn't exist,
 // this will return an error with codes.NotFound.
-func (s *State) WorkspaceGet(n string) (*pb.Workspace, error) {
+func (s *State) WorkspaceGet(ctx context.Context, n string) (*pb.Workspace, error) {
 	// We implement this in terms of list for now.
-	wsList, err := s.WorkspaceList()
+	wsList, err := s.WorkspaceList(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -193,7 +194,7 @@ func (s *State) workspaceGet(
 	return &result, dbGet(b, []byte(strings.ToLower(ref.Workspace)), &result)
 }
 
-func (s *State) WorkspaceDelete(n string) error {
+func (s *State) WorkspaceDelete(ctx context.Context, n string) error {
 	memTxn := s.inmem.Txn(true)
 	defer memTxn.Abort()
 

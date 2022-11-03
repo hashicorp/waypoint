@@ -27,7 +27,7 @@ func (s *Service) UI_GetProject(
 		)
 	}
 
-	jobs, err := s.state(ctx).JobList(&pb.ListJobsRequest{})
+	jobs, err := s.state(ctx).JobList(ctx, &pb.ListJobsRequest{})
 	if err != nil {
 		return nil, hcerr.Externalize(
 			hclog.FromContext(ctx),

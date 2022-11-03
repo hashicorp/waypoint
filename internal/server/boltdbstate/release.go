@@ -1,6 +1,7 @@
 package boltdbstate
 
 import (
+	"context"
 	"github.com/hashicorp/go-memdb"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	"github.com/hashicorp/waypoint/pkg/serverstate"
@@ -17,12 +18,12 @@ func init() {
 }
 
 // ReleasePut inserts or updates a release record.
-func (s *State) ReleasePut(update bool, b *pb.Release) error {
+func (s *State) ReleasePut(ctx context.Context, update bool, b *pb.Release) error {
 	return releaseOp.Put(s, update, b)
 }
 
 // ReleaseGet gets a release by ref.
-func (s *State) ReleaseGet(ref *pb.Ref_Operation) (*pb.Release, error) {
+func (s *State) ReleaseGet(ctx context.Context, ref *pb.Ref_Operation) (*pb.Release, error) {
 	result, err := releaseOp.Get(s, ref)
 	if err != nil {
 		return nil, err
@@ -32,6 +33,7 @@ func (s *State) ReleaseGet(ref *pb.Ref_Operation) (*pb.Release, error) {
 }
 
 func (s *State) ReleaseList(
+	ctx context.Context,
 	ref *pb.Ref_Application,
 	opts ...serverstate.ListOperationOption,
 ) ([]*pb.Release, error) {
@@ -50,6 +52,7 @@ func (s *State) ReleaseList(
 
 // ReleaseLatest gets the latest release that was completed successfully.
 func (s *State) ReleaseLatest(
+	ctx context.Context,
 	ref *pb.Ref_Application,
 	ws *pb.Ref_Workspace,
 ) (*pb.Release, error) {

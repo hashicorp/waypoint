@@ -1,6 +1,7 @@
 package boltdbstate
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"sort"
@@ -37,7 +38,7 @@ func init() {
 // ConfigSet writes a configuration variable to the data store. Deletes
 // are always ordered before writes so that you can't delete a new value
 // in a single ConfigSet (you should never want to do this).
-func (s *State) ConfigSet(vs ...*pb.ConfigVar) error {
+func (s *State) ConfigSet(ctx context.Context, vs ...*pb.ConfigVar) error {
 	// Sort the variables so that deletes are handled before writes.
 	sort.Slice(vs, func(i, j int) bool {
 		// i < j if i is a delete request.
@@ -64,13 +65,13 @@ func (s *State) ConfigSet(vs ...*pb.ConfigVar) error {
 }
 
 // ConfigGet gets all the configuration for the given request.
-func (s *State) ConfigGet(req *pb.ConfigGetRequest) ([]*pb.ConfigVar, error) {
-	return s.ConfigGetWatch(req, nil)
+func (s *State) ConfigGet(ctx context.Context, req *pb.ConfigGetRequest) ([]*pb.ConfigVar, error) {
+	return s.ConfigGetWatch(ctx, req, nil)
 }
 
 // ConfigGetWatch gets all the configuration for the given request. If a non-nil
 // WatchSet is given, this can be watched for potential changes in the config.
-func (s *State) ConfigGetWatch(req *pb.ConfigGetRequest, ws memdb.WatchSet) ([]*pb.ConfigVar, error) {
+func (s *State) ConfigGetWatch(ctx context.Context, req *pb.ConfigGetRequest, ws memdb.WatchSet) ([]*pb.ConfigVar, error) {
 	memTxn := s.inmem.Txn(false)
 	defer memTxn.Abort()
 

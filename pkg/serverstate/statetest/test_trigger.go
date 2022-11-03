@@ -1,6 +1,7 @@
 package statetest
 
 import (
+	"context"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -17,6 +18,7 @@ func init() {
 }
 
 func TestTrigger(t *testing.T, factory Factory, restartF RestartFactory) {
+	ctx := context.Background()
 	t.Run("Get returns not found error if not exist", func(t *testing.T) {
 		require := require.New(t)
 
@@ -24,7 +26,7 @@ func TestTrigger(t *testing.T, factory Factory, restartF RestartFactory) {
 		defer s.Close()
 
 		// Set
-		_, err := s.TriggerGet(&pb.Ref_Trigger{
+		_, err := s.TriggerGet(ctx, &pb.Ref_Trigger{
 			Id: "foo",
 		})
 		require.Error(err)
@@ -40,7 +42,7 @@ func TestTrigger(t *testing.T, factory Factory, restartF RestartFactory) {
 		name := "pew"
 
 		// Set
-		err := s.TriggerPut(&pb.Trigger{
+		err := s.TriggerPut(ctx, &pb.Trigger{
 			Project: &pb.Ref_Project{Project: "p_test"},
 			Name:    name,
 			Id:      "t_test",
@@ -50,7 +52,7 @@ func TestTrigger(t *testing.T, factory Factory, restartF RestartFactory) {
 
 		// Get exact by id
 		{
-			resp, err := s.TriggerGet(&pb.Ref_Trigger{
+			resp, err := s.TriggerGet(ctx, &pb.Ref_Trigger{
 				Id: "t_test",
 			})
 			require.NoError(err)
@@ -58,7 +60,7 @@ func TestTrigger(t *testing.T, factory Factory, restartF RestartFactory) {
 		}
 
 		// Update
-		err = s.TriggerPut(&pb.Trigger{
+		err = s.TriggerPut(ctx, &pb.Trigger{
 			Project:     &pb.Ref_Project{Project: "p_test"},
 			Description: "test",
 			Name:        name,
@@ -68,7 +70,7 @@ func TestTrigger(t *testing.T, factory Factory, restartF RestartFactory) {
 
 		// Get exact by id
 		{
-			resp, err := s.TriggerGet(&pb.Ref_Trigger{
+			resp, err := s.TriggerGet(ctx, &pb.Ref_Trigger{
 				Id: "t_test",
 			})
 			require.NoError(err)
@@ -77,7 +79,7 @@ func TestTrigger(t *testing.T, factory Factory, restartF RestartFactory) {
 		}
 
 		// Set with no proj returns an error
-		err = s.TriggerPut(&pb.Trigger{
+		err = s.TriggerPut(ctx, &pb.Trigger{
 			Name: name,
 			Id:   "test_test",
 		})
@@ -91,7 +93,7 @@ func TestTrigger(t *testing.T, factory Factory, restartF RestartFactory) {
 		defer s.Close()
 
 		// Set
-		err := s.TriggerPut(&pb.Trigger{
+		err := s.TriggerPut(ctx, &pb.Trigger{
 			Project: &pb.Ref_Project{Project: "p_test"},
 			Id:      "t_test",
 		})
@@ -100,7 +102,7 @@ func TestTrigger(t *testing.T, factory Factory, restartF RestartFactory) {
 
 		// Get exact by id
 		{
-			resp, err := s.TriggerGet(&pb.Ref_Trigger{
+			resp, err := s.TriggerGet(ctx, &pb.Ref_Trigger{
 				Id: "t_test",
 			})
 			require.NoError(err)
@@ -108,14 +110,14 @@ func TestTrigger(t *testing.T, factory Factory, restartF RestartFactory) {
 		}
 
 		// Delete it
-		err = s.TriggerDelete(&pb.Ref_Trigger{
+		err = s.TriggerDelete(ctx, &pb.Ref_Trigger{
 			Id: "t_test",
 		})
 		require.NoError(err)
 
 		// It's gone
 		{
-			_, err := s.TriggerGet(&pb.Ref_Trigger{
+			_, err := s.TriggerGet(ctx, &pb.Ref_Trigger{
 				Id: "t_test",
 			})
 			require.Error(err)
@@ -129,7 +131,7 @@ func TestTrigger(t *testing.T, factory Factory, restartF RestartFactory) {
 		defer s.Close()
 
 		// Create more for listing
-		err := s.TriggerPut(&pb.Trigger{
+		err := s.TriggerPut(ctx, &pb.Trigger{
 			Project: &pb.Ref_Project{Project: "p_test"},
 			Tags:    []string{"first"},
 			Name:    "firsttest",
@@ -137,7 +139,7 @@ func TestTrigger(t *testing.T, factory Factory, restartF RestartFactory) {
 		})
 		require.NoError(err)
 
-		err = s.TriggerPut(&pb.Trigger{
+		err = s.TriggerPut(ctx, &pb.Trigger{
 			Project: &pb.Ref_Project{Project: "test_project"},
 			Application: &pb.Ref_Application{
 				Project:     "test_project",
@@ -148,7 +150,7 @@ func TestTrigger(t *testing.T, factory Factory, restartF RestartFactory) {
 		})
 		require.NoError(err)
 
-		err = s.TriggerPut(&pb.Trigger{
+		err = s.TriggerPut(ctx, &pb.Trigger{
 			Project: &pb.Ref_Project{Project: "test_project"},
 			Tags:    []string{"test", "another"},
 			Name:    "more_test",
@@ -158,39 +160,39 @@ func TestTrigger(t *testing.T, factory Factory, restartF RestartFactory) {
 
 		// List all
 		{
-			resp, err := s.TriggerList(nil, nil, nil, nil)
+			resp, err := s.TriggerList(ctx, nil, nil, nil, nil)
 			require.NoError(err)
 			require.Len(resp, 3)
 		}
 
 		// List some
 		{
-			resp1, err := s.TriggerList(&pb.Ref_Workspace{Workspace: "default"}, &pb.Ref_Project{Project: "p_test"}, nil, nil)
+			resp1, err := s.TriggerList(ctx, &pb.Ref_Workspace{Workspace: "default"}, &pb.Ref_Project{Project: "p_test"}, nil, nil)
 			require.NoError(err)
 			require.Len(resp1, 1)
 
-			resp2, err := s.TriggerList(&pb.Ref_Workspace{Workspace: "default"}, &pb.Ref_Project{Project: "test_project"}, nil, nil)
+			resp2, err := s.TriggerList(ctx, &pb.Ref_Workspace{Workspace: "default"}, &pb.Ref_Project{Project: "test_project"}, nil, nil)
 			require.NoError(err)
 			require.Len(resp2, 2)
 		}
 
 		// List none
 		{
-			resp, err := s.TriggerList(&pb.Ref_Workspace{Workspace: "production"}, nil, nil, nil)
+			resp, err := s.TriggerList(ctx, &pb.Ref_Workspace{Workspace: "production"}, nil, nil, nil)
 			require.NoError(err)
 			require.Len(resp, 0)
 		}
 
 		// List by workspace
 		{
-			resp, err := s.TriggerList(&pb.Ref_Workspace{Workspace: "default"}, nil, nil, nil)
+			resp, err := s.TriggerList(ctx, &pb.Ref_Workspace{Workspace: "default"}, nil, nil, nil)
 			require.NoError(err)
 			require.Len(resp, 3)
 		}
 
 		// List by project
 		{
-			resp, err := s.TriggerList(&pb.Ref_Workspace{Workspace: "default"}, &pb.Ref_Project{Project: "test_project"}, nil, nil)
+			resp, err := s.TriggerList(ctx, &pb.Ref_Workspace{Workspace: "default"}, &pb.Ref_Project{Project: "test_project"}, nil, nil)
 			require.NoError(err)
 			require.Len(resp, 2)
 		}
@@ -198,7 +200,7 @@ func TestTrigger(t *testing.T, factory Factory, restartF RestartFactory) {
 		// List by application
 		{
 			// No app ref but project set means all apps, so 2
-			resp, err := s.TriggerList(&pb.Ref_Workspace{Workspace: "default"},
+			resp, err := s.TriggerList(ctx, &pb.Ref_Workspace{Workspace: "default"},
 				&pb.Ref_Project{Project: "test_project"}, &pb.Ref_Application{Project: "test_project", Application: "a_test"}, nil)
 			require.NoError(err)
 			require.Len(resp, 2)
@@ -206,7 +208,7 @@ func TestTrigger(t *testing.T, factory Factory, restartF RestartFactory) {
 
 		// List by tag
 		{
-			resp, err := s.TriggerList(nil, nil, nil, []string{"test"})
+			resp, err := s.TriggerList(ctx, nil, nil, nil, []string{"test"})
 			require.NoError(err)
 			require.Len(resp, 1)
 		}

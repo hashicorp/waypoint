@@ -15,7 +15,7 @@ func (s *Service) SetConfig(
 	ctx context.Context,
 	req *pb.ConfigSetRequest,
 ) (*pb.ConfigSetResponse, error) {
-	if err := s.state(ctx).ConfigSet(req.Variables...); err != nil {
+	if err := s.state(ctx).ConfigSet(ctx, req.Variables...); err != nil {
 		return nil, hcerr.Externalize(hclog.FromContext(ctx), err, "failed to set config")
 	}
 
@@ -30,7 +30,7 @@ func (s *Service) GetConfig(
 		return nil, err
 	}
 
-	vars, err := s.state(ctx).ConfigGet(req)
+	vars, err := s.state(ctx).ConfigGet(ctx, req)
 	if err != nil {
 		return nil, hcerr.Externalize(hclog.FromContext(ctx), err, "failed to get config")
 	}
@@ -46,7 +46,7 @@ func (s *Service) SetConfigSource(
 		return nil, err
 	}
 
-	if err := s.state(ctx).ConfigSourceSet(req.ConfigSource); err != nil {
+	if err := s.state(ctx).ConfigSourceSet(ctx, req.ConfigSource); err != nil {
 		return nil, hcerr.Externalize(
 			hclog.FromContext(ctx),
 			err,
@@ -65,7 +65,7 @@ func (s *Service) GetConfigSource(
 		return nil, err
 	}
 
-	vars, err := s.state(ctx).ConfigSourceGet(req)
+	vars, err := s.state(ctx).ConfigSourceGet(ctx, req)
 	if err != nil {
 		return nil, hcerr.Externalize(
 			hclog.FromContext(ctx),

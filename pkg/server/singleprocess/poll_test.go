@@ -352,7 +352,7 @@ func TestServicePollQueue(t *testing.T) {
 	require.Eventually(func() bool {
 		// We should have a single poll job
 		var jobs []*pb.Job
-		raw, err := testServiceImpl(impl).state(ctx).JobList(&pb.ListJobsRequest{})
+		raw, err := testServiceImpl(impl).state(ctx).JobList(ctx, &pb.ListJobsRequest{})
 		for _, j := range raw {
 			if j.State != pb.Job_ERROR {
 				jobs = append(jobs, j)
@@ -372,10 +372,10 @@ func TestServicePollQueue(t *testing.T) {
 
 	// Ensure we don't queue more jobs
 	time.Sleep(100 * time.Millisecond)
-	raw, err := testServiceImpl(impl).state(ctx).JobList(&pb.ListJobsRequest{})
+	raw, err := testServiceImpl(impl).state(ctx).JobList(ctx, &pb.ListJobsRequest{})
 	require.NoError(err)
 	time.Sleep(100 * time.Millisecond)
-	raw2, err := testServiceImpl(impl).state(ctx).JobList(&pb.ListJobsRequest{})
+	raw2, err := testServiceImpl(impl).state(ctx).JobList(ctx, &pb.ListJobsRequest{})
 	require.NoError(err)
 	require.Equal(len(raw), len(raw2))
 }
@@ -432,7 +432,7 @@ func TestProjectPollHandler(t *testing.T) {
 	require.Eventually(func() bool {
 		// We should have a single poll job
 		var jobs []*pb.Job
-		raw, err := testServiceImpl(impl).state(ctx).JobList(&pb.ListJobsRequest{})
+		raw, err := testServiceImpl(impl).state(ctx).JobList(ctx, &pb.ListJobsRequest{})
 		for _, j := range raw {
 			if j.State != pb.Job_ERROR {
 				jobs = append(jobs, j)
@@ -496,7 +496,7 @@ func TestApplicationPollHandler(t *testing.T) {
 
 	// Grab next poll time
 	state := testServiceImpl(impl).state(ctx)
-	a, _, err := state.ApplicationPollPeek(nil)
+	a, _, err := state.ApplicationPollPeek(ctx, nil)
 	require.NoError(err)
 	require.Nil(a) // Apps Next Poll should be 0 since not started yet
 
@@ -531,7 +531,7 @@ func TestApplicationPollHandler(t *testing.T) {
 	require.NoError(err)
 
 	// App poll time should be set
-	a, pollTime, err := state.ApplicationPollPeek(nil)
+	a, pollTime, err := state.ApplicationPollPeek(ctx, nil)
 	require.NoError(err)
 	require.NotNil(pollTime)
 	require.NotNil(a) // Apps Next Poll should be set
@@ -547,7 +547,7 @@ func TestApplicationPollHandler(t *testing.T) {
 		// We should have a single poll job
 		var jobs []*pb.Job
 
-		raw, err := testServiceImpl(impl).state(ctx).JobList(&pb.ListJobsRequest{})
+		raw, err := testServiceImpl(impl).state(ctx).JobList(ctx, &pb.ListJobsRequest{})
 		for _, j := range raw {
 			if j.State != pb.Job_ERROR && j.SingletonId == appStatusPollSingletonId("default", "Example", appName, appStatusPollOperationTypeDeployment) {
 				jobs = append(jobs, j)
@@ -567,7 +567,7 @@ func TestApplicationPollHandler(t *testing.T) {
 
 	// ensure the next poll is after the initial poll before waiting
 	// next poll time gets set when a app poll is marked complete
-	a, nextPollTime, err := state.ApplicationPollPeek(nil)
+	a, nextPollTime, err := state.ApplicationPollPeek(ctx, nil)
 	require.NoError(err)
 	require.NotNil(a)
 	require.NotNil(nextPollTime)
@@ -616,7 +616,7 @@ func TestApplicationPollHandler_fullLifecycle(t *testing.T) {
 
 	// Grab next poll time
 	state := testServiceImpl(impl).state(ctx)
-	a, _, err := state.ApplicationPollPeek(nil)
+	a, _, err := state.ApplicationPollPeek(ctx, nil)
 	require.NoError(err)
 	require.Nil(a) // Apps Next Poll should be 0 since not started yet
 
@@ -651,7 +651,7 @@ func TestApplicationPollHandler_fullLifecycle(t *testing.T) {
 	require.NoError(err)
 
 	// App poll time should be set
-	a, pollTime, err := state.ApplicationPollPeek(nil)
+	a, pollTime, err := state.ApplicationPollPeek(ctx, nil)
 	require.NoError(err)
 	require.NotNil(pollTime)
 	require.NotNil(a) // Apps Next Poll should be set
@@ -666,7 +666,7 @@ func TestApplicationPollHandler_fullLifecycle(t *testing.T) {
 	require.Eventually(func() bool {
 		// We should have a single poll job for just the deployment
 		var jobs []*pb.Job
-		raw, err := testServiceImpl(impl).state(ctx).JobList(&pb.ListJobsRequest{})
+		raw, err := testServiceImpl(impl).state(ctx).JobList(ctx, &pb.ListJobsRequest{})
 		for _, j := range raw {
 			if j.State != pb.Job_ERROR &&
 				j.SingletonId == appStatusPollSingletonId("default", "Example", appName, appStatusPollOperationTypeDeployment) {
@@ -710,7 +710,7 @@ func TestApplicationPollHandler_fullLifecycle(t *testing.T) {
 	require.Eventually(func() bool {
 		// We should have a poll job for a deployment and another for a release
 
-		raw, err := testServiceImpl(impl).state(ctx).JobList(&pb.ListJobsRequest{})
+		raw, err := testServiceImpl(impl).state(ctx).JobList(ctx, &pb.ListJobsRequest{})
 		releaseJobs := 0
 		deployJobs := 0
 		for _, j := range raw {
@@ -743,7 +743,7 @@ func TestApplicationPollHandler_fullLifecycle(t *testing.T) {
 	require.NoError(err)
 
 	// App poll time should be unset now
-	a, _, err = state.ApplicationPollPeek(nil)
+	a, _, err = state.ApplicationPollPeek(ctx, nil)
 	require.NoError(err)
 	require.Nil(a) // Apps Next Poll should be 0 since turned off
 

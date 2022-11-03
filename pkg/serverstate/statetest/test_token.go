@@ -1,6 +1,7 @@
 package statetest
 
 import (
+	"context"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -13,6 +14,7 @@ func init() {
 }
 
 func TestTokenSignature(t *testing.T, factory Factory, rf RestartFactory) {
+	ctx := context.Background()
 	require := require.New(t)
 
 	s := factory(t)
@@ -22,34 +24,34 @@ func TestTokenSignature(t *testing.T, factory Factory, rf RestartFactory) {
 	keyId := "k1"
 
 	// Can generate a signature
-	sig1, err := s.TokenSignature(body1, keyId)
+	sig1, err := s.TokenSignature(ctx, body1, keyId)
 	require.NoError(err)
 	require.NotEmpty(sig1)
 
 	// Good signature verification succeeds
 	{
-		valid, err := s.TokenSignatureVerify(body1, sig1, keyId)
+		valid, err := s.TokenSignatureVerify(ctx, body1, sig1, keyId)
 		require.NoError(err)
 		require.True(valid)
 	}
 
 	// Tampered body verification fails
 	{
-		valid, err := s.TokenSignatureVerify([]byte("test2"), sig1, keyId)
+		valid, err := s.TokenSignatureVerify(ctx, []byte("test2"), sig1, keyId)
 		require.NoError(err)
 		require.False(valid)
 	}
 
 	// Tampered signature verification fails
 	{
-		valid, err := s.TokenSignatureVerify(body1, []byte("tampered signature"), keyId)
+		valid, err := s.TokenSignatureVerify(ctx, body1, []byte("tampered signature"), keyId)
 		require.NoError(err)
 		require.False(valid)
 	}
 
 	// Different key sig verify fails
 	{
-		_, err := s.TokenSignatureVerify(body1, sig1, "k2")
+		_, err := s.TokenSignatureVerify(ctx, body1, sig1, "k2")
 		require.Error(err)
 	}
 

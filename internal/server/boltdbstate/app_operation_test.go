@@ -1,6 +1,7 @@
 package boltdbstate
 
 import (
+	"context"
 	"math/rand"
 	"sort"
 	"strconv"
@@ -17,6 +18,7 @@ import (
 )
 
 func TestAppOperation(t *testing.T) {
+	ctx := context.Background()
 	op := &appOperation{
 		Struct: (*pb.Build)(nil),
 		Bucket: buildOp.Bucket,
@@ -100,7 +102,7 @@ func TestAppOperation(t *testing.T) {
 				},
 			},
 		}
-		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
+		require.NoError(s.JobCreate(ctx, serverptypes.TestJobNew(t, &pb.Job{
 			Id:            "jobA",
 			DataSourceRef: ref,
 		})))

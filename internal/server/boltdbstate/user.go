@@ -1,6 +1,7 @@
 package boltdbstate
 
 import (
+	"context"
 	"strings"
 
 	bolt "go.etcd.io/bbolt"
@@ -24,7 +25,7 @@ func init() {
 
 // UserPut creates or updates the given user. If the user has no ID set
 // then an ID will be written directly to the parameter.
-func (s *State) UserPut(user *pb.User) error {
+func (s *State) UserPut(ctx context.Context, user *pb.User) error {
 	memTxn := s.inmem.Txn(true)
 	defer memTxn.Abort()
 
@@ -39,7 +40,7 @@ func (s *State) UserPut(user *pb.User) error {
 }
 
 // UserGet gets a user by reference.
-func (s *State) UserGet(ref *pb.Ref_User) (*pb.User, error) {
+func (s *State) UserGet(ctx context.Context, ref *pb.Ref_User) (*pb.User, error) {
 	memTxn := s.inmem.Txn(false)
 	defer memTxn.Abort()
 
@@ -54,7 +55,7 @@ func (s *State) UserGet(ref *pb.Ref_User) (*pb.User, error) {
 }
 
 // UserDelete deletes a user by reference.
-func (s *State) UserDelete(ref *pb.Ref_User) error {
+func (s *State) UserDelete(ctx context.Context, ref *pb.Ref_User) error {
 	memTxn := s.inmem.Txn(true)
 	defer memTxn.Abort()
 
@@ -69,7 +70,7 @@ func (s *State) UserDelete(ref *pb.Ref_User) error {
 }
 
 // UserList returns the list of projects.
-func (s *State) UserList() ([]*pb.User, error) {
+func (s *State) UserList(ctx context.Context) ([]*pb.User, error) {
 	memTxn := s.inmem.Txn(false)
 	defer memTxn.Abort()
 
@@ -103,7 +104,7 @@ func (s *State) UserList() ([]*pb.User, error) {
 }
 
 // UserEmpty returns true if there are no users yet (bootstrap state).
-func (s *State) UserEmpty() (bool, error) {
+func (s *State) UserEmpty(ctx context.Context) (bool, error) {
 	memTxn := s.inmem.Txn(false)
 	defer memTxn.Abort()
 
@@ -117,7 +118,7 @@ func (s *State) UserEmpty() (bool, error) {
 
 // UserGetOIDC gets a user by by OIDC link lookup. This will return
 // a codes.NotFound error if the user is not found.
-func (s *State) UserGetOIDC(iss, sub string) (*pb.User, error) {
+func (s *State) UserGetOIDC(ctx context.Context, iss, sub string) (*pb.User, error) {
 	memTxn := s.inmem.Txn(false)
 	defer memTxn.Abort()
 
@@ -180,7 +181,7 @@ func (s *State) userGetOIDC(
 
 // UserGetEmail gets a user by by email lookup. This will return
 // a codes.NotFound error if the user is not found.
-func (s *State) UserGetEmail(email string) (*pb.User, error) {
+func (s *State) UserGetEmail(ctx context.Context, email string) (*pb.User, error) {
 	memTxn := s.inmem.Txn(false)
 	defer memTxn.Abort()
 

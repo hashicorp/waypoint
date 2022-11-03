@@ -52,7 +52,7 @@ func TestDeployment(t *testing.T, factory Factory, restartF RestartFactory) {
 		}
 
 		// Add
-		err := s.DeploymentPut(false, serverptypes.TestDeployment(t, &pb.Deployment{
+		err := s.DeploymentPut(ctx, false, serverptypes.TestDeployment(t, &pb.Deployment{
 			Id:          "d1",
 			Application: app,
 			Workspace:   ws,
@@ -65,7 +65,7 @@ func TestDeployment(t *testing.T, factory Factory, restartF RestartFactory) {
 
 		// Can read
 		{
-			resp, err := s.DeploymentGet(&pb.Ref_Operation{
+			resp, err := s.DeploymentGet(ctx, &pb.Ref_Operation{
 				Target: &pb.Ref_Operation_Id{
 					Id: "d1",
 				},
@@ -76,14 +76,14 @@ func TestDeployment(t *testing.T, factory Factory, restartF RestartFactory) {
 
 		// Can read latest
 		{
-			resp, err := s.DeploymentLatest(app, &pb.Ref_Workspace{Workspace: "default"})
+			resp, err := s.DeploymentLatest(ctx, app, &pb.Ref_Workspace{Workspace: "default"})
 			require.NoError(err)
 			require.NotNil(resp)
 		}
 
 		// Update
 		ts := timestamppb.Now()
-		err = s.DeploymentPut(true, serverptypes.TestDeployment(t, &pb.Deployment{
+		err = s.DeploymentPut(ctx, true, serverptypes.TestDeployment(t, &pb.Deployment{
 			Id:          "d1",
 			Application: app,
 			Workspace:   ws,
@@ -96,7 +96,7 @@ func TestDeployment(t *testing.T, factory Factory, restartF RestartFactory) {
 		require.NoError(err)
 
 		{
-			resp, err := s.DeploymentGet(&pb.Ref_Operation{
+			resp, err := s.DeploymentGet(ctx, &pb.Ref_Operation{
 				Target: &pb.Ref_Operation_Id{
 					Id: "d1",
 				},
@@ -109,7 +109,7 @@ func TestDeployment(t *testing.T, factory Factory, restartF RestartFactory) {
 
 		// Add another and see Latset change
 		// Add
-		err = s.DeploymentPut(false, serverptypes.TestDeployment(t, &pb.Deployment{
+		err = s.DeploymentPut(ctx, false, serverptypes.TestDeployment(t, &pb.Deployment{
 			Id:          "d2",
 			Application: app,
 			Workspace:   ws,
@@ -122,14 +122,14 @@ func TestDeployment(t *testing.T, factory Factory, restartF RestartFactory) {
 		require.NoError(err)
 
 		{
-			resp, err := s.DeploymentLatest(app, &pb.Ref_Workspace{Workspace: "default"})
+			resp, err := s.DeploymentLatest(ctx, app, &pb.Ref_Workspace{Workspace: "default"})
 			require.NoError(err)
 			require.NotNil(resp)
 			require.Equal("d2", resp.Id)
 		}
 
 		{
-			resp, err := s.DeploymentList(app)
+			resp, err := s.DeploymentList(ctx, app)
 			require.NoError(err)
 
 			require.Len(resp, 2)
@@ -152,7 +152,7 @@ func TestDeployment(t *testing.T, factory Factory, restartF RestartFactory) {
 		*/
 
 		{
-			resp, err := s.DeploymentList(app, serverstate.ListWithOrder(&pb.OperationOrder{
+			resp, err := s.DeploymentList(ctx, app, serverstate.ListWithOrder(&pb.OperationOrder{
 				Order: pb.OperationOrder_START_TIME,
 				Desc:  true,
 				Limit: 1,
@@ -164,7 +164,7 @@ func TestDeployment(t *testing.T, factory Factory, restartF RestartFactory) {
 			require.Equal("d2", resp[0].Id)
 		}
 
-		err = s.DeploymentPut(false, serverptypes.TestDeployment(t, &pb.Deployment{
+		err = s.DeploymentPut(ctx, false, serverptypes.TestDeployment(t, &pb.Deployment{
 			Id:          "d3",
 			Application: app,
 			Workspace:   ws,
@@ -176,14 +176,14 @@ func TestDeployment(t *testing.T, factory Factory, restartF RestartFactory) {
 		require.NoError(err)
 
 		{
-			resp, err := s.DeploymentList(app)
+			resp, err := s.DeploymentList(ctx, app)
 			require.NoError(err)
 
 			require.Len(resp, 3)
 		}
 
 		{
-			resp, err := s.DeploymentList(app,
+			resp, err := s.DeploymentList(ctx, app,
 				serverstate.ListWithOrder(&pb.OperationOrder{
 					Order: pb.OperationOrder_START_TIME,
 					Desc:  true,
@@ -205,7 +205,7 @@ func TestDeployment(t *testing.T, factory Factory, restartF RestartFactory) {
 			require.Equal("d3", resp[0].Id)
 		}
 		{
-			resp, err := s.DeploymentList(app,
+			resp, err := s.DeploymentList(ctx, app,
 				serverstate.ListWithOrder(&pb.OperationOrder{
 					Order: pb.OperationOrder_START_TIME,
 					Desc:  true,
@@ -262,7 +262,7 @@ func TestDeploymentListFilter(t *testing.T, f Factory, rf RestartFactory) {
 
 	// Add a destroyed deployment
 	require.NoError(
-		s.DeploymentPut(false, serverptypes.TestDeployment(t, &pb.Deployment{
+		s.DeploymentPut(ctx, false, serverptypes.TestDeployment(t, &pb.Deployment{
 			Id:          "destroyed",
 			Application: app,
 			Workspace:   ws,
@@ -274,7 +274,7 @@ func TestDeploymentListFilter(t *testing.T, f Factory, rf RestartFactory) {
 	)
 
 	require.NoError(
-		s.DeploymentPut(false, serverptypes.TestDeployment(t, &pb.Deployment{
+		s.DeploymentPut(ctx, false, serverptypes.TestDeployment(t, &pb.Deployment{
 			Id:          "created",
 			Application: app,
 			Workspace:   ws,
@@ -285,17 +285,17 @@ func TestDeploymentListFilter(t *testing.T, f Factory, rf RestartFactory) {
 		})),
 	)
 
-	resp, err := s.DeploymentList(app, serverstate.ListWithPhysicalState(pb.Operation_CREATED))
+	resp, err := s.DeploymentList(ctx, app, serverstate.ListWithPhysicalState(pb.Operation_CREATED))
 	require.NoError(err)
 	require.Len(resp, 1)
 	require.Equal("created", resp[0].Id)
 
-	resp, err = s.DeploymentList(app, serverstate.ListWithPhysicalState(pb.Operation_DESTROYED))
+	resp, err = s.DeploymentList(ctx, app, serverstate.ListWithPhysicalState(pb.Operation_DESTROYED))
 	require.NoError(err)
 	require.Len(resp, 1)
 	require.Equal("destroyed", resp[0].Id)
 
-	resp, err = s.DeploymentList(app, serverstate.ListWithPhysicalState(pb.Operation_PENDING))
+	resp, err = s.DeploymentList(ctx, app, serverstate.ListWithPhysicalState(pb.Operation_PENDING))
 	require.NoError(err)
 	require.Len(resp, 0)
 }

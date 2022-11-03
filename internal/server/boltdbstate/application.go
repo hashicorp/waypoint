@@ -14,7 +14,7 @@ import (
 )
 
 // AppPut creates or updates the application.
-func (s *State) AppPut(app *pb.Application) (*pb.Application, error) {
+func (s *State) AppPut(ctx context.Context, app *pb.Application) (*pb.Application, error) {
 	memTxn := s.inmem.Txn(true)
 	defer memTxn.Abort()
 
@@ -30,7 +30,7 @@ func (s *State) AppPut(app *pb.Application) (*pb.Application, error) {
 
 // AppDelete deletes an application from a project. This will also delete
 // all the operations associated with this application.
-func (s *State) AppDelete(ref *pb.Ref_Application) error {
+func (s *State) AppDelete(ctx context.Context, ref *pb.Ref_Application) error {
 	memTxn := s.inmem.Txn(true)
 	defer memTxn.Abort()
 
@@ -45,7 +45,7 @@ func (s *State) AppDelete(ref *pb.Ref_Application) error {
 }
 
 // AppGet retrieves the application..
-func (s *State) AppGet(ref *pb.Ref_Application) (*pb.Application, error) {
+func (s *State) AppGet(ctx context.Context, ref *pb.Ref_Application) (*pb.Application, error) {
 	memTxn := s.inmem.Txn(false)
 	defer memTxn.Abort()
 
@@ -65,6 +65,7 @@ func (s *State) AppGet(ref *pb.Ref_Application) (*pb.Application, error) {
 // For more information on how ProjectPollPeek works, refer to the ProjectPollPeek
 // docs.
 func (s *State) ApplicationPollPeek(
+	ctx context.Context,
 	ws memdb.WatchSet,
 ) (*pb.Project, time.Time, error) {
 	memTxn := s.inmem.Txn(false)
@@ -84,6 +85,7 @@ func (s *State) ApplicationPollPeek(
 // ApplicationPollComplete sets the next poll time for a given project given the app
 // reference along with the time interval "t".
 func (s *State) ApplicationPollComplete(
+	ctx context.Context,
 	project *pb.Project,
 	t time.Time,
 ) error {
@@ -100,9 +102,8 @@ func (s *State) ApplicationPollComplete(
 
 // GetFileChangeSignal checks the metadata for the given application and its
 // project, returning the value of FileChangeSignal that is most relevent.
-func (s *State) GetFileChangeSignal(scope *pb.Ref_Application) (string, error) {
-	ctx := context.Background()
-	app, err := s.AppGet(scope)
+func (s *State) GetFileChangeSignal(ctx context.Context, scope *pb.Ref_Application) (string, error) {
+	app, err := s.AppGet(ctx, scope)
 	if err != nil {
 		return "", err
 	}

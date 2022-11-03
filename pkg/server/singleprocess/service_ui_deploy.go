@@ -64,7 +64,7 @@ func (s *Service) UI_ListDeployments(
 ) (*pb.UI_ListDeploymentsResponse, error) {
 	log := hclog.FromContext(ctx)
 
-	deployList, err := s.state(ctx).DeploymentList(req.Application,
+	deployList, err := s.state(ctx).DeploymentList(ctx, req.Application,
 		serverstate.ListWithOrder(req.Order),
 		serverstate.ListWithWorkspace(req.Workspace),
 		serverstate.ListWithStatusFilter(req.Status...),
@@ -143,6 +143,7 @@ func (s *Service) getDeploymentBundle(
 		status report if a target is requested.
 	*/
 	statusReports, err := s.state(ctx).StatusReportList(
+		ctx,
 		application,
 		// NOTE(izaak): the only implemented order for list is pb.OperationOrder_COMPLETE_TIME, which doesn't apply here.
 		serverstate.ListWithWorkspace(workspace),

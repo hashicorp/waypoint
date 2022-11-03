@@ -352,7 +352,7 @@ func TestServiceEntrypointExecStream_invalidSessionId(t *testing.T) {
 	require.NoError(err)
 	client := server.TestServer(t, impl)
 
-	exec, closer := testRegisterExec(t, client, impl)
+	exec, closer := testRegisterExec(ctx, t, client, impl)
 	defer closer()
 
 	// Start exec with a bad starting message
@@ -383,7 +383,7 @@ func TestServiceEntrypointExecStream_closeSend(t *testing.T) {
 	require.NoError(err)
 	client := server.TestServer(t, impl)
 
-	exec, closer := testRegisterExec(t, client, impl)
+	exec, closer := testRegisterExec(ctx, t, client, impl)
 	defer closer()
 
 	// Start exec with a bad starting message
@@ -420,7 +420,7 @@ func TestServiceEntrypointExecStream_doubleStart(t *testing.T) {
 	require.NoError(err)
 	client := server.TestServer(t, impl)
 
-	exec, closer := testRegisterExec(t, client, impl)
+	exec, closer := testRegisterExec(ctx, t, client, impl)
 	defer closer()
 
 	// Start exec
@@ -459,7 +459,7 @@ func TestServiceEntrypointExecStream_doubleStart(t *testing.T) {
 	require.Nil(resp)
 }
 
-func testRegisterExec(t *testing.T, client pb.WaypointClient, impl pb.WaypointServer) (*serverstate.InstanceExec, func()) {
+func testRegisterExec(ctx context.Context, t *testing.T, client pb.WaypointClient, impl pb.WaypointServer) (*serverstate.InstanceExec, func()) {
 	// Create an instance
 	instanceId, deploymentId, closer := TestEntrypoint(t, client)
 	defer closer()
@@ -480,11 +480,11 @@ func testRegisterExec(t *testing.T, client pb.WaypointClient, impl pb.WaypointSe
 
 	// Wait for the registered exec
 	ws := memdb.NewWatchSet()
-	list, err := testStateInmem(impl).InstanceExecListByInstanceId(instanceId, ws)
+	list, err := testStateInmem(impl).InstanceExecListByInstanceId(ctx, instanceId, ws)
 	require.NoError(t, err)
 	if len(list) == 0 {
 		ws.Watch(time.After(1 * time.Second))
-		list, err = testStateInmem(impl).InstanceExecListByInstanceId(instanceId, ws)
+		list, err = testStateInmem(impl).InstanceExecListByInstanceId(ctx, instanceId, ws)
 		require.NoError(t, err)
 	}
 	require.Len(t, list, 1)

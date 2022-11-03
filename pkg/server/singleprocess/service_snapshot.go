@@ -36,7 +36,7 @@ func (s *Service) CreateSnapshot(
 
 	// Create the snapshot and write the data
 	bw := bufio.NewWriter(&snapshotWriter{srv: srv})
-	if err := s.state(ctx).CreateSnapshot(bw); err != nil {
+	if err := s.state(ctx).CreateSnapshot(ctx, bw); err != nil {
 		return hcerr.Externalize(
 			hclog.FromContext(ctx),
 			err,
@@ -104,7 +104,7 @@ func (s *Service) RestoreSnapshot(
 	go func() {
 		defer close(restoreCloseCh)
 		defer pr.Close()
-		restoreCloseCh <- s.state(ctx).StageRestoreSnapshot(pr)
+		restoreCloseCh <- s.state(ctx).StageRestoreSnapshot(ctx, pr)
 	}()
 
 	// Buffer our writes so that we store some window of restore data in memory

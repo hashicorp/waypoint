@@ -54,7 +54,7 @@ func (s *Service) spawnLogPlugin(
 	var lo boltdbstate.InstanceLogs
 	lo.LogBuffer = logbuffer.New()
 
-	err = inmemstate.InstanceLogsCreate(instId, &lo)
+	err = inmemstate.InstanceLogsCreate(ctx, instId, &lo)
 	if err != nil {
 		return nil, "", err
 	}
@@ -174,7 +174,7 @@ func (s *Service) GetLogStream(
 
 	switch scope := req.Scope.(type) {
 	case *pb.GetLogStreamRequest_DeploymentId:
-		deployment, err := s.state(ctx).DeploymentGet(&pb.Ref_Operation{
+		deployment, err := s.state(ctx).DeploymentGet(ctx, &pb.Ref_Operation{
 			Target: &pb.Ref_Operation_Id{
 				Id: scope.DeploymentId,
 			},
@@ -205,11 +205,11 @@ func (s *Service) GetLogStream(
 			}
 
 			// Be sure to cleanup when we, the job creator, are finished.
-			defer s.state(ctx).JobCancel(jobId, false)
+			defer s.state(ctx).JobCancel(ctx, jobId, false)
 
 			// Because we spawned the writer, we can safely delete the whole thing
 			// when the reader is done.
-			defer inmemstate.InstanceLogsDelete(inst.Id)
+			defer inmemstate.InstanceLogsDelete(ctx, inst.Id)
 
 			log.Debug("log plugin spawned", "job_id", jobId)
 			instanceFunc = func(ws memdb.WatchSet) ([]*streamRec, error) {
@@ -223,7 +223,7 @@ func (s *Service) GetLogStream(
 			log.Debug("deployment log will watch connected instances")
 			instanceLog := log.Named("instancefunc")
 			instanceFunc = func(ws memdb.WatchSet) ([]*streamRec, error) {
-				instances, err := s.state(ctx).InstancesByDeployment(scope.DeploymentId, ws)
+				instances, err := s.state(ctx).InstancesByDeployment(ctx, scope.DeploymentId, ws)
 				if err != nil {
 					return nil, hcerr.Externalize(
 						log,
@@ -273,8 +273,8 @@ func (s *Service) GetLogStream(
 		// Be sure to cleanup all our detritus when done!
 		defer func() {
 			for _, il := range deploymentToInstance {
-				inmemstate.InstanceLogsDelete(il.InstanceLogsId)
-				s.state(ctx).JobCancel(il.JobId, false)
+				inmemstate.InstanceLogsDelete(ctx, il.InstanceLogsId)
+				s.state(ctx).JobCancel(ctx, il.JobId, false)
 			}
 		}()
 
@@ -286,7 +286,7 @@ func (s *Service) GetLogStream(
 			// We filter and only consider successful and created deployments because
 			// that most accurate matches the only scope, so we shouldn't miss anything.
 
-			deployments, err := s.state(ctx).DeploymentList(scope.Application.Application,
+			deployments, err := s.state(ctx).DeploymentList(ctx, scope.Application.Application,
 				serverstate.ListWithPhysicalState(pb.Operation_CREATED),
 				serverstate.ListWithWorkspace(scope.Application.Workspace),
 				serverstate.ListWithStatusFilter(&pb.StatusFilter{
@@ -345,7 +345,7 @@ func (s *Service) GetLogStream(
 					}
 				} else {
 					instanceLog.Trace("tracking instances for deployment", "deployment_id", dep.Id)
-					depInstances, err := s.state(ctx).InstancesByDeployment(dep.Id, ws)
+					depInstances, err := s.state(ctx).InstancesByDeployment(ctx, dep.Id, ws)
 					if err != nil {
 						return nil, hcerr.Externalize(
 							log,

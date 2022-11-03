@@ -71,7 +71,7 @@ func TestServiceJob(t *testing.T, factory Factory) {
 		require.Nil(job)
 	})
 
-	_, err := impl.State(context.Background()).JobList(&pb.ListJobsRequest{})
+	_, err := impl.State(ctx).JobList(ctx, &pb.ListJobsRequest{})
 	require.NoError(t, err)
 
 }
@@ -166,7 +166,7 @@ func TestServiceJob_List(t *testing.T, factory Factory) {
 		require.Equal(jobList.Jobs[0].Workspace.Workspace, "prod")
 
 		proj := serverptypes.TestProject(t, &pb.Project{Name: "new"})
-		_, err = client.UpsertProject(context.Background(), &pb.UpsertProjectRequest{
+		_, err = client.UpsertProject(ctx, &pb.UpsertProjectRequest{
 			Project: proj,
 		})
 		require.NoError(err)
@@ -1016,7 +1016,7 @@ func TestServiceQueueJob_odr_basic(t *testing.T, factory Factory) {
 			"CARPET_DRIVER": "apu",
 		},
 	})
-	cfgResp, err := client.UpsertOnDemandRunnerConfig(context.Background(), &pb.UpsertOnDemandRunnerConfigRequest{
+	cfgResp, err := client.UpsertOnDemandRunnerConfig(ctx, &pb.UpsertOnDemandRunnerConfigRequest{
 		Config: odr,
 	})
 	odr = cfgResp.Config
@@ -1024,7 +1024,7 @@ func TestServiceQueueJob_odr_basic(t *testing.T, factory Factory) {
 
 	// Update the project to include ondemand runner
 	proj := serverptypes.TestProject(t, &pb.Project{Name: "proj"})
-	_, err = client.UpsertProject(context.Background(), &pb.UpsertProjectRequest{
+	_, err = client.UpsertProject(ctx, &pb.UpsertProjectRequest{
 		Project: proj,
 	})
 	require.NoError(err)
@@ -1380,13 +1380,13 @@ func TestServiceQueueJob_odr_customTask(t *testing.T, factory Factory) {
 	require.NotEmpty(queueResp)
 
 	// Job should exist and be queued
-	job, err := impl.State(context.Background()).JobById(queueResp.JobId, nil)
+	job, err := impl.State(ctx).JobById(ctx, queueResp.JobId, nil)
 	require.NoError(err)
 	require.Equal(pb.Job_QUEUED, job.State)
 	primaryJobId := job.Id
 
 	// task should be PENDING
-	task, err := impl.State(context.Background()).TaskGet(ctx, &pb.Ref_Task{
+	task, err := impl.State(ctx).TaskGet(ctx, &pb.Ref_Task{
 		Ref: &pb.Ref_Task_JobId{
 			JobId: queueResp.JobId,
 		},
@@ -1457,7 +1457,7 @@ func TestServiceQueueJob_odr_customTask(t *testing.T, factory Factory) {
 	// the JobAck. We do this a few times in this test to account for CI machine
 	// slowness.
 	time.Sleep(200 * time.Millisecond)
-	task, err = impl.State(context.Background()).TaskGet(ctx, &pb.Ref_Task{
+	task, err = impl.State(ctx).TaskGet(ctx, &pb.Ref_Task{
 		Ref: &pb.Ref_Task_JobId{
 			JobId: job.Id,
 		},
@@ -1474,7 +1474,7 @@ func TestServiceQueueJob_odr_customTask(t *testing.T, factory Factory) {
 
 	// task should be STARTED
 	time.Sleep(200 * time.Millisecond)
-	task, err = impl.State(context.Background()).TaskGet(ctx, &pb.Ref_Task{
+	task, err = impl.State(ctx).TaskGet(ctx, &pb.Ref_Task{
 		Ref: &pb.Ref_Task_JobId{
 			JobId: job.Id,
 		},
@@ -1510,7 +1510,7 @@ func TestServiceQueueJob_odr_customTask(t *testing.T, factory Factory) {
 
 		// task should be RUNNING
 		time.Sleep(200 * time.Millisecond)
-		task, err = impl.State(context.Background()).TaskGet(ctx, &pb.Ref_Task{
+		task, err = impl.State(ctx).TaskGet(ctx, &pb.Ref_Task{
 			Ref: &pb.Ref_Task_JobId{
 				JobId: queueResp.JobId,
 			},
@@ -1528,7 +1528,7 @@ func TestServiceQueueJob_odr_customTask(t *testing.T, factory Factory) {
 
 	// task should be COMPLETED
 	time.Sleep(200 * time.Millisecond)
-	task, err = impl.State(context.Background()).TaskGet(ctx, &pb.Ref_Task{
+	task, err = impl.State(ctx).TaskGet(ctx, &pb.Ref_Task{
 		Ref: &pb.Ref_Task_JobId{
 			JobId: job.Id,
 		},
@@ -1620,7 +1620,7 @@ func TestServiceQueueJob_odr_customTask(t *testing.T, factory Factory) {
 
 	// task should be STOPPING
 	time.Sleep(200 * time.Millisecond)
-	task, err = impl.State(context.Background()).TaskGet(ctx, &pb.Ref_Task{
+	task, err = impl.State(ctx).TaskGet(ctx, &pb.Ref_Task{
 		Ref: &pb.Ref_Task_JobId{
 			JobId: job.Id,
 		},
@@ -1637,7 +1637,7 @@ func TestServiceQueueJob_odr_customTask(t *testing.T, factory Factory) {
 
 	// task should be STOPPED
 	time.Sleep(200 * time.Millisecond)
-	task, err = impl.State(context.Background()).TaskGet(ctx, &pb.Ref_Task{
+	task, err = impl.State(ctx).TaskGet(ctx, &pb.Ref_Task{
 		Ref: &pb.Ref_Task_JobId{
 			JobId: job.Id,
 		},
@@ -1708,12 +1708,12 @@ func TestServiceQueueJob_odr_customTaskSkipOp(t *testing.T, factory Factory) {
 	require.NotEmpty(queueResp)
 
 	// Job should exist and be queued
-	job, err := impl.State(context.Background()).JobById(queueResp.JobId, nil)
+	job, err := impl.State(ctx).JobById(ctx, queueResp.JobId, nil)
 	require.NoError(err)
 	require.Equal(pb.Job_QUEUED, job.State)
 
 	// task should be PENDING
-	task, err := impl.State(context.Background()).TaskGet(ctx, &pb.Ref_Task{
+	task, err := impl.State(ctx).TaskGet(ctx, &pb.Ref_Task{
 		Ref: &pb.Ref_Task_JobId{
 			JobId: queueResp.JobId,
 		},
@@ -1776,7 +1776,7 @@ func TestServiceQueueJob_odr_customTaskSkipOp(t *testing.T, factory Factory) {
 	// the JobAck. We do this a few times in this test to account for CI machine
 	// slowness.
 	time.Sleep(200 * time.Millisecond)
-	task, err = impl.State(context.Background()).TaskGet(ctx, &pb.Ref_Task{
+	task, err = impl.State(ctx).TaskGet(ctx, &pb.Ref_Task{
 		Ref: &pb.Ref_Task_JobId{
 			JobId: job.Id,
 		},
@@ -1793,7 +1793,7 @@ func TestServiceQueueJob_odr_customTaskSkipOp(t *testing.T, factory Factory) {
 
 	// task should be STARTED
 	time.Sleep(200 * time.Millisecond)
-	task, err = impl.State(context.Background()).TaskGet(ctx, &pb.Ref_Task{
+	task, err = impl.State(ctx).TaskGet(ctx, &pb.Ref_Task{
 		Ref: &pb.Ref_Task_JobId{
 			JobId: job.Id,
 		},
@@ -1828,7 +1828,7 @@ func TestServiceQueueJob_odr_customTaskSkipOp(t *testing.T, factory Factory) {
 
 		// task should be RUNNING
 		time.Sleep(200 * time.Millisecond)
-		task, err = impl.State(context.Background()).TaskGet(ctx, &pb.Ref_Task{
+		task, err = impl.State(ctx).TaskGet(ctx, &pb.Ref_Task{
 			Ref: &pb.Ref_Task_JobId{
 				JobId: queueResp.JobId,
 			},
@@ -1846,7 +1846,7 @@ func TestServiceQueueJob_odr_customTaskSkipOp(t *testing.T, factory Factory) {
 
 	// task should be COMPLETED
 	time.Sleep(200 * time.Millisecond)
-	task, err = impl.State(context.Background()).TaskGet(ctx, &pb.Ref_Task{
+	task, err = impl.State(ctx).TaskGet(ctx, &pb.Ref_Task{
 		Ref: &pb.Ref_Task_JobId{
 			JobId: job.Id,
 		},
@@ -1890,7 +1890,7 @@ func TestServiceQueueJob_odr_customTaskSkipOp(t *testing.T, factory Factory) {
 
 	// task should be STOPPING
 	time.Sleep(200 * time.Millisecond)
-	task, err = impl.State(context.Background()).TaskGet(ctx, &pb.Ref_Task{
+	task, err = impl.State(ctx).TaskGet(ctx, &pb.Ref_Task{
 		Ref: &pb.Ref_Task_JobId{
 			JobId: job.Id,
 		},
@@ -1907,7 +1907,7 @@ func TestServiceQueueJob_odr_customTaskSkipOp(t *testing.T, factory Factory) {
 
 	// task should be STOPPED
 	time.Sleep(200 * time.Millisecond)
-	task, err = impl.State(context.Background()).TaskGet(ctx, &pb.Ref_Task{
+	task, err = impl.State(ctx).TaskGet(ctx, &pb.Ref_Task{
 		Ref: &pb.Ref_Task_JobId{
 			JobId: job.Id,
 		},
@@ -1951,7 +1951,7 @@ func TestServiceQueueJob_odr_default(t *testing.T, factory Factory) {
 		Default: true,
 	})
 
-	cfgResp, err := client.UpsertOnDemandRunnerConfig(context.Background(), &pb.UpsertOnDemandRunnerConfigRequest{
+	cfgResp, err := client.UpsertOnDemandRunnerConfig(ctx, &pb.UpsertOnDemandRunnerConfigRequest{
 		Config: odr,
 	})
 
@@ -1961,7 +1961,7 @@ func TestServiceQueueJob_odr_default(t *testing.T, factory Factory) {
 
 	// Update the project to include ondemand runner
 	proj := serverptypes.TestProject(t, &pb.Project{Name: "proj"})
-	_, err = client.UpsertProject(context.Background(), &pb.UpsertProjectRequest{
+	_, err = client.UpsertProject(ctx, &pb.UpsertProjectRequest{
 		Project: proj,
 	})
 
@@ -2117,14 +2117,14 @@ func TestServiceQueueJob_odr_target_id(t *testing.T, factory Factory) {
 			},
 		},
 	})
-	cfgResp, err := client.UpsertOnDemandRunnerConfig(context.Background(), &pb.UpsertOnDemandRunnerConfigRequest{
+	cfgResp, err := client.UpsertOnDemandRunnerConfig(ctx, &pb.UpsertOnDemandRunnerConfigRequest{
 		Config: odr,
 	})
 	odr = cfgResp.Config
 	log.Info("test odr profile", "name", odr.Name)
 
 	proj := serverptypes.TestProject(t, &pb.Project{Name: "proj"})
-	_, err = client.UpsertProject(context.Background(), &pb.UpsertProjectRequest{
+	_, err = client.UpsertProject(ctx, &pb.UpsertProjectRequest{
 		Project: proj,
 	})
 	require.NoError(err)
@@ -2282,14 +2282,14 @@ func TestServiceQueueJob_odr_target_labels(t *testing.T, factory Factory) {
 			},
 		},
 	})
-	cfgResp, err := client.UpsertOnDemandRunnerConfig(context.Background(), &pb.UpsertOnDemandRunnerConfigRequest{
+	cfgResp, err := client.UpsertOnDemandRunnerConfig(ctx, &pb.UpsertOnDemandRunnerConfigRequest{
 		Config: odr,
 	})
 	odr = cfgResp.Config
 	log.Info("test odr profile", "name", odr.Name)
 
 	proj := serverptypes.TestProject(t, &pb.Project{Name: "proj"})
-	_, err = client.UpsertProject(context.Background(), &pb.UpsertProjectRequest{
+	_, err = client.UpsertProject(ctx, &pb.UpsertProjectRequest{
 		Project: proj,
 	})
 	require.NoError(err)
@@ -2431,14 +2431,14 @@ func TestServiceQueueJob_odr_depends(t *testing.T, factory Factory) {
 			"CARPET_DRIVER": "apu",
 		},
 	})
-	cfgResp, err := client.UpsertOnDemandRunnerConfig(context.Background(), &pb.UpsertOnDemandRunnerConfigRequest{
+	cfgResp, err := client.UpsertOnDemandRunnerConfig(ctx, &pb.UpsertOnDemandRunnerConfigRequest{
 		Config: odr,
 	})
 	odr = cfgResp.Config
 
 	// Update the project to include ondemand runner
 	proj := serverptypes.TestProject(t, &pb.Project{Name: "proj"})
-	_, err = client.UpsertProject(context.Background(), &pb.UpsertProjectRequest{
+	_, err = client.UpsertProject(ctx, &pb.UpsertProjectRequest{
 		Project: proj,
 	})
 	require.NoError(err)
@@ -2480,7 +2480,7 @@ func TestServiceQueueJob_odr_depends(t *testing.T, factory Factory) {
 	require.NotEmpty(queueResp)
 
 	// Get the task to get the start job
-	task, err := impl.State(context.Background()).TaskGet(ctx, &pb.Ref_Task{
+	task, err := impl.State(ctx).TaskGet(ctx, &pb.Ref_Task{
 		Ref: &pb.Ref_Task_JobId{
 			JobId: queueResp.JobId,
 		},
@@ -2489,7 +2489,7 @@ func TestServiceQueueJob_odr_depends(t *testing.T, factory Factory) {
 	require.Equal(pb.Task_PENDING, task.JobState)
 
 	// Get the start job
-	job, err := impl.State(context.Background()).JobById(task.StartJob.Id, nil)
+	job, err := impl.State(ctx).JobById(ctx, task.StartJob.Id, nil)
 	require.NoError(err)
 	require.IsType(&pb.Job_StartTask{}, job.Operation)
 	require.Equal([]string{queueA.JobId, queueB.JobId}, job.DependsOn)

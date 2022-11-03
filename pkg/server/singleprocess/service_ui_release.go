@@ -13,7 +13,7 @@ func (s *Service) UI_ListReleases(
 	ctx context.Context,
 	req *pb.UI_ListReleasesRequest,
 ) (*pb.UI_ListReleasesResponse, error) {
-	releaseList, err := s.state(ctx).ReleaseList(req.Application,
+	releaseList, err := s.state(ctx).ReleaseList(ctx, req.Application,
 		serverstate.ListWithOrder(req.Order),
 		serverstate.ListWithWorkspace(req.Workspace),
 		serverstate.ListWithStatusFilter(req.Status...),
@@ -34,6 +34,7 @@ func (s *Service) UI_ListReleases(
 	// we'll have to not use that abstraction and instead write our own query for grabbing a status report if a target
 	// is requested.
 	statusReports, err := s.state(ctx).StatusReportList(
+		ctx,
 		req.Application,
 		// NOTE(izaak): the only implemented order for list is pb.OperationOrder_COMPLETE_TIME, which doesn't apply here.
 		serverstate.ListWithWorkspace(req.Workspace),

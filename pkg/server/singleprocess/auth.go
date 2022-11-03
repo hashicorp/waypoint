@@ -139,7 +139,7 @@ func (s *Service) Authenticate(
 
 	// Check the cookie
 	if c := CookieFromRequest(ctx); c != "" {
-		serverConfig, err := s.state(ctx).ServerConfigGet()
+		serverConfig, err := s.state(ctx).ServerConfigGet(ctx)
 		if err != nil {
 			return nil, err
 		}
@@ -220,7 +220,7 @@ func (s *Service) authRunner(
 	}
 
 	// Get our runner
-	r, err := s.state(ctx).RunnerById(runnerId, nil)
+	r, err := s.state(ctx).RunnerById(ctx, runnerId, nil)
 	if status.Code(err) == codes.NotFound {
 		err = nil
 		r = nil
@@ -288,7 +288,7 @@ func (s *Service) authLogin(
 	}
 
 	// Look up the user that this token is for.
-	user, err := s.state(ctx).UserGet(&pb.Ref_User{
+	user, err := s.state(ctx).UserGet(ctx, &pb.Ref_User{
 		Ref: &pb.Ref_User_Id{
 			Id: &pb.Ref_UserId{Id: userId},
 		},
@@ -316,7 +316,7 @@ func (s *Service) authLogin(
 		}
 
 		// Look up the user again
-		user, err = s.state(ctx).UserGet(&pb.Ref_User{
+		user, err = s.state(ctx).UserGet(ctx, &pb.Ref_User{
 			Ref: &pb.Ref_User_Id{
 				Id: &pb.Ref_UserId{Id: userId},
 			},
@@ -351,7 +351,7 @@ func (s *Service) decodeToken(ctx context.Context, token string) (*pb.TokenTrans
 		return nil, nil, errors.Wrapf(err, "failed to proto unmarshal token")
 	}
 
-	isValid, err := s.state(ctx).TokenSignatureVerify(tt.Body, tt.Signature, tt.KeyId)
+	isValid, err := s.state(ctx).TokenSignatureVerify(ctx, tt.Body, tt.Signature, tt.KeyId)
 	if err != nil {
 		return nil, nil, errors.Wrapf(ErrInvalidToken, err.Error())
 	}
@@ -416,7 +416,7 @@ func (s *Service) encodeToken(ctx context.Context, tt *pb.TokenTransport, body *
 		return "", errors.Wrapf(err, "failed to proto marshal the token")
 	}
 
-	tokenSignature, err := s.state(ctx).TokenSignature(tokenBodyData, tt.KeyId)
+	tokenSignature, err := s.state(ctx).TokenSignature(ctx, tokenBodyData, tt.KeyId)
 	if err != nil {
 		return "", errors.Wrapf(err, "failed getting token signature")
 	}
@@ -471,7 +471,7 @@ func (s *Service) GenerateLoginToken(
 
 	// If we're authing as another user, we have to get that user
 	if req.User != nil {
-		user, err := s.state(ctx).UserGet(req.User)
+		user, err := s.state(ctx).UserGet(ctx, req.User)
 		if err != nil {
 			return nil, err
 		}
@@ -636,7 +636,7 @@ func (s *Service) GenerateInviteToken(
 	// req.Login.UserId is authored by the caller and won't be an encoded id
 	// so we don't decode it, but we will be sure the resulting token is encoded.
 	if req.Login.UserId != currentUser.Id && req.Signup == nil {
-		_, err := s.state(ctx).UserGet(&pb.Ref_User{
+		_, err := s.state(ctx).UserGet(ctx, &pb.Ref_User{
 			Ref: &pb.Ref_User_Id{
 				Id: &pb.Ref_UserId{Id: req.Login.UserId},
 			},
@@ -702,7 +702,7 @@ func (s *Service) ConvertInviteToken(ctx context.Context, req *pb.ConvertInviteT
 	// If we have a signup invite, then create a new user.
 	if signup := invite.Signup; signup != nil {
 		user := &pb.User{Username: signup.InitialUsername}
-		if err := s.state(ctx).UserPut(user); err != nil {
+		if err := s.state(ctx).UserPut(ctx, user); err != nil {
 			return nil, err
 		}
 
@@ -730,7 +730,7 @@ func (s *Service) ConvertInviteToken(ctx context.Context, req *pb.ConvertInviteT
 
 // BootstrapToken RPC call.
 func (s *Service) BootstrapToken(ctx context.Context, req *empty.Empty) (*pb.NewTokenResponse, error) {
-	if !s.state(ctx).HMACKeyEmpty() {
+	if !s.state(ctx).HMACKeyEmpty(ctx) {
 		return nil, status.Errorf(codes.PermissionDenied, "server is already bootstrapped")
 	}
 
@@ -758,7 +758,7 @@ func (s *Service) BootstrapToken(ctx context.Context, req *empty.Empty) (*pb.New
 // bootstrapUser creates the initial default user. This will always attempt
 // to create the user so gating logic to prevent that is up to the caller.
 func (s *Service) bootstrapUser(ctx context.Context) (*pb.User, error) {
-	empty, err := s.state(ctx).UserEmpty()
+	empty, err := s.state(ctx).UserEmpty(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -772,13 +772,13 @@ func (s *Service) bootstrapUser(ctx context.Context) (*pb.User, error) {
 		Username: DefaultUser,
 	}
 
-	return user, s.state(ctx).UserPut(user)
+	return user, s.state(ctx).UserPut(ctx, user)
 }
 
 // Bootstrapped returns true if the server is already bootstrapped. If
 // this returns true then BootstrapToken can no longer be called.
 func (s *Service) Bootstrapped(ctx context.Context) bool {
-	return !s.state(ctx).HMACKeyEmpty()
+	return !s.state(ctx).HMACKeyEmpty(ctx)
 }
 
 // DecodeToken RPC call.

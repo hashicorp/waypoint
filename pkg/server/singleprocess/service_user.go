@@ -21,7 +21,7 @@ func (s *Service) GetUser(
 	// If we have a request, get that user
 	if req.User != nil {
 		var err error
-		user, err = s.state(ctx).UserGet(req.User)
+		user, err = s.state(ctx).UserGet(ctx, req.User)
 		if err != nil {
 			return nil, hcerr.Externalize(hclog.FromContext(ctx), err, "failed to get user")
 		}
@@ -41,7 +41,7 @@ func (s *Service) UpdateUser(
 	}
 
 	// Get the user so that we don't overwrite fields that shouldn't be.
-	user, err := s.state(ctx).UserGet(&pb.Ref_User{
+	user, err := s.state(ctx).UserGet(ctx, &pb.Ref_User{
 		Ref: &pb.Ref_User_Id{
 			Id: &pb.Ref_UserId{Id: req.User.Id},
 		},
@@ -55,7 +55,7 @@ func (s *Service) UpdateUser(
 	user.Display = req.User.Display
 
 	// Write it
-	if err := s.state(ctx).UserPut(user); err != nil {
+	if err := s.state(ctx).UserPut(ctx, user); err != nil {
 		return nil, hcerr.Externalize(hclog.FromContext(ctx), err, "failed to update user")
 	}
 
@@ -72,7 +72,7 @@ func (s *Service) DeleteUser(
 		return nil, err
 	}
 
-	if err := s.state(ctx).UserDelete(req.User); err != nil {
+	if err := s.state(ctx).UserDelete(ctx, req.User); err != nil {
 		return nil, hcerr.Externalize(hclog.FromContext(ctx), err, "failed to delete user")
 	}
 
@@ -83,7 +83,7 @@ func (s *Service) ListUsers(
 	ctx context.Context,
 	req *empty.Empty,
 ) (*pb.ListUsersResponse, error) {
-	users, err := s.state(ctx).UserList()
+	users, err := s.state(ctx).UserList(ctx)
 	if err != nil {
 		return nil, hcerr.Externalize(hclog.FromContext(ctx), err, "failed to list users")
 	}

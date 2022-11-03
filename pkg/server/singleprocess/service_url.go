@@ -147,7 +147,7 @@ func (s *Service) initURLGuestAccount(
 ) (string, error) {
 	// Check if URL Token already exists, if so, no reason to
 	// re-register and generate a new hostname
-	urlToken, err := s.state(ctx).ServerURLTokenGet()
+	urlToken, err := s.state(ctx).ServerURLTokenGet(ctx)
 	if err != nil {
 		return "", err
 	} else if urlToken != "" {
@@ -202,7 +202,7 @@ func (s *Service) initURLGuestAccount(
 		return "", err
 	}
 
-	if err := s.state(ctx).ServerURLTokenSet(accountResp.Token); err != nil {
+	if err := s.state(ctx).ServerURLTokenSet(ctx, accountResp.Token); err != nil {
 		return "", err
 	}
 

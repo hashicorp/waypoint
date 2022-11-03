@@ -41,7 +41,7 @@ func (s *Service) ListInstances(
 
 		for {
 			ws := memdb.NewWatchSet()
-			result, err = s.state(ctx).InstancesByDeployment(scope.DeploymentId, ws)
+			result, err = s.state(ctx).InstancesByDeployment(ctx, scope.DeploymentId, ws)
 
 			if err != nil {
 				return nil, hcerr.Externalize(
@@ -68,6 +68,7 @@ func (s *Service) ListInstances(
 		}
 	case *pb.ListInstancesRequest_Application_:
 		result, err = s.state(ctx).InstancesByApp(
+			ctx,
 			scope.Application.Application,
 			scope.Application.Workspace,
 			nil,

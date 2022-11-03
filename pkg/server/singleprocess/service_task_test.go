@@ -409,15 +409,15 @@ func TestServiceTask_CancelTask(t *testing.T) {
 		})
 		require.NoError(err)
 
-		job, err := testServiceImpl(impl).state(ctx).JobById(startJobId, nil)
+		job, err := testServiceImpl(impl).state(ctx).JobById(ctx, startJobId, nil)
 		require.NoError(err)
 		require.True(job.State == pb.Job_ERROR && job.CancelTime != nil)
 
-		job, err = testServiceImpl(impl).state(ctx).JobById(runJobId, nil)
+		job, err = testServiceImpl(impl).state(ctx).JobById(ctx, runJobId, nil)
 		require.NoError(err)
 		require.True(job.State == pb.Job_ERROR && job.CancelTime != nil)
 
-		job, err = testServiceImpl(impl).state(ctx).JobById(stopJobId, nil)
+		job, err = testServiceImpl(impl).state(ctx).JobById(ctx, stopJobId, nil)
 		require.NoError(err)
 		require.True(job.State == pb.Job_ERROR && job.CancelTime != nil)
 	})

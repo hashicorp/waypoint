@@ -1,6 +1,7 @@
 package statetest
 
 import (
+	"context"
 	"strings"
 	"testing"
 
@@ -20,6 +21,7 @@ func init() {
 }
 
 func TestOnDemandRunnerConfig(t *testing.T, factory Factory, restartF RestartFactory) {
+	ctx := context.Background()
 	t.Run("Get returns not found error if not exist", func(t *testing.T) {
 		require := require.New(t)
 
@@ -27,7 +29,7 @@ func TestOnDemandRunnerConfig(t *testing.T, factory Factory, restartF RestartFac
 		defer s.Close()
 
 		// Set
-		_, err := s.OnDemandRunnerConfigGet(&pb.Ref_OnDemandRunnerConfig{
+		_, err := s.OnDemandRunnerConfigGet(ctx, &pb.Ref_OnDemandRunnerConfig{
 			Id: "foo",
 		})
 		require.Error(err)
@@ -50,7 +52,7 @@ func TestOnDemandRunnerConfig(t *testing.T, factory Factory, restartF RestartFac
 			Default:              true,
 		})
 
-		result, err := s.OnDemandRunnerConfigPut(rec)
+		result, err := s.OnDemandRunnerConfigPut(ctx, rec)
 		require.NoError(err)
 		require.NotEmpty(result.Id)
 		require.NotEmpty(result.Name)
@@ -68,7 +70,7 @@ func TestOnDemandRunnerConfig(t *testing.T, factory Factory, restartF RestartFac
 				Id: "client-chooses",
 			})
 
-			_, err := s.OnDemandRunnerConfigPut(rec)
+			_, err := s.OnDemandRunnerConfigPut(ctx, rec)
 			require.Error(err)
 		}
 
@@ -78,7 +80,7 @@ func TestOnDemandRunnerConfig(t *testing.T, factory Factory, restartF RestartFac
 				Name: "client-chooses-name",
 			})
 
-			resp, err := s.OnDemandRunnerConfigPut(rec)
+			resp, err := s.OnDemandRunnerConfigPut(ctx, rec)
 			require.NoError(err)
 			require.NotEmpty(resp.Id) // server chose the ID
 
@@ -87,7 +89,7 @@ func TestOnDemandRunnerConfig(t *testing.T, factory Factory, restartF RestartFac
 				Id:   "trying to overwrite the ID",
 			})
 
-			_, err = s.OnDemandRunnerConfigPut(updateRec)
+			_, err = s.OnDemandRunnerConfigPut(ctx, updateRec)
 			require.Error(err)
 		}
 	})
@@ -109,7 +111,7 @@ func TestOnDemandRunnerConfig(t *testing.T, factory Factory, restartF RestartFac
 			Default:              true,
 		})
 
-		putResp, err := s.OnDemandRunnerConfigPut(rec)
+		putResp, err := s.OnDemandRunnerConfigPut(ctx, rec)
 		require.NoError(err)
 		require.NotEmpty(putResp.Id) // must have chosen an id
 		require.Equal(rec.Name, putResp.Name)
@@ -122,7 +124,7 @@ func TestOnDemandRunnerConfig(t *testing.T, factory Factory, restartF RestartFac
 
 		// Get exact
 		{
-			resp, err := s.OnDemandRunnerConfigGet(&pb.Ref_OnDemandRunnerConfig{
+			resp, err := s.OnDemandRunnerConfigGet(ctx, &pb.Ref_OnDemandRunnerConfig{
 				Id: rec.Id,
 			})
 			require.NoError(err)
@@ -141,7 +143,7 @@ func TestOnDemandRunnerConfig(t *testing.T, factory Factory, restartF RestartFac
 
 		// Get case insensitive
 		{
-			resp, err := s.OnDemandRunnerConfigGet(&pb.Ref_OnDemandRunnerConfig{
+			resp, err := s.OnDemandRunnerConfigGet(ctx, &pb.Ref_OnDemandRunnerConfig{
 				Id: strings.ToUpper(rec.Id),
 			})
 			require.NoError(err)
@@ -150,7 +152,7 @@ func TestOnDemandRunnerConfig(t *testing.T, factory Factory, restartF RestartFac
 
 		// Get by name
 		{
-			resp, err := s.OnDemandRunnerConfigGet(&pb.Ref_OnDemandRunnerConfig{
+			resp, err := s.OnDemandRunnerConfigGet(ctx, &pb.Ref_OnDemandRunnerConfig{
 				Name: rec.Name,
 			})
 			require.NoError(err)
@@ -161,7 +163,7 @@ func TestOnDemandRunnerConfig(t *testing.T, factory Factory, restartF RestartFac
 
 		// Get missing (returns not found error)
 		{
-			_, err := s.OnDemandRunnerConfigGet(&pb.Ref_OnDemandRunnerConfig{
+			_, err := s.OnDemandRunnerConfigGet(ctx, &pb.Ref_OnDemandRunnerConfig{
 				Id: strings.ToUpper("unknown"),
 			})
 			require.Error(err)
@@ -170,7 +172,7 @@ func TestOnDemandRunnerConfig(t *testing.T, factory Factory, restartF RestartFac
 
 		// List
 		{
-			resp, err := s.OnDemandRunnerConfigList()
+			resp, err := s.OnDemandRunnerConfigList(ctx)
 			require.NoError(err)
 			require.Len(resp, 1)
 		}
@@ -193,7 +195,7 @@ func TestOnDemandRunnerConfig(t *testing.T, factory Factory, restartF RestartFac
 			Default:              true,
 		})
 
-		putResp, err := s.OnDemandRunnerConfigPut(rec)
+		putResp, err := s.OnDemandRunnerConfigPut(ctx, rec)
 		require.NoError(err)
 		require.NotEmpty(putResp.Id) // must have chosen an id
 		require.Equal(rec.Name, putResp.Name)
@@ -206,7 +208,7 @@ func TestOnDemandRunnerConfig(t *testing.T, factory Factory, restartF RestartFac
 
 		// Get exact
 		{
-			resp, err := s.OnDemandRunnerConfigGet(&pb.Ref_OnDemandRunnerConfig{
+			resp, err := s.OnDemandRunnerConfigGet(ctx, &pb.Ref_OnDemandRunnerConfig{
 				Id: rec.Id,
 			})
 			require.NoError(err)
@@ -235,14 +237,14 @@ func TestOnDemandRunnerConfig(t *testing.T, factory Factory, restartF RestartFac
 		})
 
 		// No error, it just updates the existing one
-		resp, err := s.OnDemandRunnerConfigPut(rec2)
+		resp, err := s.OnDemandRunnerConfigPut(ctx, rec2)
 		require.NoError(err)
 		// We updated a field, see if it stuck
 		require.Equal(rec2.OciUrl, resp.OciUrl)
 
 		// List should only return 1
 		{
-			resp, err := s.OnDemandRunnerConfigList()
+			resp, err := s.OnDemandRunnerConfigList(ctx)
 			require.NoError(err)
 			require.Len(resp, 1)
 		}
@@ -258,11 +260,11 @@ func TestOnDemandRunnerConfig(t *testing.T, factory Factory, restartF RestartFac
 		// Set
 		rec := serverptypes.TestOnDemandRunnerConfig(t, serverptypes.TestOnDemandRunnerConfig(t, nil))
 
-		_, err := s.OnDemandRunnerConfigPut(rec)
+		_, err := s.OnDemandRunnerConfigPut(ctx, rec)
 		require.NoError(err)
 
 		// Read
-		resp, err := s.OnDemandRunnerConfigGet(&pb.Ref_OnDemandRunnerConfig{
+		resp, err := s.OnDemandRunnerConfigGet(ctx, &pb.Ref_OnDemandRunnerConfig{
 			Id: rec.Id,
 		})
 		require.NoError(err)
@@ -270,7 +272,7 @@ func TestOnDemandRunnerConfig(t *testing.T, factory Factory, restartF RestartFac
 
 		// Delete
 		{
-			err := s.OnDemandRunnerConfigDelete(&pb.Ref_OnDemandRunnerConfig{
+			err := s.OnDemandRunnerConfigDelete(ctx, &pb.Ref_OnDemandRunnerConfig{
 				Id: rec.Id,
 			})
 			require.NoError(err)
@@ -278,7 +280,7 @@ func TestOnDemandRunnerConfig(t *testing.T, factory Factory, restartF RestartFac
 
 		// Read
 		{
-			_, err := s.OnDemandRunnerConfigGet(&pb.Ref_OnDemandRunnerConfig{
+			_, err := s.OnDemandRunnerConfigGet(ctx, &pb.Ref_OnDemandRunnerConfig{
 				Id: rec.Id,
 			})
 			require.Error(err)
@@ -287,7 +289,7 @@ func TestOnDemandRunnerConfig(t *testing.T, factory Factory, restartF RestartFac
 
 		// List
 		{
-			resp, err := s.OnDemandRunnerConfigList()
+			resp, err := s.OnDemandRunnerConfigList(ctx)
 			require.NoError(err)
 			require.Len(resp, 0)
 		}
@@ -295,6 +297,7 @@ func TestOnDemandRunnerConfig(t *testing.T, factory Factory, restartF RestartFac
 }
 
 func TestOnDemandRunnerConfig_LabelTargeting(t *testing.T, factory Factory, restartF RestartFactory) {
+	ctx := context.Background()
 	require := require.New(t)
 
 	s := factory(t)
@@ -315,10 +318,10 @@ func TestOnDemandRunnerConfig_LabelTargeting(t *testing.T, factory Factory, rest
 		},
 	})
 
-	_, err := s.OnDemandRunnerConfigPut(rec)
+	_, err := s.OnDemandRunnerConfigPut(ctx, rec)
 	require.NoError(err)
 
-	resp, err := s.OnDemandRunnerConfigGet(&pb.Ref_OnDemandRunnerConfig{
+	resp, err := s.OnDemandRunnerConfigGet(ctx, &pb.Ref_OnDemandRunnerConfig{
 		Id: rec.Id,
 	})
 	require.NoError(err)
