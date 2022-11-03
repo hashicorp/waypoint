@@ -1,4 +1,4 @@
-## unreleased
+## 0.10.3 (November 03, 2022)
 
 FEATURES:
 
