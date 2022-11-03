@@ -6,6 +6,51 @@ IMPROVEMENTS:
 
 BUG FIXES:
 
+## 0.10.3 (November 03, 2022)
+
+FEATURES:
+
+* plugin/consul: Consul key-value data config sourcer plugin [[GH-4045](https://github.com/hashicorp/waypoint/issues/4045)]
+
+IMPROVEMENTS:
+
+* cli/config-sync: Add operations flags to `config sync` command. [[GH-4143](https://github.com/hashicorp/waypoint/issues/4143)]
+* cli/fmt: Add a `-check` flag that will determine if the `waypoint.hcl` is already
+properly formatted, similar to `terraform fmt -check`. [[GH-4020](https://github.com/hashicorp/waypoint/issues/4020)]
+* cli/pipeline_run: Show app deployment and release URLs if exist from running
+pipeline. Also show input variables used. [[GH-4096](https://github.com/hashicorp/waypoint/issues/4096)]
+* cli: Add prune flags to `waypoint deploy` for configuring the automatic release. [[GH-4114](https://github.com/hashicorp/waypoint/issues/4114)]
+* cli: Introduce new CLI flag `-reattach` for `waypoint pipeline run` which will stream
+an existing pipeline run either by the latest known run or a specific sequence id. [[GH-4042](https://github.com/hashicorp/waypoint/issues/4042)]
+* cli: Only echo file name when config file is formatted with `waypoint fmt`. [[GH-4111](https://github.com/hashicorp/waypoint/issues/4111)]
+* cli: Update `waypoint runner profile inspect` to show default runner profile
+if no name argument supplied. [[GH-4078](https://github.com/hashicorp/waypoint/issues/4078)]
+* core: Auto run a status report after a deployment or release operation rather
+than only if `waypoint deploy` or `waypoint release` CLI is run. [[GH-4099](https://github.com/hashicorp/waypoint/issues/4099)]
+* core: Combine git clone messages from job stream into a single message [[GH-4115](https://github.com/hashicorp/waypoint/issues/4115)]
+* pipelines: Add ability to evaluate input variables in pipelines stanzas. [[GH-4132](https://github.com/hashicorp/waypoint/issues/4132)]
+* ui/input-variables: Adds the ability to set an input variable as sensitive and hides its value from the list and form [[GH-4139](https://github.com/hashicorp/waypoint/issues/4139)]
+
+BUG FIXES:
+
+* cli/runner-profile-set: Fix panic when setting runner profile environment variables [[GH-3995](https://github.com/hashicorp/waypoint/issues/3995)]
+* cli/upgrade: Update the OCI URL for the bootstrap runner profile during `server upgrade` [[GH-4175](https://github.com/hashicorp/waypoint/issues/4175)]
+* cli: Fix bug where input variables were not included on pipeline run jobs. [[GH-4137](https://github.com/hashicorp/waypoint/issues/4137)]
+* cli: Fix panic in `waypoint runner profile set` when no flags are specified. [[GH-4013](https://github.com/hashicorp/waypoint/issues/4013)]
+* cli: Fix panic in cli for `waypoint task cancel` if attempting to cancel by run
+job id with no argument. [[GH-4019](https://github.com/hashicorp/waypoint/issues/4019)]
+* cli: Only show "CompleteTime" on `waypoint pipeline list` if the job has a valid
+complete time. [[GH-4113](https://github.com/hashicorp/waypoint/issues/4113)]
+* cli: Remove automatic uppercasing of ids, so that future runner profiles will match [[GH-4063](https://github.com/hashicorp/waypoint/issues/4063)]
+* cli: Respect the -workspace flag when requesting a logstream for a deployment
+by workspace [[GH-4009](https://github.com/hashicorp/waypoint/issues/4009)]
+* core: Fix panic if no Use stanza found for given workspace scope on a build,
+deploy, release, or registry stanza. [[GH-4112](https://github.com/hashicorp/waypoint/issues/4112)]
+* core: fix panic when null value is set on a string variable [[GH-4067](https://github.com/hashicorp/waypoint/issues/4067)]
+* install/nomad: Update installation with Nomad to use CSI parameters. [[GH-4157](https://github.com/hashicorp/waypoint/issues/4157)]
+* pipelines: Properly mark a pipeline run as complete [[GH-4053](https://github.com/hashicorp/waypoint/issues/4053)]
+* plugin/docker: fix issue with authenticating with registries when using
+docker-pull [[GH-4121](https://github.com/hashicorp/waypoint/issues/4121)]
 
 ## 0.10.2 (October 03, 2022)
 
