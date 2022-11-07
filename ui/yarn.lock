@@ -7320,13 +7320,12 @@ ember-router-service-refresh-polyfill@^0.1.0:
     ember-cli-babel "^7.23.1"
     ember-cli-htmlbars "^5.3.2"
 
-ember-set-helper@^2.0.0:
-  version "2.0.0"
-  resolved "https://registry.yarnpkg.com/ember-set-helper/-/ember-set-helper-2.0.0.tgz#afdb6cf2f5750f6f69e38a387f19615560f30a0f"
-  integrity sha512-cnKbQEkPi+plRI9eWj76zt4pjRKM/PsKIlYP2ZcSI7R83c1Zig5DLDUft+1PJI/1/fnPGLB8s3E6hjFBQo+T9g==
+ember-set-helper@^2.0.1:
+  version "2.0.1"
+  resolved "https://registry.yarnpkg.com/ember-set-helper/-/ember-set-helper-2.0.1.tgz#e39417531e25089b45ccb905b8c00eda7b3fbbde"
+  integrity sha512-6IIimVGOdehZcncH1ilCY4p7hWBtZqWYMc1Xodr1ATOCuIk6ZO1yztKcUQhlmwl7fE82gL4wHD01T6XP5W59Ng==
   dependencies:
     ember-cli-babel "^7.18.0"
-    ember-cli-htmlbars "^4.2.3"
 
 ember-simple-auth@^4.2.2:
   version "4.2.2"
