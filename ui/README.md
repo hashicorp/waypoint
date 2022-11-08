@@ -59,15 +59,16 @@ Troubleshooting:
 ### Running with a local Waypoint Server
 
 This option assumes there is a Waypoint server running
-at `https://localhost:9702`. If you need to make any API changes to go along
+at `https://localhost:9702`, which you can verify by visiting https://localhost:9702 in the browser. 
+
+If you need to make any API changes to go along
 with frontend changes, or just wish to run the server locally, you can follow
 the instructions to run [Waypoint server locally](https://www.waypointproject.io/docs/server/run).
 
-Note: You'll need to visit the above address in the same browser session to
-accept the invalid certificate warning in your browser for this to work.
-
-- `ember serve local`
-- The app will be available at [http://localhost:4200](http://localhost:4200).
+- Visit https://localhost:9702, and accept the invalid certificate warning.
+- `ember serve local` 
+- The app will be available at [http://localhost:4200](http://localhost:4200). Make sure that you are in the same browser session (e.g. a new tab) where you accepted the invalid certificate warning above.
+- When prompted for a token, run `waypoint user token` in the command line, and enter the response. 
 
 If you need to build the server and run it locally, you'll want to stop the existing instance, build and reinstall it in docker:
 
