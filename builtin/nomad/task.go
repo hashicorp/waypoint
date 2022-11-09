@@ -263,9 +263,9 @@ func (p *TaskLauncher) StartTask(
 
 	// On-Demand runner specific configuration to start the task with
 	config := map[string]interface{}{
-		"image":   tli.OciUrl,
-		"args":    tli.Arguments,
-		"command": tli.Entrypoint,
+		"image":      tli.OciUrl,
+		"args":       tli.Arguments,
+		"entrypoint": tli.Entrypoint,
 	}
 
 	job.TaskGroups[0].Tasks[0].Config = config
