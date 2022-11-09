@@ -1,0 +1,4 @@
+```release-note:bug
+plugin/nomad: Update Nomad task launcher plugin to use `entrypoint` config - fixes
+pipeline exec steps run in Nomad.
+```
