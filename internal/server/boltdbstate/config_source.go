@@ -2,6 +2,7 @@ package boltdbstate
 
 import (
 	"context"
+	"strconv"
 	"strings"
 
 	"github.com/hashicorp/go-memdb"
@@ -103,16 +104,61 @@ func (s *State) configSourceGetMerged(
 	ws memdb.WatchSet,
 	req *pb.GetConfigSourceRequest,
 ) ([]*pb.ConfigSource, error) {
+	sources, err := s.configSourceGetExact(dbTxn, memTxn, ws, &pb.Ref_Global{}, req.Type)
+	if err != nil {
+		return nil, err
+	}
+
 	switch scope := req.Scope.(type) {
 	case *pb.GetConfigSourceRequest_Global:
-		return s.configSourceGetExact(dbTxn, memTxn, ws, scope.Global, req.Type)
+		return sources, nil
+
+	case *pb.GetConfigSourceRequest_Project:
+		// Project scope, grab our project scope vars and only those
+		sources, err = s.configSourceGetExact(dbTxn, memTxn, ws, scope.Project, req.Type)
+		if err != nil {
+			return nil, err
+		}
+
+	case *pb.GetConfigSourceRequest_Application:
+		sources, err = s.configSourceGetExact(dbTxn, memTxn, ws, scope.Application, req.Type)
+		if err != nil {
+			return nil, err
+		}
 
 	default:
 		panic("unknown scope")
 	}
 
-	// In the future, when we implement scoping, this is where we'd do merging.
-	// See the logic in config.go for more details.
+	// Filter based on the workspace if we have it set.
+	if req.Workspace != nil {
+		for key, source := range sources {
+			if source.Workspace != nil &&
+				!strings.EqualFold(source.Workspace.Workspace, req.Workspace.Workspace) {
+				sources[key] = nil
+			}
+
+		}
+	}
+
+	// Merge our merge set
+	merged := make(map[string]*pb.ConfigSource)
+	for _, source := range sources {
+		// Ignore nil since those are filtered out values.
+		if source == nil {
+			continue
+		}
+
+		merged[strconv.FormatUint(source.Hash, 10)] = source
+
+	}
+
+	result := make([]*pb.ConfigSource, 0, len(merged))
+	for _, v := range merged {
+		result = append(result, v)
+	}
+
+	return result, nil
 }
 
 // configSourceGetExact returns the list of config sources for a scope
@@ -127,12 +173,37 @@ func (s *State) configSourceGetExact(
 	// We have to get the correct iterator based on the scope. We check the
 	// scope and use the proper index to get the iterator here.
 	var iter memdb.ResultIterator
-	switch ref.(type) {
+	switch ref := ref.(type) {
 	case *pb.Ref_Global:
 		var err error
 		iter, err = memTxn.Get(
 			configSourceIndexTableName,
 			configSourceIndexIdIndexName+"_prefix",
+			typeVal,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+	case *pb.Ref_Project:
+		var err error
+		iter, err = memTxn.Get(
+			configSourceIndexTableName,
+			configIndexProjectIndexName,
+			ref.Project,
+			typeVal,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+	case *pb.Ref_Application:
+		var err error
+		iter, err = memTxn.Get(
+			configSourceIndexTableName,
+			configSourceIndexApplicationIndexName,
+			ref.Project,
+			ref.Application,
 			typeVal,
 		)
 		if err != nil {
@@ -169,9 +240,30 @@ func (s *State) configSourceGetExact(
 
 // configSourceIndexSet writes an index record for a single config var.
 func (s *State) configSourceIndexSet(txn *memdb.Txn, id []byte, value *pb.ConfigSource) error {
+	var project, application string
+	global := false
+
+	switch scope := value.Scope.(type) {
+	case *pb.ConfigSource_Application:
+		project = scope.Application.Project
+		application = scope.Application.Application
+
+	case *pb.ConfigSource_Project:
+		project = scope.Project.Project
+
+	case *pb.ConfigSource_Global:
+		global = true
+
+	default:
+		panic("unknown scope")
+	}
+
 	record := &configSourceIndexRecord{
-		Id:   string(id),
-		Type: value.Type,
+		Id:          string(id),
+		Project:     project,
+		Application: application,
+		Type:        value.Type,
+		Global:      global,
 	}
 
 	// If we have no value, we delete from the memdb index
@@ -220,18 +312,84 @@ func configSourceIndexSchema() *memdb.TableSchema {
 					Lowercase: true,
 				},
 			},
+
+			configSourceIndexGlobalIndexName: {
+				Name:         configSourceIndexGlobalIndexName,
+				AllowMissing: true,
+				Unique:       false,
+				Indexer: &memdb.CompoundIndex{
+					Indexes: []memdb.Indexer{
+						&memdb.BoolFieldIndex{
+							Field: "Global",
+						},
+
+						&memdb.StringFieldIndex{
+							Field:     "Type",
+							Lowercase: true,
+						},
+					},
+				},
+			},
+
+			configSourceIndexProjectIndexName: {
+				Name:         configSourceIndexProjectIndexName,
+				AllowMissing: true,
+				Unique:       false,
+				Indexer: &memdb.CompoundIndex{
+					Indexes: []memdb.Indexer{
+						&memdb.StringFieldIndex{
+							Field: "Project",
+						},
+
+						&memdb.StringFieldIndex{
+							Field:     "Type",
+							Lowercase: true,
+						},
+					},
+				},
+			},
+
+			configSourceIndexApplicationIndexName: {
+				Name:         configSourceIndexApplicationIndexName,
+				AllowMissing: true,
+				Unique:       false,
+				Indexer: &memdb.CompoundIndex{
+					Indexes: []memdb.Indexer{
+						&memdb.StringFieldIndex{
+							Field:     "Project",
+							Lowercase: true,
+						},
+
+						&memdb.StringFieldIndex{
+							Field:     "Application",
+							Lowercase: true,
+						},
+
+						&memdb.StringFieldIndex{
+							Field:     "Type",
+							Lowercase: true,
+						},
+					},
+				},
+			},
 		},
 	}
 }
 
 const (
-	configSourceIndexTableName   = "config-source-index"
-	configSourceIndexIdIndexName = "id"
+	configSourceIndexTableName            = "config-source-index"
+	configSourceIndexIdIndexName          = "id"
+	configSourceIndexGlobalIndexName      = "global"
+	configSourceIndexProjectIndexName     = "project"
+	configSourceIndexApplicationIndexName = "application"
 )
 
 type configSourceIndexRecord struct {
-	Id   string
-	Type string
+	Id          string
+	Project     string
+	Application string
+	Type        string
+	Global      bool
 }
 
 // isConfigSourceDelete returns true if the config var represents a deletion.
