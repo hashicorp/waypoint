@@ -186,3 +186,45 @@ func TestWorkspaceProjectConfigSource(t *testing.T) {
 		Project:     projectName,
 	}})
 }
+
+func TestMultipleGlobalConfigSources(t *testing.T) {
+	ctx := context.Background()
+	require := require.New(t)
+
+	s := TestState(t)
+	defer s.Close()
+
+	err := s.ConfigSourceSet(ctx, &pb.ConfigSource{
+		Delete:    false,
+		Scope:     &pb.ConfigSource_Global{Global: &pb.Ref_Global{}},
+		Workspace: &pb.Ref_Workspace{Workspace: "default"},
+		Type:      "test",
+	})
+
+	err = s.ConfigSourceSet(ctx, &pb.ConfigSource{
+		Delete:    false,
+		Scope:     &pb.ConfigSource_Global{Global: &pb.Ref_Global{}},
+		Workspace: &pb.Ref_Workspace{Workspace: "default"},
+		Type:      "test2",
+	})
+
+	require.NoError(err)
+
+	source, err := s.ConfigSourceGet(ctx, &pb.GetConfigSourceRequest{
+		Scope:     &pb.GetConfigSourceRequest_Global{Global: &pb.Ref_Global{}},
+		Workspace: &pb.Ref_Workspace{Workspace: "default"},
+	})
+
+	require.NoError(err)
+
+	// Ensure that since we created 2 global config sources, we get 2 back
+	require.True(len(source) == 2)
+
+	// Verify that the first one matches the type we specified
+	require.Equal(source[0].Type, "test")
+	require.Equal(source[0].Scope, &pb.ConfigSource_Global{Global: &pb.Ref_Global{}})
+
+	// Verify that the second one matches the type we specified
+	require.Equal(source[1].Type, "test2")
+	require.Equal(source[1].Scope, &pb.ConfigSource_Global{Global: &pb.Ref_Global{}})
+}
