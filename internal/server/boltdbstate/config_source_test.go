@@ -75,8 +75,12 @@ func TestProjectConfigSource(t *testing.T) {
 
 	require.NoError(err)
 	require.True(len(source) > 0)
-	require.Equal(source[0].Type, configSourceType)
-	require.Equal(source[0].Scope, &pb.ConfigSource_Project{Project: &pb.Ref_Project{Project: projectName}})
+	require.Equal(configSourceType, source[0].Type)
+	require.Equal(&pb.ConfigSource_Project{
+		Project: &pb.Ref_Project{
+			Project: projectName,
+		},
+	}, source[0].Scope)
 }
 
 func TestAppConfigSource(t *testing.T) {
@@ -126,11 +130,11 @@ func TestAppConfigSource(t *testing.T) {
 
 	require.NoError(err)
 	require.True(len(source) > 0)
-	require.Equal(source[0].Type, configSourceType)
-	require.Equal(source[0].Scope, &pb.ConfigSource_Application{Application: &pb.Ref_Application{
+	require.Equal(configSourceType, source[0].Type)
+	require.Equal(&pb.ConfigSource_Application{Application: &pb.Ref_Application{
 		Application: appName,
 		Project:     projectName,
-	}})
+	}}, source[0].Scope)
 }
 
 func TestWorkspaceProjectConfigSource(t *testing.T) {
@@ -180,11 +184,11 @@ func TestWorkspaceProjectConfigSource(t *testing.T) {
 
 	require.NoError(err)
 	require.True(len(source) > 0)
-	require.Equal(source[0].Type, configSourceType)
-	require.Equal(source[0].Scope, &pb.ConfigSource_Application{Application: &pb.Ref_Application{
+	require.Equal(configSourceType, source[0].Type)
+	require.Equal(&pb.ConfigSource_Application{Application: &pb.Ref_Application{
 		Application: appName,
 		Project:     projectName,
-	}})
+	}}, source[0].Scope)
 }
 
 func TestMultipleGlobalConfigSources(t *testing.T) {
@@ -221,10 +225,94 @@ func TestMultipleGlobalConfigSources(t *testing.T) {
 	require.True(len(source) == 2)
 
 	// Verify that the first one matches the type we specified
-	require.Equal(source[0].Type, "test")
-	require.Equal(source[0].Scope, &pb.ConfigSource_Global{Global: &pb.Ref_Global{}})
+	require.Equal("test", source[0].Type)
+	require.Equal(&pb.ConfigSource_Global{Global: &pb.Ref_Global{}}, source[0].Scope)
 
 	// Verify that the second one matches the type we specified
-	require.Equal(source[1].Type, "test2")
-	require.Equal(source[1].Scope, &pb.ConfigSource_Global{Global: &pb.Ref_Global{}})
+	require.Equal("test2", source[1].Type)
+	require.Equal(&pb.ConfigSource_Global{Global: &pb.Ref_Global{}}, source[1].Scope)
+}
+
+func TestGlobalProjectAndAppScope(t *testing.T) {
+	ctx := context.Background()
+	require := require.New(t)
+
+	s := TestState(t)
+	defer s.Close()
+
+	const projectName = "testproject"
+	const appName = "testapp"
+	const workspaceName = "default"
+	const configSourceType = "test"
+
+	err := s.ConfigSourceSet(ctx, &pb.ConfigSource{
+		Delete: false,
+		Scope: &pb.ConfigSource_Global{
+			Global: &pb.Ref_Global{},
+		},
+		Workspace: &pb.Ref_Workspace{
+			Workspace: workspaceName,
+		},
+		Type: configSourceType,
+	})
+
+	err = s.ConfigSourceSet(ctx, &pb.ConfigSource{
+		Delete: false,
+		Scope: &pb.ConfigSource_Project{
+			Project: &pb.Ref_Project{
+				Project: projectName,
+			}},
+		Workspace: &pb.Ref_Workspace{
+			Workspace: workspaceName,
+		},
+		Type: configSourceType,
+	})
+
+	err = s.ConfigSourceSet(ctx, &pb.ConfigSource{
+		Delete: false,
+		Scope: &pb.ConfigSource_Application{
+			Application: &pb.Ref_Application{
+				Application: appName,
+				Project:     projectName,
+			}},
+		Workspace: &pb.Ref_Workspace{
+			Workspace: workspaceName,
+		},
+		Type: configSourceType,
+	})
+
+	require.NoError(err)
+
+	source, err := s.ConfigSourceGet(ctx, &pb.GetConfigSourceRequest{
+		Scope: &pb.GetConfigSourceRequest_Application{
+			Application: &pb.Ref_Application{
+				Project:     projectName,
+				Application: appName,
+			}},
+		Workspace: &pb.Ref_Workspace{
+			Workspace: workspaceName,
+		},
+	})
+
+	require.NoError(err)
+
+	require.True(len(source) == 3)
+
+	// Verify that the first one matches the type we specified
+	require.Equal(configSourceType, source[0].Type)
+	require.Equal(&pb.ConfigSource_Global{
+		Global: &pb.Ref_Global{},
+	}, source[0].Scope)
+
+	// Verify that the second one matches the type we specified
+	require.Equal(configSourceType, source[1].Type)
+	require.Equal(&pb.ConfigSource_Project{Project: &pb.Ref_Project{
+		Project: projectName,
+	}}, source[1].Scope)
+
+	require.Equal(configSourceType, source[2].Type)
+	require.Equal(&pb.ConfigSource_Application{Application: &pb.Ref_Application{
+		Application: appName,
+		Project:     projectName,
+	}}, source[2].Scope)
 }
