@@ -115,16 +115,29 @@ func (s *State) configSourceGetMerged(
 
 	case *pb.GetConfigSourceRequest_Project:
 		// Project scope, grab our project scope vars and only those
-		sources, err = s.configSourceGetExact(dbTxn, memTxn, ws, scope.Project, req.Type)
+		projectSources, err := s.configSourceGetExact(dbTxn, memTxn, ws, scope.Project, req.Type)
 		if err != nil {
 			return nil, err
 		}
 
+		sources = append(sources, projectSources...)
+
 	case *pb.GetConfigSourceRequest_Application:
-		sources, err = s.configSourceGetExact(dbTxn, memTxn, ws, scope.Application, req.Type)
+		projectSources, err := s.configSourceGetExact(dbTxn, memTxn, ws, &pb.Ref_Project{
+			Project: scope.Application.Project,
+		}, req.Type)
 		if err != nil {
 			return nil, err
 		}
+
+		sources = append(sources, projectSources...)
+
+		appSources, err := s.configSourceGetExact(dbTxn, memTxn, ws, scope.Application, req.Type)
+		if err != nil {
+			return nil, err
+		}
+
+		sources = append(sources, appSources...)
 
 	default:
 		panic("unknown scope")
