@@ -2,6 +2,7 @@ package boltdbstate
 
 import (
 	"context"
+	"encoding/binary"
 	"strconv"
 	"strings"
 
@@ -69,17 +70,19 @@ func (s *State) configSourceSet(
 	memTxn *memdb.Txn,
 	value *pb.ConfigSource,
 ) error {
-	id := s.configSourceId(value)
-
 	// Write the hashed value of the config source. We use a map here so
 	// that it is easy for us to add more keys to the hash.
 	var err error
 	value.Hash, err = hashstructure.Hash(map[string]interface{}{
 		"config": value.Config,
+		"scope":  value.Scope,
+		"type":   value.Type,
 	}, hashstructure.FormatV2, nil)
 	if err != nil {
 		return err
 	}
+
+	id := s.configSourceId(value)
 
 	// Get the global bucket and write the value to it.
 	b := dbTxn.Bucket(configSourceBucket)
@@ -191,7 +194,8 @@ func (s *State) configSourceGetExact(
 		var err error
 		iter, err = memTxn.Get(
 			configSourceIndexTableName,
-			configSourceIndexIdIndexName+"_prefix",
+			configSourceIndexGlobalIndexName+"_prefix",
+			true,
 			typeVal,
 		)
 		if err != nil {
@@ -202,7 +206,7 @@ func (s *State) configSourceGetExact(
 		var err error
 		iter, err = memTxn.Get(
 			configSourceIndexTableName,
-			configIndexProjectIndexName,
+			configIndexProjectIndexName+"_prefix",
 			ref.Project,
 			typeVal,
 		)
@@ -214,7 +218,7 @@ func (s *State) configSourceGetExact(
 		var err error
 		iter, err = memTxn.Get(
 			configSourceIndexTableName,
-			configSourceIndexApplicationIndexName,
+			configSourceIndexApplicationIndexName+"_prefix",
 			ref.Project,
 			ref.Application,
 			typeVal,
@@ -305,11 +309,9 @@ func (s *State) configSourceIndexInit(dbTxn *bolt.Tx, memTxn *memdb.Txn) error {
 }
 
 func (s *State) configSourceId(v *pb.ConfigSource) []byte {
-	// For now the type is a unique ID. In the future when we introduce
-	// scoping we'll have to do something different. This ID is only used
-	// for the in-memory index so when we change this the server just needs
-	// to be restarted for the fix to stick.
-	return []byte(strings.ToLower(v.Type))
+	configSourceId := make([]byte, 8)
+	binary.LittleEndian.PutUint64(configSourceId, v.Hash)
+	return configSourceId
 }
 
 func configSourceIndexSchema() *memdb.TableSchema {
