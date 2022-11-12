@@ -3,7 +3,6 @@ package boltdbstate
 import (
 	"context"
 	"encoding/binary"
-	"strconv"
 	"strings"
 
 	"github.com/hashicorp/go-memdb"
@@ -70,19 +69,26 @@ func (s *State) configSourceSet(
 	memTxn *memdb.Txn,
 	value *pb.ConfigSource,
 ) error {
-	// Write the hashed value of the config source. We use a map here so
-	// that it is easy for us to add more keys to the hash.
-	var err error
-	value.Hash, err = hashstructure.Hash(map[string]interface{}{
-		"config": value.Config,
-		"scope":  value.Scope,
-		"type":   value.Type,
+	// The scope and type of a config source is used to establish a unique record
+	// in the config sources table.
+	idHash, err := hashstructure.Hash(map[string]interface{}{
+		"scope": value.Scope,
+		"type":  value.Type,
 	}, hashstructure.FormatV2, nil)
 	if err != nil {
 		return err
 	}
 
-	id := s.configSourceId(value)
+	id := s.configSourceId(idHash)
+
+	// Write the hashed value of the config source. We use a map here so
+	// that it is easy for us to add more keys to the hash.
+	value.Hash, err = hashstructure.Hash(map[string]interface{}{
+		"config": value.Config,
+	}, hashstructure.FormatV2, nil)
+	if err != nil {
+		return err
+	}
 
 	// Get the global bucket and write the value to it.
 	b := dbTxn.Bucket(configSourceBucket)
@@ -153,28 +159,10 @@ func (s *State) configSourceGetMerged(
 				!strings.EqualFold(source.Workspace.Workspace, req.Workspace.Workspace) {
 				sources[key] = nil
 			}
-
 		}
 	}
 
-	// Merge our merge set
-	merged := make(map[string]*pb.ConfigSource)
-	for _, source := range sources {
-		// Ignore nil since those are filtered out values.
-		if source == nil {
-			continue
-		}
-
-		merged[strconv.FormatUint(source.Hash, 10)] = source
-
-	}
-
-	result := make([]*pb.ConfigSource, 0, len(merged))
-	for _, v := range merged {
-		result = append(result, v)
-	}
-
-	return result, nil
+	return sources, nil
 }
 
 // configSourceGetExact returns the list of config sources for a scope
@@ -208,6 +196,7 @@ func (s *State) configSourceGetExact(
 			configSourceIndexTableName,
 			configIndexProjectIndexName+"_prefix",
 			ref.Project,
+			true,
 			typeVal,
 		)
 		if err != nil {
@@ -257,16 +246,18 @@ func (s *State) configSourceGetExact(
 
 // configSourceIndexSet writes an index record for a single config var.
 func (s *State) configSourceIndexSet(txn *memdb.Txn, id []byte, value *pb.ConfigSource) error {
-	var project, application string
+	var projectName, applicationName string
 	global := false
+	project := false
 
 	switch scope := value.Scope.(type) {
 	case *pb.ConfigSource_Application:
-		project = scope.Application.Project
-		application = scope.Application.Application
+		projectName = scope.Application.Project
+		applicationName = scope.Application.Application
 
 	case *pb.ConfigSource_Project:
-		project = scope.Project.Project
+		projectName = scope.Project.Project
+		project = true
 
 	case *pb.ConfigSource_Global:
 		global = true
@@ -276,11 +267,12 @@ func (s *State) configSourceIndexSet(txn *memdb.Txn, id []byte, value *pb.Config
 	}
 
 	record := &configSourceIndexRecord{
-		Id:          string(id),
-		Project:     project,
-		Application: application,
-		Type:        value.Type,
-		Global:      global,
+		Id:              string(id),
+		ProjectName:     projectName,
+		ApplicationName: applicationName,
+		Type:            value.Type,
+		Global:          global,
+		Project:         project,
 	}
 
 	// If we have no value, we delete from the memdb index
@@ -308,9 +300,9 @@ func (s *State) configSourceIndexInit(dbTxn *bolt.Tx, memTxn *memdb.Txn) error {
 	})
 }
 
-func (s *State) configSourceId(v *pb.ConfigSource) []byte {
+func (s *State) configSourceId(idHash uint64) []byte {
 	configSourceId := make([]byte, 8)
-	binary.LittleEndian.PutUint64(configSourceId, v.Hash)
+	binary.LittleEndian.PutUint64(configSourceId, idHash)
 	return configSourceId
 }
 
@@ -353,6 +345,11 @@ func configSourceIndexSchema() *memdb.TableSchema {
 				Indexer: &memdb.CompoundIndex{
 					Indexes: []memdb.Indexer{
 						&memdb.StringFieldIndex{
+							Field:     "ProjectName",
+							Lowercase: true,
+						},
+
+						&memdb.BoolFieldIndex{
 							Field: "Project",
 						},
 
@@ -371,12 +368,12 @@ func configSourceIndexSchema() *memdb.TableSchema {
 				Indexer: &memdb.CompoundIndex{
 					Indexes: []memdb.Indexer{
 						&memdb.StringFieldIndex{
-							Field:     "Project",
+							Field:     "ProjectName",
 							Lowercase: true,
 						},
 
 						&memdb.StringFieldIndex{
-							Field:     "Application",
+							Field:     "ApplicationName",
 							Lowercase: true,
 						},
 
@@ -400,11 +397,12 @@ const (
 )
 
 type configSourceIndexRecord struct {
-	Id          string
-	Project     string
-	Application string
-	Type        string
-	Global      bool
+	Id              string
+	ProjectName     string
+	ApplicationName string
+	Type            string
+	Global          bool
+	Project         bool
 }
 
 // isConfigSourceDelete returns true if the config var represents a deletion.
