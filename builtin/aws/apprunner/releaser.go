@@ -76,8 +76,8 @@ func (r *Releaser) Release(
 
 		// do nothing as there is no operation to wait for
 	} else {
-		// Wait for 5 minutes
-		d := time.Now().Add(time.Minute * time.Duration(5))
+		// Wait for X-minutes
+		d := time.Now().Add(DEFAULT_TIMEOUT)
 		ctx, cancel := context.WithDeadline(ctx, d)
 		defer cancel()
 
@@ -182,6 +182,8 @@ See [deployment pruning](/docs/lifecycle/release#deployment-pruning) for more in
 
 	return doc, nil
 }
+
+const DEFAULT_TIMEOUT = time.Minute * time.Duration(10)
 
 var (
 	_ component.Configurable   = (*Releaser)(nil)

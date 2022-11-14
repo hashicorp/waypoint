@@ -41,8 +41,12 @@ type Deployment struct {
 	ServiceUrl string `protobuf:"bytes,5,opt,name=service_url,json=serviceUrl,proto3" json:"service_url,omitempty"`
 	// The current state of the App Runner service.
 	Status string `protobuf:"bytes,6,opt,name=status,proto3" json:"status,omitempty"`
-	// OperationId can be passed to the following release lifecycle,
-	// which can wait/poll the operation status.
+	// The Deploy lifecycle will either CreateService (new)
+	// or UpdateService (existing); Both will provide an OperationId.
+	//
+	// OperationId can be passed to the following Release lifecycle,
+	// which can wait/poll the operation status, as well as see the
+	// operation type, like CREATE_SERVICE or ____
 	OperationId string `protobuf:"bytes,7,opt,name=operation_id,json=operationId,proto3" json:"operation_id,omitempty"`
 }
 

@@ -56,7 +56,7 @@ func (r *Releaser) Destroy(
 	step.Done()
 
 	step = sg.Add("App Runner::Waiting for Delete Service to succeed...")
-	d := time.Now().Add(time.Minute * time.Duration(5))
+	d := time.Now().Add(DEFAULT_TIMEOUT)
 	ctx, cancel := context.WithDeadline(ctx, d)
 	defer cancel()
 	ticker := time.NewTicker(5 * time.Second)
