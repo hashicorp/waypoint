@@ -3,14 +3,17 @@ package boltdbstate
 import (
 	"context"
 	"encoding/binary"
+	"sort"
 	"strings"
 
-	"github.com/hashicorp/go-memdb"
 	"github.com/mitchellh/hashstructure/v2"
 	bolt "go.etcd.io/bbolt"
 	"google.golang.org/protobuf/proto"
 
+	"github.com/hashicorp/go-memdb"
+
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
+	serversort "github.com/hashicorp/waypoint/pkg/server/sort"
 )
 
 var configSourceBucket = []byte("config_source")
@@ -169,6 +172,9 @@ func (s *State) configSourceGetMerged(
 			result = append(result, source)
 		}
 	}
+
+	sort.Sort(serversort.ConfigSource(result))
+
 	return result, nil
 }
 
