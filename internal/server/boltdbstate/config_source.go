@@ -72,8 +72,9 @@ func (s *State) configSourceSet(
 	// The scope and type of a config source is used to establish a unique record
 	// in the config sources table.
 	idHash, err := hashstructure.Hash(map[string]interface{}{
-		"scope": value.Scope,
-		"type":  value.Type,
+		"scope":     value.Scope,
+		"type":      value.Type,
+		"workspace": value.Workspace,
 	}, hashstructure.FormatV2, nil)
 	if err != nil {
 		return err
@@ -162,7 +163,13 @@ func (s *State) configSourceGetMerged(
 		}
 	}
 
-	return sources, nil
+	var result []*pb.ConfigSource
+	for _, source := range sources {
+		if source != nil {
+			result = append(result, source)
+		}
+	}
+	return result, nil
 }
 
 // configSourceGetExact returns the list of config sources for a scope

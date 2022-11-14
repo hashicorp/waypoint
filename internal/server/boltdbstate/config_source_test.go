@@ -316,3 +316,138 @@ func TestGlobalProjectAndAppScope(t *testing.T) {
 		Project:     projectName,
 	}}, source[2].Scope)
 }
+
+func TestProjectAndAppConfigSource(t *testing.T) {
+	ctx := context.Background()
+	require := require.New(t)
+
+	s := TestState(t)
+	defer s.Close()
+
+	const projectName = "testproject"
+	const appName = "testapp"
+	const workspaceName = "default"
+	const configSourceType = "test"
+
+	err := s.ProjectPut(ctx, &pb.Project{
+		Name: "test-project",
+		Applications: []*pb.Application{
+			{
+				Project: &pb.Ref_Project{Project: projectName},
+				Name:    appName,
+			},
+		},
+	})
+
+	err = s.ConfigSourceSet(ctx, &pb.ConfigSource{
+		Delete: false,
+		Scope: &pb.ConfigSource_Project{Project: &pb.Ref_Project{
+			Project: projectName,
+		}},
+		Workspace: &pb.Ref_Workspace{Workspace: workspaceName},
+		Type:      configSourceType,
+	})
+
+	err = s.ConfigSourceSet(ctx, &pb.ConfigSource{
+		Delete: false,
+		Scope: &pb.ConfigSource_Application{Application: &pb.Ref_Application{
+			Application: appName,
+			Project:     projectName,
+		}},
+		Workspace: &pb.Ref_Workspace{Workspace: workspaceName},
+		Type:      configSourceType,
+	})
+
+	require.NoError(err)
+
+	source, err := s.ConfigSourceGet(ctx, &pb.GetConfigSourceRequest{
+		Scope: &pb.GetConfigSourceRequest_Application{
+			Application: &pb.Ref_Application{
+				Application: appName,
+				Project:     projectName,
+			},
+		},
+		Workspace: &pb.Ref_Workspace{Workspace: workspaceName},
+		Type:      configSourceType,
+	})
+
+	require.NoError(err)
+	require.True(len(source) == 2)
+
+	require.Equal(configSourceType, source[0].Type)
+	require.Equal(&pb.ConfigSource_Project{
+		Project: &pb.Ref_Project{
+			Project: projectName,
+		}}, source[0].Scope)
+
+	require.Equal(configSourceType, source[1].Type)
+	require.Equal(&pb.ConfigSource_Application{Application: &pb.Ref_Application{
+		Application: appName,
+		Project:     projectName,
+	}}, source[1].Scope)
+}
+
+func TestMultipleWorkspaceApplicationConfigSources(t *testing.T) {
+	ctx := context.Background()
+	require := require.New(t)
+
+	s := TestState(t)
+	defer s.Close()
+
+	const projectName = "testproject"
+	const appName = "testapp"
+	const workspaceName = "not-default"
+	const workspaceName2 = "the-default"
+	const configSourceType = "test"
+
+	err := s.ProjectPut(ctx, &pb.Project{
+		Name: "test-project",
+		Applications: []*pb.Application{
+			{
+				Project: &pb.Ref_Project{Project: projectName},
+				Name:    appName,
+			},
+		},
+	})
+
+	err = s.ConfigSourceSet(ctx, &pb.ConfigSource{
+		Delete: false,
+		Scope: &pb.ConfigSource_Application{Application: &pb.Ref_Application{
+			Application: appName,
+			Project:     projectName,
+		}},
+		Workspace: &pb.Ref_Workspace{Workspace: workspaceName},
+		Type:      configSourceType,
+	})
+
+	err = s.ConfigSourceSet(ctx, &pb.ConfigSource{
+		Delete: false,
+		Scope: &pb.ConfigSource_Application{Application: &pb.Ref_Application{
+			Application: appName,
+			Project:     projectName,
+		}},
+		Workspace: &pb.Ref_Workspace{Workspace: workspaceName2},
+		Type:      configSourceType,
+	})
+
+	require.NoError(err)
+
+	sources, err := s.ConfigSourceGet(ctx, &pb.GetConfigSourceRequest{
+		Scope: &pb.GetConfigSourceRequest_Application{
+			Application: &pb.Ref_Application{
+				Application: appName,
+				Project:     projectName,
+			},
+		},
+		Workspace: &pb.Ref_Workspace{Workspace: workspaceName},
+		Type:      configSourceType,
+	})
+
+	require.NoError(err)
+	require.True(len(sources) == 1)
+	require.Equal(configSourceType, sources[0].Type)
+	require.Equal(&pb.ConfigSource_Application{Application: &pb.Ref_Application{
+		Application: appName,
+		Project:     projectName,
+	}}, sources[0].Scope)
+}
