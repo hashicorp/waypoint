@@ -161,6 +161,20 @@ func (p *Platform) Deploy(
 				Cpu:    aws.String(strconv.FormatInt(cpu, 10)),
 				Memory: aws.String(strconv.FormatInt(mem, 10)),
 			},
+			SourceConfiguration: &apprunner.SourceConfiguration{
+				AuthenticationConfiguration: &apprunner.AuthenticationConfiguration{
+					AccessRoleArn: aws.String(roleArn),
+				},
+				ImageRepository: &apprunner.ImageRepository{
+					ImageRepositoryType: aws.String(apprunner.ImageRepositoryTypeEcr),
+					ImageIdentifier:     aws.String(img.Name()),
+					ImageConfiguration: &apprunner.ImageConfiguration{
+						Port:                        aws.String(strconv.Itoa(port)),
+						RuntimeEnvironmentVariables: envVars,
+					},
+				},
+				AutoDeploymentsEnabled: aws.Bool(false),
+			},
 		})
 
 		if err != nil {
