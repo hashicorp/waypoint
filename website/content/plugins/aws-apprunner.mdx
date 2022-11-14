@@ -66,6 +66,11 @@ variable "tag" {
 }
 ```
 
+!> Due to Waypoint's current behavior to prune previous deployments it is recommended
+to always use the `-prune=false` flag to prevent subsequent `waypoint up`'s from accidentally
+tearing down the single AppRunner service. Default pruning behavior may change in the future.
+See https://github.com/hashicorp/waypoint/issues/4035
+
 ## Compatible Builders
 
 Waypoint offers two built-in configurations that _just work_ with AWS App Runner:
