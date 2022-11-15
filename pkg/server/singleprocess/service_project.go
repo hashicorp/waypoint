@@ -92,7 +92,11 @@ func (s *Service) ListProjects(
 	ctx context.Context,
 	req *pb.ListProjectsRequest,
 ) (*pb.ListProjectsResponse, error) {
-	result, paginationOptions, err := s.state(ctx).ProjectList(ctx, req.PaginationOptions)
+	if err := serverptypes.ValidateListProjectsRequest(req); err != nil {
+		return nil, err
+	}
+
+	result, pagination, err := s.state(ctx).ProjectList(ctx, req.Pagination)
 	if err != nil {
 		return nil, hcerr.Externalize(
 			hclog.FromContext(ctx),
@@ -101,7 +105,7 @@ func (s *Service) ListProjects(
 		)
 	}
 
-	return &pb.ListProjectsResponse{Projects: result}, nil
+	return &pb.ListProjectsResponse{Projects: result, Pagination: pagination}, nil
 }
 
 func (s *Service) DestroyProject(

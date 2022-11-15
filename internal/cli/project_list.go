@@ -29,7 +29,7 @@ func (c *ProjectListCommand) Run(args []string) int {
 		return 1
 	}
 
-	resp, err := c.project.Client().ListProjects(c.Ctx, &pb.ListProjectsRequest{PaginationOptions: &pb.PaginationRequest{}})
+	resp, err := c.project.Client().ListProjects(c.Ctx, &pb.ListProjectsRequest{Pagination: &pb.PaginationRequest{}})
 	if err != nil {
 		c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 		return 1

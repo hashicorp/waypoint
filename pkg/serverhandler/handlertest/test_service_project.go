@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	empty "google.golang.org/protobuf/types/known/emptypb"
 
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	"github.com/hashicorp/waypoint/pkg/server/ptypes"
@@ -84,10 +83,19 @@ func TestServiceProject(t *testing.T, factory Factory) {
 
 		// Lists all projects
 		{
-			resp, err := client.ListProjects(ctx, &empty.Empty{})
+			resp, err := client.ListProjects(ctx, &pb.ListProjectsRequest{})
 			require.NoError(err)
 			require.NotNil(resp)
 			require.Len(resp.Projects, 1)
+		}
+
+		// Returns an error if both PreviousPageToken & NextPageToken are set
+		{
+			resp, err := client.ListProjects(ctx, &pb.ListProjectsRequest{
+				Pagination: ptypes.TestPaginationRequest(t, &pb.PaginationRequest{PreviousPageToken: "lol", NextPageToken: "LOL"}),
+			})
+			require.Error(err)
+			require.Nil(resp)
 		}
 	})
 

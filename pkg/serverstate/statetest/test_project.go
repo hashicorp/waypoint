@@ -2,6 +2,9 @@ package statetest
 
 import (
 	"context"
+	"encoding/base64"
+	"fmt"
+	"math/rand"
 	"strings"
 	"testing"
 	"time"
@@ -12,6 +15,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	"github.com/hashicorp/waypoint/internal/pkg/jsonpb"
+	"github.com/hashicorp/waypoint/pkg/pagination"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	serverptypes "github.com/hashicorp/waypoint/pkg/server/ptypes"
 )
@@ -25,6 +29,7 @@ func init() {
 		TestProjectGetSetAllProperties,
 		TestProjectGetSetAllPropertiesSansVariables,
 		TestProjectCanTransitionDataSource,
+		TestProjectPagination,
 	}
 }
 
@@ -86,7 +91,7 @@ func TestProject(t *testing.T, factory Factory, restartF RestartFactory) {
 
 		// List
 		{
-			resp, err := s.ProjectList(ctx)
+			resp, _, err := s.ProjectList(ctx, &pb.PaginationRequest{})
 			require.NoError(err)
 			require.Len(resp, 2)
 		}
@@ -181,10 +186,242 @@ func TestProject(t *testing.T, factory Factory, restartF RestartFactory) {
 
 		// List
 		{
-			resp, err := s.ProjectList(ctx)
+			resp, _, err := s.ProjectList(ctx, &pb.PaginationRequest{})
 			require.NoError(err)
 			require.Len(resp, 0)
 		}
+	})
+}
+
+func TestProjectPagination(t *testing.T, factory Factory, restartF RestartFactory) {
+	ctx := context.Background()
+	require := require.New(t)
+	s := factory(t)
+	defer s.Close()
+	// a b c d e
+	// f g h i j
+	// k l m n o
+	// p q r s t
+	// u v w x y
+	// z
+	startChar := 'a'
+	endChar := 'm'
+	projectCount := endChar - startChar + 1
+	var chars []string
+
+	// Generate randomized projects
+	for char := startChar; char <= endChar; char++ {
+		chars = append(chars, fmt.Sprintf("%c", char))
+	}
+	rand.Seed(time.Now().UnixNano())
+	rand.Shuffle(len(chars), func(i, j int) {
+		chars[i], chars[j] = chars[j], chars[i]
+	})
+	for _, char := range chars {
+		name := char
+		err := s.ProjectPut(ctx, serverptypes.TestProject(t, &pb.Project{
+			Name: name,
+		}))
+		require.NoError(err)
+	}
+
+	t.Run("ProjectList", func(t *testing.T) {
+		t.Run(fmt.Sprintf("works with nil for compatibility and returns all %d results", projectCount), func(t *testing.T) {
+			{
+				resp, _, err := s.ProjectList(ctx, nil)
+				require.NoError(err)
+				require.Len(resp, int(endChar-startChar)+1)
+			}
+		})
+
+		t.Run("returns 400 Bad Request if both nextPageToken and prevPageToken are set", func(t *testing.T) {
+			nextPageToken, _ := pagination.EncodeAndSerializePageToken("key", "lol")
+			prevPageToken, _ := pagination.EncodeAndSerializePageToken("key", "lol")
+			_, _, err := s.ProjectList(
+				ctx,
+				serverptypes.TestPaginationRequest(t, &pb.PaginationRequest{
+					PageSize:          5,
+					NextPageToken:     nextPageToken,
+					PreviousPageToken: prevPageToken,
+				}),
+			)
+			require.Error(err)
+			require.Equal(codes.InvalidArgument, status.Code(err))
+			require.Contains(err.Error(), "Only one of NextPageToken or PreviousPageToken can be set.")
+		})
+
+		t.Run("returns 400 Bad Request if either pagination token is incorrectly formatted", func(t *testing.T) {
+			_, _, err := s.ProjectList(
+				ctx,
+				serverptypes.TestPaginationRequest(t, &pb.PaginationRequest{PageSize: 5, NextPageToken: "thisIsNotBase64Encoded"}),
+			)
+			require.Error(err)
+			require.Equal(codes.InvalidArgument, status.Code(err))
+			require.Contains(err.Error(), "Incorrectly formatted pagination token.")
+
+			encodedPrevPageToken := base64.StdEncoding.EncodeToString([]byte("incorrectlyFormattedToken"))
+			_, _, err = s.ProjectList(
+				ctx,
+				serverptypes.TestPaginationRequest(t, &pb.PaginationRequest{PageSize: 5, PreviousPageToken: encodedPrevPageToken}),
+			)
+			require.Error(err)
+			require.Equal(codes.InvalidArgument, status.Code(err))
+			require.Contains(err.Error(), "Incorrectly formatted pagination token.")
+		})
+
+		t.Run("returns page 1/3 (5 results: a-e) + nextPageToken, without previousPageToken", func(t *testing.T) {
+			resp, paginationResponse, err := s.ProjectList(
+				ctx,
+				serverptypes.TestPaginationRequest(t, &pb.PaginationRequest{PageSize: 5}),
+			)
+			require.NoError(err)
+			require.Len(resp, 5)
+			expectedPageToken, _ := pagination.EncodeAndSerializePageToken("name", "e")
+			require.Equal(expectedPageToken, paginationResponse.NextPageToken)
+			require.Empty(paginationResponse.PreviousPageToken)
+		})
+
+		t.Run("returns page 2/3 (5 results: f-j) with correct nextPageToken & previousPageToken", func(t *testing.T) {
+			nextPageToken, _ := pagination.EncodeAndSerializePageToken("name", "e")
+			resp, paginationResponse, err := s.ProjectList(
+				ctx,
+				serverptypes.TestPaginationRequest(t, &pb.PaginationRequest{PageSize: 5, NextPageToken: nextPageToken}),
+			)
+			require.NoError(err)
+			require.Len(resp, 5)
+			expectedPrevPageToken, _ := pagination.EncodeAndSerializePageToken("name", "f")
+			require.Equal(expectedPrevPageToken, paginationResponse.PreviousPageToken)
+			expectedNextPageToken, _ := pagination.EncodeAndSerializePageToken("name", "j")
+			require.Equal(expectedNextPageToken, paginationResponse.NextPageToken)
+		})
+
+		t.Run("returns page 3/3 (3 results: k-m) + previousPageToken, without nextPageToken", func(t *testing.T) {
+			nextPageToken, _ := pagination.EncodeAndSerializePageToken("name", "j")
+			resp, paginationResponse, err := s.ProjectList(
+				ctx,
+				serverptypes.TestPaginationRequest(t, &pb.PaginationRequest{PageSize: 5, NextPageToken: nextPageToken}),
+			)
+			require.NoError(err)
+			require.Len(resp, 3)
+			expectedPrevPageToken, _ := pagination.EncodeAndSerializePageToken("name", "k")
+			require.Equal(expectedPrevPageToken, paginationResponse.PreviousPageToken)
+			require.Empty(paginationResponse.NextPageToken)
+		})
+
+		t.Run("returns page 2/3 (5 results: f-j) with correct previousPageToken & nextPageToken", func(t *testing.T) {
+			prevPageToken, _ := pagination.EncodeAndSerializePageToken("name", "k")
+			resp, paginationResponse, err := s.ProjectList(
+				ctx,
+				serverptypes.TestPaginationRequest(t, &pb.PaginationRequest{PageSize: 5, PreviousPageToken: prevPageToken}),
+			)
+			require.NoError(err)
+			require.Len(resp, 5)
+			expectedPrevPageToken, _ := pagination.EncodeAndSerializePageToken("name", "f")
+			require.Equal(expectedPrevPageToken, paginationResponse.PreviousPageToken)
+			expectedNextPageToken, _ := pagination.EncodeAndSerializePageToken("name", "j")
+			require.Equal(expectedNextPageToken, paginationResponse.NextPageToken)
+		})
+
+		t.Run("returns page 2/3 (5 results: g-j) with correct previousPageToken & nextPageToken after insertion that affects page results", func(t *testing.T) {
+			insertedProjectName := "ha"
+			err := s.ProjectPut(ctx, serverptypes.TestProject(t, &pb.Project{
+				Name: insertedProjectName,
+			}))
+			require.NoError(err)
+			// a b c d  e
+			// f g h ha i
+			// j k l m  n
+			// o p q r  s
+			// t u v w  x
+			// y z
+			prevPageToken, _ := pagination.EncodeAndSerializePageToken("name", "k")
+			resp, paginationResponse, err := s.ProjectList(
+				ctx,
+				serverptypes.TestPaginationRequest(t, &pb.PaginationRequest{PageSize: 5, PreviousPageToken: prevPageToken}),
+			)
+			require.NoError(err)
+			require.Len(resp, 5)
+			expectedPrevPageToken, _ := pagination.EncodeAndSerializePageToken("name", "g")
+			require.Equal(expectedPrevPageToken, paginationResponse.PreviousPageToken)
+			expectedNextPageToken, _ := pagination.EncodeAndSerializePageToken("name", "j")
+			require.Equal(expectedNextPageToken, paginationResponse.NextPageToken)
+
+			err = s.ProjectDelete(ctx, &pb.Ref_Project{Project: insertedProjectName})
+			require.NoError(err)
+		})
+
+		t.Run("returns page 2/3 (5 results: f-j) with correct previousPageToken & nextPageToken after insertion that shouldn't affect page results", func(t *testing.T) {
+			insertedProjectName := "ab"
+			err := s.ProjectPut(
+				ctx,
+				serverptypes.TestProject(t, &pb.Project{
+					Name: insertedProjectName,
+				}))
+			require.NoError(err)
+			// a ab b c  d
+			// e f  g h  i
+			// j k  l m  n
+			// o p  q r  s
+			// t u  v w  x
+			// y z
+
+			prevPageToken, _ := pagination.EncodeAndSerializePageToken("name", "k")
+			resp, paginationResponse, err := s.ProjectList(
+				ctx,
+				serverptypes.TestPaginationRequest(t, &pb.PaginationRequest{PageSize: 5, PreviousPageToken: prevPageToken}),
+			)
+			require.NoError(err)
+			require.Len(resp, 5)
+			expectedPrevPageToken, _ := pagination.EncodeAndSerializePageToken("name", "f")
+			require.Equal(expectedPrevPageToken, paginationResponse.PreviousPageToken)
+			expectedNextPageToken, _ := pagination.EncodeAndSerializePageToken("name", "j")
+			require.Equal(expectedNextPageToken, paginationResponse.NextPageToken)
+
+			err = s.ProjectDelete(ctx, &pb.Ref_Project{Project: insertedProjectName})
+			require.NoError(err)
+		})
+
+		t.Run("returns page 2/2 (5 results: f-j) with previousPageToken & null nextPageToken", func(t *testing.T) {
+			// a b c d e
+			// f g h i j
+			// k l m
+			deleteFromChar := 'k' // delete k - m
+			for char := deleteFromChar; char <= endChar; char++ {
+				err := s.ProjectDelete(ctx, &pb.Ref_Project{Project: fmt.Sprintf("%c", char)})
+				require.NoError(err)
+			}
+
+			nextPageToken, _ := pagination.EncodeAndSerializePageToken("name", "e")
+			resp, paginationResponse, err := s.ProjectList(
+				ctx,
+				serverptypes.TestPaginationRequest(t, &pb.PaginationRequest{PageSize: 5, NextPageToken: nextPageToken}),
+			)
+			require.NoError(err)
+			require.Len(resp, 5)
+			expectedPrevPageToken, _ := pagination.EncodeAndSerializePageToken("name", "f")
+			require.Equal(expectedPrevPageToken, paginationResponse.PreviousPageToken)
+			require.Empty(paginationResponse.NextPageToken)
+		})
+
+		t.Run("returns page 1/1 (5 results: a-e) with null previousPageToken & nextPageToken", func(t *testing.T) {
+			// a b c d e
+			// delete f - j
+			deleteFromChar := 'f'
+			endChar := 'j'
+			for char := deleteFromChar; char <= endChar; char++ {
+				err := s.ProjectDelete(ctx, &pb.Ref_Project{Project: fmt.Sprintf("%c", char)})
+				require.NoError(err)
+			}
+
+			resp, paginationResponse, err := s.ProjectList(
+				ctx,
+				serverptypes.TestPaginationRequest(t, &pb.PaginationRequest{PageSize: 5}),
+			)
+			require.NoError(err)
+			require.Len(resp, 5)
+			require.Empty(paginationResponse.PreviousPageToken)
+			require.Empty(paginationResponse.NextPageToken)
+		})
 	})
 }
 
