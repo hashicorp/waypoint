@@ -1,0 +1,4 @@
+```release-note:bug
+plugin/vault: Fix usage of dynamic secrets from Vault for dynamic Waypoint app
+config.
+```
