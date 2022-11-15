@@ -38,5 +38,6 @@ Configuration for this command is global. The "-app", "-project", and
 #### Command Options
 
 - `-type=<string>` - Dynamic source type to look up, such as 'vault'.
+- `-scope=<string>` - The scope for this configuration source. The configuration source will only appear within this scope. This can be one of 'global', 'project', or 'app'. The default is project.
 
 @include "commands/config-source-get_more.mdx"

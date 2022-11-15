@@ -189,9 +189,10 @@ func (s *Service) EntrypointConfig(
 			// all down. In the future we may want to consider filtering this
 			// by only the types we actually need above.
 			sources, err := s.state(ctx).ConfigSourceGetWatch(ctx, &pb.GetConfigSourceRequest{
-				Scope: &pb.GetConfigSourceRequest_Global{
-					Global: &pb.Ref_Global{},
+				Scope: &pb.GetConfigSourceRequest_Application{
+					Application: deployment.Application,
 				},
+				Workspace: deployment.Workspace,
 			}, ws)
 			if err != nil {
 				return hcerr.Externalize(
