@@ -439,11 +439,18 @@ func (s *Service) RunnerConfig(
 			// config sourcers that are needed by vars. We cannot do that because
 			// waypoint.hcl config can now source dynamic config too and we can't
 			// know those in advance perfectly. Always send down all config sources.
-			sources, err := s.state(ctx).ConfigSourceGetWatch(&pb.GetConfigSourceRequest{
+			getConfigSourceRequest := &pb.GetConfigSourceRequest{
 				Scope: &pb.GetConfigSourceRequest_Global{
 					Global: &pb.Ref_Global{},
 				},
-			}, ws)
+			}
+			if job != nil {
+				getConfigSourceRequest.Workspace = job.Workspace
+				getConfigSourceRequest.Scope = &pb.GetConfigSourceRequest_Application{
+					Application: job.Application,
+				}
+			}
+			sources, err := s.state(ctx).ConfigSourceGetWatch(ctx, getConfigSourceRequest, ws)
 			if err != nil {
 				return hcerr.Externalize(log, err, "failed to get the configuration for a dynamic source plugin")
 			}
@@ -552,10 +559,11 @@ func (s *Service) RunnerJobStream(
 	log = log.With("job_id", job.Id)
 
 	// Load config sourcers to send along with the job assignment
-	cfgSrcs, err := s.state(ctx).ConfigSourceGetWatch(&pb.GetConfigSourceRequest{
-		Scope: &pb.GetConfigSourceRequest_Global{
-			Global: &pb.Ref_Global{},
+	cfgSrcs, err := s.state(ctx).ConfigSourceGetWatch(ctx, &pb.GetConfigSourceRequest{
+		Scope: &pb.GetConfigSourceRequest_Application{
+			Application: job.Application,
 		},
+		Workspace: job.Workspace,
 	}, nil)
 	if err != nil {
 		return hcerr.Externalize(log, err, "failed to get the configuration for a dynamic source plugin to send with job assignment")
