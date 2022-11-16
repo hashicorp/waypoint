@@ -7,7 +7,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/mitchellh/mapstructure"
 	dockerparser "github.com/novln/docker-parser"
 	"helm.sh/helm/v3/pkg/action"
@@ -18,6 +17,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
 
+	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/builtin/k8s"
 	"github.com/hashicorp/waypoint/internal/clierrors"
 	"github.com/hashicorp/waypoint/internal/installutil"
@@ -98,7 +98,11 @@ func (i *K8sRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) err
 		version = *tags[0].Name
 	}
 
-	path, err := client.LocateChart("https://github.com/hashicorp/waypoint-helm/archive/refs/tags/"+version+".tar.gz", settings)
+	chartLocation := "https://github.com/hashicorp/waypoint-helm/archive/refs/tags/" + version + ".tar.gz"
+	if i.Config.HelmRef != "" {
+		chartLocation = "https://github.com/hashicorp/waypoint-helm/tarball/" + i.Config.HelmRef
+	}
+	path, err := client.LocateChart(chartLocation, settings)
 	if err != nil {
 		opts.UI.Output("Unable to locate Waypoint helm chart.", terminal.WithErrorStyle())
 		return err
@@ -213,6 +217,13 @@ func (i *K8sRunnerInstaller) InstallFlags(set *flag.Set) {
 		Target: &i.Config.Version,
 		Usage: "The version of the Helm chart to use for the Waypoint runner install. " +
 			"The required version number format is: 'vX.Y.Z'.",
+	})
+
+	set.StringVar(&flag.StringVar{
+		Name:   "k8s-helm-ref",
+		Target: &i.Config.HelmRef,
+		Usage: "The git ref of the Helm chart to use for the Waypoint runner install. " +
+			"The ref may also be a branch name like 'main'. Takes precedent over -k8s-helm-version.",
 	})
 
 	set.StringVar(&flag.StringVar{

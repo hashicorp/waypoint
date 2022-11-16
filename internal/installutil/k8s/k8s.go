@@ -6,19 +6,21 @@ import (
 	"time"
 
 	"github.com/hashicorp/go-hclog"
-	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
-	"github.com/hashicorp/waypoint/internal/clierrors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
+
+	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
+	"github.com/hashicorp/waypoint/internal/clierrors"
 )
 
 type K8sConfig struct {
 	KubeconfigPath       string `hcl:"kubeconfig,optional"`
 	K8sContext           string `hcl:"context,optional"`
 	Version              string `hcl:"version,optional"`
+	HelmRef              string `hcl:"helm_ref,optional"`
 	Namespace            string `hcl:"namespace,optional"`
 	RunnerImage          string `hcl:"runner_image,optional"`
 	CpuRequest           string `hcl:"runner_cpu_request,optional"`
