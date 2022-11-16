@@ -184,7 +184,11 @@ func (i *K8sInstaller) Install(
 	} else {
 		version = i.Config.Version
 	}
-	path, err := client.LocateChart("https://github.com/hashicorp/waypoint-helm/archive/refs/tags/"+version+".tar.gz", settings)
+	chartLocation := "https://github.com/hashicorp/waypoint-helm/archive/refs/tags/" + version + ".tar.gz"
+	if i.Config.HelmRef != "" {
+		chartLocation = "https://github.com/hashicorp/waypoint-helm/tarball/" + i.Config.HelmRef
+	}
+	path, err := client.LocateChart(chartLocation, settings)
 	if err != nil {
 		return nil, "", err
 	}
@@ -489,7 +493,11 @@ func (i *K8sInstaller) Upgrade(
 		version = i.Config.Version
 	}
 
-	path, err := client.LocateChart("https://github.com/hashicorp/waypoint-helm/archive/refs/tags/"+version+".tar.gz", settings)
+	chartLocation := "https://github.com/hashicorp/waypoint-helm/archive/refs/tags/" + version + ".tar.gz"
+	if i.Config.HelmRef != "" {
+		chartLocation = "https://github.com/hashicorp/waypoint-helm/tarball/" + i.Config.HelmRef
+	}
+	path, err := client.LocateChart(chartLocation, settings)
 	if err != nil {
 		return nil, err
 	}
@@ -955,6 +963,13 @@ func (i *K8sInstaller) InstallFlags(set *flag.Set) {
 		Target: &i.Config.Version,
 		Usage: "The version of the Helm chart to use for the Waypoint runner install. " +
 			"The required version number format is: 'vX.Y.Z'.",
+	})
+
+	set.StringVar(&flag.StringVar{
+		Name:   "k8s-helm-ref",
+		Target: &i.Config.HelmRef,
+		Usage: "The git ref of the Helm chart to use for the Waypoint install. " +
+			"The ref may also be a branch name like 'main'. Takes precedent over -k8s-helm-version.",
 	})
 
 	set.StringVar(&flag.StringVar{
