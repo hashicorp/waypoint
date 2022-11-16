@@ -1,0 +1,3 @@
+```release-note:improvement
+core/install: Add `-k8s-helm-ref` to use unreleased helm chart version when installing runners
+```
