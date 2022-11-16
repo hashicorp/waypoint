@@ -16,6 +16,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/efs"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/hashicorp/go-hclog"
+
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/builtin/aws/utils"
 	"github.com/hashicorp/waypoint/internal/clierrors"
@@ -357,16 +358,24 @@ func (i *ECSRunnerInstaller) Uninstall(ctx context.Context, opts *InstallOpts) e
 	// TODO: Still attempt to delete the EFS volume if the ECS service
 	// uninstall fails
 	efsSvc := efs.New(sess)
-	fileSystemsResp, err := efsSvc.DescribeFileSystems(&efs.DescribeFileSystemsInput{
-		CreationToken: nil,
-		FileSystemId:  nil,
-		Marker:        nil,
-		MaxItems:      nil,
-	})
-	if err != nil {
-		return err
+	marker := ""
+	done := false
+	var fileSystems []*efs.FileSystemDescription
+	for !done {
+		fileSystemsResp, err := efsSvc.DescribeFileSystems(&efs.DescribeFileSystemsInput{
+			Marker:   aws.String(marker),
+			MaxItems: aws.Int64(100),
+		})
+		if err != nil {
+			return err
+		}
+		if marker == *fileSystemsResp.Marker {
+			done = true
+		}
+		fileSystems = append(fileSystems, fileSystemsResp.FileSystems...)
 	}
-	for _, fileSystem := range fileSystemsResp.FileSystems {
+
+	for _, fileSystem := range fileSystems {
 		// Check if tags match ID, if so then delete things
 		for _, tag := range fileSystem.Tags {
 			if *tag.Key == "runner-id" && *tag.Value == opts.Id {
