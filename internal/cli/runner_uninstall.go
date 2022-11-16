@@ -170,10 +170,10 @@ func (c *RunnerUninstallCommand) Run(args []string) int {
 				s.Update("Runner %q forgotten on server", c.id)
 				s.Status(terminal.StatusOK)
 			}
-			s.Done()
 			break
 		}
 	}
+	s.Done()
 
 	// TODO: Remove runner profiles associated solely with this runner
 
