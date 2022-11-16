@@ -4,12 +4,13 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/posener/complete"
+
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/internal/clierrors"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	"github.com/hashicorp/waypoint/internal/runnerinstall"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
-	"github.com/posener/complete"
 )
 
 type RunnerUninstallCommand struct {
@@ -164,11 +165,13 @@ func (c *RunnerUninstallCommand) Run(args []string) int {
 			if err != nil {
 				s.Update("Couldn't forget runner: %s", clierrors.Humanize(err))
 				s.Status(terminal.StatusWarn)
+				return 1
 			} else {
 				s.Update("Runner %q forgotten on server", c.id)
 				s.Status(terminal.StatusOK)
 			}
 			s.Done()
+			break
 		}
 	}
 
