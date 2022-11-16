@@ -114,6 +114,11 @@ func (c *ProjectInspectCommand) FormatProject(projectTarget string) error {
 		case *pb.Job_DataSource_Remote:
 			dataSource = "Remote"
 			remoteDesc = ds.Remote.Description
+
+			if ds.Remote.GitRemote != nil {
+				gitRef = ds.Remote.GitRemote.Ref
+				gitPath = ds.Remote.GitRemote.Path
+			}
 		}
 	}
 
