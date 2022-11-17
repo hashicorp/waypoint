@@ -37,6 +37,7 @@ func (c *ProjectDestroyCommand) Run(args []string) int {
 			p = &pb.Ref_Project{Project: c.args[0]}
 		} else {
 			c.ui.Output("Please explicitly specify project to delete.", terminal.WithWarningStyle())
+			return 1
 		}
 	} else {
 		p = c.project.Ref()
