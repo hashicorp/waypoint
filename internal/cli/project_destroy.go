@@ -39,7 +39,7 @@ func (c *ProjectDestroyCommand) Run(args []string) int {
 		return 1
 	}
 
-	// Confirmation required
+	// Confirmation required without `-auto-approve` flag
 	if !c.confirm {
 		proceed, err := c.ui.Input(&terminal.Input{
 			Prompt: "Do you really want to destroy project \"" + project.Project.Name + "\" and its resources? Only 'yes' will be accepted to approve: ",
