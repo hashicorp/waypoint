@@ -1,0 +1,7 @@
+```release-note:improvement
+cli: `project destroy` requires the `-project` or `-p` flag regardless of where it's run.
+```
+
+```release-note:bug
+cli: `project destroy` now successfully destroys a project created in the UI without a remote source or local hcl file.
+```
