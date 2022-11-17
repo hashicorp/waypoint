@@ -25,7 +25,7 @@ func (c *ProjectDestroyCommand) Run(args []string) int {
 	}
 
 	if c.flagProject == "" {
-		c.ui.Output("Must explicitly set -project flag to destroy project.", terminal.WithErrorStyle())
+		c.ui.Output("Must explicitly set -project (-p) flag to destroy project.", terminal.WithErrorStyle())
 		return 1
 	}
 
@@ -57,10 +57,17 @@ func (c *ProjectDestroyCommand) Run(args []string) int {
 			return 1
 		}
 	}
-	_, err = c.project.DestroyProject(c.Ctx, &pb.Job_DestroyProjectOp{
-		Project:              &pb.Ref_Project{Project: project.Project.Name},
-		SkipDestroyResources: c.skipDestroyResources,
-	})
+
+	if project.Project.DataSource == nil {
+		_, err = c.project.Client().DestroyProject(c.Ctx, &pb.DestroyProjectRequest{
+			Project: c.project.Ref(),
+		})
+	} else {
+		_, err = c.project.DestroyProject(c.Ctx, &pb.Job_DestroyProjectOp{
+			Project:              &pb.Ref_Project{Project: project.Project.Name},
+			SkipDestroyResources: c.skipDestroyResources,
+		})
+	}
 	if err != nil {
 		c.ui.Output("Error destroying project: %s", err.Error(), terminal.WithErrorStyle())
 		return 1
