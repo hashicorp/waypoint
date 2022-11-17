@@ -29,15 +29,30 @@ func (c *ProjectDestroyCommand) Run(args []string) int {
 		return 1
 	}
 
-	// Get the project we're destroying
+	// Take project name from arguments if not in project directory.
+	var p *pb.Ref_Project
+	c.ui.Output("%q \n\n", c.args)
+	if c.flagProject == "" {
+		if len(c.args) > 0 {
+			p = &pb.Ref_Project{Project: c.args[0]}
+		} else {
+			c.ui.Output("Please explicitly specify project to delete.", terminal.WithWarningStyle())
+		}
+	} else {
+		p = c.project.Ref()
+		c.ui.Output("p: %q \n\n", p)
+	}
+
+	// Verify the project we're destroying exists
 	project, err := c.project.Client().GetProject(c.Ctx, &pb.GetProjectRequest{
-		Project: c.project.Ref(),
+		Project: p,
 	})
 	if err != nil {
+		c.ui.Output("Project %q not found.", p.Project, terminal.WithErrorStyle())
 		return 1
 	}
 
-	// Confirmation is required for destroying a project &/or its resources
+	// Confirmation required
 	if !c.confirm {
 		proceed, err := c.ui.Input(&terminal.Input{
 			Prompt: "Do you really want to destroy project \"" + project.Project.Name + "\" and its resources? Only 'yes' will be accepted to approve: ",
