@@ -8686,6 +8686,10 @@
         "git_remote": {
           "$ref": "#/definitions/hashicorp.waypoint.Job.Git",
           "description": "If remote refers to a git repo, git_remote will be partially populate\nwith information about which information within the git repo to use."
+        },
+        "deploy_on_change": {
+          "type": "boolean",
+          "description": "This corresponds with the implicit behavior associated with data source\npolling, whereby if the polling is successful, we perform an Up operation."
         }
       }
     },

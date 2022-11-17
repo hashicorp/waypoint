@@ -1989,6 +1989,10 @@ message Job {
     // If remote refers to a git repo, git_remote will be partially populate
     // with information about which information within the git repo to use.
     Git git_remote = 2;
+
+    // This corresponds with the implicit behavior associated with data source
+    // polling, whereby if the polling is successful, we perform an Up operation.
+    bool deploy_on_change = 3;
   }
 
   message Git {
