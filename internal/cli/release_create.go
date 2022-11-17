@@ -3,6 +3,7 @@ package cli
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"strconv"
 	"strings"
 
@@ -189,7 +190,16 @@ func (c *ReleaseCreateCommand) Run(args []string) int {
 			return nil
 		}
 
-		app.UI.Output("\nRelease URL: %s", result.Release.Url, terminal.WithSuccessStyle())
+		releaseUrl := result.Release.Url
+		ru, err := url.Parse(releaseUrl)
+		if err != nil && ru.Scheme != "" {
+			return err
+		}
+		if ru.Scheme == "" && releaseUrl != "" {
+			releaseUrl = fmt.Sprintf("https://%s", releaseUrl)
+		}
+
+		app.UI.Output("\nRelease URL: %s", releaseUrl, terminal.WithSuccessStyle())
 		return nil
 	})
 	if err != nil {
