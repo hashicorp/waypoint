@@ -303,17 +303,17 @@ func (c *PipelineRunCommand) Run(args []string) int {
 			printInplaceInfo(inplaceDeploy, app)
 			app.UI.Output("   Release URL: %s", releaseUrl, terminal.WithSuccessStyle())
 			if deployUrl != "" {
-				app.UI.Output("Deployment URL: https://%s", deployUrl, terminal.WithSuccessStyle())
+				app.UI.Output("Deployment URL: %s", deployUrl, terminal.WithSuccessStyle())
 			} else {
 				app.UI.Output(strings.TrimSpace(deployNoURL)+"\n", terminal.WithSuccessStyle())
 			}
 		case hostname != nil:
 			printInplaceInfo(inplaceDeploy, app)
-			app.UI.Output("           URL: https://%s", hostname.Fqdn, terminal.WithSuccessStyle())
-			app.UI.Output("Deployment URL: https://%s", deployUrl, terminal.WithSuccessStyle())
+			app.UI.Output("           URL: %s", hostname.Fqdn, terminal.WithSuccessStyle())
+			app.UI.Output("Deployment URL: %s", deployUrl, terminal.WithSuccessStyle())
 		case deployUrl != "":
 			printInplaceInfo(inplaceDeploy, app)
-			app.UI.Output("Deployment URL: https://%s", deployUrl, terminal.WithSuccessStyle())
+			app.UI.Output("Deployment URL: %s", deployUrl, terminal.WithSuccessStyle())
 		default:
 			app.UI.Output(strings.TrimSpace(deployNoURL)+"\n", terminal.WithSuccessStyle())
 		}
