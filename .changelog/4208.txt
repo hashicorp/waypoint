@@ -1,0 +1,3 @@
+```release-note:bug
+cli: Remove extra `https` from deployment URL from pipeline run final output.
+```
