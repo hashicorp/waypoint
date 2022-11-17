@@ -70,7 +70,7 @@ func (c *ProjectDestroyCommand) Run(args []string) int {
 		})
 	}
 	if err != nil {
-		c.ui.Output("Error destroying project: %s", err.Error(), terminal.WithErrorStyle())
+		c.ui.Output("Error destroying project %q: %s", project.Project.Name, err.Error(), terminal.WithErrorStyle())
 		return 1
 	}
 	c.ui.Output("Project %q destroyed!", project.Project.Name, terminal.WithSuccessStyle())
