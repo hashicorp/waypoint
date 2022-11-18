@@ -826,6 +826,14 @@ func (s *Service) RunnerJobStream(
 			return hcerr.Externalize(log, err, "err from err channel")
 
 		case req := <-eventCh:
+			if job == nil {
+				select {
+				case err := <-errCh:
+					log.Error("Job disappeared and there was an error while processing job event", "error", err, "event", req)
+					return hcerr.Externalize(log, err, "failed to process job event")
+				default:
+				}
+			}
 			if err := s.handleJobStreamRequest(log, job, server, req, logStreamWriter); err != nil {
 				return hcerr.Externalize(log, err, "error handling job stream request", "req", req)
 			}
@@ -881,6 +889,10 @@ func (s *Service) handleJobStreamRequest(
 	log.Trace("event received", "event", req.Event)
 	switch event := req.Event.(type) {
 	case *pb.RunnerJobStreamRequest_Complete_:
+		if event.Complete == nil {
+			log.Error("event.Complete was not filled when we expected it to be", "id", job.Id, "event", req.Event)
+			return hcerr.Externalize(log, fmt.Errorf("failed to complete job"), "failed to complete job", "id", job.Id)
+		}
 		if err := s.state(ctx).JobComplete(ctx, job.Id, event.Complete.Result, nil); err != nil {
 			return hcerr.Externalize(log, err, "failed to complete job", "id", job.Id)
 		}
