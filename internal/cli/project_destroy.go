@@ -26,7 +26,7 @@ func (c *ProjectDestroyCommand) Run(args []string) int {
 	}
 
 	if c.flagProject == "" {
-		c.ui.Output("Must explicitly set -project (-p) flag to destroy project.", terminal.WithErrorStyle())
+		c.ui.Output("Must explicitly set -project (-p) flag to destroy project.\n %s", c.Flags().Help(), terminal.WithErrorStyle())
 		return 1
 	}
 
@@ -104,12 +104,15 @@ func (c *ProjectDestroyCommand) Synopsis() string {
 
 func (c *ProjectDestroyCommand) Help() string {
 	return formatHelp(`
-Usage: waypoint project destroy [options]
+Usage: waypoint project destroy [options] -p <project>
 
   Delete the project and all resources created for all apps in the project, within
   the platform each app was deployed to.
 
-  You can optionally skip destroying the resources by setting
-  -skip-destroy-resources to true.
+  You must explicitly specify the project to destroy with the -project or -p flag.
+
+  You can skip destroying app resources with the -skip-destroy-resources flag.
+
+  You can skip the manual confirmation prompt with the -auto-approve flag.
 ` + c.Flags().Help())
 }
