@@ -1,6 +1,8 @@
-<p>
-  <Spinner @size="20" />
+<p class="row-align">
+  <FlightIcon @name="loading" @size="16" />
+  &nbsp;
   {{t "project-init-running.title.prefix"}}
+  &nbsp;
   <code class="code-block">{{@project.dataSource.git.url}}</code>
 </p>
 

@@ -1455,7 +1455,7 @@
     sass "^1.26.11"
     tippy.js "^6.3.1"
 
-"@hashicorp/structure-icons@^1.9.0-0", "@hashicorp/structure-icons@^1.9.2":
+"@hashicorp/structure-icons@^1.9.2":
   version "1.9.2"
   resolved "https://registry.yarnpkg.com/@hashicorp/structure-icons/-/structure-icons-1.9.2.tgz#c75f955b2eec414ecb92f3926c79b4ca01731d3c"
   integrity sha512-AffJv0V9npr1EWlM1XrpaKPG9PzddV48OE+jspqy7aRoFZB5++oNnPx4MZQKmFInOljnzNwfktVRkJiQHy7haw==
@@ -3038,7 +3038,8 @@ anymatch@~3.1.2:
     picomatch "^2.0.4"
 
 "api-common-protos@link:./lib/api-common-protos":
-  version "1.0.0"
+  version "0.0.0"
+  uid ""
 
 aproba@^1.0.3, aproba@^1.1.1:
   version "1.2.0"
@@ -7365,7 +7366,7 @@ ember-source@~3.28.10:
     semver "^7.3.4"
     silent-error "^1.1.1"
 
-ember-svg-jar@^2.2.3, ember-svg-jar@^2.3.4:
+ember-svg-jar@^2.2.3:
   version "2.3.4"
   resolved "https://registry.yarnpkg.com/ember-svg-jar/-/ember-svg-jar-2.3.4.tgz#ed80aa137db8440e51448f58f09afb6c140e9b5f"
   integrity sha512-EkY7fGeDevLROkDRsN+654THJT2b3cBVi8YH0v9mDofiASPBOlP3NgDs9q1WA1hU6cP68m08vXk/E40ayIVZzQ==
@@ -8977,7 +8978,8 @@ growly@^1.3.0:
   integrity sha1-8QdIy+dq+WS3yWyTxrzCivEgwIE=
 
 "grpc-web@link:./lib/grpc-web":
-  version "1.2.1"
+  version "0.0.0"
+  uid ""
 
 gzip-size@^5.0.0:
   version "5.1.1"
@@ -11490,7 +11492,8 @@ onetime@^5.1.0, onetime@^5.1.2:
     mimic-fn "^2.1.0"
 
 "opaqueany@link:./lib/opaqueany":
-  version "1.0.0"
+  version "0.0.0"
+  uid ""
 
 opener@^1.5.1:
   version "1.5.1"
@@ -14567,10 +14570,12 @@ watchpack@^2.4.0:
     graceful-fs "^4.1.2"
 
 "waypoint-client@link:./lib/waypoint-client":
-  version "1.0.0"
+  version "0.0.0"
+  uid ""
 
 "waypoint-pb@link:./lib/waypoint-pb":
-  version "1.0.0"
+  version "0.0.0"
+  uid ""
 
 wcwidth@^1.0.1:
   version "1.0.1"

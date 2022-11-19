@@ -37,4 +37,10 @@
       border-radius: 2px;
     }
   }
+
+  .row-align {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+  }
 }
