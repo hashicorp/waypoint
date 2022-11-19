@@ -1,13 +1,15 @@
-{{#each @model.authMethodsList as |authMethod|}}
+{{#each @model.authMethodsList as |authMethod|}}  
   <Pds::Button
-  @variant="primary"
-  disabled={{this.initializeOIDCFlow.isRunning}}
-  data-test-oidc-provider={{authMethod.name}}
-  {{on "click" (perform this.initializeOIDCFlow authMethod)}}>
-    {{#if this.initializeOIDCFlow.isRunning}}
-      <FlightIcon @name="loading" @size="16" />
-    {{/if}}
-    {{authMethod.displayName}}
+    @variant="primary"
+    disabled={{this.initializeOIDCFlow.isRunning}}
+    data-test-oidc-provider={{authMethod.name}}
+    {{on "click" (perform this.initializeOIDCFlow authMethod)}}>
+      <div class="button-align">
+        {{#if this.initializeOIDCFlow.isRunning}}
+          <FlightIcon @name="loading" @size="16" />
+        {{/if}}
+        {{authMethod.displayName}}
+      </div>
   </Pds::Button>
 {{/each}}
 <hr>
