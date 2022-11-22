@@ -59,6 +59,8 @@ func (c *ProjectDestroyCommand) Run(args []string) int {
 		}
 	}
 
+	// If project has a remote data source, queue destroy operation.
+	// Otherwise, directly call server API to delete from the database.
 	if project.Project.DataSource == nil {
 		_, err = c.project.Client().DestroyProject(c.Ctx, &pb.DestroyProjectRequest{
 			Project: c.project.Ref(),
