@@ -3134,6 +3134,7 @@ message ListProjectsRequest {
 message ListProjectsResponse {
   repeated Ref.Project projects = 1;
   PaginationResponse pagination = 2;
+  uint64 total_count = 3;
 }
 
 message DestroyProjectRequest {
@@ -5463,8 +5464,4 @@ message PaginationResponse {
   // `previous_page_token` in the next request. The value will become empty when
   // there are no more pages.
   string previous_page_token = 2 [json_name="previous_page_token"];
-
-  // The total number of entities stored by the server.
-  // This field is an addition not included in the base hashicorp/cloud/common pagination proto
-  uint64 total_count = 3 [json_name="total_count"];
 }

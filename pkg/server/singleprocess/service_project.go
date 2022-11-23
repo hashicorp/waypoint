@@ -96,6 +96,15 @@ func (s *Service) ListProjects(
 		return nil, err
 	}
 
+	count, err := s.state(ctx).ProjectCount(ctx)
+	if err != nil {
+		return nil, hcerr.Externalize(
+			hclog.FromContext(ctx),
+			err,
+			"failed to count projects",
+		)
+	}
+
 	result, pagination, err := s.state(ctx).ProjectList(ctx, req.Pagination)
 	if err != nil {
 		return nil, hcerr.Externalize(
@@ -105,7 +114,7 @@ func (s *Service) ListProjects(
 		)
 	}
 
-	return &pb.ListProjectsResponse{Projects: result, Pagination: pagination}, nil
+	return &pb.ListProjectsResponse{Projects: result, Pagination: pagination, TotalCount: count}, nil
 }
 
 func (s *Service) DestroyProject(

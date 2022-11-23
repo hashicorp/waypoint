@@ -9105,6 +9105,10 @@
         },
         "pagination": {
           "$ref": "#/definitions/hashicorp.waypoint.PaginationResponse"
+        },
+        "total_count": {
+          "type": "string",
+          "format": "uint64"
         }
       }
     },
@@ -9406,11 +9410,6 @@
         "previous_page_token": {
           "type": "string",
           "description": "This token allows you to get the previous page of results for list\nrequests. If the number of results is larger than `page_size`, use the\n`previous_page_token` as a value for the query parameter\n`previous_page_token` in the next request. The value will become empty when\nthere are no more pages."
-        },
-        "total_count": {
-          "type": "string",
-          "format": "uint64",
-          "title": "The total number of entities stored by the server.\nThis field is an addition not included in the base hashicorp/cloud/common pagination proto"
         }
       },
       "description": "PaginationResponse is the response holding the page tokens for a paginated\nlist response."
