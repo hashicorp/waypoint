@@ -1,21 +1,20 @@
 package boltdbstate
 
 import (
-	"context"
-	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	"testing"
+
+	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 
 	"github.com/stretchr/testify/require"
 )
 
 func TestGlobalConfigSource(t *testing.T) {
-	ctx := context.Background()
 	require := require.New(t)
 
 	s := TestState(t)
 	defer s.Close()
 
-	err := s.ConfigSourceSet(ctx, &pb.ConfigSource{
+	err := s.ConfigSourceSet(&pb.ConfigSource{
 		Delete:    false,
 		Scope:     &pb.ConfigSource_Global{Global: &pb.Ref_Global{}},
 		Workspace: &pb.Ref_Workspace{Workspace: "default"},
@@ -24,7 +23,7 @@ func TestGlobalConfigSource(t *testing.T) {
 
 	require.NoError(err)
 
-	source, err := s.ConfigSourceGet(ctx, &pb.GetConfigSourceRequest{
+	source, err := s.ConfigSourceGet(&pb.GetConfigSourceRequest{
 		Scope:     &pb.GetConfigSourceRequest_Global{Global: &pb.Ref_Global{}},
 		Workspace: &pb.Ref_Workspace{Workspace: "default"},
 		Type:      "test",
@@ -37,7 +36,7 @@ func TestGlobalConfigSource(t *testing.T) {
 }
 
 func TestProjectConfigSource(t *testing.T) {
-	ctx := context.Background()
+
 	require := require.New(t)
 
 	s := TestState(t)
@@ -48,7 +47,7 @@ func TestProjectConfigSource(t *testing.T) {
 	const workspaceName = "default"
 	const configSourceType = "test"
 
-	err := s.ProjectPut(ctx, &pb.Project{
+	err := s.ProjectPut(&pb.Project{
 		Name: "test-project",
 		Applications: []*pb.Application{
 			{
@@ -58,7 +57,7 @@ func TestProjectConfigSource(t *testing.T) {
 		},
 	})
 
-	err = s.ConfigSourceSet(ctx, &pb.ConfigSource{
+	err = s.ConfigSourceSet(&pb.ConfigSource{
 		Delete:    false,
 		Scope:     &pb.ConfigSource_Project{Project: &pb.Ref_Project{Project: projectName}},
 		Workspace: &pb.Ref_Workspace{Workspace: workspaceName},
@@ -67,7 +66,7 @@ func TestProjectConfigSource(t *testing.T) {
 
 	require.NoError(err)
 
-	source, err := s.ConfigSourceGet(ctx, &pb.GetConfigSourceRequest{
+	source, err := s.ConfigSourceGet(&pb.GetConfigSourceRequest{
 		Scope:     &pb.GetConfigSourceRequest_Project{Project: &pb.Ref_Project{Project: projectName}},
 		Workspace: &pb.Ref_Workspace{Workspace: workspaceName},
 		Type:      configSourceType,
@@ -84,7 +83,7 @@ func TestProjectConfigSource(t *testing.T) {
 }
 
 func TestAppConfigSource(t *testing.T) {
-	ctx := context.Background()
+
 	require := require.New(t)
 
 	s := TestState(t)
@@ -95,7 +94,7 @@ func TestAppConfigSource(t *testing.T) {
 	const workspaceName = "default"
 	const configSourceType = "test"
 
-	err := s.ProjectPut(ctx, &pb.Project{
+	err := s.ProjectPut(&pb.Project{
 		Name: "test-project",
 		Applications: []*pb.Application{
 			{
@@ -105,7 +104,7 @@ func TestAppConfigSource(t *testing.T) {
 		},
 	})
 
-	err = s.ConfigSourceSet(ctx, &pb.ConfigSource{
+	err = s.ConfigSourceSet(&pb.ConfigSource{
 		Delete: false,
 		Scope: &pb.ConfigSource_Application{Application: &pb.Ref_Application{
 			Application: appName,
@@ -117,7 +116,7 @@ func TestAppConfigSource(t *testing.T) {
 
 	require.NoError(err)
 
-	source, err := s.ConfigSourceGet(ctx, &pb.GetConfigSourceRequest{
+	source, err := s.ConfigSourceGet(&pb.GetConfigSourceRequest{
 		Scope: &pb.GetConfigSourceRequest_Application{
 			Application: &pb.Ref_Application{
 				Application: appName,
@@ -138,7 +137,7 @@ func TestAppConfigSource(t *testing.T) {
 }
 
 func TestWorkspaceProjectConfigSource(t *testing.T) {
-	ctx := context.Background()
+
 	require := require.New(t)
 
 	s := TestState(t)
@@ -149,7 +148,7 @@ func TestWorkspaceProjectConfigSource(t *testing.T) {
 	const workspaceName = "not-default"
 	const configSourceType = "test"
 
-	err := s.ProjectPut(ctx, &pb.Project{
+	err := s.ProjectPut(&pb.Project{
 		Name: "test-project",
 		Applications: []*pb.Application{
 			{
@@ -159,7 +158,7 @@ func TestWorkspaceProjectConfigSource(t *testing.T) {
 		},
 	})
 
-	err = s.ConfigSourceSet(ctx, &pb.ConfigSource{
+	err = s.ConfigSourceSet(&pb.ConfigSource{
 		Delete: false,
 		Scope: &pb.ConfigSource_Application{Application: &pb.Ref_Application{
 			Application: appName,
@@ -171,7 +170,7 @@ func TestWorkspaceProjectConfigSource(t *testing.T) {
 
 	require.NoError(err)
 
-	source, err := s.ConfigSourceGet(ctx, &pb.GetConfigSourceRequest{
+	source, err := s.ConfigSourceGet(&pb.GetConfigSourceRequest{
 		Scope: &pb.GetConfigSourceRequest_Application{
 			Application: &pb.Ref_Application{
 				Application: appName,
@@ -192,20 +191,20 @@ func TestWorkspaceProjectConfigSource(t *testing.T) {
 }
 
 func TestMultipleGlobalConfigSources(t *testing.T) {
-	ctx := context.Background()
+
 	require := require.New(t)
 
 	s := TestState(t)
 	defer s.Close()
 
-	err := s.ConfigSourceSet(ctx, &pb.ConfigSource{
+	err := s.ConfigSourceSet(&pb.ConfigSource{
 		Delete:    false,
 		Scope:     &pb.ConfigSource_Global{Global: &pb.Ref_Global{}},
 		Workspace: &pb.Ref_Workspace{Workspace: "default"},
 		Type:      "test",
 	})
 
-	err = s.ConfigSourceSet(ctx, &pb.ConfigSource{
+	err = s.ConfigSourceSet(&pb.ConfigSource{
 		Delete:    false,
 		Scope:     &pb.ConfigSource_Global{Global: &pb.Ref_Global{}},
 		Workspace: &pb.Ref_Workspace{Workspace: "default"},
@@ -214,7 +213,7 @@ func TestMultipleGlobalConfigSources(t *testing.T) {
 
 	require.NoError(err)
 
-	source, err := s.ConfigSourceGet(ctx, &pb.GetConfigSourceRequest{
+	source, err := s.ConfigSourceGet(&pb.GetConfigSourceRequest{
 		Scope:     &pb.GetConfigSourceRequest_Global{Global: &pb.Ref_Global{}},
 		Workspace: &pb.Ref_Workspace{Workspace: "default"},
 	})
@@ -234,7 +233,7 @@ func TestMultipleGlobalConfigSources(t *testing.T) {
 }
 
 func TestGlobalProjectAndAppScope(t *testing.T) {
-	ctx := context.Background()
+
 	require := require.New(t)
 
 	s := TestState(t)
@@ -245,7 +244,7 @@ func TestGlobalProjectAndAppScope(t *testing.T) {
 	const workspaceName = "default"
 	const configSourceType = "test"
 
-	err := s.ConfigSourceSet(ctx, &pb.ConfigSource{
+	err := s.ConfigSourceSet(&pb.ConfigSource{
 		Delete: false,
 		Scope: &pb.ConfigSource_Global{
 			Global: &pb.Ref_Global{},
@@ -256,7 +255,7 @@ func TestGlobalProjectAndAppScope(t *testing.T) {
 		Type: configSourceType,
 	})
 
-	err = s.ConfigSourceSet(ctx, &pb.ConfigSource{
+	err = s.ConfigSourceSet(&pb.ConfigSource{
 		Delete: false,
 		Scope: &pb.ConfigSource_Project{
 			Project: &pb.Ref_Project{
@@ -268,7 +267,7 @@ func TestGlobalProjectAndAppScope(t *testing.T) {
 		Type: configSourceType,
 	})
 
-	err = s.ConfigSourceSet(ctx, &pb.ConfigSource{
+	err = s.ConfigSourceSet(&pb.ConfigSource{
 		Delete: false,
 		Scope: &pb.ConfigSource_Application{
 			Application: &pb.Ref_Application{
@@ -283,7 +282,7 @@ func TestGlobalProjectAndAppScope(t *testing.T) {
 
 	require.NoError(err)
 
-	source, err := s.ConfigSourceGet(ctx, &pb.GetConfigSourceRequest{
+	source, err := s.ConfigSourceGet(&pb.GetConfigSourceRequest{
 		Scope: &pb.GetConfigSourceRequest_Application{
 			Application: &pb.Ref_Application{
 				Project:     projectName,
@@ -318,7 +317,7 @@ func TestGlobalProjectAndAppScope(t *testing.T) {
 }
 
 func TestProjectAndAppConfigSource(t *testing.T) {
-	ctx := context.Background()
+
 	require := require.New(t)
 
 	s := TestState(t)
@@ -329,7 +328,7 @@ func TestProjectAndAppConfigSource(t *testing.T) {
 	const workspaceName = "default"
 	const configSourceType = "test"
 
-	err := s.ProjectPut(ctx, &pb.Project{
+	err := s.ProjectPut(&pb.Project{
 		Name: "test-project",
 		Applications: []*pb.Application{
 			{
@@ -339,7 +338,7 @@ func TestProjectAndAppConfigSource(t *testing.T) {
 		},
 	})
 
-	err = s.ConfigSourceSet(ctx, &pb.ConfigSource{
+	err = s.ConfigSourceSet(&pb.ConfigSource{
 		Delete: false,
 		Scope: &pb.ConfigSource_Project{Project: &pb.Ref_Project{
 			Project: projectName,
@@ -348,7 +347,7 @@ func TestProjectAndAppConfigSource(t *testing.T) {
 		Type:      configSourceType,
 	})
 
-	err = s.ConfigSourceSet(ctx, &pb.ConfigSource{
+	err = s.ConfigSourceSet(&pb.ConfigSource{
 		Delete: false,
 		Scope: &pb.ConfigSource_Application{Application: &pb.Ref_Application{
 			Application: appName,
@@ -360,7 +359,7 @@ func TestProjectAndAppConfigSource(t *testing.T) {
 
 	require.NoError(err)
 
-	source, err := s.ConfigSourceGet(ctx, &pb.GetConfigSourceRequest{
+	source, err := s.ConfigSourceGet(&pb.GetConfigSourceRequest{
 		Scope: &pb.GetConfigSourceRequest_Application{
 			Application: &pb.Ref_Application{
 				Application: appName,
@@ -388,7 +387,7 @@ func TestProjectAndAppConfigSource(t *testing.T) {
 }
 
 func TestMultipleWorkspaceApplicationConfigSources(t *testing.T) {
-	ctx := context.Background()
+
 	require := require.New(t)
 
 	s := TestState(t)
@@ -400,7 +399,7 @@ func TestMultipleWorkspaceApplicationConfigSources(t *testing.T) {
 	const workspaceName2 = "the-default"
 	const configSourceType = "test"
 
-	err := s.ProjectPut(ctx, &pb.Project{
+	err := s.ProjectPut(&pb.Project{
 		Name: "test-project",
 		Applications: []*pb.Application{
 			{
@@ -410,7 +409,7 @@ func TestMultipleWorkspaceApplicationConfigSources(t *testing.T) {
 		},
 	})
 
-	err = s.ConfigSourceSet(ctx, &pb.ConfigSource{
+	err = s.ConfigSourceSet(&pb.ConfigSource{
 		Delete: false,
 		Scope: &pb.ConfigSource_Application{Application: &pb.Ref_Application{
 			Application: appName,
@@ -420,7 +419,7 @@ func TestMultipleWorkspaceApplicationConfigSources(t *testing.T) {
 		Type:      configSourceType,
 	})
 
-	err = s.ConfigSourceSet(ctx, &pb.ConfigSource{
+	err = s.ConfigSourceSet(&pb.ConfigSource{
 		Delete: false,
 		Scope: &pb.ConfigSource_Application{Application: &pb.Ref_Application{
 			Application: appName,
@@ -432,7 +431,7 @@ func TestMultipleWorkspaceApplicationConfigSources(t *testing.T) {
 
 	require.NoError(err)
 
-	sources, err := s.ConfigSourceGet(ctx, &pb.GetConfigSourceRequest{
+	sources, err := s.ConfigSourceGet(&pb.GetConfigSourceRequest{
 		Scope: &pb.GetConfigSourceRequest_Application{
 			Application: &pb.Ref_Application{
 				Application: appName,

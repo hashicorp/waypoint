@@ -1,7 +1,6 @@
 package boltdbstate
 
 import (
-	"context"
 	"encoding/binary"
 	"sort"
 	"strings"
@@ -25,7 +24,7 @@ func init() {
 }
 
 // ConfigSourceSet writes a set of config source values to the database.
-func (s *State) ConfigSourceSet(ctx context.Context, vs ...*pb.ConfigSource) error {
+func (s *State) ConfigSourceSet(vs ...*pb.ConfigSource) error {
 	memTxn := s.inmem.Txn(true)
 	defer memTxn.Abort()
 
@@ -46,14 +45,14 @@ func (s *State) ConfigSourceSet(ctx context.Context, vs ...*pb.ConfigSource) err
 }
 
 // ConfigSourceGet gets all the configuration sources for the given request.
-func (s *State) ConfigSourceGet(ctx context.Context, req *pb.GetConfigSourceRequest) ([]*pb.ConfigSource, error) {
-	return s.ConfigSourceGetWatch(ctx, req, nil)
+func (s *State) ConfigSourceGet(req *pb.GetConfigSourceRequest) ([]*pb.ConfigSource, error) {
+	return s.ConfigSourceGetWatch(req, nil)
 }
 
 // ConfigSourceGetWatch gets all the configuration sources for the given request.
 // If a non-nil WatchSet is given, this can be watched for potential changes
 // in the config source settings.
-func (s *State) ConfigSourceGetWatch(ctx context.Context, req *pb.GetConfigSourceRequest, ws memdb.WatchSet) ([]*pb.ConfigSource, error) {
+func (s *State) ConfigSourceGetWatch(req *pb.GetConfigSourceRequest, ws memdb.WatchSet) ([]*pb.ConfigSource, error) {
 	memTxn := s.inmem.Txn(false)
 	defer memTxn.Abort()
 
