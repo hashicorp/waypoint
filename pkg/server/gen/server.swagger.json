@@ -247,6 +247,30 @@
         },
         "parameters": [
           {
+            "name": "project.project",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "application.application",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "application.project",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "workspace.workspace",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
             "name": "type",
             "description": "config source type. This is optional. If this is omitted, all\nconfig source types matching the above scoping will be returned.\nThis is a prefix-search. All config sources with this type prefix\nwill be returned.",
             "in": "query",
@@ -6457,6 +6481,16 @@
         },
         "global": {
           "$ref": "#/definitions/hashicorp.waypoint.Ref.Global"
+        },
+        "project": {
+          "$ref": "#/definitions/hashicorp.waypoint.Ref.Project"
+        },
+        "application": {
+          "$ref": "#/definitions/hashicorp.waypoint.Ref.Application"
+        },
+        "workspace": {
+          "$ref": "#/definitions/hashicorp.waypoint.Ref.Workspace",
+          "description": "workspace, if set, will limit this config source to a specific\nworkspace. This is in addition to the app scoping above. For example,\nif you specify project scoping above, and set this too, then only\nmatching projects in the matching workspace will have this config var\nset."
         },
         "type": {
           "type": "string",

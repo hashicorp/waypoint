@@ -4435,7 +4435,16 @@ message ConfigSource {
   // scopes will use a default configuration set by the plugin.
   oneof scope {
     Ref.Global global = 50;
+    Ref.Project project = 51;
+    Ref.Application application = 52;
   }
+
+  // workspace, if set, will limit this config source to a specific
+  // workspace. This is in addition to the app scoping above. For example,
+  // if you specify project scoping above, and set this too, then only
+  // matching projects in the matching workspace will have this config var
+  // set.
+  Ref.Workspace workspace = 5;
 
   // type of the config source. This should match the plugin name.
   string type = 1;
@@ -4460,7 +4469,14 @@ message GetConfigSourceRequest {
   // scope is the scoping for the config source.
   oneof scope {
     Ref.Global global = 50;
+    Ref.Project project = 51;
+    Ref.Application application = 52;
   }
+
+  // Workspace that the target environment is in. This will limit configuration
+  // source to those that which is for this workspace. If this isn't set, all
+  // configuration sources will be returned.
+  Ref.Workspace workspace = 2;
 
   // config source type. This is optional. If this is omitted, all
   // config source types matching the above scoping will be returned.
