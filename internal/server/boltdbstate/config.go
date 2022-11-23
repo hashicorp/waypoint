@@ -161,7 +161,7 @@ func (s *State) configGetMerged(
 	case nil:
 		// For nil scope we just look at the global variables.
 		//
-		// Note this is IMPORTANT for backwards compatbility, since when we
+		// Note this is IMPORTANT for backwards compatibility, since when we
 		// introduced app-scoped runner vars, we pulled the "runner" out of the
 		// oneof, allowing old clients to send a nil scope. So we must handle
 		// this case so long as WP 0.5 and earlier clients exist, at least.
