@@ -1,0 +1,4 @@
+```release-note:bug
+core: Fix a rare panic when generating an invite token.
+```
+

@@ -59,15 +59,16 @@ Troubleshooting:
 ### Running with a local Waypoint Server
 
 This option assumes there is a Waypoint server running
-at `https://localhost:9702`. If you need to make any API changes to go along
+at `https://localhost:9702`, which you can verify by visiting https://localhost:9702 in the browser. 
+
+If you need to make any API changes to go along
 with frontend changes, or just wish to run the server locally, you can follow
 the instructions to run [Waypoint server locally](https://www.waypointproject.io/docs/server/run).
 
-Note: You'll need to visit the above address in the same browser session to
-accept the invalid certificate warning in your browser for this to work.
-
-- `ember serve local`
-- The app will be available at [http://localhost:4200](http://localhost:4200).
+- Visit https://localhost:9702, and accept the invalid certificate warning.
+- `ember serve local` 
+- The app will be available at [http://localhost:4200](http://localhost:4200). Make sure that you are in the same browser session (e.g. a new tab) where you accepted the invalid certificate warning above.
+- When prompted for a token, run `waypoint user token` in the command line, and enter the response. 
 
 If you need to build the server and run it locally, you'll want to stop the existing instance, build and reinstall it in docker:
 
@@ -116,7 +117,7 @@ Make use of the many generators for code, try `ember help generate` for more det
 
 We use [Percy](https://percy.io) for visual regression testing.
 
-All the Percy snapshotting happens in [percy-test.ts](./tests/acceptance/percy-test.ts). The aim is to have a test for every significant state in this file. We keep it all in one file, rather than weaving Percy snapshotting through the rest of the test suite. We think this makes it more maintainable.
+All the Percy snapshotting happens in [percy-test.ts](./tests/acceptance/percy-test.ts). The aim is to have a test for every significant state in the UI in this file. We keep it all in one file, rather than weaving Percy snapshotting through the rest of the test suite. We think this makes it more maintainable.
 
 We are incrementally adding Percy tests, so it’s rather minimal at the moment. If you’d like to add a Percy test, please go ahead.
 
@@ -128,7 +129,10 @@ yarn ember:test:percy
 
 This is exactly the same command we run in CI. You will need to set the env var `PERCY_TOKEN` with a valid Percy token.
 
-If you need access to our Percy account, please ask someone from @hashicorp/waypoint-frontend.
+#### Percy troubleshooting
+
+- If you need access to our Percy account (for approvals), please ask someone from @hashicorp/waypoint-frontend.
+- Percy should only trigger visual diffs for changes to the UI. If you notice an unexpected Percy snapshot, that part of the UI may need the class `hide-in-percy` added to the Mirage test. It's safe to approve the Percy snapshot and tag @hashicorp/waypoint-frontend to fix the frontend Mirage tests in a separate PR.
 
 ### Building
 

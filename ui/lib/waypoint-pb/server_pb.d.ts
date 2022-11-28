@@ -131,6 +131,52 @@ export namespace UI {
   }
 
 
+  export class GetDeploymentRequest extends jspb.Message {
+    getRef(): Ref.Operation | undefined;
+    setRef(value?: Ref.Operation): GetDeploymentRequest;
+    hasRef(): boolean;
+    clearRef(): GetDeploymentRequest;
+
+    getLoadDetails(): Deployment.LoadDetails;
+    setLoadDetails(value: Deployment.LoadDetails): GetDeploymentRequest;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): GetDeploymentRequest.AsObject;
+    static toObject(includeInstance: boolean, msg: GetDeploymentRequest): GetDeploymentRequest.AsObject;
+    static serializeBinaryToWriter(message: GetDeploymentRequest, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): GetDeploymentRequest;
+    static deserializeBinaryFromReader(message: GetDeploymentRequest, reader: jspb.BinaryReader): GetDeploymentRequest;
+  }
+
+  export namespace GetDeploymentRequest {
+    export type AsObject = {
+      ref?: Ref.Operation.AsObject,
+      loadDetails: Deployment.LoadDetails,
+    }
+  }
+
+
+  export class GetDeploymentResponse extends jspb.Message {
+    getDeployment(): UI.DeploymentBundle | undefined;
+    setDeployment(value?: UI.DeploymentBundle): GetDeploymentResponse;
+    hasDeployment(): boolean;
+    clearDeployment(): GetDeploymentResponse;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): GetDeploymentResponse.AsObject;
+    static toObject(includeInstance: boolean, msg: GetDeploymentResponse): GetDeploymentResponse.AsObject;
+    static serializeBinaryToWriter(message: GetDeploymentResponse, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): GetDeploymentResponse;
+    static deserializeBinaryFromReader(message: GetDeploymentResponse, reader: jspb.BinaryReader): GetDeploymentResponse;
+  }
+
+  export namespace GetDeploymentResponse {
+    export type AsObject = {
+      deployment?: UI.DeploymentBundle.AsObject,
+    }
+  }
+
+
   export class DeploymentBundle extends jspb.Message {
     getDeployment(): Deployment | undefined;
     setDeployment(value?: Deployment): DeploymentBundle;
@@ -278,6 +324,11 @@ export class GetVersionInfoResponse extends jspb.Message {
   hasInfo(): boolean;
   clearInfo(): GetVersionInfoResponse;
 
+  getServerFeatures(): ServerFeatures | undefined;
+  setServerFeatures(value?: ServerFeatures): GetVersionInfoResponse;
+  hasServerFeatures(): boolean;
+  clearServerFeatures(): GetVersionInfoResponse;
+
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): GetVersionInfoResponse.AsObject;
   static toObject(includeInstance: boolean, msg: GetVersionInfoResponse): GetVersionInfoResponse.AsObject;
@@ -289,6 +340,32 @@ export class GetVersionInfoResponse extends jspb.Message {
 export namespace GetVersionInfoResponse {
   export type AsObject = {
     info?: VersionInfo.AsObject,
+    serverFeatures?: ServerFeatures.AsObject,
+  }
+}
+
+export class ServerFeatures extends jspb.Message {
+  getFeaturesList(): Array<ServerFeatures.feature>;
+  setFeaturesList(value: Array<ServerFeatures.feature>): ServerFeatures;
+  clearFeaturesList(): ServerFeatures;
+  addFeatures(value: ServerFeatures.feature, index?: number): ServerFeatures;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): ServerFeatures.AsObject;
+  static toObject(includeInstance: boolean, msg: ServerFeatures): ServerFeatures.AsObject;
+  static serializeBinaryToWriter(message: ServerFeatures, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): ServerFeatures;
+  static deserializeBinaryFromReader(message: ServerFeatures, reader: jspb.BinaryReader): ServerFeatures;
+}
+
+export namespace ServerFeatures {
+  export type AsObject = {
+    featuresList: Array<ServerFeatures.feature>,
+  }
+
+  export enum feature { 
+    FEATURE_UNSPECIFIED = 0,
+    FEATURE_INLINE_KEEPALIVES = 1,
   }
 }
 
@@ -687,6 +764,9 @@ export class Project extends jspb.Message {
   hasStatusReportPoll(): boolean;
   clearStatusReportPoll(): Project;
 
+  getState(): Project.ProjectState;
+  setState(value: Project.ProjectState): Project;
+
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): Project.AsObject;
   static toObject(includeInstance: boolean, msg: Project): Project.AsObject;
@@ -707,6 +787,7 @@ export namespace Project {
     fileChangeSignal: string,
     variablesList: Array<Variable.AsObject>,
     statusReportPoll?: Project.AppStatusPoll.AsObject,
+    state: Project.ProjectState,
   }
 
   export class Poll extends jspb.Message {
@@ -754,6 +835,11 @@ export namespace Project {
     }
   }
 
+
+  export enum ProjectState { 
+    ACTIVE = 0,
+    DESTROYING = 1,
+  }
 }
 
 export class Workspace extends jspb.Message {
@@ -1030,6 +1116,68 @@ export namespace Ref {
   export namespace Workspace {
     export type AsObject = {
       workspace: string,
+    }
+  }
+
+
+  export class Deployment extends jspb.Message {
+    getLatest(): boolean;
+    setLatest(value: boolean): Deployment;
+
+    getSequence(): number;
+    setSequence(value: number): Deployment;
+
+    getRefCase(): Deployment.RefCase;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): Deployment.AsObject;
+    static toObject(includeInstance: boolean, msg: Deployment): Deployment.AsObject;
+    static serializeBinaryToWriter(message: Deployment, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): Deployment;
+    static deserializeBinaryFromReader(message: Deployment, reader: jspb.BinaryReader): Deployment;
+  }
+
+  export namespace Deployment {
+    export type AsObject = {
+      latest: boolean,
+      sequence: number,
+    }
+
+    export enum RefCase { 
+      REF_NOT_SET = 0,
+      LATEST = 1,
+      SEQUENCE = 2,
+    }
+  }
+
+
+  export class Artifact extends jspb.Message {
+    getLatest(): boolean;
+    setLatest(value: boolean): Artifact;
+
+    getSequence(): number;
+    setSequence(value: number): Artifact;
+
+    getRefCase(): Artifact.RefCase;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): Artifact.AsObject;
+    static toObject(includeInstance: boolean, msg: Artifact): Artifact.AsObject;
+    static serializeBinaryToWriter(message: Artifact, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): Artifact;
+    static deserializeBinaryFromReader(message: Artifact, reader: jspb.BinaryReader): Artifact;
+  }
+
+  export namespace Artifact {
+    export type AsObject = {
+      latest: boolean,
+      sequence: number,
+    }
+
+    export enum RefCase { 
+      REF_NOT_SET = 0,
+      LATEST = 1,
+      SEQUENCE = 2,
     }
   }
 
@@ -1412,6 +1560,95 @@ export namespace Ref {
     }
   }
 
+
+  export class Pipeline extends jspb.Message {
+    getId(): string;
+    setId(value: string): Pipeline;
+
+    getOwner(): Ref.PipelineOwner | undefined;
+    setOwner(value?: Ref.PipelineOwner): Pipeline;
+    hasOwner(): boolean;
+    clearOwner(): Pipeline;
+
+    getRefCase(): Pipeline.RefCase;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): Pipeline.AsObject;
+    static toObject(includeInstance: boolean, msg: Pipeline): Pipeline.AsObject;
+    static serializeBinaryToWriter(message: Pipeline, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): Pipeline;
+    static deserializeBinaryFromReader(message: Pipeline, reader: jspb.BinaryReader): Pipeline;
+  }
+
+  export namespace Pipeline {
+    export type AsObject = {
+      id: string,
+      owner?: Ref.PipelineOwner.AsObject,
+    }
+
+    export enum RefCase { 
+      REF_NOT_SET = 0,
+      ID = 1,
+      OWNER = 2,
+    }
+  }
+
+
+  export class PipelineOwner extends jspb.Message {
+    getProject(): Ref.Project | undefined;
+    setProject(value?: Ref.Project): PipelineOwner;
+    hasProject(): boolean;
+    clearProject(): PipelineOwner;
+
+    getPipelineName(): string;
+    setPipelineName(value: string): PipelineOwner;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): PipelineOwner.AsObject;
+    static toObject(includeInstance: boolean, msg: PipelineOwner): PipelineOwner.AsObject;
+    static serializeBinaryToWriter(message: PipelineOwner, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): PipelineOwner;
+    static deserializeBinaryFromReader(message: PipelineOwner, reader: jspb.BinaryReader): PipelineOwner;
+  }
+
+  export namespace PipelineOwner {
+    export type AsObject = {
+      project?: Ref.Project.AsObject,
+      pipelineName: string,
+    }
+  }
+
+
+  export class PipelineStep extends jspb.Message {
+    getPipelineId(): string;
+    setPipelineId(value: string): PipelineStep;
+
+    getPipelineName(): string;
+    setPipelineName(value: string): PipelineStep;
+
+    getStep(): string;
+    setStep(value: string): PipelineStep;
+
+    getRunSequence(): number;
+    setRunSequence(value: number): PipelineStep;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): PipelineStep.AsObject;
+    static toObject(includeInstance: boolean, msg: PipelineStep): PipelineStep.AsObject;
+    static serializeBinaryToWriter(message: PipelineStep, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): PipelineStep;
+    static deserializeBinaryFromReader(message: PipelineStep, reader: jspb.BinaryReader): PipelineStep;
+  }
+
+  export namespace PipelineStep {
+    export type AsObject = {
+      pipelineId: string,
+      pipelineName: string,
+      step: string,
+      runSequence: number,
+    }
+  }
+
 }
 
 export class Component extends jspb.Message {
@@ -1652,6 +1889,42 @@ export namespace DeclaredResource {
   }
 }
 
+export class DestroyedResource extends jspb.Message {
+  getName(): string;
+  setName(value: string): DestroyedResource;
+
+  getType(): string;
+  setType(value: string): DestroyedResource;
+
+  getPlatform(): string;
+  setPlatform(value: string): DestroyedResource;
+
+  getState(): any_pb.Any | undefined;
+  setState(value?: any_pb.Any): DestroyedResource;
+  hasState(): boolean;
+  clearState(): DestroyedResource;
+
+  getStateJson(): string;
+  setStateJson(value: string): DestroyedResource;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): DestroyedResource.AsObject;
+  static toObject(includeInstance: boolean, msg: DestroyedResource): DestroyedResource.AsObject;
+  static serializeBinaryToWriter(message: DestroyedResource, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): DestroyedResource;
+  static deserializeBinaryFromReader(message: DestroyedResource, reader: jspb.BinaryReader): DestroyedResource;
+}
+
+export namespace DestroyedResource {
+  export type AsObject = {
+    name: string,
+    type: string,
+    platform: string,
+    state?: any_pb.Any.AsObject,
+    stateJson: string,
+  }
+}
+
 export class TaskLaunchInfo extends jspb.Message {
   getOciUrl(): string;
   setOciUrl(value: string): TaskLaunchInfo;
@@ -1695,6 +1968,11 @@ export class Task extends jspb.Message {
   hasTaskJob(): boolean;
   clearTaskJob(): Task;
 
+  getWatchJob(): Ref.Job | undefined;
+  setWatchJob(value?: Ref.Job): Task;
+  hasWatchJob(): boolean;
+  clearWatchJob(): Task;
+
   getStartJob(): Ref.Job | undefined;
   setStartJob(value?: Ref.Job): Task;
   hasStartJob(): boolean;
@@ -1713,6 +1991,12 @@ export class Task extends jspb.Message {
   hasState(): boolean;
   clearState(): Task;
 
+  getJobState(): Task.State;
+  setJobState(value: Task.State): Task;
+
+  getResourceName(): string;
+  setResourceName(value: string): Task;
+
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): Task.AsObject;
   static toObject(includeInstance: boolean, msg: Task): Task.AsObject;
@@ -1725,10 +2009,231 @@ export namespace Task {
   export type AsObject = {
     id: string,
     taskJob?: Ref.Job.AsObject,
+    watchJob?: Ref.Job.AsObject,
     startJob?: Ref.Job.AsObject,
     stopJob?: Ref.Job.AsObject,
     stateJson: string,
     state?: any_pb.Any.AsObject,
+    jobState: Task.State,
+    resourceName: string,
+  }
+
+  export enum State { 
+    UNKNOWN = 0,
+    PENDING = 1,
+    STARTING = 2,
+    STARTED = 3,
+    RUNNING = 4,
+    COMPLETED = 5,
+    STOPPING = 6,
+    STOPPED = 7,
+    MIXED = 8,
+  }
+}
+
+export class UpsertTaskRequest extends jspb.Message {
+  getTask(): Task | undefined;
+  setTask(value?: Task): UpsertTaskRequest;
+  hasTask(): boolean;
+  clearTask(): UpsertTaskRequest;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): UpsertTaskRequest.AsObject;
+  static toObject(includeInstance: boolean, msg: UpsertTaskRequest): UpsertTaskRequest.AsObject;
+  static serializeBinaryToWriter(message: UpsertTaskRequest, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): UpsertTaskRequest;
+  static deserializeBinaryFromReader(message: UpsertTaskRequest, reader: jspb.BinaryReader): UpsertTaskRequest;
+}
+
+export namespace UpsertTaskRequest {
+  export type AsObject = {
+    task?: Task.AsObject,
+  }
+}
+
+export class UpsertTaskResponse extends jspb.Message {
+  getTask(): Task | undefined;
+  setTask(value?: Task): UpsertTaskResponse;
+  hasTask(): boolean;
+  clearTask(): UpsertTaskResponse;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): UpsertTaskResponse.AsObject;
+  static toObject(includeInstance: boolean, msg: UpsertTaskResponse): UpsertTaskResponse.AsObject;
+  static serializeBinaryToWriter(message: UpsertTaskResponse, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): UpsertTaskResponse;
+  static deserializeBinaryFromReader(message: UpsertTaskResponse, reader: jspb.BinaryReader): UpsertTaskResponse;
+}
+
+export namespace UpsertTaskResponse {
+  export type AsObject = {
+    task?: Task.AsObject,
+  }
+}
+
+export class GetTaskRequest extends jspb.Message {
+  getRef(): Ref.Task | undefined;
+  setRef(value?: Ref.Task): GetTaskRequest;
+  hasRef(): boolean;
+  clearRef(): GetTaskRequest;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): GetTaskRequest.AsObject;
+  static toObject(includeInstance: boolean, msg: GetTaskRequest): GetTaskRequest.AsObject;
+  static serializeBinaryToWriter(message: GetTaskRequest, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): GetTaskRequest;
+  static deserializeBinaryFromReader(message: GetTaskRequest, reader: jspb.BinaryReader): GetTaskRequest;
+}
+
+export namespace GetTaskRequest {
+  export type AsObject = {
+    ref?: Ref.Task.AsObject,
+  }
+}
+
+export class GetTaskResponse extends jspb.Message {
+  getTask(): Task | undefined;
+  setTask(value?: Task): GetTaskResponse;
+  hasTask(): boolean;
+  clearTask(): GetTaskResponse;
+
+  getTaskJob(): Job | undefined;
+  setTaskJob(value?: Job): GetTaskResponse;
+  hasTaskJob(): boolean;
+  clearTaskJob(): GetTaskResponse;
+
+  getStartJob(): Job | undefined;
+  setStartJob(value?: Job): GetTaskResponse;
+  hasStartJob(): boolean;
+  clearStartJob(): GetTaskResponse;
+
+  getStopJob(): Job | undefined;
+  setStopJob(value?: Job): GetTaskResponse;
+  hasStopJob(): boolean;
+  clearStopJob(): GetTaskResponse;
+
+  getWatchJob(): Job | undefined;
+  setWatchJob(value?: Job): GetTaskResponse;
+  hasWatchJob(): boolean;
+  clearWatchJob(): GetTaskResponse;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): GetTaskResponse.AsObject;
+  static toObject(includeInstance: boolean, msg: GetTaskResponse): GetTaskResponse.AsObject;
+  static serializeBinaryToWriter(message: GetTaskResponse, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): GetTaskResponse;
+  static deserializeBinaryFromReader(message: GetTaskResponse, reader: jspb.BinaryReader): GetTaskResponse;
+}
+
+export namespace GetTaskResponse {
+  export type AsObject = {
+    task?: Task.AsObject,
+    taskJob?: Job.AsObject,
+    startJob?: Job.AsObject,
+    stopJob?: Job.AsObject,
+    watchJob?: Job.AsObject,
+  }
+}
+
+export class DeleteTaskRequest extends jspb.Message {
+  getRef(): Ref.Task | undefined;
+  setRef(value?: Ref.Task): DeleteTaskRequest;
+  hasRef(): boolean;
+  clearRef(): DeleteTaskRequest;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): DeleteTaskRequest.AsObject;
+  static toObject(includeInstance: boolean, msg: DeleteTaskRequest): DeleteTaskRequest.AsObject;
+  static serializeBinaryToWriter(message: DeleteTaskRequest, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): DeleteTaskRequest;
+  static deserializeBinaryFromReader(message: DeleteTaskRequest, reader: jspb.BinaryReader): DeleteTaskRequest;
+}
+
+export namespace DeleteTaskRequest {
+  export type AsObject = {
+    ref?: Ref.Task.AsObject,
+  }
+}
+
+export class ListTaskRequest extends jspb.Message {
+  getTaskstateList(): Array<Task.State>;
+  setTaskstateList(value: Array<Task.State>): ListTaskRequest;
+  clearTaskstateList(): ListTaskRequest;
+  addTaskstate(value: Task.State, index?: number): ListTaskRequest;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): ListTaskRequest.AsObject;
+  static toObject(includeInstance: boolean, msg: ListTaskRequest): ListTaskRequest.AsObject;
+  static serializeBinaryToWriter(message: ListTaskRequest, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): ListTaskRequest;
+  static deserializeBinaryFromReader(message: ListTaskRequest, reader: jspb.BinaryReader): ListTaskRequest;
+}
+
+export namespace ListTaskRequest {
+  export type AsObject = {
+    taskstateList: Array<Task.State>,
+  }
+}
+
+export class ListTaskResponse extends jspb.Message {
+  getTasksList(): Array<GetTaskResponse>;
+  setTasksList(value: Array<GetTaskResponse>): ListTaskResponse;
+  clearTasksList(): ListTaskResponse;
+  addTasks(value?: GetTaskResponse, index?: number): GetTaskResponse;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): ListTaskResponse.AsObject;
+  static toObject(includeInstance: boolean, msg: ListTaskResponse): ListTaskResponse.AsObject;
+  static serializeBinaryToWriter(message: ListTaskResponse, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): ListTaskResponse;
+  static deserializeBinaryFromReader(message: ListTaskResponse, reader: jspb.BinaryReader): ListTaskResponse;
+}
+
+export namespace ListTaskResponse {
+  export type AsObject = {
+    tasksList: Array<GetTaskResponse.AsObject>,
+  }
+}
+
+export class CancelTaskRequest extends jspb.Message {
+  getRef(): Ref.Task | undefined;
+  setRef(value?: Ref.Task): CancelTaskRequest;
+  hasRef(): boolean;
+  clearRef(): CancelTaskRequest;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): CancelTaskRequest.AsObject;
+  static toObject(includeInstance: boolean, msg: CancelTaskRequest): CancelTaskRequest.AsObject;
+  static serializeBinaryToWriter(message: CancelTaskRequest, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): CancelTaskRequest;
+  static deserializeBinaryFromReader(message: CancelTaskRequest, reader: jspb.BinaryReader): CancelTaskRequest;
+}
+
+export namespace CancelTaskRequest {
+  export type AsObject = {
+    ref?: Ref.Task.AsObject,
+  }
+}
+
+export class ErrorDetail extends jspb.Message {
+  getKey(): string;
+  setKey(value: string): ErrorDetail;
+
+  getValue(): string;
+  setValue(value: string): ErrorDetail;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): ErrorDetail.AsObject;
+  static toObject(includeInstance: boolean, msg: ErrorDetail): ErrorDetail.AsObject;
+  static serializeBinaryToWriter(message: ErrorDetail, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): ErrorDetail;
+  static deserializeBinaryFromReader(message: ErrorDetail, reader: jspb.BinaryReader): ErrorDetail;
+}
+
+export namespace ErrorDetail {
+  export type AsObject = {
+    key: string,
+    value: string,
   }
 }
 
@@ -2399,6 +2904,11 @@ export class Job extends jspb.Message {
   hasOndemandRunner(): boolean;
   clearOndemandRunner(): Job;
 
+  getOndemandRunnerTask(): Job.TaskOverride | undefined;
+  setOndemandRunnerTask(value?: Job.TaskOverride): Job;
+  hasOndemandRunnerTask(): boolean;
+  clearOndemandRunnerTask(): Job;
+
   getLabelsMap(): jspb.Map<string, string>;
   clearLabelsMap(): Job;
 
@@ -2515,6 +3025,21 @@ export class Job extends jspb.Message {
   hasInit(): boolean;
   clearInit(): Job;
 
+  getWatchTask(): Job.WatchTaskOp | undefined;
+  setWatchTask(value?: Job.WatchTaskOp): Job;
+  hasWatchTask(): boolean;
+  clearWatchTask(): Job;
+
+  getPipelineStep(): Job.PipelineStepOp | undefined;
+  setPipelineStep(value?: Job.PipelineStepOp): Job;
+  hasPipelineStep(): boolean;
+  clearPipelineStep(): Job;
+
+  getDestroyProject(): Job.DestroyProjectOp | undefined;
+  setDestroyProject(value?: Job.DestroyProjectOp): Job;
+  hasDestroyProject(): boolean;
+  clearDestroyProject(): Job;
+
   getState(): Job.State;
   setState(value: Job.State): Job;
 
@@ -2576,6 +3101,16 @@ export class Job extends jspb.Message {
   hasExpireTime(): boolean;
   clearExpireTime(): Job;
 
+  getTask(): Ref.Task | undefined;
+  setTask(value?: Ref.Task): Job;
+  hasTask(): boolean;
+  clearTask(): Job;
+
+  getPipeline(): Ref.PipelineStep | undefined;
+  setPipeline(value?: Ref.PipelineStep): Job;
+  hasPipeline(): boolean;
+  clearPipeline(): Job;
+
   getOperationCase(): Job.OperationCase;
 
   serializeBinary(): Uint8Array;
@@ -2596,6 +3131,7 @@ export namespace Job {
     workspace?: Ref.Workspace.AsObject,
     targetRunner?: Ref.Runner.AsObject,
     ondemandRunner?: Ref.OnDemandRunnerConfig.AsObject,
+    ondemandRunnerTask?: Job.TaskOverride.AsObject,
     labelsMap: Array<[string, string]>,
     dataSource?: Job.DataSource.AsObject,
     dataSourceOverridesMap: Array<[string, string]>,
@@ -2620,6 +3156,9 @@ export namespace Job {
     startTask?: Job.StartTaskLaunchOp.AsObject,
     stopTask?: Job.StopTaskLaunchOp.AsObject,
     init?: Job.InitOp.AsObject,
+    watchTask?: Job.WatchTaskOp.AsObject,
+    pipelineStep?: Job.PipelineStepOp.AsObject,
+    destroyProject?: Job.DestroyProjectOp.AsObject,
     state: Job.State,
     assignedRunner?: Ref.RunnerId.AsObject,
     queueTime?: google_protobuf_timestamp_pb.Timestamp.AsObject,
@@ -2633,7 +3172,34 @@ export namespace Job {
     result?: Job.Result.AsObject,
     cancelTime?: google_protobuf_timestamp_pb.Timestamp.AsObject,
     expireTime?: google_protobuf_timestamp_pb.Timestamp.AsObject,
+    task?: Ref.Task.AsObject,
+    pipeline?: Ref.PipelineStep.AsObject,
   }
+
+  export class TaskOverride extends jspb.Message {
+    getLaunchInfo(): TaskLaunchInfo | undefined;
+    setLaunchInfo(value?: TaskLaunchInfo): TaskOverride;
+    hasLaunchInfo(): boolean;
+    clearLaunchInfo(): TaskOverride;
+
+    getSkipOperation(): boolean;
+    setSkipOperation(value: boolean): TaskOverride;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): TaskOverride.AsObject;
+    static toObject(includeInstance: boolean, msg: TaskOverride): TaskOverride.AsObject;
+    static serializeBinaryToWriter(message: TaskOverride, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): TaskOverride;
+    static deserializeBinaryFromReader(message: TaskOverride, reader: jspb.BinaryReader): TaskOverride;
+  }
+
+  export namespace TaskOverride {
+    export type AsObject = {
+      launchInfo?: TaskLaunchInfo.AsObject,
+      skipOperation: boolean,
+    }
+  }
+
 
   export class Result extends jspb.Message {
     getBuild(): Job.BuildResult | undefined;
@@ -2706,6 +3272,26 @@ export namespace Job {
     hasInit(): boolean;
     clearInit(): Result;
 
+    getWatchTask(): Job.WatchTaskResult | undefined;
+    setWatchTask(value?: Job.WatchTaskResult): Result;
+    hasWatchTask(): boolean;
+    clearWatchTask(): Result;
+
+    getPipelineStep(): Job.PipelineStepResult | undefined;
+    setPipelineStep(value?: Job.PipelineStepResult): Result;
+    hasPipelineStep(): boolean;
+    clearPipelineStep(): Result;
+
+    getPipelineConfigSync(): Job.PipelineConfigSyncResult | undefined;
+    setPipelineConfigSync(value?: Job.PipelineConfigSyncResult): Result;
+    hasPipelineConfigSync(): boolean;
+    clearPipelineConfigSync(): Result;
+
+    getProjectDestroy(): Job.ProjectDestroyResult | undefined;
+    setProjectDestroy(value?: Job.ProjectDestroyResult): Result;
+    hasProjectDestroy(): boolean;
+    clearProjectDestroy(): Result;
+
     serializeBinary(): Uint8Array;
     toObject(includeInstance?: boolean): Result.AsObject;
     static toObject(includeInstance: boolean, msg: Result): Result.AsObject;
@@ -2730,6 +3316,10 @@ export namespace Job {
       statusReport?: Job.StatusReportResult.AsObject,
       startTask?: Job.StartTaskResult.AsObject,
       init?: Job.InitResult.AsObject,
+      watchTask?: Job.WatchTaskResult.AsObject,
+      pipelineStep?: Job.PipelineStepResult.AsObject,
+      pipelineConfigSync?: Job.PipelineConfigSyncResult.AsObject,
+      projectDestroy?: Job.ProjectDestroyResult.AsObject,
     }
   }
 
@@ -2771,6 +3361,11 @@ export namespace Job {
     hasGit(): boolean;
     clearGit(): DataSource;
 
+    getRemote(): Job.Remote | undefined;
+    setRemote(value?: Job.Remote): DataSource;
+    hasRemote(): boolean;
+    clearRemote(): DataSource;
+
     getSourceCase(): DataSource.SourceCase;
 
     serializeBinary(): Uint8Array;
@@ -2785,6 +3380,7 @@ export namespace Job {
     export type AsObject = {
       local?: Job.Local.AsObject,
       git?: Job.Git.AsObject,
+      remote?: Job.Remote.AsObject,
     }
 
     export class Ref extends jspb.Message {
@@ -2826,6 +3422,7 @@ export namespace Job {
       SOURCE_NOT_SET = 0,
       LOCAL = 1,
       GIT = 2,
+      REMOTE = 3,
     }
   }
 
@@ -2845,6 +3442,31 @@ export namespace Job {
   }
 
 
+  export class Remote extends jspb.Message {
+    getDescription(): string;
+    setDescription(value: string): Remote;
+
+    getGitRemote(): Job.Git | undefined;
+    setGitRemote(value?: Job.Git): Remote;
+    hasGitRemote(): boolean;
+    clearGitRemote(): Remote;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): Remote.AsObject;
+    static toObject(includeInstance: boolean, msg: Remote): Remote.AsObject;
+    static serializeBinaryToWriter(message: Remote, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): Remote;
+    static deserializeBinaryFromReader(message: Remote, reader: jspb.BinaryReader): Remote;
+  }
+
+  export namespace Remote {
+    export type AsObject = {
+      description: string,
+      gitRemote?: Job.Git.AsObject,
+    }
+  }
+
+
   export class Git extends jspb.Message {
     getUrl(): string;
     setUrl(value: string): Git;
@@ -2857,6 +3479,9 @@ export namespace Job {
 
     getIgnoreChangesOutsidePath(): boolean;
     setIgnoreChangesOutsidePath(value: boolean): Git;
+
+    getRecurseSubmodules(): number;
+    setRecurseSubmodules(value: number): Git;
 
     getBasic(): Job.Git.Basic | undefined;
     setBasic(value?: Job.Git.Basic): Git;
@@ -2884,6 +3509,7 @@ export namespace Job {
       ref: string,
       path: string,
       ignoreChangesOutsidePath: boolean,
+      recurseSubmodules: number,
       basic?: Job.Git.Basic.AsObject,
       ssh?: Job.Git.SSH.AsObject,
     }
@@ -2949,6 +3575,9 @@ export namespace Job {
       hasTimestamp(): boolean;
       clearTimestamp(): Ref;
 
+      getCommitMessage(): string;
+      setCommitMessage(value: string): Ref;
+
       serializeBinary(): Uint8Array;
       toObject(includeInstance?: boolean): Ref.AsObject;
       static toObject(includeInstance: boolean, msg: Ref): Ref.AsObject;
@@ -2961,6 +3590,7 @@ export namespace Job {
       export type AsObject = {
         commit: string,
         timestamp?: google_protobuf_timestamp_pb.Timestamp.AsObject,
+        commitMessage: string,
       }
     }
 
@@ -3567,6 +4197,46 @@ export namespace Job {
   }
 
 
+  export class WatchTaskOp extends jspb.Message {
+    getStartJob(): Ref.Job | undefined;
+    setStartJob(value?: Ref.Job): WatchTaskOp;
+    hasStartJob(): boolean;
+    clearStartJob(): WatchTaskOp;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): WatchTaskOp.AsObject;
+    static toObject(includeInstance: boolean, msg: WatchTaskOp): WatchTaskOp.AsObject;
+    static serializeBinaryToWriter(message: WatchTaskOp, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): WatchTaskOp;
+    static deserializeBinaryFromReader(message: WatchTaskOp, reader: jspb.BinaryReader): WatchTaskOp;
+  }
+
+  export namespace WatchTaskOp {
+    export type AsObject = {
+      startJob?: Ref.Job.AsObject,
+    }
+  }
+
+
+  export class WatchTaskResult extends jspb.Message {
+    getExitCode(): number;
+    setExitCode(value: number): WatchTaskResult;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): WatchTaskResult.AsObject;
+    static toObject(includeInstance: boolean, msg: WatchTaskResult): WatchTaskResult.AsObject;
+    static serializeBinaryToWriter(message: WatchTaskResult, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): WatchTaskResult;
+    static deserializeBinaryFromReader(message: WatchTaskResult, reader: jspb.BinaryReader): WatchTaskResult;
+  }
+
+  export namespace WatchTaskResult {
+    export type AsObject = {
+      exitCode: number,
+    }
+  }
+
+
   export class StatusReportOp extends jspb.Message {
     getDeployment(): Deployment | undefined;
     setDeployment(value?: Deployment): StatusReportOp;
@@ -3716,6 +4386,44 @@ export namespace Job {
   }
 
 
+  export class PipelineConfigSyncResult extends jspb.Message {
+    getSyncedPipelinesMap(): jspb.Map<string, Ref.Pipeline>;
+    clearSyncedPipelinesMap(): PipelineConfigSyncResult;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): PipelineConfigSyncResult.AsObject;
+    static toObject(includeInstance: boolean, msg: PipelineConfigSyncResult): PipelineConfigSyncResult.AsObject;
+    static serializeBinaryToWriter(message: PipelineConfigSyncResult, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): PipelineConfigSyncResult;
+    static deserializeBinaryFromReader(message: PipelineConfigSyncResult, reader: jspb.BinaryReader): PipelineConfigSyncResult;
+  }
+
+  export namespace PipelineConfigSyncResult {
+    export type AsObject = {
+      syncedPipelinesMap: Array<[string, Ref.Pipeline.AsObject]>,
+    }
+  }
+
+
+  export class ProjectDestroyResult extends jspb.Message {
+    getJobId(): string;
+    setJobId(value: string): ProjectDestroyResult;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): ProjectDestroyResult.AsObject;
+    static toObject(includeInstance: boolean, msg: ProjectDestroyResult): ProjectDestroyResult.AsObject;
+    static serializeBinaryToWriter(message: ProjectDestroyResult, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): ProjectDestroyResult;
+    static deserializeBinaryFromReader(message: ProjectDestroyResult, reader: jspb.BinaryReader): ProjectDestroyResult;
+  }
+
+  export namespace ProjectDestroyResult {
+    export type AsObject = {
+      jobId: string,
+    }
+  }
+
+
   export class PollOp extends jspb.Message {
     serializeBinary(): Uint8Array;
     toObject(includeInstance?: boolean): PollOp.AsObject;
@@ -3788,6 +4496,73 @@ export namespace Job {
 
   export namespace InitResult {
     export type AsObject = {
+    }
+  }
+
+
+  export class PipelineStepOp extends jspb.Message {
+    getStep(): Pipeline.Step | undefined;
+    setStep(value?: Pipeline.Step): PipelineStepOp;
+    hasStep(): boolean;
+    clearStep(): PipelineStepOp;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): PipelineStepOp.AsObject;
+    static toObject(includeInstance: boolean, msg: PipelineStepOp): PipelineStepOp.AsObject;
+    static serializeBinaryToWriter(message: PipelineStepOp, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): PipelineStepOp;
+    static deserializeBinaryFromReader(message: PipelineStepOp, reader: jspb.BinaryReader): PipelineStepOp;
+  }
+
+  export namespace PipelineStepOp {
+    export type AsObject = {
+      step?: Pipeline.Step.AsObject,
+    }
+  }
+
+
+  export class DestroyProjectOp extends jspb.Message {
+    getProject(): Ref.Project | undefined;
+    setProject(value?: Ref.Project): DestroyProjectOp;
+    hasProject(): boolean;
+    clearProject(): DestroyProjectOp;
+
+    getSkipDestroyResources(): boolean;
+    setSkipDestroyResources(value: boolean): DestroyProjectOp;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): DestroyProjectOp.AsObject;
+    static toObject(includeInstance: boolean, msg: DestroyProjectOp): DestroyProjectOp.AsObject;
+    static serializeBinaryToWriter(message: DestroyProjectOp, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): DestroyProjectOp;
+    static deserializeBinaryFromReader(message: DestroyProjectOp, reader: jspb.BinaryReader): DestroyProjectOp;
+  }
+
+  export namespace DestroyProjectOp {
+    export type AsObject = {
+      project?: Ref.Project.AsObject,
+      skipDestroyResources: boolean,
+    }
+  }
+
+
+  export class PipelineStepResult extends jspb.Message {
+    getResult(): google_rpc_status_pb.Status | undefined;
+    setResult(value?: google_rpc_status_pb.Status): PipelineStepResult;
+    hasResult(): boolean;
+    clearResult(): PipelineStepResult;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): PipelineStepResult.AsObject;
+    static toObject(includeInstance: boolean, msg: PipelineStepResult): PipelineStepResult.AsObject;
+    static serializeBinaryToWriter(message: PipelineStepResult, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): PipelineStepResult;
+    static deserializeBinaryFromReader(message: PipelineStepResult, reader: jspb.BinaryReader): PipelineStepResult;
+  }
+
+  export namespace PipelineStepResult {
+    export type AsObject = {
+      result?: google_rpc_status_pb.Status.AsObject,
     }
   }
 
@@ -3889,6 +4664,9 @@ export namespace Job {
     START_TASK = 66,
     STOP_TASK = 67,
     INIT = 68,
+    WATCH_TASK = 69,
+    PIPELINE_STEP = 70,
+    DESTROY_PROJECT = 71,
   }
 }
 
@@ -4041,6 +4819,11 @@ export class ListJobsRequest extends jspb.Message {
   hasTargetrunner(): boolean;
   clearTargetrunner(): ListJobsRequest;
 
+  getPipeline(): Ref.PipelineStep | undefined;
+  setPipeline(value?: Ref.PipelineStep): ListJobsRequest;
+  hasPipeline(): boolean;
+  clearPipeline(): ListJobsRequest;
+
   getJobstateList(): Array<Job.State>;
   setJobstateList(value: Array<Job.State>): ListJobsRequest;
   clearJobstateList(): ListJobsRequest;
@@ -4060,6 +4843,7 @@ export namespace ListJobsRequest {
     project?: Ref.Project.AsObject,
     application?: Ref.Application.AsObject,
     targetrunner?: Ref.Runner.AsObject,
+    pipeline?: Ref.PipelineStep.AsObject,
     jobstateList: Array<Job.State>,
   }
 }
@@ -5883,6 +6667,26 @@ export namespace ListProjectsResponse {
   }
 }
 
+export class DestroyProjectRequest extends jspb.Message {
+  getProject(): Ref.Project | undefined;
+  setProject(value?: Ref.Project): DestroyProjectRequest;
+  hasProject(): boolean;
+  clearProject(): DestroyProjectRequest;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): DestroyProjectRequest.AsObject;
+  static toObject(includeInstance: boolean, msg: DestroyProjectRequest): DestroyProjectRequest.AsObject;
+  static serializeBinaryToWriter(message: DestroyProjectRequest, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): DestroyProjectRequest;
+  static deserializeBinaryFromReader(message: DestroyProjectRequest, reader: jspb.BinaryReader): DestroyProjectRequest;
+}
+
+export namespace DestroyProjectRequest {
+  export type AsObject = {
+    project?: Ref.Project.AsObject,
+  }
+}
+
 export class GetApplicationRequest extends jspb.Message {
   getApplication(): Ref.Application | undefined;
   setApplication(value?: Ref.Application): GetApplicationRequest;
@@ -6355,6 +7159,46 @@ export class GetOnDemandRunnerConfigResponse extends jspb.Message {
 }
 
 export namespace GetOnDemandRunnerConfigResponse {
+  export type AsObject = {
+    config?: OnDemandRunnerConfig.AsObject,
+  }
+}
+
+export class DeleteOnDemandRunnerConfigRequest extends jspb.Message {
+  getConfig(): Ref.OnDemandRunnerConfig | undefined;
+  setConfig(value?: Ref.OnDemandRunnerConfig): DeleteOnDemandRunnerConfigRequest;
+  hasConfig(): boolean;
+  clearConfig(): DeleteOnDemandRunnerConfigRequest;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): DeleteOnDemandRunnerConfigRequest.AsObject;
+  static toObject(includeInstance: boolean, msg: DeleteOnDemandRunnerConfigRequest): DeleteOnDemandRunnerConfigRequest.AsObject;
+  static serializeBinaryToWriter(message: DeleteOnDemandRunnerConfigRequest, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): DeleteOnDemandRunnerConfigRequest;
+  static deserializeBinaryFromReader(message: DeleteOnDemandRunnerConfigRequest, reader: jspb.BinaryReader): DeleteOnDemandRunnerConfigRequest;
+}
+
+export namespace DeleteOnDemandRunnerConfigRequest {
+  export type AsObject = {
+    config?: Ref.OnDemandRunnerConfig.AsObject,
+  }
+}
+
+export class DeleteOnDemandRunnerConfigResponse extends jspb.Message {
+  getConfig(): OnDemandRunnerConfig | undefined;
+  setConfig(value?: OnDemandRunnerConfig): DeleteOnDemandRunnerConfigResponse;
+  hasConfig(): boolean;
+  clearConfig(): DeleteOnDemandRunnerConfigResponse;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): DeleteOnDemandRunnerConfigResponse.AsObject;
+  static toObject(includeInstance: boolean, msg: DeleteOnDemandRunnerConfigResponse): DeleteOnDemandRunnerConfigResponse.AsObject;
+  static serializeBinaryToWriter(message: DeleteOnDemandRunnerConfigResponse, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): DeleteOnDemandRunnerConfigResponse;
+  static deserializeBinaryFromReader(message: DeleteOnDemandRunnerConfigResponse, reader: jspb.BinaryReader): DeleteOnDemandRunnerConfigResponse;
+}
+
+export namespace DeleteOnDemandRunnerConfigResponse {
   export type AsObject = {
     config?: OnDemandRunnerConfig.AsObject,
   }
@@ -6845,6 +7689,11 @@ export class Deployment extends jspb.Message {
   clearDeclaredResourcesList(): Deployment;
   addDeclaredResources(value?: DeclaredResource, index?: number): DeclaredResource;
 
+  getDestroyedResourcesList(): Array<DestroyedResource>;
+  setDestroyedResourcesList(value: Array<DestroyedResource>): Deployment;
+  clearDestroyedResourcesList(): Deployment;
+  addDestroyedResources(value?: DestroyedResource, index?: number): DestroyedResource;
+
   getPreload(): Deployment.Preload | undefined;
   setPreload(value?: Deployment.Preload): Deployment;
   hasPreload(): boolean;
@@ -6879,6 +7728,7 @@ export namespace Deployment {
     hasExecPlugin: boolean,
     hasLogsPlugin: boolean,
     declaredResourcesList: Array<DeclaredResource.AsObject>,
+    destroyedResourcesList: Array<DestroyedResource.AsObject>,
     preload?: Deployment.Preload.AsObject,
   }
 
@@ -7302,6 +8152,11 @@ export class Release extends jspb.Message {
   clearDeclaredResourcesList(): Release;
   addDeclaredResources(value?: DeclaredResource, index?: number): DeclaredResource;
 
+  getDestroyedResourcesList(): Array<DestroyedResource>;
+  setDestroyedResourcesList(value: Array<DestroyedResource>): Release;
+  clearDestroyedResourcesList(): Release;
+  addDestroyedResources(value?: DestroyedResource, index?: number): DestroyedResource;
+
   getPreload(): Release.Preload | undefined;
   setPreload(value?: Release.Preload): Release;
   hasPreload(): boolean;
@@ -7333,6 +8188,7 @@ export namespace Release {
     jobId: string,
     unimplemented: boolean,
     declaredResourcesList: Array<DeclaredResource.AsObject>,
+    destroyedResourcesList: Array<DestroyedResource.AsObject>,
     preload?: Release.Preload.AsObject,
   }
 
@@ -9384,6 +10240,664 @@ export namespace EntrypointExecResponse {
   }
 }
 
+export class Pipeline extends jspb.Message {
+  getId(): string;
+  setId(value: string): Pipeline;
+
+  getName(): string;
+  setName(value: string): Pipeline;
+
+  getProject(): Ref.Project | undefined;
+  setProject(value?: Ref.Project): Pipeline;
+  hasProject(): boolean;
+  clearProject(): Pipeline;
+
+  getStepsMap(): jspb.Map<string, Pipeline.Step>;
+  clearStepsMap(): Pipeline;
+
+  getOwnerCase(): Pipeline.OwnerCase;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): Pipeline.AsObject;
+  static toObject(includeInstance: boolean, msg: Pipeline): Pipeline.AsObject;
+  static serializeBinaryToWriter(message: Pipeline, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): Pipeline;
+  static deserializeBinaryFromReader(message: Pipeline, reader: jspb.BinaryReader): Pipeline;
+}
+
+export namespace Pipeline {
+  export type AsObject = {
+    id: string,
+    name: string,
+    project?: Ref.Project.AsObject,
+    stepsMap: Array<[string, Pipeline.Step.AsObject]>,
+  }
+
+  export class Step extends jspb.Message {
+    getName(): string;
+    setName(value: string): Step;
+
+    getDependsOnList(): Array<string>;
+    setDependsOnList(value: Array<string>): Step;
+    clearDependsOnList(): Step;
+    addDependsOn(value: string, index?: number): Step;
+
+    getExec(): Pipeline.Step.Exec | undefined;
+    setExec(value?: Pipeline.Step.Exec): Step;
+    hasExec(): boolean;
+    clearExec(): Step;
+
+    getBuild(): Pipeline.Step.Build | undefined;
+    setBuild(value?: Pipeline.Step.Build): Step;
+    hasBuild(): boolean;
+    clearBuild(): Step;
+
+    getDeploy(): Pipeline.Step.Deploy | undefined;
+    setDeploy(value?: Pipeline.Step.Deploy): Step;
+    hasDeploy(): boolean;
+    clearDeploy(): Step;
+
+    getRelease(): Pipeline.Step.Release | undefined;
+    setRelease(value?: Pipeline.Step.Release): Step;
+    hasRelease(): boolean;
+    clearRelease(): Step;
+
+    getUp(): Pipeline.Step.Up | undefined;
+    setUp(value?: Pipeline.Step.Up): Step;
+    hasUp(): boolean;
+    clearUp(): Step;
+
+    getPipeline(): Pipeline.Step.Pipeline | undefined;
+    setPipeline(value?: Pipeline.Step.Pipeline): Step;
+    hasPipeline(): boolean;
+    clearPipeline(): Step;
+
+    getImage(): string;
+    setImage(value: string): Step;
+
+    getWorkspace(): Ref.Workspace | undefined;
+    setWorkspace(value?: Ref.Workspace): Step;
+    hasWorkspace(): boolean;
+    clearWorkspace(): Step;
+
+    getKindCase(): Step.KindCase;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): Step.AsObject;
+    static toObject(includeInstance: boolean, msg: Step): Step.AsObject;
+    static serializeBinaryToWriter(message: Step, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): Step;
+    static deserializeBinaryFromReader(message: Step, reader: jspb.BinaryReader): Step;
+  }
+
+  export namespace Step {
+    export type AsObject = {
+      name: string,
+      dependsOnList: Array<string>,
+      exec?: Pipeline.Step.Exec.AsObject,
+      build?: Pipeline.Step.Build.AsObject,
+      deploy?: Pipeline.Step.Deploy.AsObject,
+      release?: Pipeline.Step.Release.AsObject,
+      up?: Pipeline.Step.Up.AsObject,
+      pipeline?: Pipeline.Step.Pipeline.AsObject,
+      image: string,
+      workspace?: Ref.Workspace.AsObject,
+    }
+
+    export class Exec extends jspb.Message {
+      getImage(): string;
+      setImage(value: string): Exec;
+
+      getCommand(): string;
+      setCommand(value: string): Exec;
+
+      getArgsList(): Array<string>;
+      setArgsList(value: Array<string>): Exec;
+      clearArgsList(): Exec;
+      addArgs(value: string, index?: number): Exec;
+
+      serializeBinary(): Uint8Array;
+      toObject(includeInstance?: boolean): Exec.AsObject;
+      static toObject(includeInstance: boolean, msg: Exec): Exec.AsObject;
+      static serializeBinaryToWriter(message: Exec, writer: jspb.BinaryWriter): void;
+      static deserializeBinary(bytes: Uint8Array): Exec;
+      static deserializeBinaryFromReader(message: Exec, reader: jspb.BinaryReader): Exec;
+    }
+
+    export namespace Exec {
+      export type AsObject = {
+        image: string,
+        command: string,
+        argsList: Array<string>,
+      }
+    }
+
+
+    export class Build extends jspb.Message {
+      getDisablePush(): boolean;
+      setDisablePush(value: boolean): Build;
+
+      serializeBinary(): Uint8Array;
+      toObject(includeInstance?: boolean): Build.AsObject;
+      static toObject(includeInstance: boolean, msg: Build): Build.AsObject;
+      static serializeBinaryToWriter(message: Build, writer: jspb.BinaryWriter): void;
+      static deserializeBinary(bytes: Uint8Array): Build;
+      static deserializeBinaryFromReader(message: Build, reader: jspb.BinaryReader): Build;
+    }
+
+    export namespace Build {
+      export type AsObject = {
+        disablePush: boolean,
+      }
+    }
+
+
+    export class Deploy extends jspb.Message {
+      getRelease(): boolean;
+      setRelease(value: boolean): Deploy;
+
+      serializeBinary(): Uint8Array;
+      toObject(includeInstance?: boolean): Deploy.AsObject;
+      static toObject(includeInstance: boolean, msg: Deploy): Deploy.AsObject;
+      static serializeBinaryToWriter(message: Deploy, writer: jspb.BinaryWriter): void;
+      static deserializeBinary(bytes: Uint8Array): Deploy;
+      static deserializeBinaryFromReader(message: Deploy, reader: jspb.BinaryReader): Deploy;
+    }
+
+    export namespace Deploy {
+      export type AsObject = {
+        release: boolean,
+      }
+    }
+
+
+    export class Release extends jspb.Message {
+      getDeployment(): Ref.Deployment | undefined;
+      setDeployment(value?: Ref.Deployment): Release;
+      hasDeployment(): boolean;
+      clearDeployment(): Release;
+
+      getPrune(): boolean;
+      setPrune(value: boolean): Release;
+
+      getPruneRetain(): number;
+      setPruneRetain(value: number): Release;
+
+      getPruneRetainOverride(): boolean;
+      setPruneRetainOverride(value: boolean): Release;
+
+      serializeBinary(): Uint8Array;
+      toObject(includeInstance?: boolean): Release.AsObject;
+      static toObject(includeInstance: boolean, msg: Release): Release.AsObject;
+      static serializeBinaryToWriter(message: Release, writer: jspb.BinaryWriter): void;
+      static deserializeBinary(bytes: Uint8Array): Release;
+      static deserializeBinaryFromReader(message: Release, reader: jspb.BinaryReader): Release;
+    }
+
+    export namespace Release {
+      export type AsObject = {
+        deployment?: Ref.Deployment.AsObject,
+        prune: boolean,
+        pruneRetain: number,
+        pruneRetainOverride: boolean,
+      }
+    }
+
+
+    export class Up extends jspb.Message {
+      getPrune(): boolean;
+      setPrune(value: boolean): Up;
+
+      getPruneRetain(): number;
+      setPruneRetain(value: number): Up;
+
+      getPruneRetainOverride(): boolean;
+      setPruneRetainOverride(value: boolean): Up;
+
+      serializeBinary(): Uint8Array;
+      toObject(includeInstance?: boolean): Up.AsObject;
+      static toObject(includeInstance: boolean, msg: Up): Up.AsObject;
+      static serializeBinaryToWriter(message: Up, writer: jspb.BinaryWriter): void;
+      static deserializeBinary(bytes: Uint8Array): Up;
+      static deserializeBinaryFromReader(message: Up, reader: jspb.BinaryReader): Up;
+    }
+
+    export namespace Up {
+      export type AsObject = {
+        prune: boolean,
+        pruneRetain: number,
+        pruneRetainOverride: boolean,
+      }
+    }
+
+
+    export class Pipeline extends jspb.Message {
+      getRef(): Ref.Pipeline | undefined;
+      setRef(value?: Ref.Pipeline): Pipeline;
+      hasRef(): boolean;
+      clearRef(): Pipeline;
+
+      serializeBinary(): Uint8Array;
+      toObject(includeInstance?: boolean): Pipeline.AsObject;
+      static toObject(includeInstance: boolean, msg: Pipeline): Pipeline.AsObject;
+      static serializeBinaryToWriter(message: Pipeline, writer: jspb.BinaryWriter): void;
+      static deserializeBinary(bytes: Uint8Array): Pipeline;
+      static deserializeBinaryFromReader(message: Pipeline, reader: jspb.BinaryReader): Pipeline;
+    }
+
+    export namespace Pipeline {
+      export type AsObject = {
+        ref?: Ref.Pipeline.AsObject,
+      }
+    }
+
+
+    export enum KindCase { 
+      KIND_NOT_SET = 0,
+      EXEC = 3,
+      BUILD = 4,
+      DEPLOY = 6,
+      RELEASE = 7,
+      UP = 8,
+      PIPELINE = 9,
+    }
+  }
+
+
+  export enum OwnerCase { 
+    OWNER_NOT_SET = 0,
+    PROJECT = 3,
+  }
+}
+
+export class PipelineRun extends jspb.Message {
+  getId(): string;
+  setId(value: string): PipelineRun;
+
+  getSequence(): number;
+  setSequence(value: number): PipelineRun;
+
+  getPipeline(): Ref.Pipeline | undefined;
+  setPipeline(value?: Ref.Pipeline): PipelineRun;
+  hasPipeline(): boolean;
+  clearPipeline(): PipelineRun;
+
+  getJobsList(): Array<Ref.Job>;
+  setJobsList(value: Array<Ref.Job>): PipelineRun;
+  clearJobsList(): PipelineRun;
+  addJobs(value?: Ref.Job, index?: number): Ref.Job;
+
+  getState(): PipelineRun.State;
+  setState(value: PipelineRun.State): PipelineRun;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): PipelineRun.AsObject;
+  static toObject(includeInstance: boolean, msg: PipelineRun): PipelineRun.AsObject;
+  static serializeBinaryToWriter(message: PipelineRun, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): PipelineRun;
+  static deserializeBinaryFromReader(message: PipelineRun, reader: jspb.BinaryReader): PipelineRun;
+}
+
+export namespace PipelineRun {
+  export type AsObject = {
+    id: string,
+    sequence: number,
+    pipeline?: Ref.Pipeline.AsObject,
+    jobsList: Array<Ref.Job.AsObject>,
+    state: PipelineRun.State,
+  }
+
+  export enum State { 
+    UNKNOWN = 0,
+    PENDING = 1,
+    STARTING = 2,
+    RUNNING = 3,
+    ERROR = 4,
+    CANCELLED = 5,
+    SUCCESS = 6,
+  }
+}
+
+export class UpsertPipelineRequest extends jspb.Message {
+  getPipeline(): Pipeline | undefined;
+  setPipeline(value?: Pipeline): UpsertPipelineRequest;
+  hasPipeline(): boolean;
+  clearPipeline(): UpsertPipelineRequest;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): UpsertPipelineRequest.AsObject;
+  static toObject(includeInstance: boolean, msg: UpsertPipelineRequest): UpsertPipelineRequest.AsObject;
+  static serializeBinaryToWriter(message: UpsertPipelineRequest, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): UpsertPipelineRequest;
+  static deserializeBinaryFromReader(message: UpsertPipelineRequest, reader: jspb.BinaryReader): UpsertPipelineRequest;
+}
+
+export namespace UpsertPipelineRequest {
+  export type AsObject = {
+    pipeline?: Pipeline.AsObject,
+  }
+}
+
+export class UpsertPipelineResponse extends jspb.Message {
+  getPipeline(): Pipeline | undefined;
+  setPipeline(value?: Pipeline): UpsertPipelineResponse;
+  hasPipeline(): boolean;
+  clearPipeline(): UpsertPipelineResponse;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): UpsertPipelineResponse.AsObject;
+  static toObject(includeInstance: boolean, msg: UpsertPipelineResponse): UpsertPipelineResponse.AsObject;
+  static serializeBinaryToWriter(message: UpsertPipelineResponse, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): UpsertPipelineResponse;
+  static deserializeBinaryFromReader(message: UpsertPipelineResponse, reader: jspb.BinaryReader): UpsertPipelineResponse;
+}
+
+export namespace UpsertPipelineResponse {
+  export type AsObject = {
+    pipeline?: Pipeline.AsObject,
+  }
+}
+
+export class GetPipelineRequest extends jspb.Message {
+  getPipeline(): Ref.Pipeline | undefined;
+  setPipeline(value?: Ref.Pipeline): GetPipelineRequest;
+  hasPipeline(): boolean;
+  clearPipeline(): GetPipelineRequest;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): GetPipelineRequest.AsObject;
+  static toObject(includeInstance: boolean, msg: GetPipelineRequest): GetPipelineRequest.AsObject;
+  static serializeBinaryToWriter(message: GetPipelineRequest, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): GetPipelineRequest;
+  static deserializeBinaryFromReader(message: GetPipelineRequest, reader: jspb.BinaryReader): GetPipelineRequest;
+}
+
+export namespace GetPipelineRequest {
+  export type AsObject = {
+    pipeline?: Ref.Pipeline.AsObject,
+  }
+}
+
+export class GetPipelineResponse extends jspb.Message {
+  getPipeline(): Pipeline | undefined;
+  setPipeline(value?: Pipeline): GetPipelineResponse;
+  hasPipeline(): boolean;
+  clearPipeline(): GetPipelineResponse;
+
+  getRootStep(): string;
+  setRootStep(value: string): GetPipelineResponse;
+
+  getGraph(): GetPipelineResponse.Graph | undefined;
+  setGraph(value?: GetPipelineResponse.Graph): GetPipelineResponse;
+  hasGraph(): boolean;
+  clearGraph(): GetPipelineResponse;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): GetPipelineResponse.AsObject;
+  static toObject(includeInstance: boolean, msg: GetPipelineResponse): GetPipelineResponse.AsObject;
+  static serializeBinaryToWriter(message: GetPipelineResponse, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): GetPipelineResponse;
+  static deserializeBinaryFromReader(message: GetPipelineResponse, reader: jspb.BinaryReader): GetPipelineResponse;
+}
+
+export namespace GetPipelineResponse {
+  export type AsObject = {
+    pipeline?: Pipeline.AsObject,
+    rootStep: string,
+    graph?: GetPipelineResponse.Graph.AsObject,
+  }
+
+  export class Graph extends jspb.Message {
+    getContent(): Uint8Array | string;
+    getContent_asU8(): Uint8Array;
+    getContent_asB64(): string;
+    setContent(value: Uint8Array | string): Graph;
+
+    getFormat(): GetPipelineResponse.Graph.Format;
+    setFormat(value: GetPipelineResponse.Graph.Format): Graph;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): Graph.AsObject;
+    static toObject(includeInstance: boolean, msg: Graph): Graph.AsObject;
+    static serializeBinaryToWriter(message: Graph, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): Graph;
+    static deserializeBinaryFromReader(message: Graph, reader: jspb.BinaryReader): Graph;
+  }
+
+  export namespace Graph {
+    export type AsObject = {
+      content: Uint8Array | string,
+      format: GetPipelineResponse.Graph.Format,
+    }
+
+    export enum Format { 
+      INVALID = 0,
+      MERMAID = 1,
+    }
+  }
+
+}
+
+export class RunPipelineRequest extends jspb.Message {
+  getPipeline(): Ref.Pipeline | undefined;
+  setPipeline(value?: Ref.Pipeline): RunPipelineRequest;
+  hasPipeline(): boolean;
+  clearPipeline(): RunPipelineRequest;
+
+  getJobTemplate(): Job | undefined;
+  setJobTemplate(value?: Job): RunPipelineRequest;
+  hasJobTemplate(): boolean;
+  clearJobTemplate(): RunPipelineRequest;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): RunPipelineRequest.AsObject;
+  static toObject(includeInstance: boolean, msg: RunPipelineRequest): RunPipelineRequest.AsObject;
+  static serializeBinaryToWriter(message: RunPipelineRequest, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): RunPipelineRequest;
+  static deserializeBinaryFromReader(message: RunPipelineRequest, reader: jspb.BinaryReader): RunPipelineRequest;
+}
+
+export namespace RunPipelineRequest {
+  export type AsObject = {
+    pipeline?: Ref.Pipeline.AsObject,
+    jobTemplate?: Job.AsObject,
+  }
+}
+
+export class RunPipelineResponse extends jspb.Message {
+  getJobId(): string;
+  setJobId(value: string): RunPipelineResponse;
+
+  getAllJobIdsList(): Array<string>;
+  setAllJobIdsList(value: Array<string>): RunPipelineResponse;
+  clearAllJobIdsList(): RunPipelineResponse;
+  addAllJobIds(value: string, index?: number): RunPipelineResponse;
+
+  getJobMapMap(): jspb.Map<string, Ref.PipelineStep>;
+  clearJobMapMap(): RunPipelineResponse;
+
+  getSequence(): number;
+  setSequence(value: number): RunPipelineResponse;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): RunPipelineResponse.AsObject;
+  static toObject(includeInstance: boolean, msg: RunPipelineResponse): RunPipelineResponse.AsObject;
+  static serializeBinaryToWriter(message: RunPipelineResponse, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): RunPipelineResponse;
+  static deserializeBinaryFromReader(message: RunPipelineResponse, reader: jspb.BinaryReader): RunPipelineResponse;
+}
+
+export namespace RunPipelineResponse {
+  export type AsObject = {
+    jobId: string,
+    allJobIdsList: Array<string>,
+    jobMapMap: Array<[string, Ref.PipelineStep.AsObject]>,
+    sequence: number,
+  }
+}
+
+export class ListPipelinesRequest extends jspb.Message {
+  getProject(): Ref.Project | undefined;
+  setProject(value?: Ref.Project): ListPipelinesRequest;
+  hasProject(): boolean;
+  clearProject(): ListPipelinesRequest;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): ListPipelinesRequest.AsObject;
+  static toObject(includeInstance: boolean, msg: ListPipelinesRequest): ListPipelinesRequest.AsObject;
+  static serializeBinaryToWriter(message: ListPipelinesRequest, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): ListPipelinesRequest;
+  static deserializeBinaryFromReader(message: ListPipelinesRequest, reader: jspb.BinaryReader): ListPipelinesRequest;
+}
+
+export namespace ListPipelinesRequest {
+  export type AsObject = {
+    project?: Ref.Project.AsObject,
+  }
+}
+
+export class ListPipelinesResponse extends jspb.Message {
+  getPipelinesList(): Array<Pipeline>;
+  setPipelinesList(value: Array<Pipeline>): ListPipelinesResponse;
+  clearPipelinesList(): ListPipelinesResponse;
+  addPipelines(value?: Pipeline, index?: number): Pipeline;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): ListPipelinesResponse.AsObject;
+  static toObject(includeInstance: boolean, msg: ListPipelinesResponse): ListPipelinesResponse.AsObject;
+  static serializeBinaryToWriter(message: ListPipelinesResponse, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): ListPipelinesResponse;
+  static deserializeBinaryFromReader(message: ListPipelinesResponse, reader: jspb.BinaryReader): ListPipelinesResponse;
+}
+
+export namespace ListPipelinesResponse {
+  export type AsObject = {
+    pipelinesList: Array<Pipeline.AsObject>,
+  }
+}
+
+export class ListPipelineRunsRequest extends jspb.Message {
+  getPipeline(): Ref.Pipeline | undefined;
+  setPipeline(value?: Ref.Pipeline): ListPipelineRunsRequest;
+  hasPipeline(): boolean;
+  clearPipeline(): ListPipelineRunsRequest;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): ListPipelineRunsRequest.AsObject;
+  static toObject(includeInstance: boolean, msg: ListPipelineRunsRequest): ListPipelineRunsRequest.AsObject;
+  static serializeBinaryToWriter(message: ListPipelineRunsRequest, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): ListPipelineRunsRequest;
+  static deserializeBinaryFromReader(message: ListPipelineRunsRequest, reader: jspb.BinaryReader): ListPipelineRunsRequest;
+}
+
+export namespace ListPipelineRunsRequest {
+  export type AsObject = {
+    pipeline?: Ref.Pipeline.AsObject,
+  }
+}
+
+export class ListPipelineRunsResponse extends jspb.Message {
+  getPipelineRunsList(): Array<PipelineRun>;
+  setPipelineRunsList(value: Array<PipelineRun>): ListPipelineRunsResponse;
+  clearPipelineRunsList(): ListPipelineRunsResponse;
+  addPipelineRuns(value?: PipelineRun, index?: number): PipelineRun;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): ListPipelineRunsResponse.AsObject;
+  static toObject(includeInstance: boolean, msg: ListPipelineRunsResponse): ListPipelineRunsResponse.AsObject;
+  static serializeBinaryToWriter(message: ListPipelineRunsResponse, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): ListPipelineRunsResponse;
+  static deserializeBinaryFromReader(message: ListPipelineRunsResponse, reader: jspb.BinaryReader): ListPipelineRunsResponse;
+}
+
+export namespace ListPipelineRunsResponse {
+  export type AsObject = {
+    pipelineRunsList: Array<PipelineRun.AsObject>,
+  }
+}
+
+export class GetPipelineRunRequest extends jspb.Message {
+  getPipeline(): Ref.Pipeline | undefined;
+  setPipeline(value?: Ref.Pipeline): GetPipelineRunRequest;
+  hasPipeline(): boolean;
+  clearPipeline(): GetPipelineRunRequest;
+
+  getSequence(): number;
+  setSequence(value: number): GetPipelineRunRequest;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): GetPipelineRunRequest.AsObject;
+  static toObject(includeInstance: boolean, msg: GetPipelineRunRequest): GetPipelineRunRequest.AsObject;
+  static serializeBinaryToWriter(message: GetPipelineRunRequest, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): GetPipelineRunRequest;
+  static deserializeBinaryFromReader(message: GetPipelineRunRequest, reader: jspb.BinaryReader): GetPipelineRunRequest;
+}
+
+export namespace GetPipelineRunRequest {
+  export type AsObject = {
+    pipeline?: Ref.Pipeline.AsObject,
+    sequence: number,
+  }
+}
+
+export class GetPipelineRunResponse extends jspb.Message {
+  getPipelineRun(): PipelineRun | undefined;
+  setPipelineRun(value?: PipelineRun): GetPipelineRunResponse;
+  hasPipelineRun(): boolean;
+  clearPipelineRun(): GetPipelineRunResponse;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): GetPipelineRunResponse.AsObject;
+  static toObject(includeInstance: boolean, msg: GetPipelineRunResponse): GetPipelineRunResponse.AsObject;
+  static serializeBinaryToWriter(message: GetPipelineRunResponse, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): GetPipelineRunResponse;
+  static deserializeBinaryFromReader(message: GetPipelineRunResponse, reader: jspb.BinaryReader): GetPipelineRunResponse;
+}
+
+export namespace GetPipelineRunResponse {
+  export type AsObject = {
+    pipelineRun?: PipelineRun.AsObject,
+  }
+}
+
+export class ConfigSyncPipelineRequest extends jspb.Message {
+  getProject(): Ref.Project | undefined;
+  setProject(value?: Ref.Project): ConfigSyncPipelineRequest;
+  hasProject(): boolean;
+  clearProject(): ConfigSyncPipelineRequest;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): ConfigSyncPipelineRequest.AsObject;
+  static toObject(includeInstance: boolean, msg: ConfigSyncPipelineRequest): ConfigSyncPipelineRequest.AsObject;
+  static serializeBinaryToWriter(message: ConfigSyncPipelineRequest, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): ConfigSyncPipelineRequest;
+  static deserializeBinaryFromReader(message: ConfigSyncPipelineRequest, reader: jspb.BinaryReader): ConfigSyncPipelineRequest;
+}
+
+export namespace ConfigSyncPipelineRequest {
+  export type AsObject = {
+    project?: Ref.Project.AsObject,
+  }
+}
+
+export class ConfigSyncPipelineResponse extends jspb.Message {
+  getSyncedPipelinesMap(): jspb.Map<string, Ref.Pipeline>;
+  clearSyncedPipelinesMap(): ConfigSyncPipelineResponse;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): ConfigSyncPipelineResponse.AsObject;
+  static toObject(includeInstance: boolean, msg: ConfigSyncPipelineResponse): ConfigSyncPipelineResponse.AsObject;
+  static serializeBinaryToWriter(message: ConfigSyncPipelineResponse, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): ConfigSyncPipelineResponse;
+  static deserializeBinaryFromReader(message: ConfigSyncPipelineResponse, reader: jspb.BinaryReader): ConfigSyncPipelineResponse;
+}
+
+export namespace ConfigSyncPipelineResponse {
+  export type AsObject = {
+    syncedPipelinesMap: Array<[string, Ref.Pipeline.AsObject]>,
+  }
+}
+
 export class TokenTransport extends jspb.Message {
   getBody(): Uint8Array | string;
   getBody_asU8(): Uint8Array;
@@ -9401,6 +10915,13 @@ export class TokenTransport extends jspb.Message {
   getMetadataMap(): jspb.Map<string, string>;
   clearMetadataMap(): TokenTransport;
 
+  getOauthCreds(): TokenTransport.OAuthCredentials | undefined;
+  setOauthCreds(value?: TokenTransport.OAuthCredentials): TokenTransport;
+  hasOauthCreds(): boolean;
+  clearOauthCreds(): TokenTransport;
+
+  getExternalCredsCase(): TokenTransport.ExternalCredsCase;
+
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): TokenTransport.AsObject;
   static toObject(includeInstance: boolean, msg: TokenTransport): TokenTransport.AsObject;
@@ -9415,6 +10936,39 @@ export namespace TokenTransport {
     signature: Uint8Array | string,
     keyId: string,
     metadataMap: Array<[string, string]>,
+    oauthCreds?: TokenTransport.OAuthCredentials.AsObject,
+  }
+
+  export class OAuthCredentials extends jspb.Message {
+    getUrl(): string;
+    setUrl(value: string): OAuthCredentials;
+
+    getClientId(): string;
+    setClientId(value: string): OAuthCredentials;
+
+    getClientSecret(): string;
+    setClientSecret(value: string): OAuthCredentials;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): OAuthCredentials.AsObject;
+    static toObject(includeInstance: boolean, msg: OAuthCredentials): OAuthCredentials.AsObject;
+    static serializeBinaryToWriter(message: OAuthCredentials, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): OAuthCredentials;
+    static deserializeBinaryFromReader(message: OAuthCredentials, reader: jspb.BinaryReader): OAuthCredentials;
+  }
+
+  export namespace OAuthCredentials {
+    export type AsObject = {
+      url: string,
+      clientId: string,
+      clientSecret: string,
+    }
+  }
+
+
+  export enum ExternalCredsCase { 
+    EXTERNAL_CREDS_NOT_SET = 0,
+    OAUTH_CREDS = 12,
   }
 }
 
@@ -10097,6 +11651,24 @@ export class WaypointHclFmtResponse extends jspb.Message {
 export namespace WaypointHclFmtResponse {
   export type AsObject = {
     waypointHcl: Uint8Array | string,
+  }
+}
+
+export class InlineKeepalive extends jspb.Message {
+  getSignature(): string;
+  setSignature(value: string): InlineKeepalive;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): InlineKeepalive.AsObject;
+  static toObject(includeInstance: boolean, msg: InlineKeepalive): InlineKeepalive.AsObject;
+  static serializeBinaryToWriter(message: InlineKeepalive, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): InlineKeepalive;
+  static deserializeBinaryFromReader(message: InlineKeepalive, reader: jspb.BinaryReader): InlineKeepalive;
+}
+
+export namespace InlineKeepalive {
+  export type AsObject = {
+    signature: string,
   }
 }
 

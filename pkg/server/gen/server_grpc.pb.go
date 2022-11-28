@@ -78,6 +78,9 @@ type WaypointClient interface {
 	// ListApplications because applications are a part of projects and you
 	// can use GetProject to get more information about the project.
 	ListProjects(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*ListProjectsResponse, error)
+	// DestroyProject deletes a project from the database as well as (optionally)
+	// destroys all resources created within a project
+	DestroyProject(ctx context.Context, in *DestroyProjectRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	// GetApplication returns one application on the project.
 	GetApplication(ctx context.Context, in *GetApplicationRequest, opts ...grpc.CallOption) (*GetApplicationResponse, error)
 	// UpsertApplication upserts an application with a project.
@@ -254,6 +257,10 @@ type WaypointClient interface {
 	UpsertOnDemandRunnerConfig(ctx context.Context, in *UpsertOnDemandRunnerConfigRequest, opts ...grpc.CallOption) (*UpsertOnDemandRunnerConfigResponse, error)
 	// GetOnDemandRunnerConfig returns the on-demand runner configuration.
 	GetOnDemandRunnerConfig(ctx context.Context, in *GetOnDemandRunnerConfigRequest, opts ...grpc.CallOption) (*GetOnDemandRunnerConfigResponse, error)
+	// GetOnDemandRunnerConfig returns the on-demand runner configuration.
+	GetDefaultOnDemandRunnerConfig(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*GetOnDemandRunnerConfigResponse, error)
+	// GetOnDemandRunnerConfig returns the on-demand runner configuration.
+	DeleteOnDemandRunnerConfig(ctx context.Context, in *DeleteOnDemandRunnerConfigRequest, opts ...grpc.CallOption) (*DeleteOnDemandRunnerConfigResponse, error)
 	// ListOnDemandRunnerConfigs returns a list of all the on-demand runners configs.
 	ListOnDemandRunnerConfigs(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*ListOnDemandRunnerConfigsResponse, error)
 	// UpsertBuild updates or inserts a build. A build is responsible for
@@ -286,10 +293,38 @@ type WaypointClient interface {
 	// RunTrigger will look up the referenced trigger and attempt to queue a job
 	// based on the trigger configuration.
 	RunTrigger(ctx context.Context, in *RunTriggerRequest, opts ...grpc.CallOption) (*RunTriggerResponse, error)
+	// UpsertPipeline updates or inserts a pipeline. This is an INTERNAL ONLY
+	// endpoint that is meant to only be called by runners. Calling this manually
+	// can risk the internal state for pipelines. In the future, we'll restrict
+	// access to this via ACLs.
+	UpsertPipeline(ctx context.Context, in *UpsertPipelineRequest, opts ...grpc.CallOption) (*UpsertPipelineResponse, error)
+	// RunPipeline queues a pipeline execution.
+	RunPipeline(ctx context.Context, in *RunPipelineRequest, opts ...grpc.CallOption) (*RunPipelineResponse, error)
+	// GetPipeline returns a pipeline proto by pipeline ref id
+	GetPipeline(ctx context.Context, in *GetPipelineRequest, opts ...grpc.CallOption) (*GetPipelineResponse, error)
+	// GetPipelineRun returns a pipeline run proto by pipeline ref id and sequence
+	GetPipelineRun(ctx context.Context, in *GetPipelineRunRequest, opts ...grpc.CallOption) (*GetPipelineRunResponse, error)
+	// GetLatestPipelineRun returns a pipeline run proto by pipeline ref id and sequence
+	GetLatestPipelineRun(ctx context.Context, in *GetPipelineRequest, opts ...grpc.CallOption) (*GetPipelineRunResponse, error)
+	// ListPipelines takes a project and evaluates the projects config to get
+	// a list of Pipeline protos to return in the response. These pipelines
+	// are scoped to a single project from the request. It will return an
+	// error if the requested project does not exist, or an empty response
+	// if no pipelines are defined for the project.
+	ListPipelines(ctx context.Context, in *ListPipelinesRequest, opts ...grpc.CallOption) (*ListPipelinesResponse, error)
+	// ListPipelineRuns takes a pipeline ref and returns a list of runs of that pipeline.
+	// It will return an error if the requested pipeline does not exist, or an empty response
+	// if there are no runs for the pipeline.
+	ListPipelineRuns(ctx context.Context, in *ListPipelineRunsRequest, opts ...grpc.CallOption) (*ListPipelineRunsResponse, error)
+	// ConfigSyncPipeline takes a request for a given project and syncs the current
+	// project config to the Waypoint database.
+	ConfigSyncPipeline(ctx context.Context, in *ConfigSyncPipelineRequest, opts ...grpc.CallOption) (*ConfigSyncPipelineResponse, error)
 	// Get a given project with useful related records.
 	UI_GetProject(ctx context.Context, in *UI_GetProjectRequest, opts ...grpc.CallOption) (*UI_GetProjectResponse, error)
 	// List deployments for a given application.
 	UI_ListDeployments(ctx context.Context, in *UI_ListDeploymentsRequest, opts ...grpc.CallOption) (*UI_ListDeploymentsResponse, error)
+	// GetDeployment returns a deployment
+	UI_GetDeployment(ctx context.Context, in *UI_GetDeploymentRequest, opts ...grpc.CallOption) (*UI_GetDeploymentResponse, error)
 	// List releases for a given application.
 	UI_ListReleases(ctx context.Context, in *UI_ListReleasesRequest, opts ...grpc.CallOption) (*UI_ListReleasesResponse, error)
 }
@@ -467,6 +502,15 @@ func (c *waypointClient) GetProject(ctx context.Context, in *GetProjectRequest, 
 func (c *waypointClient) ListProjects(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*ListProjectsResponse, error) {
 	out := new(ListProjectsResponse)
 	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/ListProjects", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *waypointClient) DestroyProject(ctx context.Context, in *DestroyProjectRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/DestroyProject", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1216,6 +1260,24 @@ func (c *waypointClient) GetOnDemandRunnerConfig(ctx context.Context, in *GetOnD
 	return out, nil
 }
 
+func (c *waypointClient) GetDefaultOnDemandRunnerConfig(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*GetOnDemandRunnerConfigResponse, error) {
+	out := new(GetOnDemandRunnerConfigResponse)
+	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/GetDefaultOnDemandRunnerConfig", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *waypointClient) DeleteOnDemandRunnerConfig(ctx context.Context, in *DeleteOnDemandRunnerConfigRequest, opts ...grpc.CallOption) (*DeleteOnDemandRunnerConfigResponse, error) {
+	out := new(DeleteOnDemandRunnerConfigResponse)
+	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/DeleteOnDemandRunnerConfig", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *waypointClient) ListOnDemandRunnerConfigs(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*ListOnDemandRunnerConfigsResponse, error) {
 	out := new(ListOnDemandRunnerConfigsResponse)
 	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/ListOnDemandRunnerConfigs", in, out, opts...)
@@ -1342,6 +1404,78 @@ func (c *waypointClient) RunTrigger(ctx context.Context, in *RunTriggerRequest, 
 	return out, nil
 }
 
+func (c *waypointClient) UpsertPipeline(ctx context.Context, in *UpsertPipelineRequest, opts ...grpc.CallOption) (*UpsertPipelineResponse, error) {
+	out := new(UpsertPipelineResponse)
+	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/UpsertPipeline", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *waypointClient) RunPipeline(ctx context.Context, in *RunPipelineRequest, opts ...grpc.CallOption) (*RunPipelineResponse, error) {
+	out := new(RunPipelineResponse)
+	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/RunPipeline", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *waypointClient) GetPipeline(ctx context.Context, in *GetPipelineRequest, opts ...grpc.CallOption) (*GetPipelineResponse, error) {
+	out := new(GetPipelineResponse)
+	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/GetPipeline", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *waypointClient) GetPipelineRun(ctx context.Context, in *GetPipelineRunRequest, opts ...grpc.CallOption) (*GetPipelineRunResponse, error) {
+	out := new(GetPipelineRunResponse)
+	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/GetPipelineRun", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *waypointClient) GetLatestPipelineRun(ctx context.Context, in *GetPipelineRequest, opts ...grpc.CallOption) (*GetPipelineRunResponse, error) {
+	out := new(GetPipelineRunResponse)
+	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/GetLatestPipelineRun", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *waypointClient) ListPipelines(ctx context.Context, in *ListPipelinesRequest, opts ...grpc.CallOption) (*ListPipelinesResponse, error) {
+	out := new(ListPipelinesResponse)
+	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/ListPipelines", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *waypointClient) ListPipelineRuns(ctx context.Context, in *ListPipelineRunsRequest, opts ...grpc.CallOption) (*ListPipelineRunsResponse, error) {
+	out := new(ListPipelineRunsResponse)
+	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/ListPipelineRuns", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *waypointClient) ConfigSyncPipeline(ctx context.Context, in *ConfigSyncPipelineRequest, opts ...grpc.CallOption) (*ConfigSyncPipelineResponse, error) {
+	out := new(ConfigSyncPipelineResponse)
+	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/ConfigSyncPipeline", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *waypointClient) UI_GetProject(ctx context.Context, in *UI_GetProjectRequest, opts ...grpc.CallOption) (*UI_GetProjectResponse, error) {
 	out := new(UI_GetProjectResponse)
 	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/UI_GetProject", in, out, opts...)
@@ -1354,6 +1488,15 @@ func (c *waypointClient) UI_GetProject(ctx context.Context, in *UI_GetProjectReq
 func (c *waypointClient) UI_ListDeployments(ctx context.Context, in *UI_ListDeploymentsRequest, opts ...grpc.CallOption) (*UI_ListDeploymentsResponse, error) {
 	out := new(UI_ListDeploymentsResponse)
 	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/UI_ListDeployments", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *waypointClient) UI_GetDeployment(ctx context.Context, in *UI_GetDeploymentRequest, opts ...grpc.CallOption) (*UI_GetDeploymentResponse, error) {
+	out := new(UI_GetDeploymentResponse)
+	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/UI_GetDeployment", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1428,6 +1571,9 @@ type WaypointServer interface {
 	// ListApplications because applications are a part of projects and you
 	// can use GetProject to get more information about the project.
 	ListProjects(context.Context, *emptypb.Empty) (*ListProjectsResponse, error)
+	// DestroyProject deletes a project from the database as well as (optionally)
+	// destroys all resources created within a project
+	DestroyProject(context.Context, *DestroyProjectRequest) (*emptypb.Empty, error)
 	// GetApplication returns one application on the project.
 	GetApplication(context.Context, *GetApplicationRequest) (*GetApplicationResponse, error)
 	// UpsertApplication upserts an application with a project.
@@ -1604,6 +1750,10 @@ type WaypointServer interface {
 	UpsertOnDemandRunnerConfig(context.Context, *UpsertOnDemandRunnerConfigRequest) (*UpsertOnDemandRunnerConfigResponse, error)
 	// GetOnDemandRunnerConfig returns the on-demand runner configuration.
 	GetOnDemandRunnerConfig(context.Context, *GetOnDemandRunnerConfigRequest) (*GetOnDemandRunnerConfigResponse, error)
+	// GetOnDemandRunnerConfig returns the on-demand runner configuration.
+	GetDefaultOnDemandRunnerConfig(context.Context, *emptypb.Empty) (*GetOnDemandRunnerConfigResponse, error)
+	// GetOnDemandRunnerConfig returns the on-demand runner configuration.
+	DeleteOnDemandRunnerConfig(context.Context, *DeleteOnDemandRunnerConfigRequest) (*DeleteOnDemandRunnerConfigResponse, error)
 	// ListOnDemandRunnerConfigs returns a list of all the on-demand runners configs.
 	ListOnDemandRunnerConfigs(context.Context, *emptypb.Empty) (*ListOnDemandRunnerConfigsResponse, error)
 	// UpsertBuild updates or inserts a build. A build is responsible for
@@ -1636,10 +1786,38 @@ type WaypointServer interface {
 	// RunTrigger will look up the referenced trigger and attempt to queue a job
 	// based on the trigger configuration.
 	RunTrigger(context.Context, *RunTriggerRequest) (*RunTriggerResponse, error)
+	// UpsertPipeline updates or inserts a pipeline. This is an INTERNAL ONLY
+	// endpoint that is meant to only be called by runners. Calling this manually
+	// can risk the internal state for pipelines. In the future, we'll restrict
+	// access to this via ACLs.
+	UpsertPipeline(context.Context, *UpsertPipelineRequest) (*UpsertPipelineResponse, error)
+	// RunPipeline queues a pipeline execution.
+	RunPipeline(context.Context, *RunPipelineRequest) (*RunPipelineResponse, error)
+	// GetPipeline returns a pipeline proto by pipeline ref id
+	GetPipeline(context.Context, *GetPipelineRequest) (*GetPipelineResponse, error)
+	// GetPipelineRun returns a pipeline run proto by pipeline ref id and sequence
+	GetPipelineRun(context.Context, *GetPipelineRunRequest) (*GetPipelineRunResponse, error)
+	// GetLatestPipelineRun returns a pipeline run proto by pipeline ref id and sequence
+	GetLatestPipelineRun(context.Context, *GetPipelineRequest) (*GetPipelineRunResponse, error)
+	// ListPipelines takes a project and evaluates the projects config to get
+	// a list of Pipeline protos to return in the response. These pipelines
+	// are scoped to a single project from the request. It will return an
+	// error if the requested project does not exist, or an empty response
+	// if no pipelines are defined for the project.
+	ListPipelines(context.Context, *ListPipelinesRequest) (*ListPipelinesResponse, error)
+	// ListPipelineRuns takes a pipeline ref and returns a list of runs of that pipeline.
+	// It will return an error if the requested pipeline does not exist, or an empty response
+	// if there are no runs for the pipeline.
+	ListPipelineRuns(context.Context, *ListPipelineRunsRequest) (*ListPipelineRunsResponse, error)
+	// ConfigSyncPipeline takes a request for a given project and syncs the current
+	// project config to the Waypoint database.
+	ConfigSyncPipeline(context.Context, *ConfigSyncPipelineRequest) (*ConfigSyncPipelineResponse, error)
 	// Get a given project with useful related records.
 	UI_GetProject(context.Context, *UI_GetProjectRequest) (*UI_GetProjectResponse, error)
 	// List deployments for a given application.
 	UI_ListDeployments(context.Context, *UI_ListDeploymentsRequest) (*UI_ListDeploymentsResponse, error)
+	// GetDeployment returns a deployment
+	UI_GetDeployment(context.Context, *UI_GetDeploymentRequest) (*UI_GetDeploymentResponse, error)
 	// List releases for a given application.
 	UI_ListReleases(context.Context, *UI_ListReleasesRequest) (*UI_ListReleasesResponse, error)
 	mustEmbedUnimplementedWaypointServer()
@@ -1705,6 +1883,9 @@ func (UnimplementedWaypointServer) GetProject(context.Context, *GetProjectReques
 }
 func (UnimplementedWaypointServer) ListProjects(context.Context, *emptypb.Empty) (*ListProjectsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListProjects not implemented")
+}
+func (UnimplementedWaypointServer) DestroyProject(context.Context, *DestroyProjectRequest) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DestroyProject not implemented")
 }
 func (UnimplementedWaypointServer) GetApplication(context.Context, *GetApplicationRequest) (*GetApplicationResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetApplication not implemented")
@@ -1877,6 +2058,12 @@ func (UnimplementedWaypointServer) UpsertOnDemandRunnerConfig(context.Context, *
 func (UnimplementedWaypointServer) GetOnDemandRunnerConfig(context.Context, *GetOnDemandRunnerConfigRequest) (*GetOnDemandRunnerConfigResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetOnDemandRunnerConfig not implemented")
 }
+func (UnimplementedWaypointServer) GetDefaultOnDemandRunnerConfig(context.Context, *emptypb.Empty) (*GetOnDemandRunnerConfigResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetDefaultOnDemandRunnerConfig not implemented")
+}
+func (UnimplementedWaypointServer) DeleteOnDemandRunnerConfig(context.Context, *DeleteOnDemandRunnerConfigRequest) (*DeleteOnDemandRunnerConfigResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteOnDemandRunnerConfig not implemented")
+}
 func (UnimplementedWaypointServer) ListOnDemandRunnerConfigs(context.Context, *emptypb.Empty) (*ListOnDemandRunnerConfigsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListOnDemandRunnerConfigs not implemented")
 }
@@ -1919,11 +2106,38 @@ func (UnimplementedWaypointServer) ListTriggers(context.Context, *ListTriggerReq
 func (UnimplementedWaypointServer) RunTrigger(context.Context, *RunTriggerRequest) (*RunTriggerResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RunTrigger not implemented")
 }
+func (UnimplementedWaypointServer) UpsertPipeline(context.Context, *UpsertPipelineRequest) (*UpsertPipelineResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpsertPipeline not implemented")
+}
+func (UnimplementedWaypointServer) RunPipeline(context.Context, *RunPipelineRequest) (*RunPipelineResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RunPipeline not implemented")
+}
+func (UnimplementedWaypointServer) GetPipeline(context.Context, *GetPipelineRequest) (*GetPipelineResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetPipeline not implemented")
+}
+func (UnimplementedWaypointServer) GetPipelineRun(context.Context, *GetPipelineRunRequest) (*GetPipelineRunResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetPipelineRun not implemented")
+}
+func (UnimplementedWaypointServer) GetLatestPipelineRun(context.Context, *GetPipelineRequest) (*GetPipelineRunResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetLatestPipelineRun not implemented")
+}
+func (UnimplementedWaypointServer) ListPipelines(context.Context, *ListPipelinesRequest) (*ListPipelinesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListPipelines not implemented")
+}
+func (UnimplementedWaypointServer) ListPipelineRuns(context.Context, *ListPipelineRunsRequest) (*ListPipelineRunsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListPipelineRuns not implemented")
+}
+func (UnimplementedWaypointServer) ConfigSyncPipeline(context.Context, *ConfigSyncPipelineRequest) (*ConfigSyncPipelineResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ConfigSyncPipeline not implemented")
+}
 func (UnimplementedWaypointServer) UI_GetProject(context.Context, *UI_GetProjectRequest) (*UI_GetProjectResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UI_GetProject not implemented")
 }
 func (UnimplementedWaypointServer) UI_ListDeployments(context.Context, *UI_ListDeploymentsRequest) (*UI_ListDeploymentsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UI_ListDeployments not implemented")
+}
+func (UnimplementedWaypointServer) UI_GetDeployment(context.Context, *UI_GetDeploymentRequest) (*UI_GetDeploymentResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UI_GetDeployment not implemented")
 }
 func (UnimplementedWaypointServer) UI_ListReleases(context.Context, *UI_ListReleasesRequest) (*UI_ListReleasesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UI_ListReleases not implemented")
@@ -2279,6 +2493,24 @@ func _Waypoint_ListProjects_Handler(srv interface{}, ctx context.Context, dec fu
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(WaypointServer).ListProjects(ctx, req.(*emptypb.Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Waypoint_DestroyProject_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DestroyProjectRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(WaypointServer).DestroyProject(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/hashicorp.waypoint.Waypoint/DestroyProject",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(WaypointServer).DestroyProject(ctx, req.(*DestroyProjectRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -3369,6 +3601,42 @@ func _Waypoint_GetOnDemandRunnerConfig_Handler(srv interface{}, ctx context.Cont
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Waypoint_GetDefaultOnDemandRunnerConfig_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(emptypb.Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(WaypointServer).GetDefaultOnDemandRunnerConfig(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/hashicorp.waypoint.Waypoint/GetDefaultOnDemandRunnerConfig",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(WaypointServer).GetDefaultOnDemandRunnerConfig(ctx, req.(*emptypb.Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Waypoint_DeleteOnDemandRunnerConfig_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteOnDemandRunnerConfigRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(WaypointServer).DeleteOnDemandRunnerConfig(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/hashicorp.waypoint.Waypoint/DeleteOnDemandRunnerConfig",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(WaypointServer).DeleteOnDemandRunnerConfig(ctx, req.(*DeleteOnDemandRunnerConfigRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Waypoint_ListOnDemandRunnerConfigs_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(emptypb.Empty)
 	if err := dec(in); err != nil {
@@ -3621,6 +3889,150 @@ func _Waypoint_RunTrigger_Handler(srv interface{}, ctx context.Context, dec func
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Waypoint_UpsertPipeline_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpsertPipelineRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(WaypointServer).UpsertPipeline(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/hashicorp.waypoint.Waypoint/UpsertPipeline",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(WaypointServer).UpsertPipeline(ctx, req.(*UpsertPipelineRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Waypoint_RunPipeline_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RunPipelineRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(WaypointServer).RunPipeline(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/hashicorp.waypoint.Waypoint/RunPipeline",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(WaypointServer).RunPipeline(ctx, req.(*RunPipelineRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Waypoint_GetPipeline_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetPipelineRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(WaypointServer).GetPipeline(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/hashicorp.waypoint.Waypoint/GetPipeline",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(WaypointServer).GetPipeline(ctx, req.(*GetPipelineRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Waypoint_GetPipelineRun_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetPipelineRunRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(WaypointServer).GetPipelineRun(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/hashicorp.waypoint.Waypoint/GetPipelineRun",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(WaypointServer).GetPipelineRun(ctx, req.(*GetPipelineRunRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Waypoint_GetLatestPipelineRun_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetPipelineRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(WaypointServer).GetLatestPipelineRun(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/hashicorp.waypoint.Waypoint/GetLatestPipelineRun",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(WaypointServer).GetLatestPipelineRun(ctx, req.(*GetPipelineRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Waypoint_ListPipelines_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListPipelinesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(WaypointServer).ListPipelines(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/hashicorp.waypoint.Waypoint/ListPipelines",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(WaypointServer).ListPipelines(ctx, req.(*ListPipelinesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Waypoint_ListPipelineRuns_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListPipelineRunsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(WaypointServer).ListPipelineRuns(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/hashicorp.waypoint.Waypoint/ListPipelineRuns",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(WaypointServer).ListPipelineRuns(ctx, req.(*ListPipelineRunsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Waypoint_ConfigSyncPipeline_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ConfigSyncPipelineRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(WaypointServer).ConfigSyncPipeline(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/hashicorp.waypoint.Waypoint/ConfigSyncPipeline",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(WaypointServer).ConfigSyncPipeline(ctx, req.(*ConfigSyncPipelineRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Waypoint_UI_GetProject_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(UI_GetProjectRequest)
 	if err := dec(in); err != nil {
@@ -3653,6 +4065,24 @@ func _Waypoint_UI_ListDeployments_Handler(srv interface{}, ctx context.Context, 
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(WaypointServer).UI_ListDeployments(ctx, req.(*UI_ListDeploymentsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Waypoint_UI_GetDeployment_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UI_GetDeploymentRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(WaypointServer).UI_GetDeployment(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/hashicorp.waypoint.Waypoint/UI_GetDeployment",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(WaypointServer).UI_GetDeployment(ctx, req.(*UI_GetDeploymentRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -3757,6 +4187,10 @@ var Waypoint_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListProjects",
 			Handler:    _Waypoint_ListProjects_Handler,
+		},
+		{
+			MethodName: "DestroyProject",
+			Handler:    _Waypoint_DestroyProject_Handler,
 		},
 		{
 			MethodName: "GetApplication",
@@ -3947,6 +4381,14 @@ var Waypoint_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Waypoint_GetOnDemandRunnerConfig_Handler,
 		},
 		{
+			MethodName: "GetDefaultOnDemandRunnerConfig",
+			Handler:    _Waypoint_GetDefaultOnDemandRunnerConfig_Handler,
+		},
+		{
+			MethodName: "DeleteOnDemandRunnerConfig",
+			Handler:    _Waypoint_DeleteOnDemandRunnerConfig_Handler,
+		},
+		{
 			MethodName: "ListOnDemandRunnerConfigs",
 			Handler:    _Waypoint_ListOnDemandRunnerConfigs_Handler,
 		},
@@ -4003,12 +4445,48 @@ var Waypoint_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Waypoint_RunTrigger_Handler,
 		},
 		{
+			MethodName: "UpsertPipeline",
+			Handler:    _Waypoint_UpsertPipeline_Handler,
+		},
+		{
+			MethodName: "RunPipeline",
+			Handler:    _Waypoint_RunPipeline_Handler,
+		},
+		{
+			MethodName: "GetPipeline",
+			Handler:    _Waypoint_GetPipeline_Handler,
+		},
+		{
+			MethodName: "GetPipelineRun",
+			Handler:    _Waypoint_GetPipelineRun_Handler,
+		},
+		{
+			MethodName: "GetLatestPipelineRun",
+			Handler:    _Waypoint_GetLatestPipelineRun_Handler,
+		},
+		{
+			MethodName: "ListPipelines",
+			Handler:    _Waypoint_ListPipelines_Handler,
+		},
+		{
+			MethodName: "ListPipelineRuns",
+			Handler:    _Waypoint_ListPipelineRuns_Handler,
+		},
+		{
+			MethodName: "ConfigSyncPipeline",
+			Handler:    _Waypoint_ConfigSyncPipeline_Handler,
+		},
+		{
 			MethodName: "UI_GetProject",
 			Handler:    _Waypoint_UI_GetProject_Handler,
 		},
 		{
 			MethodName: "UI_ListDeployments",
 			Handler:    _Waypoint_UI_ListDeployments_Handler,
+		},
+		{
+			MethodName: "UI_GetDeployment",
+			Handler:    _Waypoint_UI_GetDeployment_Handler,
 		},
 		{
 			MethodName: "UI_ListReleases",

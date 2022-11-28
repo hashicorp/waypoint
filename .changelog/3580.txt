@@ -1,0 +1,3 @@
+```release-note:improvement
+cli: Fix incorrect description for `destroy -h` command.
+```

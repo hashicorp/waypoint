@@ -26,7 +26,7 @@ func TestServiceStatusReport(t *testing.T, factory Factory) {
 	ctx := context.Background()
 
 	// Create our server
-	_, client := factory(t)
+	client, _ := factory(t)
 
 	type Req = pb.UpsertStatusReportRequest
 
@@ -75,7 +75,7 @@ func TestServiceStatusReport_GetStatusReport(t *testing.T, factory Factory) {
 	ctx := context.Background()
 
 	// Create our server
-	_, client := factory(t)
+	client, _ := factory(t)
 
 	statusReportResp, err := client.UpsertStatusReport(ctx, &pb.UpsertStatusReportRequest{
 		StatusReport: serverptypes.TestValidStatusReport(t, nil),
@@ -119,7 +119,7 @@ func TestServiceStatusReport_ListStatusReports(t *testing.T, factory Factory) {
 	ctx := context.Background()
 
 	// Create our server
-	_, client := factory(t)
+	client, _ := factory(t)
 
 	// Create a project with an application
 	respProj, err := client.UpsertProject(ctx, &pb.UpsertProjectRequest{
@@ -251,7 +251,7 @@ func TestServiceStatusReport_ExpediteStatusReport(t *testing.T, factory Factory)
 	ctx := context.Background()
 
 	// Create our server
-	_, client := factory(t)
+	client, _ := factory(t)
 
 	// Create a project with an application
 	respProj, err := client.UpsertProject(ctx, &pb.UpsertProjectRequest{

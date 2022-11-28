@@ -1,0 +1,3 @@
+```release-note:bug
+cli: Ensure a deploy and release URL has a scheme included if not set.
+```

@@ -81,6 +81,11 @@ func (c *RunnerAgentCommand) Run(args []string) int {
 	plugin.InsideODR = c.flagODR
 
 	// Flag defaults
+	if c.flagConcurrency == 0 {
+		c.flagConcurrency = runtime.NumCPU() * 3
+	}
+
+	// Check again in case it was set to 0.
 	if c.flagConcurrency < 1 {
 		log.Warn("concurrency flag less than 1 has no effect, using 1")
 		c.flagConcurrency = 1
@@ -366,12 +371,16 @@ func (c *RunnerAgentCommand) Flags() *flag.Sets {
 			Name:   "concurrency",
 			Target: &c.flagConcurrency,
 			Usage: "The number of concurrent jobs that can be running at one time. " +
-				"This has no effect if `-odr` is set. A value of less than 1 will " +
+				"This has no effect if `-odr` is set. The default value applied will be " +
+				"(total number of logical cpus available * 3). A value of less than 1 will " +
 				"default to 1.",
 
 			// Most jobs that a non-ODR runner runs are IO bound, so we use
 			// just a heuristic here of allowing some multiple above the CPUs.
-			Default: runtime.NumCPU() * 3,
+			//Default: runtime.NumCPU() * 3,
+			// NOTE(briancain): We set a default of 0 here, but when the CLI goes
+			// to use this value, if set to 0, we'll attempt to set it to the default
+			// runtime.NumCPU()*3.
 		})
 	})
 }

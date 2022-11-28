@@ -19,7 +19,7 @@ func TestServiceUpdateUser(t *testing.T, factory Factory) {
 	ctx := context.Background()
 
 	// Create our server
-	_, client := factory(t)
+	client, _ := factory(t)
 
 	// Get ourself
 	getUser := func(t *testing.T) *pb.User {

@@ -2,10 +2,12 @@ package singleprocess
 
 import (
 	"context"
+	"github.com/hashicorp/go-hclog"
 
 	empty "google.golang.org/protobuf/types/known/emptypb"
 
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
+	"github.com/hashicorp/waypoint/pkg/server/hcerr"
 	serverptypes "github.com/hashicorp/waypoint/pkg/server/ptypes"
 )
 
@@ -18,8 +20,14 @@ func (s *Service) UpsertProject(
 	}
 
 	result := req.Project
-	if err := s.state(ctx).ProjectPut(result); err != nil {
-		return nil, err
+	if err := s.state(ctx).ProjectPut(ctx, result); err != nil {
+		return nil, hcerr.Externalize(
+			hclog.FromContext(ctx),
+			err,
+			"failed to upsert project",
+			"project_name",
+			result.GetName(),
+		)
 	}
 
 	if projectNeedsRemoteInit(result) {
@@ -35,7 +43,7 @@ func (s *Service) UpsertProject(
 			// An error here indicates a failure to enqueue an
 			// InitOp, not a failure during the operation itself,
 			// which happen out-of-band.
-			return nil, err
+			return nil, hcerr.Externalize(hclog.FromContext(ctx), err, "failed queueing init job")
 		}
 	}
 
@@ -50,15 +58,27 @@ func (s *Service) GetProject(
 		return nil, err
 	}
 
-	result, err := s.state(ctx).ProjectGet(req.Project)
+	result, err := s.state(ctx).ProjectGet(ctx, req.Project)
 	if err != nil {
-		return nil, err
+		return nil, hcerr.Externalize(
+			hclog.FromContext(ctx),
+			err,
+			"failed to get project",
+			"project_name",
+			result.GetName(),
+		)
 	}
 
 	// Get all the workspaces that this project is part of
-	workspaces, err := s.state(ctx).ProjectListWorkspaces(req.Project)
+	workspaces, err := s.state(ctx).ProjectListWorkspaces(ctx, req.Project)
 	if err != nil {
-		return nil, err
+		return nil, hcerr.Externalize(
+			hclog.FromContext(ctx),
+			err,
+			"failed to list workspaces for project",
+			"project_name",
+			result.GetName(),
+		)
 	}
 
 	return &pb.GetProjectResponse{
@@ -71,12 +91,38 @@ func (s *Service) ListProjects(
 	ctx context.Context,
 	req *empty.Empty,
 ) (*pb.ListProjectsResponse, error) {
-	result, err := s.state(ctx).ProjectList()
+	result, err := s.state(ctx).ProjectList(ctx)
 	if err != nil {
-		return nil, err
+		return nil, hcerr.Externalize(
+			hclog.FromContext(ctx),
+			err,
+			"failed to list projects",
+		)
 	}
 
 	return &pb.ListProjectsResponse{Projects: result}, nil
+}
+
+func (s *Service) DestroyProject(
+	ctx context.Context,
+	req *pb.DestroyProjectRequest,
+) (*empty.Empty, error) {
+	if err := serverptypes.ValidateDestroyProjectRequest(req); err != nil {
+		return nil, err
+	}
+
+	err := s.state(ctx).ProjectDelete(ctx, req.Project)
+	if err != nil {
+		return nil, hcerr.Externalize(
+			hclog.FromContext(ctx),
+			err,
+			"failed to delete project",
+			"project",
+			req.Project.Project,
+		)
+	}
+
+	return &empty.Empty{}, nil
 }
 
 func (s *Service) GetApplication(
@@ -87,9 +133,15 @@ func (s *Service) GetApplication(
 		return nil, err
 	}
 
-	result, err := s.state(ctx).AppGet(req.Application)
+	result, err := s.state(ctx).AppGet(ctx, req.Application)
 	if err != nil {
-		return nil, err
+		return nil, hcerr.Externalize(
+			hclog.FromContext(ctx),
+			err,
+			"failed to get application",
+			"application",
+			req.Application.Application,
+		)
 	}
 
 	return &pb.GetApplicationResponse{
@@ -106,9 +158,13 @@ func (s *Service) UpsertApplication(
 	}
 
 	// Get the project
-	praw, err := s.state(ctx).ProjectGet(req.Project)
+	praw, err := s.state(ctx).ProjectGet(ctx, req.Project)
 	if err != nil {
-		return nil, err
+		return nil, hcerr.Externalize(
+			hclog.FromContext(ctx),
+			err,
+			"failed to get project in application upsert",
+		)
 	}
 
 	var app *pb.Application
@@ -126,16 +182,22 @@ func (s *Service) UpsertApplication(
 
 	app.FileChangeSignal = req.FileChangeSignal
 
-	app, err = s.state(ctx).AppPut(app)
+	app, err = s.state(ctx).AppPut(ctx, app)
 	if err != nil {
-		return nil, err
+		return nil, hcerr.Externalize(
+			hclog.FromContext(ctx),
+			err,
+			"failed to get upsert application",
+			"application_name",
+			app.GetName(),
+		)
 	}
 
 	return &pb.UpsertApplicationResponse{Application: app}, nil
 }
 
 func queueInitOps(s *Service, ctx context.Context, project *pb.Project) error {
-	workspaces, err := s.state(ctx).WorkspaceList()
+	workspaces, err := s.state(ctx).WorkspaceList(ctx)
 	if err != nil {
 		return err
 	}
@@ -173,7 +235,7 @@ func projectNeedsRemoteInit(project *pb.Project) bool {
 		return false
 	}
 
-	if project.DataSource.GetGit() == nil {
+	if project.DataSource.GetGit() == nil && project.DataSource.GetRemote() == nil {
 		return false
 	}
 

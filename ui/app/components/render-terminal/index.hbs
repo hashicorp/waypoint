@@ -1,6 +1,6 @@
 <div class="xterm-wrapper">
   {{#unless this.isFollowingLogs}}
-    <button class="follow-logs" type="button" {{on "click" this.followLogs}}>
+    <button class="follow-logs" type="button" title="Follow logs" {{on "click" this.followLogs}}>
       <FlightIcon @name="arrow-down" class="icon" />
     </button>
   {{/unless}}

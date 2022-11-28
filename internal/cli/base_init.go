@@ -21,14 +21,14 @@ import (
 // initConfig initializes the configuration with the specified filename from the CLI.
 // If filename is empty, it will default to configpkg.Filename.
 // Not finding config is not an error case - config will return nil.
-func (c *baseCommand) initConfig(filename string) (*configpkg.Config, error) {
+func (c *baseCommand) initConfig(filename string) (*configpkg.Config, configpkg.ValidationResults, error) {
 	path, err := c.initConfigPath(filename)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	if path == "" {
-		return nil, nil
+		return nil, nil, nil
 	}
 
 	return c.initConfigLoad(path)
@@ -46,21 +46,21 @@ func (c *baseCommand) initConfigPath(filename string) (string, error) {
 }
 
 // initConfigLoad loads the configuration at the given path.
-func (c *baseCommand) initConfigLoad(path string) (*configpkg.Config, error) {
+func (c *baseCommand) initConfigLoad(path string) (*configpkg.Config, configpkg.ValidationResults, error) {
 	cfg, err := configpkg.Load(path, &configpkg.LoadOptions{
 		Pwd:       filepath.Dir(path),
 		Workspace: c.refWorkspace.Workspace,
 	})
 	if err != nil {
-		return nil, err
+		return nil, []configpkg.ValidationResult{{Error: err}}, err
 	}
 
 	// Validate
-	if err := cfg.Validate(); err != nil {
-		return nil, err
+	results, err := cfg.Validate()
+	if err != nil {
+		return nil, results, err
 	}
-
-	return cfg, nil
+	return cfg, results, nil
 }
 
 // initClient initializes the client.

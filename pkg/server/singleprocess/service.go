@@ -36,6 +36,13 @@ type Service struct {
 	// with EncodeId), and returns only the waypoint-relevant ID.
 	decodeId func(encodedId string) (id string, err error)
 
+	// processToken allows an implementation the ability to alter a to be
+	// generated token before it's generated. This can be used to alter semantics
+	// about the token, such as adding labels, metadata, or additional info
+	processToken func(ctx context.Context, transport *pb.TokenTransport, token *pb.Token) (*pb.Token, error)
+
+	populateDataSource func(ctx context.Context, job *pb.Job) (*pb.Job, error)
+
 	logStreamProvider logstream.Provider
 
 	// urlConfig is not nil if the URL service is enabled. This is guaranteed
@@ -67,6 +74,13 @@ type Service struct {
 
 	// oidcCache is the cache for OIDC providers.
 	oidcCache *wpoidc.ProviderCache
+
+	// features that this waypoint service supports, and will advertise
+	// on the GetVersionInfo RPC
+	features []pb.ServerFeaturesFeature
+
+	// activeAuthKeyId represents the currently active auth encryption key config and methodology
+	activeAuthKeyId string
 }
 
 // New returns a Waypoint server implementation that uses BotlDB plus
@@ -93,6 +107,9 @@ func New(opts ...Option) (pb.WaypointServer, error) {
 
 	s.encodeId = cfg.idEncoder
 	s.decodeId = cfg.idDecoder
+	s.features = cfg.features
+	s.processToken = cfg.processToken
+	s.populateDataSource = cfg.populateDataSource
 
 	if !cfg.oidcDisabled {
 		s.oidcCache = wpoidc.NewProviderCache()
@@ -110,21 +127,21 @@ func New(opts ...Option) (pb.WaypointServer, error) {
 	s.state = cfg.stateProvider
 
 	// If we don't have a server ID, set that.
-
+	ctx := context.Background()
 	// TODO(izaak): the serverstate interface doesn't currently support
 	// the ServerId methods, but I think it probably needs to.
-	state := s.state(context.Background())
+	state := s.state(ctx)
 
 	// If a server ID was configured, set that
 	if cfg.serverId != "" {
-		if err := state.ServerIdSet(cfg.serverId); err != nil {
+		if err := state.ServerIdSet(ctx, cfg.serverId); err != nil {
 			return nil, err
 		}
 		s.id = cfg.serverId
 	} else {
 		// If no server ID was configured, check if we already have one.
 		// If not, generate a new random one and set it.
-		id, err := state.ServerIdGet()
+		id, err := state.ServerIdGet(ctx)
 		if err != nil {
 			return nil, err
 		}
@@ -134,7 +151,7 @@ func New(opts ...Option) (pb.WaypointServer, error) {
 				return nil, err
 			}
 
-			if err := state.ServerIdSet(id); err != nil {
+			if err := state.ServerIdSet(ctx, id); err != nil {
 				return nil, err
 			}
 		}
@@ -143,16 +160,22 @@ func New(opts ...Option) (pb.WaypointServer, error) {
 
 	if !cfg.skipServerConfigInit {
 		// If we haven't initialized our server config before, do that once.
-		conf, err := state.ServerConfigGet()
+		conf, err := state.ServerConfigGet(ctx)
 		if err != nil {
 			return nil, err
 		}
 		if conf.Cookie == "" {
-			err := state.ServerConfigSet(conf)
+			err := state.ServerConfigSet(ctx, conf)
 			if err != nil && status.Convert(err).Code() != codes.Unimplemented {
 				return nil, err
 			}
 		}
+	}
+
+	if cfg.activeAuthKeyId == "" {
+		s.activeAuthKeyId = DefaultKeyId
+	} else {
+		s.activeAuthKeyId = cfg.activeAuthKeyId
 	}
 
 	// Setup our URL service config if it is enabled.
@@ -196,7 +219,7 @@ func New(opts ...Option) (pb.WaypointServer, error) {
 			AdvertiseAddrs: []*pb.ServerConfig_AdvertiseAddr{addr},
 		}
 
-		if err := state.ServerConfigSet(conf); err != nil {
+		if err := state.ServerConfigSet(ctx, conf); err != nil {
 			return nil, err
 		}
 	}
@@ -251,6 +274,9 @@ type config struct {
 	idEncoder func(ctx context.Context, id string) (encodedId string, err error)
 	idDecoder func(encodedId string) (id string, err error)
 
+	processToken       func(ctx context.Context, transport *pb.TokenTransport, token *pb.Token) (*pb.Token, error)
+	populateDataSource func(context.Context, *pb.Job) (*pb.Job, error)
+
 	serverConfig         *serverconfig.Config
 	log                  hclog.Logger
 	superuser            bool
@@ -260,7 +286,10 @@ type config struct {
 	serverId             string
 	skipServerConfigInit bool
 
-	acceptUrlTerms bool
+	features []pb.ServerFeaturesFeature
+
+	acceptUrlTerms  bool
+	activeAuthKeyId string
 }
 
 type Option func(*Service, *config) error
@@ -383,6 +412,48 @@ func WithServerId(serverId string) Option {
 func WithServerConfigSkipInit() Option {
 	return func(s *Service, cfg *config) error {
 		cfg.skipServerConfigInit = true
+		return nil
+	}
+}
+
+// WithFeatures adds features that the server will advertise on the
+// GetVersionInfo rpc, that clients can use to ensure compatibility
+// before attempting to exercise features.
+func WithFeatures(features ...pb.ServerFeaturesFeature) Option {
+	return func(s *Service, cfg *config) error {
+		cfg.features = features
+		return nil
+	}
+}
+
+// WithTokenProcessor installs a function that will be called just before
+// a new token is encoded. This allows customization of that Token to include
+// additional information.
+func WithTokenProcessor(fn func(context.Context, *pb.TokenTransport, *pb.Token) (*pb.Token, error)) Option {
+	return func(s *Service, cfg *config) error {
+		cfg.processToken = fn
+		return nil
+	}
+}
+
+// WithActiveAuthKeyId sets an identifier representing the key that will
+// be used for authentication (i.e. generating protobuf token signatures)
+// This server will also be expected to be able to work with auth data
+// generated by a server bearing this key id.
+// EXAMPLE: the boltdb state engine currently uses this as an ID
+// for the HMAC key that it generates. If the AuthKeyId changes,
+// the boltdb state will generate a new corresponding HMAC key, and
+// subsequently use that to generate new token signatures.
+func WithActiveAuthKeyId(id string) Option {
+	return func(s *Service, cfg *config) error {
+		cfg.activeAuthKeyId = id
+		return nil
+	}
+}
+
+func WithPopulateJobDataSource(fn func(context.Context, *pb.Job) (*pb.Job, error)) Option {
+	return func(s *Service, cfg *config) error {
+		cfg.populateDataSource = fn
 		return nil
 	}
 }

@@ -352,7 +352,7 @@ func (b *Builder) Build(
 	if err != nil {
 		return nil, err
 	}
-	if serverInfo.Architecture != "amd64" {
+	if serverInfo.Architecture != "amd64" && serverInfo.Architecture != "x86_64" {
 		ui.Output(
 			"Warning! Buildpacks are known to have issues on architectures "+
 				"other than amd64. The architecure being reported by the Docker "+
@@ -516,7 +516,7 @@ func (b *Builder) Documentation() (*docs.Documentation, error) {
 	doc.Description(`
 Create a Docker image using CloudNative Buildpacks.
 
-**This plugin must either be run via Docker or inside an ondemand runner.**
+**This plugin must either be run via Docker or inside an ondemand runner**.
 `)
 
 	doc.Example(`

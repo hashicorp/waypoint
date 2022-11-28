@@ -1,6 +1,7 @@
 package boltdbstate
 
 import (
+	"context"
 	"github.com/hashicorp/go-memdb"
 	bolt "go.etcd.io/bbolt"
 	"google.golang.org/protobuf/proto"
@@ -20,7 +21,7 @@ func init() {
 }
 
 // ServerConfigSet writes the server configuration.
-func (s *State) ServerConfigSet(c *pb.ServerConfig) error {
+func (s *State) ServerConfigSet(ctx context.Context, c *pb.ServerConfig) error {
 	memTxn := s.inmem.Txn(true)
 	defer memTxn.Abort()
 
@@ -35,7 +36,7 @@ func (s *State) ServerConfigSet(c *pb.ServerConfig) error {
 }
 
 // ServerConfigGet gets the server configuration.
-func (s *State) ServerConfigGet() (*pb.ServerConfig, error) {
+func (s *State) ServerConfigGet(ctx context.Context) (*pb.ServerConfig, error) {
 	memTxn := s.inmem.Txn(false)
 	defer memTxn.Abort()
 

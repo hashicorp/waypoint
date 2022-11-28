@@ -28,68 +28,76 @@ manually installed runners will not be automatically upgraded.
 
 #### Global Options
 
-- `-plain` - Plain output: no colors, no animation.
+- `-plain` - Plain output: no colors, no animation. The default is false.
 - `-app=<string>` (`-a`) - App to target. Certain commands require a single app target for Waypoint configurations with multiple apps. If you have a single app, then this can be ignored.
 - `-project=<string>` (`-p`) - Project to target.
 - `-workspace=<string>` (`-w`) - Workspace to operate in.
 
 #### Command Options
 
-- `-auto-approve` - Confirm server upgrade.
+- `-auto-approve` - Auto-approve server upgrade. If unset, confirmation will be requested. The default is false.
 - `-context-name=<string>` - Waypoint server context to upgrade.
 - `-platform=<string>` - Platform to upgrade the Waypoint server from, defaults to the platform stored in the context.
-- `-snapshot-name=<string>` - Filename to write the snapshot to. If no name is specified, by default a timestamp will be appended to the default snapshot name.
-- `-snapshot` - Enable or disable taking a snapshot of Waypoint server prior to upgrades.
+- `-snapshot-name=<string>` - Filename to write the snapshot to. If no name is specified, by default a timestamp will be appended to the default snapshot name. The default is waypoint-server-snapshot.
+- `-snapshot` - Enable or disable taking a snapshot of Waypoint server prior to upgrades. The default is true.
 
 #### docker Options
 
-- `-docker-server-image=<string>` - Docker image for the Waypoint server.
+- `-docker-server-image=<string>` - Docker image for the Waypoint server. The default is hashicorp/waypoint:latest.
 - `-docker-odr-image=<string>` - Docker image for the Waypoint On-Demand Runners. This will default to the server image with the name (not label) suffixed with '-odr'.
 
 #### ecs Options
 
-- `-ecs-cluster=<string>` - Configures the Cluster to upgrade.
-- `-ecs-server-image=<string>` - Docker image for the Waypoint server.
+- `-ecs-cluster=<string>` - Configures the Cluster to upgrade. The default is waypoint-server.
+- `-ecs-server-image=<string>` - Docker image for the Waypoint server. The default is hashicorp/waypoint:latest.
 - `-ecs-region=<string>` - Configures which AWS region to install into.
-- `-ecs-cpu=<string>` - Configures the requested CPU amount for the Waypoint server task in ECS.
-- `-ecs-mem=<string>` - Configures the requested memory amount for the Waypoint server task in ECS.
+- `-ecs-cpu=<string>` - Configures the requested CPU amount for the Waypoint server task in ECS. The default is 512.
+- `-ecs-mem=<string>` - Configures the requested memory amount for the Waypoint server task in ECS. The default is 1024.
 - `-ecs-odr-image=<string>` - Docker image for the Waypoint On-Demand Runners. This will default to the server image with the name (not label) suffixed with '-odr'.
-- `-ecs-task-role-name=<string>` - IAM Execution Role to assign to the on-demand runner. If this is blank, an IAM role will be created automatically with the default permissions.
-- `-ecs-odr-mem=<string>` - Configures the requested memory amount for the Waypoint On-Demand runner in ECS.
-- `-ecs-odr-cpu=<string>` - Configures the requested CPU amount for the Waypoint On-Demand runner in ECS.
+- `-ecs-task-role-name=<string>` - IAM Execution Role to assign to the on-demand runner. If this is blank, an IAM role will be created automatically with the default permissions. The default is waypoint-runner.
+- `-ecs-execution-role-name=<string>` - Configures the IAM Execution role name to use. The default is waypoint-server-execution-role.
+- `-ecs-odr-mem=<string>` - Configures the requested memory amount for the Waypoint On-Demand runner in ECS. The default is 2048.
+- `-ecs-odr-cpu=<string>` - Configures the requested CPU amount for the Waypoint On-Demand runner in ECS. The default is 512.
 
 #### kubernetes Options
 
-- `-k8s-advertise-internal` - Advertise the internal service address rather than the external. This is useful if all your deployments will be able to access the private service address. This will default to false but will be automatically set to true if the external host is detected to be localhost.
+- `-k8s-advertise-internal` - Advertise the internal service address rather than the external. This is useful if all your deployments will be able to access the private service address. This will default to false but will be automatically set to true if the external host is detected to be localhost. The default is false.
 - `-k8s-context=<string>` - The Kubernetes context to upgrade the Waypoint server to. If left unset, Waypoint will use the current Kubernetes context.
-- `-k8s-namespace=<string>` - Namespace to install the Waypoint server into for Kubernetes.
-- `-k8s-openshift` - Enables installing the Waypoint server on Kubernetes on Red Hat OpenShift. If set, auto-configures the installation.
-- `-k8s-server-image=<string>` - Docker image for the Waypoint server.
-- `-k8s-odr-image=<string>` - Docker image for the Waypoint On-Demand Runners
-- `-k8s-runner-service-account=<string>` - Service account to assign to the on-demand runner. If this is blank, a service account will be created automatically with the correct permissions.
-- `-k8s-runner-service-account-init` - Create the service account if it does not exist.
+- `-k8s-namespace=<string>` - Namespace to install the Waypoint server into for Kubernetes. The default is default.
+- `-k8s-server-image=<string>` - Docker image for the Waypoint server. The default is hashicorp/waypoint:latest.
+- `-k8s-odr-image=<string>` - Docker image for the Waypoint On-Demand Runners.
+- `-k8s-runner-service-account=<string>` - Service account to assign to the on-demand runner. If this is blank, a service account will be created automatically with the correct permissions. The default is waypoint-runner.
+- `-k8s-runner-service-account-init` - Create the service account if it does not exist. The default is true.
 
 #### nomad Options
 
 - `-nomad-annotate-service=<key=value>` - Annotations for the Service generated.
-- `-nomad-auth-soft-fail` - Don't fail the Nomad task on an auth failure obtaining server image container. Attempt to continue without auth.
-- `-nomad-dc=<string>` - Datacenters to install to for Nomad.
-- `-nomad-host=<string>` - Hostname of the Nomad server to use, like for launching on-demand tasks.
-- `-nomad-namespace=<string>` - Namespace to install the Waypoint server into for Nomad.
-- `-nomad-odr-image=<string>` - Docker image for the on-demand runners. If not specified, it defaults to the server image name + '-odr' (i.e. 'hashicorp/waypoint-odr:latest')
-- `-nomad-policy-override` - Override the Nomad sentinel policy for enterprise Nomad.
-- `-nomad-region=<string>` - Region to install to for Nomad.
-- `-nomad-server-cpu=<string>` - CPU required to run this task in MHz.
-- `-nomad-server-memory=<string>` - MB of Memory to allocate to the server job task.
-- `-nomad-runner-cpu=<string>` - CPU required to run this task in MHz.
-- `-nomad-runner-memory=<string>` - MB of Memory to allocate to the runner job task.
-- `-nomad-server-image=<string>` - Docker image for the Waypoint server.
+- `-nomad-auth-soft-fail` - Don't fail the Nomad task on an auth failure obtaining server image container. Attempt to continue without auth. The default is false.
+- `-nomad-dc=<string>` - Datacenters to install to for Nomad. The default is dc1.
+- `-nomad-host=<string>` - Hostname of the Nomad server to use, like for launching on-demand tasks. The default is http://localhost:4646.
+- `-nomad-namespace=<string>` - Namespace to install the Waypoint server into for Nomad. The default is default.
+- `-nomad-odr-image=<string>` - Docker image for the on-demand runners. If not specified, it defaults to the server image name + '-odr' (i.e. 'hashicorp/waypoint-odr:latest').
+- `-nomad-policy-override` - Override the Nomad sentinel policy for enterprise Nomad. The default is false.
+- `-nomad-region=<string>` - Region to install to for Nomad. The default is global.
+- `-nomad-server-cpu=<string>` - CPU required to run this task in MHz. The default is 200.
+- `-nomad-server-memory=<string>` - MB of Memory to allocate to the server job task. The default is 600.
+- `-nomad-runner-cpu=<string>` - CPU required to run this task in MHz. The default is 200.
+- `-nomad-runner-memory=<string>` - MB of Memory to allocate to the runner job task. The default is 600.
+- `-nomad-runner-host-volume=<string>` - Name of the host volume to use for the Waypoint runner.
+- `-nomad-runner-csi-volume-provider=<string>` - Name of the CSI volume provider to use for the Waypoint runner.
+- `-nomad-runner-csi-volume=<string>` - The name of the volume to initialize for the Waypoint runner within the CSI provider.
+- `-nomad-runner-csi-volume-capacity-min=<int>` - Waypoint runner Nomad CSI volume capacity minimum, in bytes. The default is 1073741824.
+- `-nomad-runner-csi-volume-capacity-max=<int>` - Waypoint runner Nomad CSI volume capacity maximum, in bytes. The default is 2147483648.
+- `-nomad-server-image=<string>` - Docker image for the Waypoint server. The default is hashicorp/waypoint:latest.
 - `-nomad-host-volume=<string>` - Nomad host volume name.
-- `-nomad-consul-service` - Create service for Waypoint UI and Server in Consul.
+- `-nomad-service-provider=<string>` - Create service for Waypoint UI and Server. One possible value from: consul, nomad, none. The default is none.
+- `-nomad-service-ui-tags=<string>` - Tags for the Waypoint UI service. The default is waypoint.
+- `-nomad-service-backend-tags=<string>` - Tags for the Waypoint backend service. The default is waypoint.
+- `-nomad-consul-service` - Create service for Waypoint UI and Server in Consul. The default is false.
 - `-nomad-consul-service-hostname=<string>` - If set, will use this hostname for Consul DNS rather than the default, i.e. "waypoint-server.service.consul".
 - `-nomad-consul-service-ui-tags=<string>` - Tags for the Waypoint UI service generated in Consul.
 - `-nomad-consul-service-backend-tags=<string>` - Tags for the Waypoint backend service generated in Consul. The 'first' tag will be used when crafting the Consul DNS hostname for accessing Waypoint.
-- `-nomad-consul-datacenter=<string>` - The datacenter where Consul is located.
-- `-nomad-consul-domain=<string>` - The domain where Consul is located.
+- `-nomad-consul-datacenter=<string>` - The datacenter where Consul is located. The default is dc1.
+- `-nomad-consul-domain=<string>` - The domain where Consul is located. The default is consul.
 
 @include "commands/server-upgrade_more.mdx"

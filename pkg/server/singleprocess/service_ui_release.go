@@ -3,7 +3,9 @@ package singleprocess
 import (
 	"context"
 
+	"github.com/hashicorp/go-hclog"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
+	"github.com/hashicorp/waypoint/pkg/server/hcerr"
 	"github.com/hashicorp/waypoint/pkg/serverstate"
 )
 
@@ -11,14 +13,18 @@ func (s *Service) UI_ListReleases(
 	ctx context.Context,
 	req *pb.UI_ListReleasesRequest,
 ) (*pb.UI_ListReleasesResponse, error) {
-	releaseList, err := s.state(ctx).ReleaseList(req.Application,
+	releaseList, err := s.state(ctx).ReleaseList(ctx, req.Application,
 		serverstate.ListWithOrder(req.Order),
 		serverstate.ListWithWorkspace(req.Workspace),
 		serverstate.ListWithStatusFilter(req.Status...),
 		serverstate.ListWithPhysicalState(req.PhysicalState),
 	)
 	if err != nil {
-		return nil, err
+		return nil, hcerr.Externalize(
+			hclog.FromContext(ctx),
+			err,
+			"error listing releases",
+		)
 	}
 
 	// TODO: make this more efficient. We should be able to just grab the relevant status report in one go, not have to
@@ -28,12 +34,21 @@ func (s *Service) UI_ListReleases(
 	// we'll have to not use that abstraction and instead write our own query for grabbing a status report if a target
 	// is requested.
 	statusReports, err := s.state(ctx).StatusReportList(
+		ctx,
 		req.Application,
 		// NOTE(izaak): the only implemented order for list is pb.OperationOrder_COMPLETE_TIME, which doesn't apply here.
 		serverstate.ListWithWorkspace(req.Workspace),
 	)
 	if err != nil {
-		return nil, err
+		return nil, hcerr.Externalize(
+			hclog.FromContext(ctx),
+			err,
+			"error listing status reports",
+			"application",
+			req.GetApplication(),
+			"workspace",
+			req.GetWorkspace(),
+		)
 	}
 
 	var releaseBundles []*pb.UI_ReleaseBundle
@@ -54,7 +69,11 @@ func (s *Service) UI_ListReleases(
 
 		// Always pre-populate release details for bundles
 		if err := s.releasePreloadDetails(ctx, pb.Release_BUILD, release); err != nil {
-			return nil, err
+			return nil, hcerr.Externalize(
+				hclog.FromContext(ctx),
+				err,
+				"error reloading data for releases",
+			)
 		}
 
 		bundle := pb.UI_ReleaseBundle{

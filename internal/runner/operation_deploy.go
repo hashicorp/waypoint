@@ -24,6 +24,19 @@ func (r *Runner) executeDeployOp(
 		panic("operation not expected type")
 	}
 
+	if op.Deploy.Artifact == nil {
+		// get latest artifact if none set
+		push, err := r.client.GetLatestPushedArtifact(ctx, &pb.GetLatestPushedArtifactRequest{
+			Application: job.Application,
+			Workspace:   job.Workspace,
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		op.Deploy.Artifact = push
+	}
+
 	deploymentResult, err := app.Deploy(ctx, op.Deploy.Artifact)
 	if err != nil {
 		return nil, err
@@ -35,6 +48,12 @@ func (r *Runner) executeDeployOp(
 			Target: &pb.Ref_Operation_Id{Id: deploymentResult.Id},
 		},
 	})
+	if err != nil {
+		return nil, err
+	}
+
+	// Run a status report on the recent deployment
+	_, err = app.DeploymentStatusReport(ctx, deployment)
 	if err != nil {
 		return nil, err
 	}

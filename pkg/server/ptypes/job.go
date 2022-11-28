@@ -53,6 +53,13 @@ func TestJobNew(t testing.T, src *pb.Job) *pb.Job {
 // TODO: This still fails if the job passed in to be validated is nil
 func ValidateJob(job *pb.Job) error {
 	return validationext.Error(validation.ValidateStruct(job,
+		ValidateJobRules(job)...,
+	))
+}
+
+// ValidateJobRules
+func ValidateJobRules(job *pb.Job) []*validation.FieldRules {
+	return []*validation.FieldRules{
 		validation.Field(&job.Id, validation.By(isEmpty)),
 		validation.Field(&job.Application, validation.Required),
 		validation.Field(&job.Workspace, validation.Required),
@@ -64,7 +71,7 @@ func ValidateJob(job *pb.Job) error {
 		validationext.StructField(&job.DataSource, func() []*validation.FieldRules {
 			return ValidateJobDataSourceRules(job.DataSource)
 		}),
-	))
+	}
 }
 
 // ValidateJobWorkspaceRules

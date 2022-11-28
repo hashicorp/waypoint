@@ -1,0 +1,4 @@
+```release-note:bug
+core: prune releases which released deployments that are being pruned during
+a release
+```

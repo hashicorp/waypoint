@@ -56,7 +56,12 @@ func ValidateProject(p *pb.Project) error {
 // ValidateProjectRules
 func ValidateProjectRules(p *pb.Project) []*validation.FieldRules {
 	return []*validation.FieldRules{
-		validation.Field(&p.Name, validation.Required),
+
+		validation.Field(&p.Name,
+			validation.Required,
+			validation.By(validatePathToken),
+		),
+
 		validation.Field(&p.WaypointHcl, isWaypointHcl(p)),
 
 		validationext.StructField(&p.DataSource, func() []*validation.FieldRules {
@@ -83,6 +88,13 @@ func ValidateUpsertProjectRequest(v *pb.UpsertProjectRequest) error {
 
 // ValidateGetProjectRequest
 func ValidateGetProjectRequest(v *pb.GetProjectRequest) error {
+	return validationext.Error(validation.ValidateStruct(v,
+		validation.Field(&v.Project, validation.Required),
+	))
+}
+
+// ValidateDestroyProjectRequest
+func ValidateDestroyProjectRequest(v *pb.DestroyProjectRequest) error {
 	return validationext.Error(validation.ValidateStruct(v,
 		validation.Field(&v.Project, validation.Required),
 	))

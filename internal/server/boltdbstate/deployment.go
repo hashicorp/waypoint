@@ -1,8 +1,11 @@
 package boltdbstate
 
 import (
+	"context"
+	"github.com/hashicorp/go-memdb"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	"github.com/hashicorp/waypoint/pkg/serverstate"
+	bolt "go.etcd.io/bbolt"
 )
 
 var deploymentOp = &appOperation{
@@ -17,12 +20,12 @@ func init() {
 }
 
 // DeploymentPut inserts or updates a deployment record.
-func (s *State) DeploymentPut(update bool, b *pb.Deployment) error {
+func (s *State) DeploymentPut(ctx context.Context, update bool, b *pb.Deployment) error {
 	return deploymentOp.Put(s, update, b)
 }
 
 // DeploymentGet gets a deployment by ref.
-func (s *State) DeploymentGet(ref *pb.Ref_Operation) (*pb.Deployment, error) {
+func (s *State) DeploymentGet(ctx context.Context, ref *pb.Ref_Operation) (*pb.Deployment, error) {
 	result, err := deploymentOp.Get(s, ref)
 	if err != nil {
 		return nil, err
@@ -32,6 +35,7 @@ func (s *State) DeploymentGet(ref *pb.Ref_Operation) (*pb.Deployment, error) {
 }
 
 func (s *State) DeploymentList(
+	ctx context.Context,
 	ref *pb.Ref_Application,
 	opts ...serverstate.ListOperationOption,
 ) ([]*pb.Deployment, error) {
@@ -50,6 +54,7 @@ func (s *State) DeploymentList(
 
 // DeploymentLatest gets the latest deployment that was completed successfully.
 func (s *State) DeploymentLatest(
+	ctx context.Context,
 	ref *pb.Ref_Application,
 	ws *pb.Ref_Workspace,
 ) (*pb.Deployment, error) {
@@ -59,4 +64,9 @@ func (s *State) DeploymentLatest(
 	}
 
 	return result.(*pb.Deployment), nil
+}
+
+// deploymentDelete deletes the deployment from the DB
+func (s *State) deploymentDelete(dbTxn *bolt.Tx, memTxn *memdb.Txn, d *pb.Deployment) error {
+	return deploymentOp.delete(dbTxn, memTxn, d)
 }

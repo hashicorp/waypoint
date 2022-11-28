@@ -10,6 +10,7 @@ import (
 	"google.golang.org/grpc/reflection"
 	empty "google.golang.org/protobuf/types/known/emptypb"
 
+	"github.com/hashicorp/waypoint/pkg/inlinekeepalive"
 	"github.com/hashicorp/waypoint/pkg/server"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 )
@@ -46,6 +47,14 @@ func newGrpcServer(opts *options) (*grpcServer, error) {
 		grpc.ChainStreamInterceptor(
 			// Insert our logger and log
 			logStreamInterceptor(log, false),
+
+			// Send and receive keepalive messages along grpc streams.
+			// Some loadbalancers (ALBs) don't respect http2 pings.
+			// (https://stackoverflow.com/questions/66818645/http2-ping-frames-over-aws-alb-grpc-keepalive-ping)
+			// This interceptor keeps low-traffic streams active and not timed out.
+			// NOTE(izaak): long-term, we should ensure that all of our
+			// streaming endpoints are robust to disconnect/resume.
+			inlinekeepalive.KeepaliveServerStreamInterceptor(time.Duration(5)*time.Second),
 
 			// Protocol version negotiation
 			server.VersionStreamInterceptor(resp.Info),

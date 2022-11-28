@@ -3,6 +3,7 @@ package boltdbstate
 import (
 	"bufio"
 	"compress/gzip"
+	"context"
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
@@ -29,7 +30,7 @@ import (
 //
 // This will NOT buffer data to w, so you should wrap w in a bufio.Writer
 // if you want buffering.
-func (s *State) CreateSnapshot(w io.Writer) error {
+func (s *State) CreateSnapshot(ctx context.Context, w io.Writer) error {
 	// We build up the checksum using a multiwriter from the protowriter.
 	// This lets us figure out the checksum after the proto bytes are marshalled
 	// but before gzip.
@@ -110,7 +111,7 @@ func (s *State) CreateSnapshot(w io.Writer) error {
 // StageRestoreSnapshot stages a database restore for the next server restart.
 // This will create a temporary file alongside the data file so we must have
 // write access to the directory containing the database.
-func (s *State) StageRestoreSnapshot(r io.Reader) error {
+func (s *State) StageRestoreSnapshot(ctx context.Context, r io.Reader) error {
 	log := s.log.Named("restore")
 	log.Warn("beginning to stage snapshot restore")
 

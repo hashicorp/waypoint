@@ -1,0 +1,3 @@
+```release-note:bug
+plugin/tfc: fix HCL field, `refresh_interval`
+```

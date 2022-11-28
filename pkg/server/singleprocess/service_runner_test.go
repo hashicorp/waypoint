@@ -1171,7 +1171,7 @@ func TestServiceRunnerJobStream_complete(t *testing.T) {
 	require.Equal(io.EOF, err)
 
 	// Query our job and it should be done
-	job, err := testServiceImpl(impl).state(ctx).JobById(queueResp.JobId, nil)
+	job, err := testServiceImpl(impl).state(ctx).JobById(ctx, queueResp.JobId, nil)
 	require.NoError(err)
 	require.Equal(pb.Job_SUCCESS, job.State)
 
@@ -1182,7 +1182,7 @@ func TestServiceRunnerJobStream_complete(t *testing.T) {
 
 	// Verify that we update the project last data ref
 	{
-		ws, err := testServiceImpl(impl).state(ctx).WorkspaceGet(job.Workspace.Workspace)
+		ws, err := testServiceImpl(impl).state(ctx).WorkspaceGet(ctx, job.Workspace.Workspace)
 		require.NoError(err)
 		require.NotNil(ws)
 		require.Len(ws.Projects, 1)
@@ -1271,7 +1271,7 @@ func TestServiceRunnerJobStream_errorBeforeAck(t *testing.T) {
 	require.Equal(io.EOF, err)
 
 	// Query our job and it should be queued again
-	job, err := testServiceImpl(impl).state(ctx).JobById(queueResp.JobId, nil)
+	job, err := testServiceImpl(impl).state(ctx).JobById(ctx, queueResp.JobId, nil)
 	require.NoError(err)
 	require.Equal(pb.Job_QUEUED, job.State)
 }
@@ -1353,7 +1353,7 @@ func TestServiceRunnerJobStream_cancel(t *testing.T) {
 	require.Equal(io.EOF, err, err.Error())
 
 	// Query our job and it should be done
-	job, err := testServiceImpl(impl).state(ctx).JobById(queueResp.JobId, nil)
+	job, err := testServiceImpl(impl).state(ctx).JobById(ctx, queueResp.JobId, nil)
 	require.NoError(err)
 	require.Equal(pb.Job_SUCCESS, job.State)
 	require.NotEmpty(job.CancelTime)
@@ -1511,7 +1511,7 @@ func TestServiceRunnerJobStream_reattachHappy(t *testing.T) {
 	require.Equal(io.EOF, err)
 
 	// Query our job and it should be done
-	job, err := testServiceImpl(impl).state(ctx).JobById(queueResp.JobId, nil)
+	job, err := testServiceImpl(impl).state(ctx).JobById(ctx, queueResp.JobId, nil)
 	require.NoError(err)
 	require.Equal(pb.Job_SUCCESS, job.State)
 
@@ -1522,7 +1522,7 @@ func TestServiceRunnerJobStream_reattachHappy(t *testing.T) {
 
 	// Verify that we update the project last data ref
 	{
-		ws, err := testServiceImpl(impl).state(ctx).WorkspaceGet(job.Workspace.Workspace)
+		ws, err := testServiceImpl(impl).state(ctx).WorkspaceGet(ctx, job.Workspace.Workspace)
 		require.NoError(err)
 		require.NotNil(ws)
 		require.Len(ws.Projects, 1)

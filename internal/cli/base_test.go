@@ -2,12 +2,14 @@ package cli
 
 import (
 	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 
 	"github.com/hashicorp/waypoint/internal/clicontext"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
+	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 )
 
 func TestCheckFlagsAfterArgs(t *testing.T) {
@@ -198,6 +200,64 @@ func TestWorkspacePrecedence(t *testing.T) {
 
 			// reset the env after every test
 			os.Unsetenv(defaultWorkspaceEnvName)
+		})
+	}
+}
+
+func TestInitConfigLoad(t *testing.T) {
+	cases := []struct {
+		Name                    string
+		FileName                string
+		ExpectedValidateResults bool
+		ExpectedErr             bool
+	}{
+		{
+			"valid file",
+			"valid.hcl",
+			false,
+			false,
+		},
+		{
+			"invalid file",
+			"invalid.hcl",
+			true,
+			true,
+		},
+	}
+
+	for _, tt := range cases {
+		t.Run(tt.Name, func(t *testing.T) {
+			require := require.New(t)
+			c := baseCommand{}
+
+			// Add a context, set the given context workspace value if any
+			cfg := &clicontext.Config{
+				Workspace: defaultWorkspace,
+			}
+
+			st := clicontext.TestStorage(t)
+			require.NoError(st.Set("default", cfg))
+
+			c.contextStorage = st
+
+			// setup flags and arguments of the base command, and set in the
+			// base config. This is work typically done in base.Init()
+			sets := flag.NewSets()
+			set := sets.NewSet("test")
+			set.StringVar(&flag.StringVar{Name: "workspace", Target: &c.flagWorkspace})
+
+			baseCfg := baseConfig{
+				Flags: sets,
+			}
+
+			err := baseCfg.Flags.Parse(baseCfg.Args)
+			require.NoError(err)
+			c.refWorkspace = &pb.Ref_Workspace{Workspace: defaultWorkspace}
+
+			c.args = baseCfg.Flags.Args()
+			_, vr, err := c.initConfig(filepath.Join("testdata", tt.FileName))
+			require.Equal((err != nil), tt.ExpectedErr, "error")
+			require.Equal(len(vr) > 0, tt.ExpectedValidateResults, "validation results")
 		})
 	}
 }

@@ -21,7 +21,7 @@ These must be passed in using Helm values (i.e. the chart must make
 environment variables configurable).
 
 This is documented in more detail with a full example in the
-[Kubernetes Helm Deployment documentation](/docs/kubernetes/helm-deploy).
+[Kubernetes Helm Deployment documentation](/docs/platforms/kubernetes/helm-deploy).
 
 #### URL Service
 
@@ -92,6 +92,15 @@ The kubectl context to use, as defined in the kubeconfig file.
 - Type: **string**
 - **Optional**
 
+#### create_namespace
+
+Create Namespace if it doesn't exist.
+
+This option will instruct Helm to create a namespace if it doesn't exist.
+
+- Type: **bool**
+- **Optional**
+
 #### devel
 
 True to considered non-released chart versions for installation.
@@ -120,12 +129,13 @@ If this isn't set, the default lookup used by `kubectl` will be used.
 
 - Type: **string**
 - **Optional**
+- Environment Variable: **KUBECONFIG**
 
 #### namespace
 
 Namespace to deploy the Helm chart.
 
-This will be created if it does not exist. This defaults to the current namespace of the auth settings.
+This will be created if it does not exist (see create_namespace). This defaults to the current namespace of the auth settings.
 
 - Type: **string**
 - **Optional**
@@ -137,6 +147,15 @@ URL of the Helm repository that contains the chart.
 This only needs to be set if you're NOT using a local chart.
 
 - Type: **string**
+- **Optional**
+
+#### skip_crds
+
+Do not create CRDs.
+
+This option will tell Helm to skip the creation of CRDs.
+
+- Type: **bool**
 - **Optional**
 
 #### values

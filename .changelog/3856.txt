@@ -1,0 +1,3 @@
+```release-note:improvement
+server: Add UI_GetDeployment convenience endpoint
+```

@@ -2,12 +2,12 @@ package singleprocess
 
 import (
 	"context"
+	"fmt"
 
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
-
+	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/waypoint/pkg/server"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
+	"github.com/hashicorp/waypoint/pkg/server/hcerr"
 	"github.com/hashicorp/waypoint/pkg/server/ptypes"
 	"github.com/hashicorp/waypoint/pkg/serverstate"
 )
@@ -28,15 +28,25 @@ func (s *Service) UpsertRelease(
 		// Get the next id
 		id, err := server.Id()
 		if err != nil {
-			return nil, status.Errorf(codes.Internal, "uuid generation failed: %s", err)
+			return nil, hcerr.Externalize(
+				hclog.FromContext(ctx),
+				fmt.Errorf("uuid generation failed: %w", err),
+				"failed to generate a uuid while upserting a release",
+			)
 		}
 
 		// Specify the id
 		result.Id = id
 	}
 
-	if err := s.state(ctx).ReleasePut(!insert, result); err != nil {
-		return nil, err
+	if err := s.state(ctx).ReleasePut(ctx, !insert, result); err != nil {
+		return nil, hcerr.Externalize(
+			hclog.FromContext(ctx),
+			err,
+			"failed to upsert release",
+			"release_id",
+			result.GetId(),
+		)
 	}
 
 	return &pb.UpsertReleaseResponse{Release: result}, nil
@@ -47,19 +57,27 @@ func (s *Service) ListReleases(
 	ctx context.Context,
 	req *pb.ListReleasesRequest,
 ) (*pb.ListReleasesResponse, error) {
-	result, err := s.state(ctx).ReleaseList(req.Application,
+	result, err := s.state(ctx).ReleaseList(ctx, req.Application,
 		serverstate.ListWithStatusFilter(req.Status...),
 		serverstate.ListWithOrder(req.Order),
 		serverstate.ListWithWorkspace(req.Workspace),
 		serverstate.ListWithPhysicalState(req.PhysicalState),
 	)
 	if err != nil {
-		return nil, err
+		return nil, hcerr.Externalize(
+			hclog.FromContext(ctx),
+			err,
+			"error listing releases",
+		)
 	}
 
 	for _, r := range result {
 		if err := s.releasePreloadDetails(ctx, req.LoadDetails, r); err != nil {
-			return nil, err
+			return nil, hcerr.Externalize(
+				hclog.FromContext(ctx),
+				err,
+				"error preloading release list details",
+			)
 		}
 	}
 
@@ -75,13 +93,21 @@ func (s *Service) GetLatestRelease(
 		return nil, err
 	}
 
-	r, err := s.state(ctx).ReleaseLatest(req.Application, req.Workspace)
+	r, err := s.state(ctx).ReleaseLatest(ctx, req.Application, req.Workspace)
 	if err != nil {
-		return nil, err
+		return nil, hcerr.Externalize(
+			hclog.FromContext(ctx),
+			err,
+			"error getting latest release",
+		)
 	}
 
 	if err := s.releasePreloadDetails(ctx, req.LoadDetails, r); err != nil {
-		return nil, err
+		return nil, hcerr.Externalize(
+			hclog.FromContext(ctx),
+			err,
+			"error preloading release details",
+		)
 	}
 
 	return r, nil
@@ -96,13 +122,25 @@ func (s *Service) GetRelease(
 		return nil, err
 	}
 
-	r, err := s.state(ctx).ReleaseGet(req.Ref)
+	r, err := s.state(ctx).ReleaseGet(ctx, req.Ref)
 	if err != nil {
-		return nil, err
+		return nil, hcerr.Externalize(
+			hclog.FromContext(ctx),
+			err,
+			"error getting release",
+			"release",
+			req.Ref.GetTarget(),
+		)
 	}
 
 	if err := s.releasePreloadDetails(ctx, req.LoadDetails, r); err != nil {
-		return nil, err
+		return nil, hcerr.Externalize(
+			hclog.FromContext(ctx),
+			err,
+			"error preloading release details",
+			"release",
+			req.Ref.GetTarget(),
+		)
 	}
 
 	return r, nil
@@ -117,7 +155,7 @@ func (s *Service) releasePreloadDetails(
 		return nil
 	}
 
-	pd, err := s.state(ctx).DeploymentGet(&pb.Ref_Operation{
+	pd, err := s.state(ctx).DeploymentGet(ctx, &pb.Ref_Operation{
 		Target: &pb.Ref_Operation_Id{
 			Id: d.DeploymentId,
 		},
@@ -128,7 +166,7 @@ func (s *Service) releasePreloadDetails(
 	d.Preload.Deployment = pd
 
 	if req > pb.Release_DEPLOYMENT {
-		pa, err := s.state(ctx).ArtifactGet(&pb.Ref_Operation{
+		pa, err := s.state(ctx).ArtifactGet(ctx, &pb.Ref_Operation{
 			Target: &pb.Ref_Operation_Id{
 				Id: pd.ArtifactId,
 			},
@@ -139,7 +177,7 @@ func (s *Service) releasePreloadDetails(
 		d.Preload.Artifact = pa
 
 		if req > pb.Release_ARTIFACT {
-			build, err := s.state(ctx).BuildGet(&pb.Ref_Operation{
+			build, err := s.state(ctx).BuildGet(ctx, &pb.Ref_Operation{
 				Target: &pb.Ref_Operation_Id{
 					Id: pa.BuildId,
 				},

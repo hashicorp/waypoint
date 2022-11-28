@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"bytes"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -20,6 +21,7 @@ type FmtCommand struct {
 	*baseCommand
 
 	flagWrite bool
+	flagCheck bool
 }
 
 func (c *FmtCommand) Run(args []string) int {
@@ -70,6 +72,23 @@ func (c *FmtCommand) Run(args []string) int {
 		return 1
 	}
 
+	fileChanged := false
+	if !bytes.Equal(src, out) {
+		fileChanged = true
+	}
+
+	if c.flagCheck {
+		// In the case where we're checking formatting, don't persist data
+		// ultimately this shouldn't even be used because we should return
+		// in this block
+		c.flagWrite = false
+		if !fileChanged {
+			return 0
+		} else {
+			return 3
+		}
+	}
+
 	// If we're writing then write it to the file. stdin never writes to a file
 	if c.flagWrite && !stdin {
 		if err := ioutil.WriteFile(c.args[0], out, 0644); err != nil {
@@ -79,7 +98,9 @@ func (c *FmtCommand) Run(args []string) int {
 			)
 			return 1
 		}
-		fmt.Println(c.args[0])
+		if fileChanged {
+			fmt.Println(c.args[0])
+		}
 	} else {
 		// We must use fmt here and not c.ui since c.ui may wordwrap and trim.
 		fmt.Print(string(out))
@@ -108,7 +129,15 @@ func (c *FmtCommand) Flags() *flag.Sets {
 			Default: true,
 			Usage: "Overwrite the input file. If this is false, the formatted " +
 				"output will be written to STDOUT. This has no effect when formatting " +
-				"from STDIN.",
+				"from STDIN or when using the -check flag.",
+		})
+
+		f.BoolVar(&flag.BoolVar{
+			Name:    "check",
+			Target:  &c.flagCheck,
+			Default: false,
+			Usage: "Check if the input is formatted. Exit status will be 0 if " +
+				"all input is properly formatted and exit status 3 otherwise.",
 		})
 	})
 }

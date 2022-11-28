@@ -2,9 +2,9 @@ package serverinstall
 
 import (
 	"context"
-	"fmt"
 
-	"github.com/distribution/distribution/v3/reference"
+	"github.com/hashicorp/waypoint/internal/runnerinstall"
+
 	"github.com/hashicorp/go-hclog"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
@@ -21,10 +21,11 @@ type Installer interface {
 	HasRunner(context.Context, *InstallOpts) (bool, error)
 
 	// Install expects the Waypoint server to be installed.
-	Install(context.Context, *InstallOpts) (*InstallResults, error)
+	// Returns InstallResults, a bootstrap token (if platform sets one up), or an error
+	Install(context.Context, *InstallOpts) (*InstallResults, string, error)
 
 	// InstallRunner expects a Waypoint runner to be installed.
-	InstallRunner(context.Context, *InstallRunnerOpts) error
+	InstallRunner(context.Context, *runnerinstall.InstallOpts) error
 
 	// InstallFlags is called prior to Install and allows the installer to
 	// specify flags for the install CLI. The flags should be prefixed with
@@ -52,7 +53,7 @@ type Installer interface {
 	// No runners may exist. Runners installed manually by the user should be
 	// ignored (i.e. InstallRunner should set some identifiers that can be used
 	// to distinguish between automatically installed vs. manually installed).
-	UninstallRunner(context.Context, *InstallOpts) error
+	UninstallRunner(context.Context, *runnerinstall.InstallOpts) error
 
 	// UninstallFlags is called prior to Uninstall and allows the Uninstaller to
 	// specify flags for the uninstall CLI. The flags should be prefixed with the
@@ -102,12 +103,10 @@ type InstallRunnerOpts struct {
 	// token already set. This is provided as a convenience since it is common
 	// to build this immediately.
 	AdvertiseClient *serverconfig.Client
-}
 
-// An optional interface that the installer can implement to request
-// an ondemand runner be registered.
-type OnDemandRunnerConfigProvider interface {
-	OnDemandRunnerConfig() *pb.OnDemandRunnerConfig
+	Cookie string
+
+	Id string
 }
 
 var Platforms = map[string]Installer{
@@ -120,8 +119,6 @@ var Platforms = map[string]Installer{
 const (
 	serverName = "waypoint-server"
 	runnerName = "waypoint-runner"
-
-	defaultServerImage = "hashicorp/waypoint:latest"
 )
 
 // Default server ports to use
@@ -130,25 +127,3 @@ var (
 	defaultGrpcPort = serverconfig.DefaultGRPCPort
 	defaultHttpPort = serverconfig.DefaultHTTPPort
 )
-
-// defaultODRImage returns the default Waypoint ODR image based on the
-// supplied server image. We default the ODR image to the name of the server
-// image with the `-odr` suffix attached to it.
-func defaultODRImage(serverImage string) (string, error) {
-	image, err := reference.Parse(serverImage)
-	if err != nil {
-		return "", fmt.Errorf("server image name %q is not a valid oci reference: %s", serverImage, err)
-	}
-	tagged, ok := image.(reference.Tagged)
-	if !ok {
-		return "", fmt.Errorf("server image doesn't have a tag specified. " +
-			"Please specify a tag, for example `waypoint:latest`.")
-	}
-
-	tag := tagged.Tag()
-
-	// Everything but the tag
-	imageName := serverImage[0 : len(serverImage)-len(tag)-1]
-
-	return fmt.Sprintf("%s-odr:%s", imageName, tag), nil
-}

@@ -25,7 +25,7 @@ func TestServiceDeployment(t *testing.T, factory Factory) {
 	ctx := context.Background()
 
 	// Create our server
-	_, client := factory(t)
+	client, _ := factory(t)
 
 	// Simplify writing tests
 	type Req = pb.UpsertDeploymentRequest
@@ -75,7 +75,7 @@ func TestServiceDeployment_GetDeployment(t *testing.T, factory Factory) {
 	ctx := context.Background()
 
 	// Create our server
-	_, client := factory(t)
+	client, _ := factory(t)
 
 	// Best way to mock for now is to make a request
 	resp, err := client.UpsertDeployment(ctx, &pb.UpsertDeploymentRequest{
@@ -122,7 +122,7 @@ func TestServiceDeployment_ListDeployments(t *testing.T, factory Factory) {
 	ctx := context.Background()
 
 	// Create our server
-	_, client := factory(t)
+	client, _ := factory(t)
 
 	buildresp, err := client.UpsertBuild(ctx, &pb.UpsertBuildRequest{
 		Build: serverptypes.TestValidBuild(t, nil),

@@ -21,7 +21,7 @@ func TestServiceUI_GetProject(t *testing.T, factory Factory) {
 	ctx := context.Background()
 
 	// Create our server
-	_, client := factory(t)
+	client, _ := factory(t)
 
 	project := serverptypes.TestProject(t, &pb.Project{
 		Name: "example",

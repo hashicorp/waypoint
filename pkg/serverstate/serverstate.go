@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/hashicorp/go-memdb"
+	"google.golang.org/protobuf/types/known/timestamppb"
 
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 )
@@ -20,164 +21,183 @@ type Interface interface {
 	// that the state storage is using.
 	io.Closer
 
-	HMACKeyEmpty() bool
-	HMACKeyCreateIfNotExist(id string, size int) (*pb.HMACKey, error)
-	HMACKeyGet(id string) (*pb.HMACKey, error)
+	HMACKeyEmpty(context.Context) bool
+	HMACKeyCreateIfNotExist(ctx context.Context, id string, size int) (*pb.HMACKey, error)
+	HMACKeyGet(ctx context.Context, id string) (*pb.HMACKey, error)
+	TokenSignature(ctx context.Context, tokenBody []byte, keyId string) (signature []byte, err error)
+	TokenSignatureVerify(ctx context.Context, tokenBody []byte, signature []byte, keyId string) (isValid bool, err error)
 
-	ServerConfigSet(*pb.ServerConfig) error
-	ServerConfigGet() (*pb.ServerConfig, error)
+	ServerConfigSet(context.Context, *pb.ServerConfig) error
+	ServerConfigGet(context.Context) (*pb.ServerConfig, error)
 
-	UserPut(*pb.User) error
-	UserGet(*pb.Ref_User) (*pb.User, error)
-	UserDelete(*pb.Ref_User) error
-	UserList() ([]*pb.User, error)
-	UserEmpty() (bool, error)
-	UserGetOIDC(iss, sub string) (*pb.User, error)
-	UserGetEmail(string) (*pb.User, error)
+	UserPut(context.Context, *pb.User) error
+	UserGet(context.Context, *pb.Ref_User) (*pb.User, error)
+	UserDelete(context.Context, *pb.Ref_User) error
+	UserList(context.Context) ([]*pb.User, error)
+	UserEmpty(context.Context) (bool, error)
+	UserGetOIDC(ctx context.Context, iss, sub string) (*pb.User, error)
+	UserGetEmail(context.Context, string) (*pb.User, error)
 
 	//---------------------------------------------------------------
 	// Server Settings
 
-	AuthMethodPut(*pb.AuthMethod) error
-	AuthMethodGet(*pb.Ref_AuthMethod) (*pb.AuthMethod, error)
-	AuthMethodDelete(*pb.Ref_AuthMethod) error
-	AuthMethodList() ([]*pb.AuthMethod, error)
+	AuthMethodPut(context.Context, *pb.AuthMethod) error
+	AuthMethodGet(context.Context, *pb.Ref_AuthMethod) (*pb.AuthMethod, error)
+	AuthMethodDelete(context.Context, *pb.Ref_AuthMethod) error
+	AuthMethodList(context.Context) ([]*pb.AuthMethod, error)
 
-	RunnerCreate(*pb.Runner) error
-	RunnerDelete(string) error
-	RunnerOffline(string) error
-	RunnerAdopt(string, bool) error
-	RunnerReject(string) error
-	RunnerById(string, memdb.WatchSet) (*pb.Runner, error)
-	RunnerList() ([]*pb.Runner, error)
+	RunnerCreate(context.Context, *pb.Runner) error
+	RunnerDelete(context.Context, string) error
+	RunnerOffline(context.Context, string) error
+	RunnerAdopt(context.Context, string, bool) error
+	RunnerReject(context.Context, string) error
+	RunnerById(context.Context, string, memdb.WatchSet) (*pb.Runner, error)
+	RunnerList(context.Context) ([]*pb.Runner, error)
 
-	OnDemandRunnerConfigPut(*pb.OnDemandRunnerConfig) error
-	OnDemandRunnerConfigGet(*pb.Ref_OnDemandRunnerConfig) (*pb.OnDemandRunnerConfig, error)
-	OnDemandRunnerConfigDelete(*pb.Ref_OnDemandRunnerConfig) error
-	OnDemandRunnerConfigList() ([]*pb.OnDemandRunnerConfig, error)
-	OnDemandRunnerConfigDefault() ([]*pb.Ref_OnDemandRunnerConfig, error)
+	OnDemandRunnerConfigPut(context.Context, *pb.OnDemandRunnerConfig) (*pb.OnDemandRunnerConfig, error)
+	OnDemandRunnerConfigGet(context.Context, *pb.Ref_OnDemandRunnerConfig) (*pb.OnDemandRunnerConfig, error)
+	OnDemandRunnerConfigDelete(context.Context, *pb.Ref_OnDemandRunnerConfig) error
+	OnDemandRunnerConfigList(context.Context) ([]*pb.OnDemandRunnerConfig, error)
+	OnDemandRunnerConfigDefault(context.Context) ([]*pb.Ref_OnDemandRunnerConfig, error)
 
-	ServerURLTokenSet(string) error
-	ServerURLTokenGet() (string, error)
+	ServerURLTokenSet(context.Context, string) error
+	ServerURLTokenGet(context.Context) (string, error)
 
-	ServerIdSet(id string) error
-	ServerIdGet() (string, error)
+	ServerIdSet(ctx context.Context, id string) error
+	ServerIdGet(context.Context) (string, error)
 
-	CreateSnapshot(io.Writer) error
-	StageRestoreSnapshot(io.Reader) error
+	CreateSnapshot(context.Context, io.Writer) error
+	StageRestoreSnapshot(context.Context, io.Reader) error
 
 	//---------------------------------------------------------------
 	// Config (App, Runner, etc.)
 
-	ConfigSet(...*pb.ConfigVar) error
-	ConfigGet(*pb.ConfigGetRequest) ([]*pb.ConfigVar, error)
-	ConfigGetWatch(*pb.ConfigGetRequest, memdb.WatchSet) ([]*pb.ConfigVar, error)
+	ConfigSet(context.Context, ...*pb.ConfigVar) error
+	ConfigGet(context.Context, *pb.ConfigGetRequest) ([]*pb.ConfigVar, error)
+	ConfigGetWatch(context.Context, *pb.ConfigGetRequest, memdb.WatchSet) ([]*pb.ConfigVar, error)
 
-	ConfigSourceSet(...*pb.ConfigSource) error
-	ConfigSourceGet(*pb.GetConfigSourceRequest) ([]*pb.ConfigSource, error)
-	ConfigSourceGetWatch(*pb.GetConfigSourceRequest, memdb.WatchSet) ([]*pb.ConfigSource, error)
+	ConfigSourceSet(context.Context, ...*pb.ConfigSource) error
+	ConfigSourceGet(context.Context, *pb.GetConfigSourceRequest) ([]*pb.ConfigSource, error)
+	ConfigSourceGetWatch(context.Context, *pb.GetConfigSourceRequest, memdb.WatchSet) ([]*pb.ConfigSource, error)
 
 	//---------------------------------------------------------------
 	// Instances
 
-	InstanceCreate(*Instance) error
-	InstanceDelete(string) error
-	InstanceById(string) (*Instance, error)
-	InstancesByApp(*pb.Ref_Application, *pb.Ref_Workspace, memdb.WatchSet) ([]*Instance, error)
-	InstancesByDeployment(string, memdb.WatchSet) ([]*Instance, error)
+	InstanceCreate(context.Context, *Instance) error
+	InstanceDelete(context.Context, string) error
+	InstanceById(context.Context, string) (*Instance, error)
+	InstancesByApp(context.Context, *pb.Ref_Application, *pb.Ref_Workspace, memdb.WatchSet) ([]*Instance, error)
+	InstancesByDeployment(context.Context, string, memdb.WatchSet) ([]*Instance, error)
 
 	//---------------------------------------------------------------
 	// Projects, Apps, Workspaces
 
-	WorkspaceList() ([]*pb.Workspace, error)
-	WorkspaceListByProject(*pb.Ref_Project) ([]*pb.Workspace, error)
-	WorkspaceListByApp(*pb.Ref_Application) ([]*pb.Workspace, error)
-	WorkspaceGet(string) (*pb.Workspace, error)
-	WorkspacePut(*pb.Workspace) error
+	WorkspaceList(context.Context) ([]*pb.Workspace, error)
+	WorkspaceListByProject(context.Context, *pb.Ref_Project) ([]*pb.Workspace, error)
+	WorkspaceListByApp(context.Context, *pb.Ref_Application) ([]*pb.Workspace, error)
+	WorkspaceGet(context.Context, string) (*pb.Workspace, error)
+	WorkspacePut(context.Context, *pb.Workspace) error
+	WorkspaceDelete(context.Context, string) error
 
-	ProjectPut(*pb.Project) error
-	ProjectGet(*pb.Ref_Project) (*pb.Project, error)
-	ProjectDelete(*pb.Ref_Project) error
-	ProjectUpdateDataRef(*pb.Ref_Project, *pb.Ref_Workspace, *pb.Job_DataSource_Ref) error
-	ProjectList() ([]*pb.Ref_Project, error)
-	ProjectListWorkspaces(*pb.Ref_Project) ([]*pb.Workspace_Project, error)
-	ProjectPollPeek(memdb.WatchSet) (*pb.Project, time.Time, error)
-	ProjectPollComplete(*pb.Project, time.Time) error
+	ProjectPut(context.Context, *pb.Project) error
+	ProjectGet(context.Context, *pb.Ref_Project) (*pb.Project, error)
+	ProjectDelete(context.Context, *pb.Ref_Project) error
+	ProjectUpdateDataRef(context.Context, *pb.Ref_Project, *pb.Ref_Workspace, *pb.Job_DataSource_Ref) error
+	ProjectList(context.Context) ([]*pb.Ref_Project, error)
+	ProjectListWorkspaces(context.Context, *pb.Ref_Project) ([]*pb.Workspace_Project, error)
+	ProjectPollPeek(context.Context, memdb.WatchSet) (*pb.Project, time.Time, error)
+	ProjectPollComplete(context.Context, *pb.Project, time.Time) error
 
-	AppPut(*pb.Application) (*pb.Application, error)
-	AppDelete(*pb.Ref_Application) error
-	AppGet(*pb.Ref_Application) (*pb.Application, error)
-	ApplicationPollPeek(memdb.WatchSet) (*pb.Project, time.Time, error)
-	ApplicationPollComplete(*pb.Project, time.Time) error
-	GetFileChangeSignal(*pb.Ref_Application) (string, error)
+	AppPut(context.Context, *pb.Application) (*pb.Application, error)
+	AppDelete(context.Context, *pb.Ref_Application) error
+	AppGet(context.Context, *pb.Ref_Application) (*pb.Application, error)
+	ApplicationPollPeek(context.Context, memdb.WatchSet) (*pb.Project, time.Time, error)
+	ApplicationPollComplete(context.Context, *pb.Project, time.Time) error
+	GetFileChangeSignal(context.Context, *pb.Ref_Application) (string, error)
 
 	//---------------------------------------------------------------
 	// Operations
 
-	ArtifactPut(bool, *pb.PushedArtifact) error
-	ArtifactGet(*pb.Ref_Operation) (*pb.PushedArtifact, error)
-	ArtifactLatest(*pb.Ref_Application, *pb.Ref_Workspace) (*pb.PushedArtifact, error)
-	ArtifactList(*pb.Ref_Application, ...ListOperationOption) ([]*pb.PushedArtifact, error)
+	ArtifactPut(context.Context, bool, *pb.PushedArtifact) error
+	ArtifactGet(context.Context, *pb.Ref_Operation) (*pb.PushedArtifact, error)
+	ArtifactLatest(context.Context, *pb.Ref_Application, *pb.Ref_Workspace) (*pb.PushedArtifact, error)
+	ArtifactList(context.Context, *pb.Ref_Application, ...ListOperationOption) ([]*pb.PushedArtifact, error)
 
-	BuildPut(bool, *pb.Build) error
-	BuildGet(*pb.Ref_Operation) (*pb.Build, error)
-	BuildLatest(*pb.Ref_Application, *pb.Ref_Workspace) (*pb.Build, error)
-	BuildList(*pb.Ref_Application, ...ListOperationOption) ([]*pb.Build, error)
+	BuildPut(context.Context, bool, *pb.Build) error
+	BuildGet(context.Context, *pb.Ref_Operation) (*pb.Build, error)
+	BuildLatest(context.Context, *pb.Ref_Application, *pb.Ref_Workspace) (*pb.Build, error)
+	BuildList(context.Context, *pb.Ref_Application, ...ListOperationOption) ([]*pb.Build, error)
 
-	DeploymentPut(bool, *pb.Deployment) error
-	DeploymentGet(*pb.Ref_Operation) (*pb.Deployment, error)
-	DeploymentLatest(*pb.Ref_Application, *pb.Ref_Workspace) (*pb.Deployment, error)
-	DeploymentList(*pb.Ref_Application, ...ListOperationOption) ([]*pb.Deployment, error)
+	DeploymentPut(context.Context, bool, *pb.Deployment) error
+	DeploymentGet(context.Context, *pb.Ref_Operation) (*pb.Deployment, error)
+	DeploymentLatest(context.Context, *pb.Ref_Application, *pb.Ref_Workspace) (*pb.Deployment, error)
+	DeploymentList(context.Context, *pb.Ref_Application, ...ListOperationOption) ([]*pb.Deployment, error)
 
-	ReleasePut(bool, *pb.Release) error
-	ReleaseGet(*pb.Ref_Operation) (*pb.Release, error)
-	ReleaseLatest(*pb.Ref_Application, *pb.Ref_Workspace) (*pb.Release, error)
-	ReleaseList(*pb.Ref_Application, ...ListOperationOption) ([]*pb.Release, error)
+	ReleasePut(context.Context, bool, *pb.Release) error
+	ReleaseGet(context.Context, *pb.Ref_Operation) (*pb.Release, error)
+	ReleaseLatest(context.Context, *pb.Ref_Application, *pb.Ref_Workspace) (*pb.Release, error)
+	ReleaseList(context.Context, *pb.Ref_Application, ...ListOperationOption) ([]*pb.Release, error)
 
-	StatusReportPut(bool, *pb.StatusReport) error
-	StatusReportGet(*pb.Ref_Operation) (*pb.StatusReport, error)
+	StatusReportPut(context.Context, bool, *pb.StatusReport) error
+	StatusReportGet(context.Context, *pb.Ref_Operation) (*pb.StatusReport, error)
 	StatusReportLatest(
+		context.Context,
 		*pb.Ref_Application,
 		*pb.Ref_Workspace,
 		func(*pb.StatusReport) (bool, error),
 	) (*pb.StatusReport, error)
-	StatusReportList(*pb.Ref_Application, ...ListOperationOption) ([]*pb.StatusReport, error)
+	StatusReportList(context.Context, *pb.Ref_Application, ...ListOperationOption) ([]*pb.StatusReport, error)
 
 	//---------------------------------------------------------------
 	// Trigger
 
-	TriggerPut(*pb.Trigger) error
-	TriggerGet(*pb.Ref_Trigger) (*pb.Trigger, error)
-	TriggerDelete(*pb.Ref_Trigger) error
-	TriggerList(*pb.Ref_Workspace, *pb.Ref_Project, *pb.Ref_Application, []string) ([]*pb.Trigger, error)
+	TriggerPut(context.Context, *pb.Trigger) error
+	TriggerGet(context.Context, *pb.Ref_Trigger) (*pb.Trigger, error)
+	TriggerDelete(context.Context, *pb.Ref_Trigger) error
+	TriggerList(context.Context, *pb.Ref_Workspace, *pb.Ref_Project, *pb.Ref_Application, []string) ([]*pb.Trigger, error)
 
 	//---------------------------------------------------------------
 	// Job System
 
-	JobCreate(...*pb.Job) error
-	JobProjectScopedRequest(*pb.Ref_Project, *pb.Job) ([]*pb.QueueJobRequest, error)
-	JobList(*pb.ListJobsRequest) ([]*pb.Job, error)
-	JobById(string, memdb.WatchSet) (*Job, error)
+	JobCreate(context.Context, ...*pb.Job) error
+	JobProjectScopedRequest(context.Context, *pb.Ref_Project, *pb.Job) ([]*pb.QueueJobRequest, error)
+	JobList(context.Context, *pb.ListJobsRequest) ([]*pb.Job, error)
+	JobById(context.Context, string, memdb.WatchSet) (*Job, error)
 	JobPeekForRunner(context.Context, *pb.Runner) (*Job, error)
 	JobAssignForRunner(context.Context, *pb.Runner) (*Job, error)
-	JobAck(string, bool) (*Job, error)
-	JobUpdateRef(string, *pb.Job_DataSource_Ref) error
-	JobUpdate(string, func(*pb.Job) error) error
-	JobComplete(string, *pb.Job_Result, error) error
-	JobCancel(string, bool) error
-	JobHeartbeat(string) error
-	JobExpire(string) error
+	JobAck(context.Context, string, bool) (*Job, error)
+	JobUpdateRef(context.Context, string, *pb.Job_DataSource_Ref) error
+	JobUpdateExpiry(context.Context, string, *timestamppb.Timestamp) error
+	JobUpdate(context.Context, string, func(*pb.Job) error) error
+	JobComplete(context.Context, string, *pb.Job_Result, error) error
+	JobCancel(context.Context, string, bool) error
+	JobHeartbeat(context.Context, string) error
+	JobExpire(context.Context, string) error
 	JobIsAssignable(context.Context, *pb.Job) (bool, error)
 
 	//---------------------------------------------------------------
 	// Task Tracking
 
-	TaskPut(*pb.Task) error
-	TaskGet(*pb.Ref_Task) (*pb.Task, error)
-	TaskDelete(*pb.Ref_Task) error
-	TaskCancel(*pb.Ref_Task) error
-	TaskList(*pb.ListTaskRequest) ([]*pb.Task, error)
-	JobsByTaskRef(*pb.Task) (*pb.Job, *pb.Job, *pb.Job, *pb.Job, error)
+	TaskPut(context.Context, *pb.Task) error
+	TaskGet(context.Context, *pb.Ref_Task) (*pb.Task, error)
+	TaskDelete(context.Context, *pb.Ref_Task) error
+	TaskCancel(context.Context, *pb.Ref_Task) error
+	TaskList(context.Context, *pb.ListTaskRequest) ([]*pb.Task, error)
+	JobsByTaskRef(context.Context, *pb.Task) (*pb.Job, *pb.Job, *pb.Job, *pb.Job, error)
+
+	//---------------------------------------------------------------
+	// Pipelines
+
+	PipelinePut(context.Context, *pb.Pipeline) error
+	PipelineGet(context.Context, *pb.Ref_Pipeline) (*pb.Pipeline, error)
+	PipelineDelete(context.Context, *pb.Ref_Pipeline) error
+	PipelineList(context.Context, *pb.Ref_Project) ([]*pb.Pipeline, error)
+
+	PipelineRunPut(context.Context, *pb.PipelineRun) error
+	PipelineRunGet(context.Context, *pb.Ref_Pipeline, uint64) (*pb.PipelineRun, error)
+	PipelineRunGetLatest(context.Context, string) (*pb.PipelineRun, error)
+	PipelineRunGetById(context.Context, string) (*pb.PipelineRun, error)
+	PipelineRunList(context.Context, *pb.Ref_Pipeline) ([]*pb.PipelineRun, error)
 }
 
 // Pruner is implemented by state storage implementations that require

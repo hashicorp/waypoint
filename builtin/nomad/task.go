@@ -15,6 +15,7 @@ import (
 
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint-plugin-sdk/docs"
+	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 )
 
 // TaskLauncher implements the TaskLauncher plugin interface to support
@@ -147,7 +148,7 @@ func (p *TaskLauncher) StopTask(
 	log hclog.Logger,
 	ti *TaskInfo,
 ) error {
-	client, err := p.getNomadClient()
+	client, err := getNomadClient()
 	if err != nil {
 		log.Error("failed to create a Nomad API client to stop an ODR task")
 		return err
@@ -163,7 +164,7 @@ func (p *TaskLauncher) StartTask(
 	log hclog.Logger,
 	tli *component.TaskLaunchInfo,
 ) (*TaskInfo, error) {
-	client, err := p.getNomadClient()
+	client, err := getNomadClient()
 	if err != nil {
 		log.Error("failed to create a Nomad API client to start an ODR task")
 		return nil, err
@@ -200,7 +201,7 @@ func (p *TaskLauncher) StartTask(
 
 	log.Trace("creating Nomad job for task")
 	jobclient := client.Jobs()
-	job := api.NewServiceJob(taskName, taskName, p.config.Region, 10)
+	job := api.NewBatchJob(taskName, taskName, p.config.Region, 10)
 	job.Datacenters = []string{p.config.Datacenter}
 	tg := api.NewTaskGroup(taskName, 1)
 	tg.Networks = []*api.NetworkResource{
@@ -208,6 +209,27 @@ func (p *TaskLauncher) StartTask(
 			Mode: "host",
 		},
 	}
+
+	interval, err := time.ParseDuration("5m")
+	if err != nil {
+		log.Error("error parsing Nomad restart interval duration")
+		return nil, err
+	}
+	delay, err := time.ParseDuration("15s")
+	if err != nil {
+		log.Error("error parsing Nomad delay interval duration")
+		return nil, err
+	}
+	attempts := 10
+	restartMode := "delay"
+
+	restartPolicy := api.RestartPolicy{
+		Interval: &interval,
+		Attempts: &attempts,
+		Delay:    &delay,
+		Mode:     &restartMode,
+	}
+	tg.RestartPolicy = &restartPolicy
 
 	job.Namespace = &p.config.Namespace
 	job.AddTaskGroup(tg)
@@ -241,15 +263,19 @@ func (p *TaskLauncher) StartTask(
 
 	// On-Demand runner specific configuration to start the task with
 	config := map[string]interface{}{
-		"image":   tli.OciUrl,
-		"args":    tli.Arguments,
-		"command": tli.Entrypoint,
+		"image":      tli.OciUrl,
+		"args":       tli.Arguments,
+		"entrypoint": tli.Entrypoint,
 	}
 
 	job.TaskGroups[0].Tasks[0].Config = config
 
 	log.Debug("registering on-demand task job", "task-name", taskName)
-	_, _, err = jobclient.Register(job, nil)
+	writeOptions := &api.WriteOptions{
+		Region:    p.config.Region,
+		Namespace: p.config.Namespace,
+	}
+	_, _, err = jobclient.Register(job, writeOptions)
 	if err != nil {
 		log.Debug("failed to register job to nomad")
 		return nil, err
@@ -261,23 +287,110 @@ func (p *TaskLauncher) StartTask(
 	}, nil
 }
 
-// getNomadClient provides the client connection used by resources to interact with Nomad.
-func (p *TaskLauncher) getNomadClient() (*api.Client, error) {
-	// Get our client
-	client, err := api.NewClient(api.DefaultConfig())
-	if err != nil {
-		return nil, err
-	}
-	return client, nil
-}
-
 // WatchTask implements TaskLauncher
 func (p *TaskLauncher) WatchTask(
 	ctx context.Context,
 	log hclog.Logger,
+	ui terminal.UI,
 	ti *TaskInfo,
 ) (*component.TaskResult, error) {
-	return nil, status.Errorf(codes.Unimplemented, "WatchTask not implemented")
+	// We'll query for the allocation in the namespace of our task launcher
+	queryOpts := &api.QueryOptions{Namespace: p.config.Namespace}
+
+	// Accumulate our result on this
+	var result component.TaskResult
+	client, err := getNomadClient()
+	if err != nil {
+		return nil, err
+	}
+	allocs, _, err := client.Jobs().Allocations(ti.Id, true, queryOpts)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(allocs) != 1 {
+		log.Error("Invalid # of allocs for ODR job", "total_allocs", len(allocs))
+		return nil, status.Errorf(codes.Internal, "Invalid # of allocs for ODR job: %d", len(allocs))
+	}
+	alloc, _, err := client.Allocations().Info(allocs[0].ID, queryOpts)
+	if err != nil {
+		log.Error("Failed to get info for alloc.", "alloc_id", allocs[0].ID, "err", err.Error())
+		return nil, err
+	}
+	tg := alloc.GetTaskGroup()
+	if len(tg.Tasks) != 1 {
+		return nil, status.Error(codes.Internal, "there should be one task in the allocation")
+	}
+	task := tg.Tasks[0]
+
+	// We'll give the ODR 5 minutes to start up
+	// TODO: Make this configurable
+	ctx, cancel := context.WithTimeout(ctx, time.Minute*time.Duration(5))
+	defer cancel()
+	ticker := time.NewTicker(5 * time.Second)
+	state := "pending"
+	for state == "pending" {
+		select {
+		case <-ticker.C:
+		case <-ctx.Done(): // cancelled
+			return nil, status.Errorf(codes.Aborted, "Context cancelled from timeout waiting for ODR task to start: %s", ctx.Err())
+		}
+		alloc, _, err := client.Allocations().Info(allocs[0].ID, queryOpts)
+		if err != nil {
+			log.Error("Failed to get info for alloc waiting for task to start", "alloc_id", allocs[0].ID, "err", err.Error())
+			return nil, err
+		}
+		allocTask, ok := alloc.TaskStates[task.Name]
+		if !ok {
+			return nil, status.Error(codes.Unknown, "ODR task not in alloc")
+		}
+		state = allocTask.State
+	}
+
+	// Only follow the logs if our task is still alive
+	follow := true
+	if state == "dead" {
+		follow = false
+	}
+
+	log.Debug("Getting logs for alloc", "alloc_name", alloc.Name, "task_name", task.Name)
+	ch := make(chan struct{})
+	logStream, errChan := client.AllocFS().Logs(alloc, follow, task.Name, "stderr", "", 0, ch, queryOpts)
+READ_LOGS:
+	for {
+		select {
+		case data := <-logStream:
+			if data == nil {
+				// check if task is dead, if it is dead, return
+				alloc, _, err := client.Allocations().Info(allocs[0].ID, queryOpts)
+				if err != nil {
+					log.Error("Failed to get info for alloc to stream logs", "alloc_id", allocs[0].ID, "err", err.Error())
+					return nil, err
+				}
+				allocTask, ok := alloc.TaskStates[task.Name]
+				if !ok {
+					return nil, status.Error(codes.Unknown, "ODR task not in alloc")
+				}
+				state = allocTask.State
+				if state != "running" {
+					// if the task is no longer running, exit
+					result.ExitCode = 0
+					return &result, nil
+				}
+
+				break READ_LOGS
+			}
+			message := string(data.Data)
+			log.Info(message)
+			ui.Output(message)
+		case err := <-errChan:
+			log.Error("Error reading logs from alloc", "err", err.Error())
+			return nil, err
+		}
+	}
+
+	result.ExitCode = 0
+	return &result, nil
 }
 
 var _ component.TaskLauncher = (*TaskLauncher)(nil)

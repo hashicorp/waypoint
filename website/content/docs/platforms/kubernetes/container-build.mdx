@@ -1,0 +1,208 @@
+---
+layout: docs
+page_title: Kubernetes - Building Container Images
+description: |-
+  Waypoint incorporates a first-class build step that can be used to build your container images and other artifacts. This page will focus on container (or Docker) images, since these are the primary deployment artifact that Kubernetes uses.
+---
+
+# Building Container Images
+
+Waypoint incorporates a first-class [build](/docs/lifecycle/build) step that
+can be used to build your container images and other artifacts. This page will
+focus on container (or Docker) images, since these are the primary deployment
+artifact that Kubernetes uses.
+
+Often one of the first challenges when setting up a new application is answering
+two questions: how do I build my application? and how do I get the result of my
+build plumbed into my deployment configuration? Waypoint solves both of these
+by incorporating configuration for both build and deploys into the
+[waypoint.hcl file](/docs/waypoint-hcl).
+
+-> **The built-in build functionality is optional.** If you have an external
+process already setup to build your images, you can
+[use externally-built images](/docs/platforms/kubernetes/external-build). Waypoint
+just needs to know about some sort of artifact, whether it is responsible
+for building it or not.
+
+This page will focus on Dockerfile-based builds because these are the most
+popular and also take into account applications that you may have written
+prior to Waypoint. However, Waypoint supports many more methods of building
+container images. Documentation on other methods along with examples can be
+found on the [build lifecycle page](/docs/lifecycle/build).
+
+## Docker Builder (Dockerfile)
+
+The most popular way to build container images today is using a manually
+written `Dockerfile`. Waypoint can also build images from Dockerfiles
+using the [`docker` builder](/plugins/docker#docker-builder). This also is
+the easiest way to get started with Waypoint with existing applications, since
+most existing applications for Kubernetes have Dockerfiles.
+
+-> **If you don't know Docker, or don't want to write a Dockerfile,**
+take a look at the [`pack` builder](/docs/lifecycle/build#cloud-native-buildpacks).
+This uses buildpacks to autodetect your app language and build a container
+image.
+
+The example below uses the Docker builder:
+
+```hcl
+app "my-app" {
+  build {
+    use "docker" {}
+  }
+}
+```
+
+This will use a `Dockerfile` in the same directory as your `waypoint.hcl`
+file. You can test this using the Waypoint CLI by running `waypoint build`. This
+command will perform the build only, so it can be used for testing. The
+`waypoint build` command should be run in the same directory as your project
+(with the `waypoint.hcl`).
+
+Waypoint will automatically run your build remotely if you have a git repo
+configured for your project and a runner and runner profile configured.
+If you want to force a build to happen locally, use the `-local` flag.
+
+```shell-session
+# let waypoint choose to run your build remotely if possible (recommended):
+$ waypoint build
+...
+
+# or, force it to run locally on your development machine:
+$ waypoint build -local
+...
+```
+
+### Docker Secrets
+
+A common requirement within Dockerfiles is to be able to access private
+information, whether that be via SSH, some API token, or any other mechanism.
+Because Waypoint image builds happen remotely, they don't have access to your
+local machine's secrets. The recommended approach to ensure secrets can be
+accessed everywhere (locally and remote) is to use Waypoint
+[input variables](/docs/waypoint-hcl/variables/input) paired with
+Docker build arguments.
+
+-> **Why not [Docker Secrets](https://docs.docker.com/engine/swarm/secrets/)?**
+Unfortunately, Docker Secrets aren't supported because [Kaniko](https://github.com/GoogleContainerTools/kaniko)
+does not support them. We use Kaniko as the underlying technology to perform
+Docker builds within your Kubernetes cluster.
+
+The example below shows how we can access a private GitHub repository
+using a [GitHub Personal Access Token (PAT)](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token). We show both
+the `waypoint.hcl` and the `Dockerfile` used to build a Go application, as
+an example.
+
+```hcl
+variable "github_token" {
+  type = string
+  env  = ["GITHUB_TOKEN"]
+}
+
+app "my-app" {
+  build {
+    use "docker" {
+      disable_entrypoint = true
+      build_args = {
+        GITHUB_TOKEN = var.github_token
+      }
+    }
+  }
+}
+```
+
+```dockerfile
+FROM golang:1.17-alpine AS builder
+
+# Configure Git
+ARG GITHUB_TOKEN
+RUN apk add --no-cache git
+RUN git config --global url."https://${GITHUB_TOKEN}:x-oauth-basic@github.com/".insteadOf "https://github.com/"
+
+# Build Go app
+RUN mkdir -p /src
+WORKDIR /src
+COPY . .
+RUN go mod download
+RUN go build -o /app .
+
+FROM scratch
+
+COPY --from=builder /app /app
+
+ENTRYPOINT ["/app"]
+```
+
+To invoke this, you can set the `github_token` input variable
+[many different ways](/docs/waypoint-hcl/variables/input#assigning-values-to-custom-input-variables). For long term use, the recommended location to set the variable
+is via the web UI. However, for testing, you can use the CLI:
+
+```shell-session
+$ waypoint build -var github_token=$MYTOKEN <project>/<app>
+```
+
+## Container Registry
+
+After getting builds working, the next step is usually to push that container
+image to a container registry. Waypoint supports a
+[`registry` stanza](/docs/waypoint-hcl/registry) for specifying a
+container registry for your image. To specify a Docker registry compatiable
+registry, use the `docker` registry:
+
+```hcl
+app "my-app" {
+  build {
+    use "docker" {}
+
+    registry {
+      use "docker" {
+        image = "docker.io/my-org/my-app"
+        tag   = gitrefpretty()
+        username = "myusername"
+        password = "mytoken"
+      }
+    }
+  }
+}
+```
+
+This example would push the built container image to
+[Docker Hub](https://hub.docker.com/), but any compatible registry
+such as Quay, AWS ECR, etc. would work. For now, hardcode your credentials
+as we've done in the example above and run `waypoint build` to verify it works.
+This should push your image now.
+
+### Hiding Credentials
+
+In a real production use-case, you should not put your container registry
+credentials directly in the `waypoint.hcl` file. Instead, you should use
+[input variables](/docs/waypoint-hcl/variables/input) to parameterize them.
+Input variables can be configured to read from environment variables so you
+can use well known environment variables (such as `AWS_ACCESS_KEY`), too.
+
+Normally, runner configuration should be used to provide these details to a runner
+executing the operation that needs these details.
+
+See [runner configuration](/docs/runner/config) for details.
+
+## Local vs. Remote Builds
+
+Waypoint can run builds locally where you run the `waypoint` CLI, or
+remotely in your Kubernetes cluster in pods that are launched on demand.
+By default, Waypoint will automatically run your operations remotely when
+[certain conditions](/docs/projects/remote#requirements) are met.
+Builds triggered by Git polling or the UI also happen remotely.
+
+To build Docker images within Kubernetes, Waypoint uses
+[Kaniko](https://github.com/GoogleContainerTools/kaniko). Waypoint
+sets up and invokes Kaniko for you, so you don't need to be familiar with it.
+All you need to know is that Kaniko supports almost all modern `Dockerfile`
+syntax, and it lets you do container image builds without any special
+privileges in your Kubernetes cluster.
+
+Remote builds are recommended.
+If you want to force a build to happen locally, use the `-local` flag.
+
+```shell-session
+$ waypoint build -local
+```

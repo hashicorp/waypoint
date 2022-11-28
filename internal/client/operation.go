@@ -2,6 +2,7 @@ package client
 
 import (
 	"context"
+	"strconv"
 
 	"github.com/hashicorp/waypoint/internal/server/execclient"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
@@ -25,6 +26,24 @@ func (c *Project) Validate(ctx context.Context, op *pb.Job_ValidateOp) (*pb.Job_
 	}
 
 	return result.Validate, nil
+}
+
+func (c *Project) DestroyProject(ctx context.Context, op *pb.Job_DestroyProjectOp) (*pb.Job_ProjectDestroyResult, error) {
+	if op == nil {
+		op = &pb.Job_DestroyProjectOp{}
+	}
+	// Build our job
+	job := c.job()
+	job.Operation = &pb.Job_DestroyProject{
+		DestroyProject: op,
+	}
+
+	// Execute it
+	result, err := c.doJob(ctx, job, c.UI)
+	if err != nil {
+		return nil, err
+	}
+	return result.ProjectDestroy, nil
 }
 
 func (c *App) Auth(ctx context.Context, op *pb.Job_AuthOp) (*pb.Job_AuthResult, error) {
@@ -194,7 +213,7 @@ func (c *App) Release(ctx context.Context, op *pb.Job_ReleaseOp) (*pb.Job_Releas
 	return result.Release, nil
 }
 
-func (a *App) Logs(ctx context.Context) (pb.Waypoint_GetLogStreamClient, error) {
+func (a *App) Logs(ctx context.Context, deploySeq string) (pb.Waypoint_GetLogStreamClient, error) {
 	log := a.project.logger.Named("logs")
 
 	// Depending on which deployments are at play, and which plugins those deployments
@@ -205,17 +224,44 @@ func (a *App) Logs(ctx context.Context) (pb.Waypoint_GetLogStreamClient, error) 
 	if err != nil {
 		return nil, err
 	}
+	var logStreamRequest *pb.GetLogStreamRequest
+
+	if deploySeq != "" {
+		i, err := strconv.ParseUint(deploySeq, 10, 64)
+		if err != nil {
+			return nil, err
+		}
+		deploy, err := a.project.client.GetDeployment(ctx, &pb.GetDeploymentRequest{
+			Ref: &pb.Ref_Operation{
+				Target: &pb.Ref_Operation_Sequence{
+					Sequence: &pb.Ref_OperationSeq{
+						Application: a.Ref(),
+						Number:      i,
+					},
+				},
+			},
+		})
+		if err != nil {
+			return nil, err
+		}
+		logStreamRequest = &pb.GetLogStreamRequest{
+			Scope: &pb.GetLogStreamRequest_DeploymentId{
+				DeploymentId: deploy.Id,
+			},
+		}
+	} else {
+		logStreamRequest = &pb.GetLogStreamRequest{
+			Scope: &pb.GetLogStreamRequest_Application_{
+				Application: &pb.GetLogStreamRequest_Application{
+					Application: a.Ref(),
+					Workspace:   a.project.WorkspaceRef(),
+				},
+			}}
+	}
 
 	// First we attempt to query the server for logs for this deployment.
 	log.Info("requesting log stream")
-	client, err := a.project.client.GetLogStream(ctx, &pb.GetLogStreamRequest{
-		Scope: &pb.GetLogStreamRequest_Application_{
-			Application: &pb.GetLogStreamRequest_Application{
-				Application: a.Ref(),
-				Workspace:   a.project.WorkspaceRef(),
-			},
-		},
-	})
+	client, err := a.project.client.GetLogStream(ctx, logStreamRequest)
 	if err != nil {
 		return nil, err
 	}
@@ -224,7 +270,7 @@ func (a *App) Logs(ctx context.Context) (pb.Waypoint_GetLogStreamClient, error) 
 	return client, nil
 }
 
-func (c *App) ConfigSync(ctx context.Context, op *pb.Job_ConfigSyncOp) (*pb.Job_ConfigSyncResult, error) {
+func (c *App) ConfigSync(ctx context.Context, op *pb.Job_ConfigSyncOp) (*pb.Job_Result, error) {
 	if op == nil {
 		op = &pb.Job_ConfigSyncOp{}
 	}
@@ -240,7 +286,7 @@ func (c *App) ConfigSync(ctx context.Context, op *pb.Job_ConfigSyncOp) (*pb.Job_
 		return nil, err
 	}
 
-	return result.ConfigSync, nil
+	return result, nil
 }
 
 func (c *App) StatusReport(ctx context.Context, op *pb.Job_StatusReportOp) (*pb.Job_StatusReportResult, error) {

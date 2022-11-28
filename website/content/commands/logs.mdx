@@ -28,7 +28,7 @@ to a specific deployment or filter out certain log messages.
 
 #### Global Options
 
-- `-plain` - Plain output: no colors, no animation.
+- `-plain` - Plain output: no colors, no animation. The default is false.
 - `-app=<string>` (`-a`) - App to target. Certain commands require a single app target for Waypoint configurations with multiple apps. If you have a single app, then this can be ignored.
 - `-project=<string>` (`-p`) - Project to target.
 - `-workspace=<string>` (`-w`) - Workspace to operate in.
@@ -42,5 +42,9 @@ to a specific deployment or filter out certain log messages.
 - `-remote-source=<key=value>` - Override configurations for how remote runners source data. This is specified to the data source type being used in your configuration. This is used for example to set a specific Git ref to run against.
 - `-var=<key=value>` - Variable value to set for this operation. Can be specified multiple times.
 - `-var-file=<string>` - HCL or JSON file containing variable values to set for this operation. If any "_.auto.wpvars" or "_.auto.wpvars.json" files are present, they will be automatically loaded.
+
+#### Command Options
+
+- `-deployment-seq=<string>` - Get logs for a specific deployment of the app using the deployment sequence number. Not valid with the -workspace param as deployment sequence numbers span across workspaces.
 
 @include "commands/logs_more.mdx"

@@ -24,7 +24,7 @@ The flags can change which plugins are listed and in which format.
 
 #### Global Options
 
-- `-plain` - Plain output: no colors, no animation.
+- `-plain` - Plain output: no colors, no animation. The default is false.
 - `-app=<string>` (`-a`) - App to target. Certain commands require a single app target for Waypoint configurations with multiple apps. If you have a single app, then this can be ignored.
 - `-project=<string>` (`-p`) - Project to target.
 - `-workspace=<string>` (`-w`) - Workspace to operate in.
@@ -41,9 +41,10 @@ The flags can change which plugins are listed and in which format.
 
 #### Command Options
 
-- `-builtin` - Show documentation on all builtin plugins
-- `-markdown` - Show documentation in markdown format
-- `-type=<string>` - Only show documentation for this type of plugin
-- `-plugin=<string>` - Only show documentation for plugins with this name
+- `-builtin` - Show documentation on all builtin plugins. The default is false.
+- `-markdown` - Show documentation in markdown format. The default is false.
+- `-json` - Generate documentation in json format. The default is false.
+- `-type=<string>` - Only show documentation for this type of plugin.
+- `-plugin=<string>` - Only show documentation for plugins with this name.
 
 @include "commands/docs_more.mdx"

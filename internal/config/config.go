@@ -32,6 +32,7 @@ type hclConfig struct {
 	Plugin    []*Plugin                `hcl:"plugin,block"`
 	Config    *genericConfig           `hcl:"config,block"`
 	Apps      []*hclApp                `hcl:"app,block"`
+	Pipelines []*hclPipeline           `hcl:"pipeline,block"`
 	Body      hcl.Body                 `hcl:",body"`
 }
 

@@ -17,11 +17,12 @@ List all jobs in Waypoint
 
 Usage: `waypoint job list [options]`
 
-List all known jobs from Waypoint server.
+List known jobs from Waypoint server.
+Options to filter job list by project, workspace, target runner, pipeline, and pipeline run.
 
 #### Global Options
 
-- `-plain` - Plain output: no colors, no animation.
+- `-plain` - Plain output: no colors, no animation. The default is false.
 - `-app=<string>` (`-a`) - App to target. Certain commands require a single app target for Waypoint configurations with multiple apps. If you have a single app, then this can be ignored.
 - `-project=<string>` (`-p`) - Project to target.
 - `-workspace=<string>` (`-w`) - Workspace to operate in.
@@ -41,8 +42,11 @@ List all known jobs from Waypoint server.
 - `-state=<string>` - List jobs that only match the requested state. Can be repeated multiple times. One possible value from: Success, Error, Running, Waiting, Queued, Unknown.
 - `-target-runner-id=<string>` - List jobs that were only assigned to the target runner by id.
 - `-target-runner-label=<key=value>` - List jobs that were only assigned to the target runner by labels. Can be repeated multiple times.
-- `-desc` - Output the list of jobs from newest to oldest.
-- `-json` - Output the list of jobs as json.
+- `-pipeline-id=<string>` - List jobs initiated by the specific pipeline, look up by pipeline ID.
+- `-pipeline-name=<string>` - List jobs initiated by the specific pipeline, look up by pipeline owner.
+- `-run=<int>` - List jobs initiated by the specific pipeline run, only valid used together with -pipeline.
+- `-desc` - Output the list of jobs from newest to oldest. The default is false.
+- `-json` - Output the list of jobs as json. The default is false.
 - `-limit=<int>` - If set, will limit the number of jobs to list.
 
 @include "commands/job-list_more.mdx"

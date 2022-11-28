@@ -10,4 +10,9 @@ export default Factory.extend({
     name: () => faker.hacker.noun(),
     hcl: () => faker.hacker.adjective(),
   }),
+  'is-sensitive': trait({
+    name: () => faker.hacker.noun(),
+    str: () => faker.hacker.adjective(),
+    sensitive: true,
+  }),
 });

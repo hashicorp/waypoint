@@ -1,0 +1,247 @@
+{
+   "description": "\nBuild a Docker image from a Dockerfile.\n\nIf a Docker server is available (either locally or via environment variables\nsuch as \"DOCKER_HOST\"), then \"docker build\" will be used to build an image\nfrom a Dockerfile.\n\n### Dockerless Builds\n\nMany hosted environments, such as Kubernetes clusters, don't provide access\nto a Docker server. In these cases, it is desirable to perform what is called\na \"dockerless\" build: building a Docker image without access to a Docker\ndaemon. Waypoint supports dockerless builds.\n\nWaypoint performs Dockerless builds by leveraging\n[Kaniko](https://github.com/GoogleContainerTools/kaniko)\nwithin on-demand launched runners. This should work in all supported\nWaypoint installation environments by default and you should not have\nto specify any additional configuration.\n",
+   "example": "build {\n  use \"docker\" {\n\tbuildkit    = false\n\tdisable_entrypoint = false\n  }\n}",
+   "mappers": null,
+   "name": "docker",
+   "optionalFields": [
+      {
+         "Field": "auth",
+         "Type": "docker.Auth",
+         "Synopsis": "the authentication information to log into the docker repository",
+         "Summary": "",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": true,
+         "SubFields": [
+            {
+               "Field": "auth",
+               "Type": "string",
+               "Synopsis": "",
+               "Summary": "",
+               "Optional": true,
+               "Default": "",
+               "EnvVar": "",
+               "Category": false,
+               "SubFields": null
+            },
+            {
+               "Field": "email",
+               "Type": "string",
+               "Synopsis": "",
+               "Summary": "",
+               "Optional": true,
+               "Default": "",
+               "EnvVar": "",
+               "Category": false,
+               "SubFields": null
+            },
+            {
+               "Field": "hostname",
+               "Type": "string",
+               "Synopsis": "Hostname of Docker registry",
+               "Summary": "",
+               "Optional": true,
+               "Default": "",
+               "EnvVar": "",
+               "Category": false,
+               "SubFields": null
+            },
+            {
+               "Field": "identityToken",
+               "Type": "string",
+               "Synopsis": "Token used to authenticate user",
+               "Summary": "",
+               "Optional": true,
+               "Default": "",
+               "EnvVar": "",
+               "Category": false,
+               "SubFields": null
+            },
+            {
+               "Field": "password",
+               "Type": "string",
+               "Synopsis": "Password of Docker registry account",
+               "Summary": "",
+               "Optional": true,
+               "Default": "",
+               "EnvVar": "",
+               "Category": false,
+               "SubFields": null
+            },
+            {
+               "Field": "registryToken",
+               "Type": "string",
+               "Synopsis": "Bearer tokens to be sent to Docker registry",
+               "Summary": "",
+               "Optional": true,
+               "Default": "",
+               "EnvVar": "",
+               "Category": false,
+               "SubFields": null
+            },
+            {
+               "Field": "serverAddress",
+               "Type": "string",
+               "Synopsis": "Address of Docker registry",
+               "Summary": "",
+               "Optional": true,
+               "Default": "",
+               "EnvVar": "",
+               "Category": false,
+               "SubFields": null
+            },
+            {
+               "Field": "username",
+               "Type": "string",
+               "Synopsis": "Username of Docker registry account",
+               "Summary": "",
+               "Optional": true,
+               "Default": "",
+               "EnvVar": "",
+               "Category": false,
+               "SubFields": null
+            }
+         ]
+      },
+      {
+         "Field": "build_args",
+         "Type": "map of string to string",
+         "Synopsis": "build args to pass to docker for the build step",
+         "Summary": "A map of key/value pairs passed as build-args to docker for the build step.",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "buildkit",
+         "Type": "bool",
+         "Synopsis": "if set, use the buildkit builder from Docker",
+         "Summary": "",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "context",
+         "Type": "string",
+         "Synopsis": "Build context path",
+         "Summary": "",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "disable_entrypoint",
+         "Type": "bool",
+         "Synopsis": "if set, the entrypoint binary won't be injected into the image",
+         "Summary": "The entrypoint binary is what provides extended functionality such as logs and exec. If it is not injected at build time the expectation is that the image already contains it",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "dockerfile",
+         "Type": "string",
+         "Synopsis": "The path to the Dockerfile.",
+         "Summary": "Set this when the Dockerfile is not APP-PATH/Dockerfile",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "no_cache",
+         "Type": "bool",
+         "Synopsis": "Do not use cache when building the image",
+         "Summary": "Ensures a clean image build.",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "platform",
+         "Type": "string",
+         "Synopsis": "set target platform to build container if server is multi-platform capable",
+         "Summary": "Must enable Docker buildkit to use the 'platform' flag.",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "target",
+         "Type": "string",
+         "Synopsis": "the target build stage in a multi-stage Dockerfile",
+         "Summary": "If buildkit is enabled unused stages will be skipped",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      }
+   ],
+   "output": "docker.Image",
+   "outputAttrs": [
+      {
+         "Field": "architecture",
+         "Type": "string",
+         "Synopsis": "",
+         "Summary": "",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "image",
+         "Type": "string",
+         "Synopsis": "",
+         "Summary": "",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "location",
+         "Type": "docker.isImage_Location",
+         "Synopsis": "",
+         "Summary": "",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "tag",
+         "Type": "string",
+         "Synopsis": "",
+         "Summary": "",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      }
+   ],
+   "outputAttrsHelp": "Output attributes can be used in your `waypoint.hcl` as [variables](/docs/waypoint-hcl/variables) via [`artifact`](/docs/waypoint-hcl/variables/artifact) or [`deploy`](/docs/waypoint-hcl/variables/deploy).",
+   "requiredFields": null,
+   "type": "builder",
+   "use": "the [`use` stanza](/docs/waypoint-hcl/use) for this plugin."
+}

@@ -443,7 +443,7 @@ config {
 
 	doc.SetField(
 		"skip_verify",
-		"Do not validate the TLS cert presented by the Vault server.",
+		"Do not validate the TLS cert presented by Terraform Cloud.",
 		docs.Summary(
 			"This is not recommended unless absolutely necessary.",
 		),
@@ -474,5 +474,5 @@ type sourceConfig struct {
 	Token           string `hcl:"token"`
 	BaseURL         string `hcl:"base_url,optional"`
 	SkipVerify      bool   `hcl:"skip_verify,optional"`
-	RefreshInterval string `hcl:"refresh_internal,optional"`
+	RefreshInterval string `hcl:"refresh_interval,optional"`
 }

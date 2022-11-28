@@ -1,8 +1,11 @@
 package boltdbstate
 
 import (
+	"context"
+	"github.com/hashicorp/go-memdb"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	"github.com/hashicorp/waypoint/pkg/serverstate"
+	bolt "go.etcd.io/bbolt"
 )
 
 var buildOp = &appOperation{
@@ -15,12 +18,12 @@ func init() {
 }
 
 // BuildPut inserts or updates a build record.
-func (s *State) BuildPut(update bool, b *pb.Build) error {
+func (s *State) BuildPut(ctx context.Context, update bool, b *pb.Build) error {
 	return buildOp.Put(s, update, b)
 }
 
 // BuildGet gets a build by ref.
-func (s *State) BuildGet(ref *pb.Ref_Operation) (*pb.Build, error) {
+func (s *State) BuildGet(ctx context.Context, ref *pb.Ref_Operation) (*pb.Build, error) {
 	result, err := buildOp.Get(s, ref)
 	if err != nil {
 		return nil, err
@@ -30,6 +33,7 @@ func (s *State) BuildGet(ref *pb.Ref_Operation) (*pb.Build, error) {
 }
 
 func (s *State) BuildList(
+	ctx context.Context,
 	ref *pb.Ref_Application,
 	opts ...serverstate.ListOperationOption,
 ) ([]*pb.Build, error) {
@@ -48,6 +52,7 @@ func (s *State) BuildList(
 
 // BuildLatest gets the latest build that was completed successfully.
 func (s *State) BuildLatest(
+	ctx context.Context,
 	ref *pb.Ref_Application,
 	ws *pb.Ref_Workspace,
 ) (*pb.Build, error) {
@@ -57,4 +62,9 @@ func (s *State) BuildLatest(
 	}
 
 	return result.(*pb.Build), nil
+}
+
+// buildDelete deletes the build from the DB
+func (s *State) buildDelete(dbTxn *bolt.Tx, memTxn *memdb.Txn, b *pb.Build) error {
+	return buildOp.delete(dbTxn, memTxn, b)
 }

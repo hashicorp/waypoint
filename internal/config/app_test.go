@@ -407,7 +407,7 @@ func TestAppValidate(t *testing.T) {
 			require.NoError(err)
 			require.NotNil(app)
 
-			err = app.Validate()
+			_, err = app.Validate()
 			if tt.Err == "" {
 				require.NoError(err)
 				return

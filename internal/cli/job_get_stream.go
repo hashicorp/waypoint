@@ -1,13 +1,10 @@
 package cli
 
 import (
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
-
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/internal/clierrors"
+	jobstream "github.com/hashicorp/waypoint/internal/jobstream"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
-	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 )
 
 type JobGetStreamCommand struct {
@@ -24,7 +21,6 @@ func (c *JobGetStreamCommand) Run(args []string) int {
 	); err != nil {
 		return 1
 	}
-	ctx := c.Ctx
 
 	var jobId string
 	if len(c.args) == 0 {
@@ -34,22 +30,24 @@ func (c *JobGetStreamCommand) Run(args []string) int {
 		jobId = c.args[0]
 	}
 
-	_, err := c.project.Client().GetJobStream(ctx, &pb.GetJobStreamRequest{
-		JobId: jobId,
-	})
-	if err != nil {
-		if status.Code(err) == codes.NotFound {
-			c.ui.Output("Job id not found: %s", clierrors.Humanize(err),
-				terminal.WithErrorStyle())
-			return 1
-		}
+	sg := c.ui.StepGroup()
+	defer sg.Wait()
 
+	step := sg.Add("Reading job stream (jobId: %s) ...", jobId)
+	defer step.Abort()
+
+	// Ignore the job result for now
+	_, err := jobstream.Stream(c.Ctx, jobId,
+		jobstream.WithClient(c.project.Client()),
+		jobstream.WithUI(c.ui))
+
+	if err != nil {
 		c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 		return 1
 	}
 
-	// TODO(briancain): process and print terminal events like `internal/client/job.go`
-	c.ui.Output("Job stream is not implemented yet!", terminal.WithWarningStyle())
+	step.Update("Finished reading job stream")
+	step.Done()
 
 	return 0
 }

@@ -25,24 +25,6 @@ These parameters are used in the [`use` stanza](/docs/waypoint-hcl/use) for this
 
 - Type: **docker.ClientConfig**
 
-#### resources (category)
-
-The resources that the tasks should use.
-
-##### resources.cpu
-
-The cpu shares that the tasks should use.
-
-- Type: **int64**
-- **Optional**
-
-##### resources.memory
-
-The amount of memory to use. Defined as '512MB', '44kB', etc.
-
-- Type: **string**
-- **Optional**
-
 ### Optional Parameters
 
 These parameters are used in the [`use` stanza](/docs/waypoint-hcl/use) for this plugin.
@@ -84,6 +66,24 @@ A list of networks to connect the container to. By default the container will al
 - Type: **list of string**
 - **Optional**
 - Default: waypoint
+
+#### resources (category)
+
+The resources that the tasks should use.
+
+##### resources.cpu
+
+The cpu shares that the tasks should use.
+
+- Type: **int64**
+- **Optional**
+
+##### resources.memory
+
+The amount of memory to use. Defined as '512MB', '44kB', etc.
+
+- Type: **string**
+- **Optional**
 
 #### static_environment
 

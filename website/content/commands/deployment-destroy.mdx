@@ -26,7 +26,7 @@ by the user unless the force flag (-force) is specified.
 
 #### Global Options
 
-- `-plain` - Plain output: no colors, no animation.
+- `-plain` - Plain output: no colors, no animation. The default is false.
 - `-app=<string>` (`-a`) - App to target. Certain commands require a single app target for Waypoint configurations with multiple apps. If you have a single app, then this can be ignored.
 - `-project=<string>` (`-p`) - Project to target.
 - `-workspace=<string>` (`-w`) - Workspace to operate in.
@@ -43,7 +43,7 @@ by the user unless the force flag (-force) is specified.
 
 #### Command Options
 
-- `-all` - Delete ALL deployments, including released.
-- `-force` - Yes to all confirmations.
+- `-all` - Delete ALL deployments, including released. The default is false.
+- `-force` - Yes to all confirmations. The default is false.
 
 @include "commands/deployment-destroy_more.mdx"

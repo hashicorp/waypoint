@@ -1,0 +1,159 @@
+{
+   "description": "Deploy the application into an AutoScaling Group on EC2",
+   "input": "ami.Image",
+   "mappers": null,
+   "name": "aws-ec2",
+   "optionalFields": [
+      {
+         "Field": "extra_ports",
+         "Type": "list of int",
+         "Synopsis": "additional TCP ports to allow into the EC2 instances",
+         "Summary": "these additional ports are usually used to allow secondary services, such as ssh",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "key",
+         "Type": "string",
+         "Synopsis": "the name of an SSH Key to associate with the instances, as preconfigured in EC2",
+         "Summary": "",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "security_groups",
+         "Type": "list of string",
+         "Synopsis": "additional security groups to attached to the EC2 instances",
+         "Summary": "this plugin creates security groups that match the above ports by default. this field allows additional security groups to be specified for the instances",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "subnet",
+         "Type": "string",
+         "Synopsis": "the subnet to place the instances into",
+         "Summary": "",
+         "Optional": true,
+         "Default": "a public subnet in the dafault VPC",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      }
+   ],
+   "output": "ec2.Deployment",
+   "outputAttrs": [
+      {
+         "Field": "public_dns",
+         "Type": "string",
+         "Synopsis": "",
+         "Summary": "",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "public_ip",
+         "Type": "string",
+         "Synopsis": "",
+         "Summary": "",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "region",
+         "Type": "string",
+         "Synopsis": "",
+         "Summary": "",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "service_name",
+         "Type": "string",
+         "Synopsis": "",
+         "Summary": "",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "target_group_arn",
+         "Type": "string",
+         "Synopsis": "",
+         "Summary": "",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      }
+   ],
+   "outputAttrsHelp": "Output attributes can be used in your `waypoint.hcl` as [variables](/docs/waypoint-hcl/variables) via [`artifact`](/docs/waypoint-hcl/variables/artifact) or [`deploy`](/docs/waypoint-hcl/variables/deploy).",
+   "requiredFields": [
+      {
+         "Field": "count",
+         "Type": "ec2.countConfig",
+         "Synopsis": "how many EC2 instances to configure the ASG with",
+         "Summary": "the fields here (desired, min, max) map directly to the typical ASG configuration",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "instance_type",
+         "Type": "string",
+         "Synopsis": "the EC2 instance type to deploy",
+         "Summary": "",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "region",
+         "Type": "string",
+         "Synopsis": "the AWS region to deploy into",
+         "Summary": "",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "service_port",
+         "Type": "int",
+         "Synopsis": "the TCP port on the instances that the app will be running on",
+         "Summary": "",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      }
+   ],
+   "type": "platform",
+   "use": "the [`use` stanza](/docs/waypoint-hcl/use) for this plugin."
+}

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"math/rand"
 	"path/filepath"
 	"sync"
 	"sync/atomic"
@@ -17,7 +18,7 @@ import (
 
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
-	"github.com/hashicorp/waypoint/pkg/serverclient"
+	"github.com/hashicorp/waypoint/pkg/tokenutil"
 )
 
 var heartbeatDuration = 5 * time.Second
@@ -62,19 +63,25 @@ func (r *Runner) AcceptMany(ctx context.Context) {
 				// the context being closed first, in which case we honor that as a valid
 				// reason to stop accepting jobs.
 				return
+			case codes.PermissionDenied:
+				// This means the runner was deregistered and we must exit.
+				// This won't be fixed unless the runner is closed and restarted.
+				r.logger.Error("runner unexpectedly deregistered, exiting")
+				time.Sleep(5 * time.Second)
+				return
 
 			case codes.NotFound:
 				// This means the runner was deregistered and we must exit.
 				// This won't be fixed unless the runner is closed and restarted.
 				r.logger.Error("runner unexpectedly deregistered, exiting")
 				return
+			case codes.Unavailable, codes.Unimplemented:
+				// Server became unavailable. Unimplemented likely means that the server
+				// is running behind a proxy and is failing health checks.
 
-			case codes.Unavailable:
-				// Server became unavailable. Let's just sleep to give the
-				// server time to come back.
-				r.logger.Warn("server unavailable, sleeping before retry")
-				time.Sleep(2 * time.Second)
-
+				// Let's just sleep to give the server time to come back.
+				r.logger.Warn("server unavailable, sleeping before retry", "error", err)
+				time.Sleep(time.Duration(2+rand.Intn(3)) * time.Second)
 			default:
 				r.logger.Error("error running job", "error", err)
 			}
@@ -113,7 +120,7 @@ func (r *Runner) AcceptExact(ctx context.Context, id string) error {
 
 var testRecvDelay time.Duration
 
-//nolint:lostcancel
+//nolint:govet,lostcancel
 func (r *Runner) accept(ctx context.Context, id string) error {
 	if r.readState(&r.stateExit) > 0 {
 		return ErrClosed
@@ -124,8 +131,8 @@ func (r *Runner) accept(ctx context.Context, id string) error {
 	// The runningCtx has the token that is set during runner adoption.
 	// This is required for API calls to succeed. Put the token into ctx
 	// as well so that this can be used for API calls.
-	if tok := serverclient.TokenFromContext(r.runningCtx); tok != "" {
-		ctx = serverclient.TokenWithContext(ctx, tok)
+	if tok := tokenutil.TokenFromContext(r.runningCtx); tok != "" {
+		ctx = tokenutil.TokenWithContext(ctx, tok)
 	}
 
 	// Retry tracks whether we're trying a job stream connection or not.
@@ -232,6 +239,9 @@ RESTART_JOB_STREAM:
 		if atomic.LoadInt32(&canceled) > 0 ||
 			status.Code(err) == codes.Unavailable ||
 			status.Code(err) == codes.NotFound {
+			// Throttle ourselves so that we don't hammer the server in the case that
+			// we've been deleted and are not likely to return.
+			time.Sleep(time.Duration(2+rand.Intn(3)) * time.Second)
 			goto RESTART_JOB_STREAM
 		}
 

@@ -79,7 +79,7 @@ func TestServiceGetLogStreamCases(t *testing.T, factory Factory) {
 		ctx := context.Background()
 
 		// Create our server
-		_, client := factory(t)
+		client, _ := factory(t)
 
 		insts, dep := mkinsts(t, ctx, client, 1)
 
@@ -123,7 +123,7 @@ func TestServiceGetLogStreamCases(t *testing.T, factory Factory) {
 		ctx := context.Background()
 
 		// Create our server
-		_, client := factory(t)
+		client, _ := factory(t)
 
 		insts, dep := mkinsts(t, ctx, client, 2)
 
@@ -191,7 +191,7 @@ func TestServiceGetLogStreamCases(t *testing.T, factory Factory) {
 		ctx := context.Background()
 
 		// Create our server
-		_, client := factory(t)
+		client, _ := factory(t)
 
 		insts, dep := mkinsts(t, ctx, client, 1)
 
@@ -274,7 +274,7 @@ func TestServiceGetLogStreamCases(t *testing.T, factory Factory) {
 		ctx := context.Background()
 
 		// Create our server
-		_, client := factory(t)
+		client, _ := factory(t)
 
 		insts, dep := mkinsts(t, ctx, client, 1)
 
@@ -345,7 +345,7 @@ func TestServiceGetLogStream_depPlugin(t *testing.T, factory Factory) {
 	defer cancel()
 
 	// Create our server
-	_, client := factory(t)
+	client, _ := factory(t)
 
 	// Register our instances
 	resp, err := client.UpsertDeployment(ctx, &pb.UpsertDeploymentRequest{
@@ -480,7 +480,7 @@ func TestServiceGetLogStream_byApp(t *testing.T, factory Factory) {
 	defer cancel()
 
 	// Create our server
-	_, client := factory(t)
+	client, _ := factory(t)
 
 	// Setup our references
 	refApp := &pb.Ref_Application{

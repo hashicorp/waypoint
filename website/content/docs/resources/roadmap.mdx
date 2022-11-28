@@ -1,0 +1,101 @@
+---
+layout: docs
+page_title: Roadmap
+description: |-
+  This page will outline some of the ideas we have for future versions of Waypoint. This is not an exhaustive list nor is it a promise that these features will be built, but it gives a glimpse into the vision we have for this project.
+---
+
+# Waypoint Roadmap
+
+Waypoint is a new project and we have a lot we want to achieve with it.
+This page will outline some of the ideas we have for future versions of Waypoint.
+This is not an exhaustive list nor is it a promise that these features will
+be built, but it gives a glimpse into the vision we have for this project.
+
+For a finer-grained view into our roadmap and what is being worked on for
+a release, please refer to the [GitHub Issue Tracker](https://github.com/hashicorp/waypoint/issues).
+This is a more manual approach to reading our roadmap and includes small details
+such as bug fixes, but is much more accurate to what we're working on.
+
+### Custom Pipelines
+
+Waypoint has always had `build`, `deploy`, and `release` lifecycle events, but
+to handle more complex deployments, Waypoint needed the ability to add custom steps.
+We recently released a [Tech Preview of custom pipelines](/docs/pipelines),
+introducing the ability to script custom steps, such as running tests after a
+build or security scanning artifacts prior to a deploy. As we work to bring
+custom pipelines out of Tech Preview, we'll be introducing more support for
+steps consuming and producing data for other steps in a pipeline, improvements
+around how pipelines access VCS data, customizable step plugins, and introducing
+pipelines to the UI.
+
+### App Promotion
+
+Waypoint has the [workspaces](/docs/workspaces) feature for
+isolating different environments. We plan to build on this feature,
+and custom pipelines, to enable workspaces that may target different
+infrastructure environments (such as a dev vs. production cluster), and we
+want to build features so applications can be easily "promoted" from
+one stage to another without rebuilding artifacts in each workspace.
+
+### Infrastructure Provisioning
+
+We plan to incorporate a tighter integration with [Terraform](https://terraform.io)
+to enable folks to provision infrastructure right from their waypoint.hcl file.
+Waypoint will be able to trigger Terraform to provision deployment infrastructure,
+and connect that infrastructure to the Waypoint server.
+
+### Service Brokering (Databases, Queues, etc.)
+
+We plan on having some mechanism by which applications can request services
+such as databases, queues, and so on. These services must be satisfied by
+some external system such as Amazon RDS. Waypoint will be able to request
+the service, connect the configuration, and destroy it when its no longer
+in use.
+
+A design goal of Waypoint is explicitly to _not do automated infrastructure
+management_, so this feature will still put the burden of managing these
+services onto the user. However, Waypoint can help orchestrate initializing
+them and configuring applications.
+
+We will likely integrate with [Terraform](https://terraform.io) in some way.
+
+### Deployment Templates
+
+Waypoint currently associates a [waypoint.hcl](/docs/waypoint-hcl)
+configuration with a single project. In the future, we will allow parameterized
+configurations to be shared as a template library with your installation.
+When users create a new project, they can select from a list of common
+templates.
+
+### Access Control
+
+The initial Waypoint release has a minimal token system that is used as a
+blanket authorization mechanism. In the future we will add a more fine-grained
+access control mechanism to Waypoint.
+
+One exception to this today are Entrypoint tokens. The Entrypoint uses
+a special fine-grained token that allows it to only access entrypoint-related
+functionality for the specific deployment it represents. This was built as
+a special security mechanism however and isn't generally available to limit
+access for other tokens.
+
+### Exec Improvements
+
+We're really excited about [`waypoint exec`](/docs/exec) but there
+are a lot of improvements we want to make here:
+
+- **New deployment targeting.** - We want exec to be able to spin up
+  new exec-focused deployments so that your exec sessions aren't shared with
+  deployments that might be receiving user traffic. Additionally, this will
+  let us harden security by disabling exec in most deployments.
+
+- **Better security, specifically around disabling.** - We want exec to
+  be safe. One mechanism towards that is having exec be disabled
+  as often as possible but can still easily be used when needed. We think having exec
+  disabled by default paired with the above deployment targeting feature makes
+  this a reality.
+
+- **Native exec.** - If a platform provides a native `exec` feature, we
+  want to provide that as an option to users. This is always likely to not
+  be a default because we want the consistent option as the default.

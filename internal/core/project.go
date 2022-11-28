@@ -8,7 +8,6 @@ import (
 
 	"github.com/hashicorp/go-argmapper"
 	"github.com/hashicorp/go-hclog"
-	"github.com/hashicorp/go-multierror"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -30,6 +29,7 @@ import (
 type Project struct {
 	logger    hclog.Logger
 	apps      map[string]*App
+	pipelines map[string]*Pipeline
 	factories map[component.Type]*factory.Factory
 	dir       *datadir.Project
 	mappers   []*argmapper.Func
@@ -73,6 +73,7 @@ func NewProject(ctx context.Context, os ...Option) (*Project, error) {
 		logger:    hclog.L(),
 		workspace: "default",
 		apps:      make(map[string]*App),
+		pipelines: make(map[string]*Pipeline),
 		jobInfo:   &component.JobInfo{},
 		factories: map[component.Type]*factory.Factory{
 			component.BuilderType:        plugin.BaseFactories[component.BuilderType],
@@ -107,11 +108,11 @@ func NewProject(ctx context.Context, os ...Option) (*Project, error) {
 	if p.dir == nil {
 		return nil, fmt.Errorf("WithDataDir must be specified")
 	}
-	if err := opts.Config.Validate(); err != nil {
+	if _, err := opts.Config.Validate(); err != nil {
 		return nil, err
 	}
-	if errs := config.ValidateLabels(p.overrideLabels); len(errs) > 0 {
-		return nil, multierror.Append(nil, errs...)
+	if err := config.ValidateLabels(p.overrideLabels); err != nil {
+		return nil, err
 	}
 
 	// Init our server connection. This may be in-process if we're in
@@ -137,7 +138,7 @@ func NewProject(ctx context.Context, os ...Option) (*Project, error) {
 		if err != nil {
 			return nil, fmt.Errorf("error loading app %q: %w", name, err)
 		}
-		if err := appConfig.Validate(); err != nil {
+		if _, err := appConfig.Validate(); err != nil {
 			return nil, fmt.Errorf("error loading app %q: %w", name, err)
 		}
 
@@ -147,6 +148,28 @@ func NewProject(ctx context.Context, os ...Option) (*Project, error) {
 		}
 
 		p.apps[appConfig.Name] = app
+	}
+
+	// configure pipelines for project and its apps
+	for _, name := range opts.Config.Pipelines() {
+		// Set input variables for pipelines and steps in context
+		evalCtx := config.EvalContext(nil, p.dir.DataDir()).NewChild()
+		config.AddVariables(evalCtx, p.variables)
+
+		pipelineConfig, err := opts.Config.Pipeline(name, evalCtx)
+		if err != nil {
+			return nil, fmt.Errorf("error loading pipeline %q: %w", name, err)
+		}
+		if err := pipelineConfig.Validate(); err != nil {
+			return nil, fmt.Errorf("error loading pipeline %q: %w", name, err)
+		}
+
+		pipeline, err := newPipeline(ctx, p, pipelineConfig)
+		if err != nil {
+			return nil, err
+		}
+
+		p.pipelines[pipelineConfig.Name] = pipeline
 	}
 
 	p.logger.Info("project initialized", "workspace", p.workspace)
@@ -189,6 +212,30 @@ func (p *Project) App(name string) (*App, error) {
 	)
 }
 
+// Pipelines returns all of the defined pipelines as a list for a given project.
+func (p *Project) Pipelines() []*Pipeline {
+	var result []*Pipeline
+	for _, pipeline := range p.pipelines {
+		result = append(result, pipeline)
+	}
+
+	return result
+}
+
+// Pipeline initializes and returns the pipeline with the given name. This
+// returns an error with codes.NotFound if the pipeline is not found.
+func (p *Project) Pipeline(name string) (*Pipeline, error) {
+	if v, ok := p.pipelines[name]; ok {
+		return v, nil
+	}
+
+	return nil, status.Errorf(codes.NotFound,
+		"Pipeline %q was not found in this project. Please ensure that "+
+			"you've created this project in the waypoint.hcl configuration.",
+		name,
+	)
+}
+
 // Client returns the API client for the backend server.
 func (p *Project) Client() pb.WaypointClient {
 	return p.client
@@ -197,6 +244,61 @@ func (p *Project) Client() pb.WaypointClient {
 // Ref returns the project ref for API calls.
 func (p *Project) Ref() *pb.Ref_Project {
 	return &pb.Ref_Project{Project: p.name}
+}
+
+// InWorkspace creates a copy of the project, for a different workspace.
+// The project's config is required to be passed in because the Config
+// option is not set on a project, so we can't reference it directly.
+// Getters for other project fields are used here to limit their exposure.
+func (p *Project) InWorkspace(ctx context.Context, workspace string, projConfig *config.Config) (*Project, error) {
+	project, err := NewProject(ctx,
+		WithLogger(p.getLogger()),
+		WithUI(p.getUI()),
+		WithComponents(p.getFactories()),
+		WithClient(p.getClient()),
+		WithConfig(projConfig),
+		WithDataDir(p.getDataDir()),
+		WithLabels(p.getLabels()),
+		WithVariables(p.getVariables()),
+		WithWorkspace(workspace),
+		WithJobInfo(p.getJobInfo()),
+	)
+	if err != nil {
+		return nil, err
+	}
+	return project, nil
+}
+
+func (p *Project) getLogger() hclog.Logger {
+	return p.logger
+}
+
+func (p *Project) getUI() terminal.UI {
+	return p.UI
+}
+
+func (p *Project) getFactories() map[component.Type]*factory.Factory {
+	return p.factories
+}
+
+func (p *Project) getClient() pb.WaypointClient {
+	return p.client
+}
+
+func (p *Project) getDataDir() *datadir.Project {
+	return p.dir
+}
+
+func (p *Project) getLabels() map[string]string {
+	return p.labels
+}
+
+func (p *Project) getVariables() variables.Values {
+	return p.variables
+}
+
+func (p *Project) getJobInfo() *component.JobInfo {
+	return p.jobInfo
 }
 
 // WorkspaceRef returns the project ref for API calls.

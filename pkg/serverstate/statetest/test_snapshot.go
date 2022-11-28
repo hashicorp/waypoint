@@ -2,6 +2,7 @@ package statetest
 
 import (
 	"bytes"
+	"context"
 	"strings"
 	"testing"
 
@@ -21,17 +22,18 @@ func init() {
 }
 
 func TestSnapshotRestore(t *testing.T, factory Factory, factoryRestart RestartFactory) {
+	ctx := context.Background()
 	require := require.New(t)
 
 	s := factory(t)
 	defer s.Close()
 
 	// Create some data
-	err := s.ProjectPut(serverptypes.TestProject(t, &pb.Project{
+	err := s.ProjectPut(ctx, serverptypes.TestProject(t, &pb.Project{
 		Name: "A",
 	}))
 	require.NoError(err)
-	resp, err := s.ProjectGet(&pb.Ref_Project{
+	resp, err := s.ProjectGet(ctx, &pb.Ref_Project{
 		Project: "A",
 	})
 	require.NoError(err)
@@ -39,7 +41,7 @@ func TestSnapshotRestore(t *testing.T, factory Factory, factoryRestart RestartFa
 
 	// Snapshot
 	var buf bytes.Buffer
-	err = s.CreateSnapshot(&buf)
+	err = s.CreateSnapshot(ctx, &buf)
 	if err != nil {
 		s, ok := status.FromError(err)
 		require.True(ok)
@@ -48,27 +50,27 @@ func TestSnapshotRestore(t *testing.T, factory Factory, factoryRestart RestartFa
 	}
 
 	// Create more data that isn't in the snapshot
-	err = s.ProjectPut(serverptypes.TestProject(t, &pb.Project{
+	err = s.ProjectPut(ctx, serverptypes.TestProject(t, &pb.Project{
 		Name: "B",
 	}))
 	require.NoError(err)
 
 	// Restore
-	require.NoError(s.StageRestoreSnapshot(bytes.NewReader(buf.Bytes())))
+	require.NoError(s.StageRestoreSnapshot(ctx, bytes.NewReader(buf.Bytes())))
 
 	// Reboot!
 	s = factoryRestart(t, s)
 
 	// Should find first record and not the second
 	{
-		resp, err := s.ProjectGet(&pb.Ref_Project{
+		resp, err := s.ProjectGet(ctx, &pb.Ref_Project{
 			Project: "A",
 		})
 		require.NoError(err)
 		require.NotNil(resp)
 	}
 	{
-		_, err := s.ProjectGet(&pb.Ref_Project{
+		_, err := s.ProjectGet(ctx, &pb.Ref_Project{
 			Project: "B",
 		})
 		require.Error(err)
@@ -76,7 +78,7 @@ func TestSnapshotRestore(t *testing.T, factory Factory, factoryRestart RestartFa
 	}
 
 	// Create more data
-	err = s.ProjectPut(serverptypes.TestProject(t, &pb.Project{
+	err = s.ProjectPut(ctx, serverptypes.TestProject(t, &pb.Project{
 		Name: "B",
 	}))
 	require.NoError(err)
@@ -86,14 +88,14 @@ func TestSnapshotRestore(t *testing.T, factory Factory, factoryRestart RestartFa
 
 	// Should find both records
 	{
-		resp, err := s.ProjectGet(&pb.Ref_Project{
+		resp, err := s.ProjectGet(ctx, &pb.Ref_Project{
 			Project: "A",
 		})
 		require.NoError(err)
 		require.NotNil(resp)
 	}
 	{
-		resp, err := s.ProjectGet(&pb.Ref_Project{
+		resp, err := s.ProjectGet(ctx, &pb.Ref_Project{
 			Project: "B",
 		})
 		require.NoError(err)
@@ -102,13 +104,14 @@ func TestSnapshotRestore(t *testing.T, factory Factory, factoryRestart RestartFa
 }
 
 func TestSnapshotRestore_corrupt(t *testing.T, factory Factory, factoryRestart RestartFactory) {
+	ctx := context.Background()
 	require := require.New(t)
 
 	s := factory(t)
 	defer s.Close()
 
 	// Restore with garbage data
-	require.Error(s.StageRestoreSnapshot(strings.NewReader(
+	require.Error(s.StageRestoreSnapshot(ctx, strings.NewReader(
 		"I am probably not a valid BoltDB file.")))
 
 	// Reboot!

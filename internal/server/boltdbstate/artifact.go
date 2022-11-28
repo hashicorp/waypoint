@@ -1,8 +1,11 @@
 package boltdbstate
 
 import (
+	"context"
+	"github.com/hashicorp/go-memdb"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	"github.com/hashicorp/waypoint/pkg/serverstate"
+	bolt "go.etcd.io/bbolt"
 )
 
 var artifactOp = &appOperation{
@@ -15,12 +18,12 @@ func init() {
 }
 
 // ArtifactPut inserts or updates a artifact record.
-func (s *State) ArtifactPut(update bool, b *pb.PushedArtifact) error {
+func (s *State) ArtifactPut(ctx context.Context, update bool, b *pb.PushedArtifact) error {
 	return artifactOp.Put(s, update, b)
 }
 
 // ArtifactGet gets a artifact by ref.
-func (s *State) ArtifactGet(ref *pb.Ref_Operation) (*pb.PushedArtifact, error) {
+func (s *State) ArtifactGet(ctx context.Context, ref *pb.Ref_Operation) (*pb.PushedArtifact, error) {
 	result, err := artifactOp.Get(s, ref)
 	if err != nil {
 		return nil, err
@@ -30,6 +33,7 @@ func (s *State) ArtifactGet(ref *pb.Ref_Operation) (*pb.PushedArtifact, error) {
 }
 
 func (s *State) ArtifactList(
+	ctx context.Context,
 	ref *pb.Ref_Application,
 	opts ...serverstate.ListOperationOption,
 ) ([]*pb.PushedArtifact, error) {
@@ -48,6 +52,7 @@ func (s *State) ArtifactList(
 
 // ArtifactLatest gets the latest artifact that was completed successfully.
 func (s *State) ArtifactLatest(
+	ctx context.Context,
 	ref *pb.Ref_Application,
 	ws *pb.Ref_Workspace,
 ) (*pb.PushedArtifact, error) {
@@ -57,4 +62,9 @@ func (s *State) ArtifactLatest(
 	}
 
 	return result.(*pb.PushedArtifact), nil
+}
+
+// artifactDelete deletes the artifact from the DB
+func (s *State) artifactDelete(dbTxn *bolt.Tx, memTxn *memdb.Txn, a *pb.PushedArtifact) error {
+	return artifactOp.delete(dbTxn, memTxn, a)
 }

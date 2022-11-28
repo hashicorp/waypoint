@@ -80,7 +80,7 @@ installed (version 1.14+ is _required_).
 [go-bindata](https://github.com/go-bindata/go-bindata) is a binary dependency
 that must be on your PATH to build Waypoint. This 
 [repository version](https://github.com/kevinburke/go-bindata/) may be installed with:
-`go get -u github.com/kevinburke/go-bindata/...`
+`brew install go-bindata`
 
 Next, clone this repository and then run the following commands:
 * `make bin` will build the binary for your local machine's os/architecture

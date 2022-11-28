@@ -23,6 +23,7 @@ type validateStruct struct {
 	Variables []*validateVariable `hcl:"variable,block"`
 	Plugin    []*Plugin           `hcl:"plugin,block"`
 	Apps      []*validateApp      `hcl:"app,block"`
+	Pipelines []*validatePipeline `hcl:"pipeline,block"`
 	Config    *genericConfig      `hcl:"config,block"`
 }
 
@@ -48,6 +49,49 @@ type validateVariable struct {
 	Description string    `hcl:"description,optional"`
 }
 
+type validatePipeline struct {
+	Name   string            `hcl:",label"`
+	Labels map[string]string `hcl:"labels,optional"`
+	Step   []*Step           `hcl:"step,block"`
+}
+
+type ValidationResult struct {
+	Error   error
+	Warning string
+}
+
+func (v ValidationResult) String() string {
+	if v.Error != nil {
+		return v.Error.Error()
+	}
+
+	return "warning: " + v.Warning
+}
+
+type ValidationResults []ValidationResult
+
+func (v ValidationResults) Error() string {
+	var values []string
+
+	for _, res := range v {
+		values = append(values, res.String())
+	}
+
+	return fmt.Sprintf("%d validation errors: %s", len(v), strings.Join(values, ", "))
+}
+
+func (v ValidationResults) HasErrors() bool {
+	for _, vr := range v {
+		if vr.Error != nil {
+			return true
+		}
+	}
+
+	return false
+}
+
+const AppeningHappening = "[NOTICE] More than one app stanza within a waypoint.hcl file is under consideration for change or removal in a future version.\nTo give feedback, visit https://discuss.hashicorp.com/t/deprecating-projects-or-how-i-learned-to-love-apps/40888"
+
 // Validate the structure of the configuration.
 //
 // This will validate required fields are specified and the types of some fields.
@@ -56,68 +100,111 @@ type validateVariable struct {
 //
 // Users of this package should call Validate on each subsequent configuration
 // that is loaded (Apps, Builds, Deploys, etc.) for further rich validation.
-func (c *Config) Validate() error {
+func (c *Config) Validate() (ValidationResults, error) {
+	var results ValidationResults
+
 	// Validate root
 	schema, _ := gohcl.ImpliedBodySchema(&validateStruct{})
 	content, diag := c.hclConfig.Body.Content(schema)
 	if diag.HasErrors() {
-		return diag
-	}
+		results = append(results, ValidationResult{Error: diag})
 
-	var result error
+		if content == nil {
+			return results, results
+		}
+	}
 
 	// Require the project. We don't use an "attr" above (which would require it)
 	// because the project can be populated later such as in a runner which
 	// sets it to the project in the job ref.
 	if c.Project == "" {
-		result = multierror.Append(result, fmt.Errorf("'project' attribute is required"))
+		results = append(results, ValidationResult{Error: fmt.Errorf("'project' attribute is required")})
 	}
 
+	apps := content.Blocks.OfType("app")
+
 	// Validate apps
-	for _, block := range content.Blocks.OfType("app") {
-		err := c.validateApp(block)
-		if err != nil {
-			result = multierror.Append(result, err)
+	for _, block := range apps {
+		appRes := c.validateApp(block)
+		results = append(results, appRes...)
+	}
+
+	if len(apps) > 1 {
+		results = append(results, ValidationResult{Warning: AppeningHappening})
+	}
+
+	// Validate pipelines
+	for i, block := range content.Blocks.OfType("pipeline") {
+		pipelineRes := c.validatePipeline(block)
+		if pipelineRes != nil {
+			results = append(results, pipelineRes...)
+		}
+
+		// Validate there's no duplicate names
+		for j, bl := range content.Blocks.OfType("pipeline") {
+			if i != j && bl.Labels[0] == block.Labels[0] {
+				results = append(results, ValidationResult{Error: &hcl.Diagnostic{
+					Severity: hcl.DiagError,
+					Summary:  "'pipeline' stanza names must be unique per project",
+					Subject:  &block.DefRange,
+					Context:  &block.TypeRange,
+				}})
+			}
 		}
 	}
 
 	// Validate labels
-	if errs := ValidateLabels(c.Labels); len(errs) > 0 {
-		result = multierror.Append(result, errs...)
+	labelResults := ValidateLabels(c.Labels)
+	results = append(results, labelResults...)
+
+	// So that callers that test the result for nil can still do so
+	// (they test for nil because this return type used to be error)
+	if len(results) == 0 {
+		return results, nil
 	}
 
-	return result
+	if results.HasErrors() {
+		return results, results
+	}
+
+	return results, nil
 }
 
-func (c *Config) validateApp(b *hcl.Block) error {
+func (c *Config) validateApp(b *hcl.Block) []ValidationResult {
+	var results []ValidationResult
+
 	// Validate root
 	schema, _ := gohcl.ImpliedBodySchema(&validateApp{})
 	content, diag := b.Body.Content(schema)
 	if diag.HasErrors() {
-		return diag
+		results = append(results, ValidationResult{Error: diag})
+
+		if content == nil {
+			return results
+		}
 	}
 
 	// Build required
 	if len(content.Blocks.OfType("build")) != 1 {
-		return &hcl.Diagnostic{
+		results = append(results, ValidationResult{Error: &hcl.Diagnostic{
 			Severity: hcl.DiagError,
 			Summary:  "'build' stanza required",
 			Subject:  &b.DefRange,
 			Context:  &b.TypeRange,
-		}
+		}})
 	}
 
 	// Deploy required
 	if len(content.Blocks.OfType("deploy")) != 1 {
-		return &hcl.Diagnostic{
+		results = append(results, ValidationResult{Error: &hcl.Diagnostic{
 			Severity: hcl.DiagError,
 			Summary:  "'deploy' stanza required",
 			Subject:  &b.DefRange,
 			Context:  &b.TypeRange,
-		}
+		}})
 	}
 
-	return nil
+	return results
 }
 
 // Validate validates the application.
@@ -125,13 +212,12 @@ func (c *Config) validateApp(b *hcl.Block) error {
 // Similar to Config.App, this doesn't validate configuration that is
 // further deferred such as build, deploy, etc. stanzas so call Validate
 // on those as they're loaded.
-func (c *App) Validate() error {
-	var result error
+func (c *App) Validate() (ValidationResults, error) {
+	var results ValidationResults
 
 	// Validate labels
-	if errs := ValidateLabels(c.Labels); len(errs) > 0 {
-		result = multierror.Append(result, errs...)
-	}
+	labelResults := ValidateLabels(c.Labels)
+	results = append(results, labelResults...)
 
 	// If a path is specified, it must not be a child of the root.
 	if c.Path != "" {
@@ -139,64 +225,125 @@ func (c *App) Validate() error {
 			// This should never happen because during App load time
 			// we ensure that the path is absolute relative to the project
 			// path.
-			panic("path is not absolute")
+			results = append(results, ValidationResult{Error: fmt.Errorf("path is not absolute")})
 		}
 
 		rel, err := filepath.Rel(c.config.path, c.Path)
 		if err != nil {
-			result = multierror.Append(result, fmt.Errorf(
-				"path: must be a child of the project directory"))
+			results = append(results, ValidationResult{Error: fmt.Errorf(
+				"path: must be a child of the project directory")})
 		}
 		if strings.HasPrefix(rel, "../") || strings.HasPrefix(rel, "..\\") {
-			result = multierror.Append(result, fmt.Errorf(
-				"path: must be a child of the project directory"))
+			results = append(results, ValidationResult{Error: fmt.Errorf(
+				"path: must be a child of the project directory")})
 		}
 	}
 
 	if c.BuildRaw == nil || c.BuildRaw.Use == nil || c.BuildRaw.Use.Type == "" {
-		result = multierror.Append(result, fmt.Errorf(
-			"build stage with a default 'use' stanza is required"))
+		results = append(results, ValidationResult{Error: fmt.Errorf(
+			"build stage with a default non-workspace scoped 'use' stanza is required")})
 	}
 
 	if c.DeployRaw == nil || c.DeployRaw.Use == nil || c.DeployRaw.Use.Type == "" {
-		result = multierror.Append(result, fmt.Errorf(
-			"deploy stage with a default 'use' stanza is required"))
+		results = append(results, ValidationResult{Error: fmt.Errorf(
+			"deploy stage with a default non-workspace scoped 'use' stanza is required")})
 	}
 
 	for _, scope := range c.BuildRaw.WorkspaceScoped {
 		if scope.Use == nil || scope.Use.Type == "" {
-			result = multierror.Append(result, fmt.Errorf(
+			results = append(results, ValidationResult{Error: fmt.Errorf(
 				"build: workspace scope %q: 'use' stanza is required",
 				scope.Scope,
-			))
+			)})
 		}
 	}
 	for _, scope := range c.BuildRaw.LabelScoped {
 		if scope.Use == nil || scope.Use.Type == "" {
-			result = multierror.Append(result, fmt.Errorf(
+			results = append(results, ValidationResult{Error: fmt.Errorf(
 				"build: label scope %q: 'use' stanza is required",
 				scope.Scope,
-			))
+			)})
 		}
 	}
 
 	for _, scope := range c.DeployRaw.WorkspaceScoped {
 		if scope.Use == nil || scope.Use.Type == "" {
-			result = multierror.Append(result, fmt.Errorf(
+			results = append(results, ValidationResult{Error: fmt.Errorf(
 				"deploy: workspace scope %q: 'use' stanza is required",
 				scope.Scope,
-			))
+			)})
 		}
 	}
 	for _, scope := range c.DeployRaw.LabelScoped {
 		if scope.Use == nil || scope.Use.Type == "" {
-			result = multierror.Append(result, fmt.Errorf(
+			results = append(results, ValidationResult{Error: fmt.Errorf(
 				"deploy: label scope %q: 'use' stanza is required",
 				scope.Scope,
-			))
+			)})
 		}
 	}
 
+	if len(results) == 0 {
+		return nil, nil
+	}
+
+	if results.HasErrors() {
+		return results, results
+	}
+
+	return results, nil
+}
+
+// validatePipeline validates that a given pipeline block has at least
+// one step stanza
+func (c *Config) validatePipeline(b *hcl.Block) []ValidationResult {
+	var results []ValidationResult
+
+	// Validate root
+	schema, _ := gohcl.ImpliedBodySchema(&validatePipeline{})
+	content, diag := b.Body.Content(schema)
+	if diag.HasErrors() {
+		results = append(results, ValidationResult{Error: diag})
+
+		if content == nil {
+			return results
+		}
+	}
+
+	// At least one Step required
+	if len(content.Blocks.OfType("step")) < 1 {
+		results = append(results, ValidationResult{Error: &hcl.Diagnostic{
+			Severity: hcl.DiagError,
+			Summary:  "'step' stanza required",
+			Subject:  &b.DefRange,
+			Context:  &b.TypeRange,
+		}})
+	}
+
+	return results
+}
+
+func (c *Pipeline) Validate() error {
+	var result error
+
+	for _, step := range c.Steps {
+		if step == nil {
+			result = multierror.Append(result, fmt.Errorf(
+				"step stage in pipeline is nil, this is an internal error"))
+		} else if step != nil && (step.Use == nil && step.Pipeline == nil) {
+			result = multierror.Append(result, fmt.Errorf(
+				"step stage with a default 'use' stanza or a 'pipeline' stanza is required"))
+		} else if step.Use != nil && step.Pipeline != nil {
+			result = multierror.Append(result, fmt.Errorf(
+				"step stage with both a 'use' stanza and pipeline stanza is not valid"))
+		} else if step.Pipeline == nil && (step.Use == nil || step.Use.Type == "") {
+			result = multierror.Append(result, fmt.Errorf(
+				"step stage %q is required to define a 'use' stanza and label or a "+
+					"pipeline stanza but neither were found", step.Name))
+		}
+
+		// else, other step validations?
+	}
 	return result
 }
 
@@ -207,29 +354,30 @@ func (c *App) Validate() error {
 //   * keys must be in hostname format (RFC 952)
 //   * keys can't be prefixed with "waypoint/" which is reserved for system use
 //
-func ValidateLabels(labels map[string]string) []error {
-	var errs []error
+func ValidateLabels(labels map[string]string) ValidationResults {
+	var results ValidationResults
+
 	for k, v := range labels {
 		name := fmt.Sprintf("label[%s]", k)
 
 		if strings.HasPrefix(k, "waypoint/") {
-			errs = append(errs, fmt.Errorf("%s: prefix 'waypoint/' is reserved for system use", name))
+			results = append(results, ValidationResult{Error: fmt.Errorf("%s: prefix 'waypoint/' is reserved for system use", name)})
 		}
 
 		if len(k) > 255 {
-			errs = append(errs, fmt.Errorf("%s: key must be less than or equal to 255 characters", name))
+			results = append(results, ValidationResult{Error: fmt.Errorf("%s: key must be less than or equal to 255 characters", name)})
 		}
 
 		if !hostnameRegexRFC952.MatchString(strings.SplitN(k, "/", 2)[0]) {
-			errs = append(errs, fmt.Errorf("%s: key before '/' must be a valid hostname (RFC 952)", name))
+			results = append(results, ValidationResult{Error: fmt.Errorf("%s: key before '/' must be a valid hostname (RFC 952)", name)})
 		}
 
 		if len(v) > 255 {
-			errs = append(errs, fmt.Errorf("%s: value must be less than or equal to 255 characters", name))
+			results = append(results, ValidationResult{Error: fmt.Errorf("%s: value must be less than or equal to 255 characters", name)})
 		}
 	}
 
-	return errs
+	return results
 }
 
 var hostnameRegexRFC952 = regexp.MustCompile(`^[a-zA-Z]([a-zA-Z0-9\-]+[\.]?)*[a-zA-Z0-9]$`)

@@ -1,12 +1,12 @@
 FROM golang:1.17.6
 
-ARG PROTOC_VERSION="3.15.8"
+ARG PROTOC_VERSION="3.17.3"
 
 RUN apt-get update; apt-get install unzip
 
 # Protoc
 # TODO(izaak): discover the protoc version from the nix files
-RUN wget https://github.com/protocolbuffers/protobuf/releases/download/v${PROTOC_VERSION}/protoc-${PROTOC_VERSION}-linux-x86_64.zip -O /tmp/protoc.zip && \
+RUN wget https://github.com/protocolbuffers/protobuf/releases/download/v${PROTOC_VERSION}/protoc-${PROTOC_VERSION}-linux-$(uname -m | sed s/aarch64/aarch_64/g).zip -O /tmp/protoc.zip && \
     unzip /tmp/protoc.zip -d /tmp && \
     mv /tmp/bin/protoc /usr/local/bin/ && \
     chmod +x /usr/local/bin/protoc && \

@@ -168,6 +168,36 @@ func (_m *WaypointClient) CompleteOIDCAuth(ctx context.Context, in *gen.Complete
 	return r0, r1
 }
 
+// ConfigSyncPipeline provides a mock function with given fields: ctx, in, opts
+func (_m *WaypointClient) ConfigSyncPipeline(ctx context.Context, in *gen.ConfigSyncPipelineRequest, opts ...grpc.CallOption) (*gen.ConfigSyncPipelineResponse, error) {
+	_va := make([]interface{}, len(opts))
+	for _i := range opts {
+		_va[_i] = opts[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx, in)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
+
+	var r0 *gen.ConfigSyncPipelineResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.ConfigSyncPipelineRequest, ...grpc.CallOption) *gen.ConfigSyncPipelineResponse); ok {
+		r0 = rf(ctx, in, opts...)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gen.ConfigSyncPipelineResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.ConfigSyncPipelineRequest, ...grpc.CallOption) error); ok {
+		r1 = rf(ctx, in, opts...)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // ConvertInviteToken provides a mock function with given fields: ctx, in, opts
 func (_m *WaypointClient) ConvertInviteToken(ctx context.Context, in *gen.ConvertInviteTokenRequest, opts ...grpc.CallOption) (*gen.NewTokenResponse, error) {
 	_va := make([]interface{}, len(opts))
@@ -348,6 +378,36 @@ func (_m *WaypointClient) DeleteHostname(ctx context.Context, in *gen.DeleteHost
 	return r0, r1
 }
 
+// DeleteOnDemandRunnerConfig provides a mock function with given fields: ctx, in, opts
+func (_m *WaypointClient) DeleteOnDemandRunnerConfig(ctx context.Context, in *gen.DeleteOnDemandRunnerConfigRequest, opts ...grpc.CallOption) (*gen.DeleteOnDemandRunnerConfigResponse, error) {
+	_va := make([]interface{}, len(opts))
+	for _i := range opts {
+		_va[_i] = opts[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx, in)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
+
+	var r0 *gen.DeleteOnDemandRunnerConfigResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.DeleteOnDemandRunnerConfigRequest, ...grpc.CallOption) *gen.DeleteOnDemandRunnerConfigResponse); ok {
+		r0 = rf(ctx, in, opts...)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gen.DeleteOnDemandRunnerConfigResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.DeleteOnDemandRunnerConfigRequest, ...grpc.CallOption) error); ok {
+		r1 = rf(ctx, in, opts...)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // DeleteTrigger provides a mock function with given fields: ctx, in, opts
 func (_m *WaypointClient) DeleteTrigger(ctx context.Context, in *gen.DeleteTriggerRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	_va := make([]interface{}, len(opts))
@@ -400,6 +460,36 @@ func (_m *WaypointClient) DeleteUser(ctx context.Context, in *gen.DeleteUserRequ
 
 	var r1 error
 	if rf, ok := ret.Get(1).(func(context.Context, *gen.DeleteUserRequest, ...grpc.CallOption) error); ok {
+		r1 = rf(ctx, in, opts...)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// DestroyProject provides a mock function with given fields: ctx, in, opts
+func (_m *WaypointClient) DestroyProject(ctx context.Context, in *gen.DestroyProjectRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	_va := make([]interface{}, len(opts))
+	for _i := range opts {
+		_va[_i] = opts[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx, in)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
+
+	var r0 *emptypb.Empty
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.DestroyProjectRequest, ...grpc.CallOption) *emptypb.Empty); ok {
+		r0 = rf(ctx, in, opts...)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*emptypb.Empty)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.DestroyProjectRequest, ...grpc.CallOption) error); ok {
 		r1 = rf(ctx, in, opts...)
 	} else {
 		r1 = ret.Error(1)
@@ -798,6 +888,36 @@ func (_m *WaypointClient) GetConfigSource(ctx context.Context, in *gen.GetConfig
 	return r0, r1
 }
 
+// GetDefaultOnDemandRunnerConfig provides a mock function with given fields: ctx, in, opts
+func (_m *WaypointClient) GetDefaultOnDemandRunnerConfig(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*gen.GetOnDemandRunnerConfigResponse, error) {
+	_va := make([]interface{}, len(opts))
+	for _i := range opts {
+		_va[_i] = opts[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx, in)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
+
+	var r0 *gen.GetOnDemandRunnerConfigResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *emptypb.Empty, ...grpc.CallOption) *gen.GetOnDemandRunnerConfigResponse); ok {
+		r0 = rf(ctx, in, opts...)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gen.GetOnDemandRunnerConfigResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *emptypb.Empty, ...grpc.CallOption) error); ok {
+		r1 = rf(ctx, in, opts...)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetDeployment provides a mock function with given fields: ctx, in, opts
 func (_m *WaypointClient) GetDeployment(ctx context.Context, in *gen.GetDeploymentRequest, opts ...grpc.CallOption) (*gen.Deployment, error) {
 	_va := make([]interface{}, len(opts))
@@ -910,6 +1030,36 @@ func (_m *WaypointClient) GetLatestBuild(ctx context.Context, in *gen.GetLatestB
 
 	var r1 error
 	if rf, ok := ret.Get(1).(func(context.Context, *gen.GetLatestBuildRequest, ...grpc.CallOption) error); ok {
+		r1 = rf(ctx, in, opts...)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetLatestPipelineRun provides a mock function with given fields: ctx, in, opts
+func (_m *WaypointClient) GetLatestPipelineRun(ctx context.Context, in *gen.GetPipelineRequest, opts ...grpc.CallOption) (*gen.GetPipelineRunResponse, error) {
+	_va := make([]interface{}, len(opts))
+	for _i := range opts {
+		_va[_i] = opts[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx, in)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
+
+	var r0 *gen.GetPipelineRunResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.GetPipelineRequest, ...grpc.CallOption) *gen.GetPipelineRunResponse); ok {
+		r0 = rf(ctx, in, opts...)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gen.GetPipelineRunResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.GetPipelineRequest, ...grpc.CallOption) error); ok {
 		r1 = rf(ctx, in, opts...)
 	} else {
 		r1 = ret.Error(1)
@@ -1090,6 +1240,66 @@ func (_m *WaypointClient) GetOnDemandRunnerConfig(ctx context.Context, in *gen.G
 
 	var r1 error
 	if rf, ok := ret.Get(1).(func(context.Context, *gen.GetOnDemandRunnerConfigRequest, ...grpc.CallOption) error); ok {
+		r1 = rf(ctx, in, opts...)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetPipeline provides a mock function with given fields: ctx, in, opts
+func (_m *WaypointClient) GetPipeline(ctx context.Context, in *gen.GetPipelineRequest, opts ...grpc.CallOption) (*gen.GetPipelineResponse, error) {
+	_va := make([]interface{}, len(opts))
+	for _i := range opts {
+		_va[_i] = opts[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx, in)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
+
+	var r0 *gen.GetPipelineResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.GetPipelineRequest, ...grpc.CallOption) *gen.GetPipelineResponse); ok {
+		r0 = rf(ctx, in, opts...)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gen.GetPipelineResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.GetPipelineRequest, ...grpc.CallOption) error); ok {
+		r1 = rf(ctx, in, opts...)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetPipelineRun provides a mock function with given fields: ctx, in, opts
+func (_m *WaypointClient) GetPipelineRun(ctx context.Context, in *gen.GetPipelineRunRequest, opts ...grpc.CallOption) (*gen.GetPipelineRunResponse, error) {
+	_va := make([]interface{}, len(opts))
+	for _i := range opts {
+		_va[_i] = opts[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx, in)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
+
+	var r0 *gen.GetPipelineRunResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.GetPipelineRunRequest, ...grpc.CallOption) *gen.GetPipelineRunResponse); ok {
+		r0 = rf(ctx, in, opts...)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gen.GetPipelineRunResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.GetPipelineRunRequest, ...grpc.CallOption) error); ok {
 		r1 = rf(ctx, in, opts...)
 	} else {
 		r1 = ret.Error(1)
@@ -1668,6 +1878,66 @@ func (_m *WaypointClient) ListOnDemandRunnerConfigs(ctx context.Context, in *emp
 	return r0, r1
 }
 
+// ListPipelineRuns provides a mock function with given fields: ctx, in, opts
+func (_m *WaypointClient) ListPipelineRuns(ctx context.Context, in *gen.ListPipelineRunsRequest, opts ...grpc.CallOption) (*gen.ListPipelineRunsResponse, error) {
+	_va := make([]interface{}, len(opts))
+	for _i := range opts {
+		_va[_i] = opts[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx, in)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
+
+	var r0 *gen.ListPipelineRunsResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.ListPipelineRunsRequest, ...grpc.CallOption) *gen.ListPipelineRunsResponse); ok {
+		r0 = rf(ctx, in, opts...)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gen.ListPipelineRunsResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.ListPipelineRunsRequest, ...grpc.CallOption) error); ok {
+		r1 = rf(ctx, in, opts...)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// ListPipelines provides a mock function with given fields: ctx, in, opts
+func (_m *WaypointClient) ListPipelines(ctx context.Context, in *gen.ListPipelinesRequest, opts ...grpc.CallOption) (*gen.ListPipelinesResponse, error) {
+	_va := make([]interface{}, len(opts))
+	for _i := range opts {
+		_va[_i] = opts[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx, in)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
+
+	var r0 *gen.ListPipelinesResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.ListPipelinesRequest, ...grpc.CallOption) *gen.ListPipelinesResponse); ok {
+		r0 = rf(ctx, in, opts...)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gen.ListPipelinesResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.ListPipelinesRequest, ...grpc.CallOption) error); ok {
+		r1 = rf(ctx, in, opts...)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // ListProjects provides a mock function with given fields: ctx, in, opts
 func (_m *WaypointClient) ListProjects(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*gen.ListProjectsResponse, error) {
 	_va := make([]interface{}, len(opts))
@@ -2028,6 +2298,36 @@ func (_m *WaypointClient) RestoreSnapshot(ctx context.Context, opts ...grpc.Call
 	return r0, r1
 }
 
+// RunPipeline provides a mock function with given fields: ctx, in, opts
+func (_m *WaypointClient) RunPipeline(ctx context.Context, in *gen.RunPipelineRequest, opts ...grpc.CallOption) (*gen.RunPipelineResponse, error) {
+	_va := make([]interface{}, len(opts))
+	for _i := range opts {
+		_va[_i] = opts[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx, in)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
+
+	var r0 *gen.RunPipelineResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.RunPipelineRequest, ...grpc.CallOption) *gen.RunPipelineResponse); ok {
+		r0 = rf(ctx, in, opts...)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gen.RunPipelineResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.RunPipelineRequest, ...grpc.CallOption) error); ok {
+		r1 = rf(ctx, in, opts...)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // RunTrigger provides a mock function with given fields: ctx, in, opts
 func (_m *WaypointClient) RunTrigger(ctx context.Context, in *gen.RunTriggerRequest, opts ...grpc.CallOption) (*gen.RunTriggerResponse, error) {
 	_va := make([]interface{}, len(opts))
@@ -2298,6 +2598,36 @@ func (_m *WaypointClient) StartExecStream(ctx context.Context, opts ...grpc.Call
 	return r0, r1
 }
 
+// UI_GetDeployment provides a mock function with given fields: ctx, in, opts
+func (_m *WaypointClient) UI_GetDeployment(ctx context.Context, in *gen.UI_GetDeploymentRequest, opts ...grpc.CallOption) (*gen.UI_GetDeploymentResponse, error) {
+	_va := make([]interface{}, len(opts))
+	for _i := range opts {
+		_va[_i] = opts[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx, in)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
+
+	var r0 *gen.UI_GetDeploymentResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.UI_GetDeploymentRequest, ...grpc.CallOption) *gen.UI_GetDeploymentResponse); ok {
+		r0 = rf(ctx, in, opts...)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gen.UI_GetDeploymentResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.UI_GetDeploymentRequest, ...grpc.CallOption) error); ok {
+		r1 = rf(ctx, in, opts...)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // UI_GetProject provides a mock function with given fields: ctx, in, opts
 func (_m *WaypointClient) UI_GetProject(ctx context.Context, in *gen.UI_GetProjectRequest, opts ...grpc.CallOption) (*gen.UI_GetProjectResponse, error) {
 	_va := make([]interface{}, len(opts))
@@ -2560,6 +2890,36 @@ func (_m *WaypointClient) UpsertOnDemandRunnerConfig(ctx context.Context, in *ge
 
 	var r1 error
 	if rf, ok := ret.Get(1).(func(context.Context, *gen.UpsertOnDemandRunnerConfigRequest, ...grpc.CallOption) error); ok {
+		r1 = rf(ctx, in, opts...)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// UpsertPipeline provides a mock function with given fields: ctx, in, opts
+func (_m *WaypointClient) UpsertPipeline(ctx context.Context, in *gen.UpsertPipelineRequest, opts ...grpc.CallOption) (*gen.UpsertPipelineResponse, error) {
+	_va := make([]interface{}, len(opts))
+	for _i := range opts {
+		_va[_i] = opts[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx, in)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
+
+	var r0 *gen.UpsertPipelineResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.UpsertPipelineRequest, ...grpc.CallOption) *gen.UpsertPipelineResponse); ok {
+		r0 = rf(ctx, in, opts...)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gen.UpsertPipelineResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.UpsertPipelineRequest, ...grpc.CallOption) error); ok {
 		r1 = rf(ctx, in, opts...)
 	} else {
 		r1 = ret.Error(1)

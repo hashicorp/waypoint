@@ -12,14 +12,14 @@ var (
 
 func TestWaypointNomadInstall(t *testing.T) {
 	wp := NewBinary(t, wpBinary, nomadTestDir)
-	stdout, stderr, err := wp.RunRaw("install", "-platform=nomad", "-accept-tos", fmt.Sprintf("-nomad-server-image=%s", wpServerImage))
+	stdout, stderr, err := wp.RunRaw("install", "-platform=nomad", "-accept-tos", fmt.Sprintf("-nomad-server-image=%s", wpServerImage), fmt.Sprintf("-nomad-odr-image=%s", wpOdrImage))
 
 	if err != nil {
 		t.Errorf("unexpected error installing server to nomad: %s", err)
 	}
 
 	if stderr != "" {
-		t.Errorf("unexpected stderr output installing server to nomad: %s", err)
+		t.Errorf("unexpected stderr output installing server to nomad: %s", stderr)
 	}
 
 	if !strings.Contains(stdout, "Waypoint server successfully installed and configured!") {
@@ -36,7 +36,7 @@ func TestWaypointNomadUp(t *testing.T) {
 	}
 
 	if stderr != "" {
-		t.Errorf("unexpected stderr output initializing waypoint project: %s", err)
+		t.Errorf("unexpected stderr output initializing waypoint project: %s", stderr)
 	}
 
 	if !strings.Contains(stdout, "Project initialized!") {
@@ -50,7 +50,7 @@ func TestWaypointNomadUp(t *testing.T) {
 	}
 
 	if stderr != "" {
-		t.Errorf("unexpected stderr output deploying waypoint project: %s", err)
+		t.Errorf("unexpected stderr output deploying waypoint project: %s", stderr)
 	}
 
 	if !strings.Contains(stdout, "The deploy was successful!") {
@@ -60,14 +60,14 @@ func TestWaypointNomadUp(t *testing.T) {
 
 func TestWaypointNomadUpgrade(t *testing.T) {
 	wp := NewBinary(t, wpBinary, nomadTestDir)
-	stdout, stderr, err := wp.RunRaw("server", "upgrade", "-platform=nomad", "-auto-approve", fmt.Sprintf("-nomad-server-image=%s", wpServerImageUpgrade), "-snapshot=false")
+	stdout, stderr, err := wp.RunRaw("server", "upgrade", "-platform=nomad", "-auto-approve", fmt.Sprintf("-nomad-server-image=%s", wpServerImageUpgrade), fmt.Sprintf("-nomad-odr-image=%s", wpOdrImageUpgrade), "-snapshot=false")
 
 	if err != nil {
 		t.Errorf("unexpected error upgrading server in nomad: %s", err)
 	}
 
 	if stderr != "" {
-		t.Errorf("unexpected stderr output upgrading server in nomad: %s", err)
+		t.Errorf("unexpected stderr output upgrading server in nomad: %s", stderr)
 	}
 
 	if !strings.Contains(stdout, "Waypoint has finished upgrading the server") {
@@ -84,7 +84,7 @@ func TestWaypointNomadUpAfterUpgrade(t *testing.T) {
 	}
 
 	if stderr != "" {
-		t.Errorf("unexpected stderr output deploying waypoint project: %s", err)
+		t.Errorf("unexpected stderr output deploying waypoint project: %s", stderr)
 	}
 
 	if !strings.Contains(stdout, "The deploy was successful!") {
@@ -101,7 +101,7 @@ func TestWaypointNomadDestroy(t *testing.T) {
 	}
 
 	if stderr != "" {
-		t.Errorf("unexpected stderr output destroying waypoint project: %s", err)
+		t.Errorf("unexpected stderr output destroying waypoint project: %s", stderr)
 	}
 
 	if !strings.Contains(stdout, "Destroy successful!") {
@@ -118,7 +118,7 @@ func TestWaypointNomadUninstall(t *testing.T) {
 	}
 
 	if stderr != "" {
-		t.Errorf("unexpected stderr output uninstalling waypoint server: %s", err)
+		t.Errorf("unexpected stderr output uninstalling waypoint server: %s", stderr)
 	}
 
 	if !strings.Contains(stdout, "Waypoint server successfully uninstalled") {

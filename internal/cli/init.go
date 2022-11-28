@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 
 	"github.com/hashicorp/waypoint/internal/cli/datagen"
+	hclpkg "github.com/hashicorp/waypoint/internal/cli/hclgen"
 	clientpkg "github.com/hashicorp/waypoint/internal/client"
 	"github.com/hashicorp/waypoint/internal/clierrors"
 	configpkg "github.com/hashicorp/waypoint/internal/config"
@@ -157,8 +158,28 @@ func (c *InitCommand) Run(args []string) int {
 
 	// If we have no config, initialize a new one.
 	if path == "" {
-		if !c.initNew() {
+		proceed, err := c.ui.Input(&terminal.Input{
+			Prompt: "Do you want help generating a waypoint.hcl file? Type 'yes' to initialize the interactive generator or 'no' to generate a template waypoint.hcl file: ",
+			Style:  "",
+			Secret: false,
+		})
+		if err != nil {
+			c.ui.Output(
+				"Error getting input: %s",
+				clierrors.Humanize(err),
+				terminal.WithErrorStyle(),
+			)
 			return 1
+		} else if strings.ToLower(proceed) == "yes" || strings.ToLower(proceed) == "y" {
+			c.ui.Output("Starting interactive HCL generator.\n")
+			if !hclpkg.HclGen(c.ui) {
+				return 1
+			}
+		} else {
+			c.ui.Output("Generating template file\n")
+			if !c.initNew() {
+				return 1
+			}
 		}
 
 		return 0
@@ -238,11 +259,12 @@ func (c *InitCommand) validateConfig() bool {
 	defer sg.Wait()
 
 	s := sg.Add("Validating configuration file...")
-	cfg, err := c.initConfig(c.fromProject)
+	cfg, _, err := c.initConfig(c.fromProject)
 	if err != nil {
 		c.stepError(s, initStepConfig, err)
 		return false
 	}
+
 	if cfg == nil {
 		// This should never happen, because if there is no config, init should have created
 		// it and exited earlier.
@@ -380,6 +402,43 @@ func (c *InitCommand) validateProject() bool {
 		}
 		s.Status(terminal.StatusOK)
 	}
+
+	sp := sg.Add("Registering all pipelines for project %q", ref.Project)
+	pipeNames := c.cfg.Pipelines()
+
+	// We do a shallow sync of pipelines on the init phase in the same way we
+	// shallow sync Applications. Prior to running a pipeline - we do a full
+	// HCL eval and protobuf sync that will upsert over this data.
+	for _, pn := range pipeNames {
+		sp.Update("Registering Pipeline %q with the server...", pn)
+
+		baseStep := map[string]*pb.Pipeline_Step{"root": {
+			Name: "root",
+			Kind: &pb.Pipeline_Step_Pipeline_{},
+		}}
+
+		_, err := client.UpsertPipeline(c.Ctx, &pb.UpsertPipelineRequest{
+			Pipeline: &pb.Pipeline{
+				Name: pn,
+				Owner: &pb.Pipeline_Project{
+					Project: &pb.Ref_Project{
+						Project: ref.Project,
+					},
+				},
+				Steps: baseStep,
+			},
+		})
+		if err != nil {
+			c.stepError(sp, initStepPipeline, err)
+			sp.Status(terminal.StatusError)
+			sp.Done()
+
+			return false
+		}
+	}
+	sp.Update("Project %q pipelines are registered with the server.", ref.Project)
+	sp.Status(terminal.StatusOK)
+	sp.Done()
 
 	s.Update("Project %q and all apps are registered with the server.", ref.Project)
 	s.Status(terminal.StatusOK)
@@ -655,6 +714,7 @@ const (
 	initStepConnect
 	initStepPluginConfig
 	initStepProject
+	initStepPipeline
 	initStepAuth
 )
 
@@ -700,6 +760,24 @@ The project and apps must be registered prior to performing any operations.
 This creates some metadata with the server. We require registration as a
 verification that the project/app names are correct and that you're targeting
 the correct server.
+			`,
+		},
+	},
+
+	initStepPipeline: {
+		Error: "Error while checking for pipeline registration.",
+		ErrorDetails: `
+There was an error while the checking if the pipelines for the project
+are registered with the Waypoint server. This error may be temporary and
+you may retry to init. See the error message below.
+		`,
+
+		Other: map[string]string{
+			"unregistered-desc": `
+The projects pipelines must be registered prior to performing any operations.
+This creates some metadata with the server. We require registration as a
+verification that the project/app names and pipelines are correct and that
+you're targeting the correct server.
 			`,
 		},
 	},

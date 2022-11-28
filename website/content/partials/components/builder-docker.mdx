@@ -36,6 +36,10 @@ build {
 
 ### Required Parameters
 
+This plugin has no required parameters.
+
+### Optional Parameters
+
 These parameters are used in the [`use` stanza](/docs/waypoint-hcl/use) for this plugin.
 
 #### auth (category)
@@ -94,15 +98,11 @@ Username of Docker registry account.
 - Type: **string**
 - **Optional**
 
-### Optional Parameters
-
-These parameters are used in the [`use` stanza](/docs/waypoint-hcl/use) for this plugin.
-
 #### build_args
 
 Build args to pass to docker for the build step.
 
-An array of strings of build-time variables passed as build-arg to docker for the build step.
+A map of key/value pairs passed as build-args to docker for the build step.
 
 - Type: **map of string to string**
 - **Optional**

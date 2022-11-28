@@ -1,0 +1,3 @@
+```release-note:feature
+CLI: New `runner profile delete` command to delete a Waypoint runner profile
+```

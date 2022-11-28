@@ -1,6 +1,7 @@
 package handlertest
 
 import (
+	"context"
 	"fmt"
 	"reflect"
 	"runtime"
@@ -8,13 +9,23 @@ import (
 	"testing"
 
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
+	"github.com/hashicorp/waypoint/pkg/serverstate"
 )
 
 type (
 	// Factory is the function type used to create a new serverhandler
 	// implementation. To fail, this should fail the test.
-	Factory func(*testing.T) (pb.WaypointServer, pb.WaypointClient)
+	Factory func(*testing.T) (pb.WaypointClient, TestServerImpl)
 )
+
+// TestServerImpl is a wrapper around a server implementation that allows us
+// to access otherwise-private fields and methods inside our tests. It should
+// not be used outside of testing.
+type TestServerImpl interface {
+
+	// State returns the underlying serverstate implementation.
+	State(ctx context.Context) serverstate.Interface
+}
 
 // Test runs a validation test suite for a pb.WaypointServer implementation.
 // All server implementations should pass this suite with no errors to ensure

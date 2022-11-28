@@ -1,0 +1,4 @@
+```release-note:improvement
+cli/pipeline_run: Show app deployment and release URLs if exist from running
+pipeline. Also show input variables used.
+```

@@ -27,20 +27,44 @@ func (c *ConfigSyncCommand) Run(args []string) int {
 	}
 
 	err := c.DoApp(c.Ctx, func(ctx context.Context, app *clientpkg.App) error {
+		app.UI.Output("Synchronizing application %q configuration with Waypoint server...",
+			app.Ref().Application, terminal.WithHeaderStyle())
+
 		sg := app.UI.StepGroup()
 		defer sg.Wait()
 
-		step := sg.Add("Synchronizing configuration variables...")
+		step := sg.Add("Synchronizing configuration variables and pipeline configs...")
 		defer step.Abort()
 
-		_, err := app.ConfigSync(ctx, &pb.Job_ConfigSyncOp{})
+		jobResult, err := app.ConfigSync(ctx, &pb.Job_ConfigSyncOp{})
 		if err != nil {
 			app.UI.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 			return ErrSentinel
 		}
 
-		step.Update("Configuration variables synchronized successfully!")
+		step.Update("Configuration variables synchronized!")
 		step.Done()
+
+		if jobResult.PipelineConfigSync != nil && len(jobResult.PipelineConfigSync.SyncedPipelines) > 0 {
+			step := sg.Add("Configuration for pipelines synchronized!")
+			step.Done()
+
+			// Extra space
+			app.UI.Output("")
+			for name, ref := range jobResult.PipelineConfigSync.SyncedPipelines {
+				pipelineRef, ok := ref.Ref.(*pb.Ref_Pipeline_Owner)
+				if !ok {
+					app.UI.Output("failed to convert pipeline ref", terminal.WithErrorStyle())
+					return ErrSentinel
+				}
+
+				app.UI.Output("✔ Pipeline %q (%s) synchronized!", name, pipelineRef.Owner.Project, terminal.WithInfoStyle())
+			}
+		}
+
+		step = sg.Add("Application configuration for %q synchronized successfully with Waypoint server!", app.Ref().Application)
+		step.Done()
+
 		return nil
 	})
 	if err != nil {
@@ -51,7 +75,7 @@ func (c *ConfigSyncCommand) Run(args []string) int {
 }
 
 func (c *ConfigSyncCommand) Flags() *flag.Sets {
-	return c.flagSet(0, nil)
+	return c.flagSet(flagSetOperation, nil)
 }
 
 func (c *ConfigSyncCommand) AutocompleteArgs() complete.Predictor {
@@ -63,7 +87,7 @@ func (c *ConfigSyncCommand) AutocompleteFlags() complete.Flags {
 }
 
 func (c *ConfigSyncCommand) Synopsis() string {
-	return "Synchronize declared variables in waypoint.hcl"
+	return "Synchronize declared variables and pipeline configs in a waypoint.hcl"
 }
 
 func (c *ConfigSyncCommand) Help() string {

@@ -41,31 +41,15 @@ The Consul ACL token used to register services with the Nomad job.
 
 Uses the runner config environment variable CONSUL_HTTP_TOKEN.
 
-#### resources (category)
-
-The amount of resources to allocate to the deployed allocation.
-
-##### resources.cpu
-
-Amount of CPU in MHz to allocate to this task.
-
-- Type: **int**
-- **Optional**
-- Default: 100
-
-##### resources.memorymb
-
-Amount of memory in MB to allocate to this task.
-
-- Type: **int**
-- **Optional**
-- Default: 300
+- Environment Variable: **CONSUL_HTTP_TOKEN**
 
 #### vault_token
 
 The Vault token used to deploy the Nomad job with a token having specific Vault policies attached.
 
 Uses the runner config environment variable VAULT_TOKEN.
+
+- Environment Variable: **VAULT_TOKEN**
 
 ### Optional Parameters
 
@@ -102,12 +86,40 @@ The replica count for the job.
 - **Optional**
 - Default: 1
 
+#### resources (category)
+
+The amount of resources to allocate to the deployed allocation.
+
+##### resources.cpu
+
+Amount of CPU in MHz to allocate to this task.
+
+- Type: **int**
+- **Optional**
+- Default: 100
+
+##### resources.memorymb
+
+Amount of memory in MB to allocate to this task.
+
+- Type: **int**
+- **Optional**
+- Default: 300
+
 #### service_port
 
 TCP port the job is listening on.
 
 - Type: **uint**
 - **Optional**
+
+#### service_provider
+
+Specifies the service registration provider to use for registering a service for the job.
+
+- Type: **string**
+- **Optional**
+- Default: consul
 
 #### static_environment
 

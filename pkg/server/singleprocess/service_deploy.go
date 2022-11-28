@@ -6,9 +6,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/hashicorp/waypoint/pkg/server/hcerr"
+
 	"github.com/hashicorp/go-hclog"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 
 	"github.com/hashicorp/waypoint/pkg/server"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
@@ -32,15 +32,19 @@ func (s *Service) UpsertDeployment(
 		// Get the next id
 		id, err := server.Id()
 		if err != nil {
-			return nil, status.Errorf(codes.Internal, "uuid generation failed: %s", err)
+			return nil, hcerr.Externalize(
+				hclog.FromContext(ctx),
+				fmt.Errorf("uuid generation failed: %w", err),
+				"failed to generate a uuid while upserting a pushed artifact",
+			)
 		}
 
 		// Specify the id
 		result.Id = id
 	}
 
-	if err := s.state(ctx).DeploymentPut(!insert, result); err != nil {
-		return nil, err
+	if err := s.state(ctx).DeploymentPut(ctx, !insert, result); err != nil {
+		return nil, hcerr.Externalize(hclog.FromContext(ctx), err, "failed to insert deployment for app", "app", req.Deployment.Application, "id", req.Deployment.Id)
 	}
 
 	// This requires: (1) URL service is enabled (2) auto hostname isn't
@@ -83,14 +87,14 @@ func (s *Service) ListDeployments(
 	ctx context.Context,
 	req *pb.ListDeploymentsRequest,
 ) (*pb.ListDeploymentsResponse, error) {
-	result, err := s.state(ctx).DeploymentList(req.Application,
+	result, err := s.state(ctx).DeploymentList(ctx, req.Application,
 		serverstate.ListWithStatusFilter(req.Status...),
 		serverstate.ListWithOrder(req.Order),
 		serverstate.ListWithWorkspace(req.Workspace),
 		serverstate.ListWithPhysicalState(req.PhysicalState),
 	)
 	if err != nil {
-		return nil, err
+		return nil, hcerr.Externalize(hclog.FromContext(ctx), err, "failed to list deployments for app", "app", req.Application.Application, "project", req.Application.Project)
 	}
 
 	for _, dep := range result {
@@ -125,9 +129,9 @@ func (s *Service) GetDeployment(
 		return nil, err
 	}
 
-	d, err := s.state(ctx).DeploymentGet(req.Ref)
+	d, err := s.state(ctx).DeploymentGet(ctx, req.Ref)
 	if err != nil {
-		return nil, err
+		return nil, hcerr.Externalize(hclog.FromContext(ctx), err, "failed to get deployment", "target", req.Ref.Target)
 	}
 
 	setDeploymentUrlIfNeeded(d)
@@ -185,7 +189,7 @@ func (s *Service) deploymentPreloadDetails(
 		return nil
 	}
 
-	pa, err := s.state(ctx).ArtifactGet(&pb.Ref_Operation{
+	pa, err := s.state(ctx).ArtifactGet(ctx, &pb.Ref_Operation{
 		Target: &pb.Ref_Operation_Id{
 			Id: d.ArtifactId,
 		},
@@ -197,7 +201,7 @@ func (s *Service) deploymentPreloadDetails(
 	d.Preload.Artifact = pa
 
 	if req == pb.Deployment_BUILD {
-		build, err := s.state(ctx).BuildGet(&pb.Ref_Operation{
+		build, err := s.state(ctx).BuildGet(ctx, &pb.Ref_Operation{
 			Target: &pb.Ref_Operation_Id{
 				Id: pa.BuildId,
 			},

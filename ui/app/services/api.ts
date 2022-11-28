@@ -230,6 +230,7 @@ export default class ApiService extends Service {
       } else {
         variable.setStr(v.str);
       }
+      variable.setSensitive(v.sensitive);
       return variable;
     });
     return varProtosList;

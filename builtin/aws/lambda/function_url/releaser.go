@@ -116,8 +116,10 @@ func (r *Releaser) resourceManager(log hclog.Logger) *resource.Manager {
 func (r *Releaser) getSession(
 	_ context.Context,
 	log hclog.Logger,
+	dep *lambdaplugin.Deployment,
 ) (*session.Session, error) {
 	return utils.GetSession(&utils.SessionConfig{
+		Region: dep.Region,
 		Logger: log,
 	})
 }

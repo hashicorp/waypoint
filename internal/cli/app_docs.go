@@ -3,6 +3,7 @@ package cli
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -36,6 +37,7 @@ type AppDocsCommand struct {
 
 	flagBuiltin  bool
 	flagMarkdown bool
+	flagJson     bool
 	flagType     string
 	flagPlugin   string
 	flagMDX      bool
@@ -202,6 +204,10 @@ func (c *AppDocsCommand) emitField(w io.Writer, h, out string, f *docs.FieldDocs
 		}
 	}
 
+	if f.EnvVar != "" {
+		fmt.Fprintf(&list, "\n- Environment Variable: **%s**", f.EnvVar)
+	}
+
 	if list.Len() != 0 {
 		parts = append(parts, list.String())
 	}
@@ -233,15 +239,25 @@ func endingSpace(w io.Writer, i, tot int) {
 
 func splitFields(fields []*docs.FieldDocs) (required, optional []*docs.FieldDocs) {
 	var o, r []*docs.FieldDocs
-
+	// Categories and fields are both stored in FieldDocs, so if we see a category then check if any of its sub fields are not optional.
+	// If so, the whole category goes in the required section of the website docs, with the optional fields still being labelled as such
+	// within the category
 	for _, f := range fields {
-		if f.Optional {
-			o = append(o, f)
-		} else {
+		var requiredSubfield bool
+		if sf := f.SubFields; len(sf) > 0 {
+			for _, fo := range sf {
+				if !fo.Optional {
+					requiredSubfield = true
+					break
+				}
+			}
+		}
+		if requiredSubfield || (!f.Optional && !f.Category) {
 			r = append(r, f)
+		} else {
+			o = append(o, f)
 		}
 	}
-
 	return r, o
 }
 
@@ -268,6 +284,73 @@ func (c *AppDocsCommand) emitSection(w io.Writer, name, use, h string, fields []
 		c.emitField(w, nh, "", f)
 		endingSpace(w, i, len(fields))
 	}
+}
+
+// jsonFormat attempts to output all the data included in a a plugin's Documentation() function in the JSON file format
+func (c *AppDocsCommand) jsonFormat(name, ct string, doc *docs.Documentation) {
+	// we use this constant to compare to ct for some special behavior
+	const csType = "configsourcer"
+
+	w, err := os.Create(fmt.Sprintf("./embedJson/gen/%s-%s.json", ct, name))
+	if err != nil {
+		c.ui.Output(fmt.Sprintf("Failed to create files: %s", clierrors.Humanize(err)), terminal.StatusError)
+		panic(err)
+	}
+
+	jMap := map[string]interface{}{"name": name, "type": ct}
+
+	dets := doc.Details()
+	if dets.Description != "" {
+		jMap["description"] = dets.Description
+	}
+
+	if dets.Input != "" {
+		jMap["input"] = dets.Input
+	}
+
+	if dets.Output != "" {
+		jMap["output"] = dets.Output
+	}
+
+	if dets.Example != "" {
+		jMap["example"] = strings.TrimSpace(dets.Example)
+	}
+
+	mappers := dets.Mappers
+	jMap["mappers"] = mappers
+
+	if ct == "configsourcer" {
+		required, optional := splitFields(doc.RequestFields())
+		jMap["requiredFields"] = required
+		jMap["optionalFields"] = optional
+		use := "`dynamic` for sourcing [configuration values](/docs/app-config/dynamic) or [input variable values](/docs/waypoint-hcl/variables/dynamic)."
+		jMap["use"] = use
+
+		if len(doc.Fields()) > 0 {
+			jMap["sourceFieldsHelp"] = "Source Parameters\n" +
+				"The parameters below are used with `waypoint config source-set` to configure\n" +
+				"the behavior this plugin. These are _not_ used in `dynamic` calls. The\n" +
+				"parameters used for `dynamic` are in the previous section.\n"
+
+			required, optional := splitFields(doc.Fields())
+			jMap["requiredSourceFields"] = required
+			jMap["optionalSourceFields"] = optional
+		}
+	} else {
+		required, optional := splitFields(doc.Fields())
+		use := "the [`use` stanza](/docs/waypoint-hcl/use) for this plugin."
+		jMap["use"] = use
+		jMap["requiredFields"] = required
+		jMap["optionalFields"] = optional
+
+		if fields := doc.TemplateFields(); len(fields) > 0 {
+			jMap["outputAttrsHelp"] = "Output attributes can be used in your `waypoint.hcl` as [variables](/docs/waypoint-hcl/variables) via [`artifact`](/docs/waypoint-hcl/variables/artifact) or [`deploy`](/docs/waypoint-hcl/variables/deploy)."
+			jMap["outputAttrs"] = fields
+		}
+	}
+
+	t, _ := json.MarshalIndent(jMap, "", "   ")
+	fmt.Fprintf(w, "%s\n", t)
 }
 
 func (c *AppDocsCommand) mdxFormat(name, ct string, doc *docs.Documentation) {
@@ -566,12 +649,39 @@ func (c *AppDocsCommand) builtinDocs(args []string) int {
 	for _, pluginDoc := range pluginDocs {
 		if c.flagMarkdown {
 			c.markdownFormat(pluginDoc.pluginName, pluginDoc.pluginType, pluginDoc.doc)
+		} else if c.flagJson {
+			c.jsonFormat(pluginDoc.pluginName, pluginDoc.pluginType, pluginDoc.doc)
 		} else {
 			c.basicFormat(pluginDoc.pluginName, pluginDoc.pluginType, pluginDoc.doc)
 		}
 	}
 
 	return 0
+}
+
+func (c *AppDocsCommand) builtinJSON() int {
+
+	var pluginNames []string
+	if c.flagPlugin != "" {
+		pluginNames = append(pluginNames, c.flagPlugin)
+	} else {
+		// Use all plugins
+		for pluginName := range plugin.Builtins {
+			pluginNames = append(pluginNames, pluginName)
+		}
+	}
+
+	pluginDocs, err := getDocs(pluginNames, c.Log)
+	if err != nil {
+		c.ui.Output(fmt.Sprintf("Failed to get plugin docs: %s", clierrors.Humanize(err)), terminal.StatusError)
+		return 1
+	}
+
+	for _, pluginDoc := range pluginDocs {
+		c.jsonFormat(pluginDoc.pluginName, pluginDoc.pluginType, pluginDoc.doc)
+	}
+
+	return c.funcsMDX()
 }
 
 func (c *AppDocsCommand) builtinMDX() int {
@@ -713,6 +823,10 @@ func (c *AppDocsCommand) Run(args []string) int {
 		return c.builtinMDX()
 	}
 
+	if c.flagJson {
+		return c.builtinJSON()
+	}
+
 	err = c.DoApp(c.Ctx, func(ctx context.Context, app *clientpkg.App) error {
 		docs, err := app.Docs(ctx, &pb.Job_DocsOp{})
 		if err != nil {
@@ -827,6 +941,12 @@ func (c *AppDocsCommand) Flags() *flag.Sets {
 			Name:   "markdown",
 			Target: &c.flagMarkdown,
 			Usage:  "Show documentation in markdown format",
+		})
+
+		f.BoolVar(&flag.BoolVar{
+			Name:   "json",
+			Target: &c.flagJson,
+			Usage:  "Generate documentation in json format",
 		})
 
 		f.StringVar(&flag.StringVar{

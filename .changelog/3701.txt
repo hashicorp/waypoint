@@ -1,0 +1,4 @@
+```release-note:bug
+cli: Set the subnet and security group ID configs for the ECS task launcher plugin
+during an ECS runner install
+```

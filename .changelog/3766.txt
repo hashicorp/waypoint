@@ -1,0 +1,4 @@
+```release-note:bug
+plugin/nomad-jobspec-canary: Retrieve the status of the correct Nomad job for the
+job resource
+```

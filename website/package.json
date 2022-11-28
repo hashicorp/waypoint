@@ -6,7 +6,7 @@
   "devDependencies": {
     "@hashicorp/platform-cli": "^2.1.0",
     "husky": "4.3.8",
-    "next": "^12.1.0",
+    "next": "^12.3.1",
     "prettier": "2.2.1"
   },
   "husky": {

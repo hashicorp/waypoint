@@ -4,20 +4,23 @@ import (
 	"context"
 	"crypto/rand"
 	"fmt"
+	"google.golang.org/grpc/status"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
 	"github.com/aws/aws-sdk-go/service/ecs"
 	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/hashicorp/go-hclog"
-	"github.com/hashicorp/waypoint/builtin/aws/utils"
 	"github.com/oklog/ulid"
 	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 
+	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint-plugin-sdk/docs"
+	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
+	"github.com/hashicorp/waypoint/builtin/aws/utils"
 )
 
 // TaskLauncher implements the TaskLauncher plugin interface to support
@@ -63,10 +66,10 @@ type TaskLauncherConfig struct {
 
 	// Subnets are the list of subnets for the cluster. These will match the
 	// subnets used for the Cluster
-	Subnets string `hcl:"subnets,optional"`
+	Subnets string `hcl:"subnets"`
 
 	// SecurityGroupId is the security group used for the Waypoint tasks.
-	SecurityGroupId string `hcl:"security_group_id,optional"`
+	SecurityGroupId string `hcl:"security_group_id"`
 
 	// LogGroup is the CloudWatch log group name to use.
 	LogGroup string `hcl:"log_group,optional"`
@@ -209,14 +212,57 @@ func (p *TaskLauncher) Config() (interface{}, error) {
 	return &p.config, nil
 }
 
-// StopTask signals to docker to stop the container created previously. This
-// method is currently unimplemented.
+// StopTask signals to AWS ECS to stop the container created previously.
 func (p *TaskLauncher) StopTask(
 	ctx context.Context,
 	log hclog.Logger,
 	ti *TaskInfo,
 ) error {
-	log.Warn("the StopTask method is not currently implemented for ECS tasks")
+	sess, err := utils.GetSession(&utils.SessionConfig{
+		Region: p.config.Region,
+	})
+	if err != nil {
+		return err
+	}
+
+	ecsSvc := ecs.New(sess)
+	tasks, err := ecsSvc.ListTasks(&ecs.ListTasksInput{
+		Cluster: aws.String(p.config.Cluster),
+		Family:  aws.String("waypoint-runner"),
+	})
+	if err != nil {
+		return err
+	}
+	for _, taskArn := range tasks.TaskArns {
+		taskResp, err := ecsSvc.DescribeTasks(&ecs.DescribeTasksInput{
+			Cluster: aws.String(p.config.Cluster),
+			Tasks:   aws.StringSlice([]string{*taskArn}),
+			Include: aws.StringSlice([]string{"TAGS"}),
+		})
+		if err != nil {
+			return err
+		} else if len(taskResp.Tasks) != 1 {
+			return status.Errorf(codes.Internal, "there should be only 1 task, but there are %d", len(taskResp.Tasks))
+		}
+		for _, tag := range taskResp.Tasks[0].Tags {
+			if *tag.Key == "waypoint-odr-task-name" && *tag.Value == ti.Id {
+				log.Info("stopping ECS task", "task_id", ti.Id)
+				_, err := ecsSvc.StopTask(&ecs.StopTaskInput{
+					Cluster: aws.String(p.config.Cluster),
+					Reason:  aws.String("Waypoint ODR job is complete"),
+					Task:    taskArn,
+				})
+				if err != nil {
+					return err
+				}
+				return nil
+			}
+		}
+	}
+
+	// If we reach this point, then we could not find our task in ECS
+	// so there's nothing to clean up. Normally, ECS will automatically
+	// clean up the task.
 	return nil
 }
 
@@ -224,9 +270,94 @@ func (p *TaskLauncher) StopTask(
 func (p *TaskLauncher) WatchTask(
 	ctx context.Context,
 	log hclog.Logger,
+	ui terminal.UI,
 	ti *TaskInfo,
 ) (*component.TaskResult, error) {
-	return nil, status.Errorf(codes.Unimplemented, "WatchTask not implemented")
+	sess, err := utils.GetSession(&utils.SessionConfig{
+		Region: p.config.Region,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	// this channel will receive the status of the ECS task
+	taskStatusCh := make(chan string)
+	go p.taskStatus(ctx, 5*time.Minute, &taskStatusCh, log, sess, ti.Id)
+
+	var logStreamName string
+	// We wait 5 minutes for the log stream to be available
+	logStreamContext, cancel := context.WithTimeout(ctx, time.Minute*5)
+	cwl := cloudwatchlogs.New(sess)
+	// loop until task is ready
+	defer cancel()
+	for logStreamName == "" {
+		select {
+		case <-logStreamContext.Done():
+			log.Error("timeout waiting for log stream to become ready", terminal.WithErrorStyle())
+			return nil, err
+		case taskStatus := <-taskStatusCh:
+			if taskStatus == "RUNNING" {
+				// use the task prefix "waypoint-odr-task-<id>" to filter the log streams
+				logStreamsResp, err := cwl.DescribeLogStreams(&cloudwatchlogs.DescribeLogStreamsInput{
+					LogGroupName:        aws.String(p.config.LogGroup),
+					LogStreamNamePrefix: aws.String(ti.Id),
+				})
+				if err != nil {
+					log.Error("error describing log streams", "err", err)
+					ui.Output("Error describing log streams: %s", err)
+					return nil, err
+				}
+
+				for _, logStream := range logStreamsResp.LogStreams {
+					if strings.Contains(*logStream.LogStreamName, ti.Id) {
+						logStreamName = *logStream.LogStreamName
+					}
+				}
+			}
+		default:
+			continue
+		}
+	}
+
+	token := ""
+	var resp *cloudwatchlogs.GetLogEventsOutput
+	for {
+		// loop until log stream is ready
+		getLogsInput := &cloudwatchlogs.GetLogEventsInput{
+			LogGroupName:  aws.String(p.config.LogGroup),
+			LogStreamName: aws.String(logStreamName),
+			StartFromHead: aws.Bool(true),
+		}
+		if resp != nil {
+			token = *resp.NextForwardToken
+			getLogsInput.NextToken = aws.String(token)
+		}
+		resp, err = cwl.GetLogEvents(getLogsInput)
+		if err != nil {
+			return nil, err
+		}
+
+		if *resp.NextForwardToken == token {
+			// if the task is done, AND we're at the end of the log
+			// stream, we exit
+			taskStatus := <-taskStatusCh
+			if taskStatus == "DELETED" || taskStatus == "DEPROVISIONING" || taskStatus == "STOPPED" || taskStatus == "DEACTIVATING" {
+				close(taskStatusCh)
+				return &component.TaskResult{ExitCode: 0}, nil
+			}
+			time.Sleep(500 * time.Millisecond)
+			continue
+		}
+
+		for _, event := range resp.Events {
+			log.Info(*event.Message)
+			ui.Output(*event.Message, terminal.WithInfoStyle())
+		}
+
+		token = *resp.NextForwardToken
+		// Sleep for half a second to slam the CloudWatch API less
+		time.Sleep(500 * time.Millisecond)
+	}
 }
 
 // StartTask runs an ECS Task to perform the requested job.
@@ -335,6 +466,12 @@ func (p *TaskLauncher) StartTask(
 				AssignPublicIp: aws.String("ENABLED"),
 			},
 		},
+		Tags: []*ecs.Tag{
+			{
+				Key:   aws.String("waypoint-odr-task-name"),
+				Value: aws.String(taskName),
+			},
+		},
 	}); err != nil {
 		return nil, err
 	}
@@ -360,6 +497,62 @@ func roleArn(name string, sess *session.Session) (string, error) {
 	// Arn is a required field of Role so we assume it will be populated and
 	// prevent any nil dereference here
 	return *roleOut.Role.Arn, nil
+}
+
+// taskStatus gets the status of an ECS task and provides it to the caller via a channel
+// the caller is responsible for closing the channel
+func (p *TaskLauncher) taskStatus(ctx context.Context, d time.Duration, taskStatusCh *chan string, log hclog.Logger, sess *session.Session, taskId string) {
+	ecsSvc := ecs.New(sess)
+
+	taskContext, cancel := context.WithTimeout(ctx, d)
+	defer cancel()
+	for {
+		select {
+		case <-taskContext.Done():
+			log.Error("timeout waiting for task to become ready", terminal.WithErrorStyle())
+			return
+		default:
+		}
+		tasks, err := ecsSvc.ListTasks(&ecs.ListTasksInput{
+			Cluster: aws.String(p.config.Cluster),
+			Family:  aws.String("waypoint-runner"),
+		})
+		if err != nil {
+			log.Error("error listing ECS tasks", "err", err)
+			return
+		}
+		var odrTask *ecs.Task
+		for _, taskArn := range tasks.TaskArns {
+			taskResp, err := ecsSvc.DescribeTasks(&ecs.DescribeTasksInput{
+				Cluster: aws.String(p.config.Cluster),
+				Tasks:   aws.StringSlice([]string{*taskArn}),
+				Include: aws.StringSlice([]string{"TAGS"}),
+			})
+			if err != nil {
+				log.Error("error describing ECS tasks", "err", err)
+				return
+			} else if len(taskResp.Tasks) != 1 {
+				log.Error("there should be only 1 task", "num_tasks", len(taskResp.Tasks))
+				return
+			}
+			for _, tag := range taskResp.Tasks[0].Tags {
+				if *tag.Key == "waypoint-odr-task-name" && *tag.Value == taskId {
+					odrTask = taskResp.Tasks[0]
+					break
+				}
+			}
+		}
+
+		if odrTask == nil {
+			log.Info("ODR Task not found")
+			*taskStatusCh <- "DELETED"
+			return
+		} else {
+			log.Trace("ODR task status", "status", *odrTask.LastStatus)
+		}
+		*taskStatusCh <- *odrTask.LastStatus
+		time.Sleep(500 * time.Millisecond)
+	}
 }
 
 var _ component.TaskLauncher = (*TaskLauncher)(nil)

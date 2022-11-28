@@ -2,6 +2,8 @@ package cli
 
 import (
 	"context"
+	"fmt"
+	"net/url"
 	"strings"
 
 	"github.com/posener/complete"
@@ -16,7 +18,9 @@ import (
 type DeploymentCreateCommand struct {
 	*baseCommand
 
-	flagRelease bool
+	flagRelease     bool
+	flagPrune       bool
+	flagPruneRetain int
 }
 
 func (c *DeploymentCreateCommand) Run(args []string) int {
@@ -70,26 +74,16 @@ func (c *DeploymentCreateCommand) Run(args []string) int {
 			hostname = hostnamesResp.Hostnames[0]
 		}
 
-		// Status Report
-		app.UI.Output("")
-		_, err = app.StatusReport(ctx, &pb.Job_StatusReportOp{
-			Target: &pb.Job_StatusReportOp_Deployment{
-				Deployment: deployment,
-			},
-		})
-		if err != nil {
-			app.UI.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
-			return ErrSentinel
-		}
-
 		// Release if we're releasing
 		var releaseUrl string
 		if c.flagRelease {
 			// We're releasing, do that too.
 			app.UI.Output("Releasing...", terminal.WithHeaderStyle())
 			releaseResult, err := app.Release(ctx, &pb.Job_ReleaseOp{
-				Deployment: deployment,
-				Prune:      true,
+				Deployment:          deployment,
+				Prune:               c.flagPrune,
+				PruneRetain:         int32(c.flagPruneRetain),
+				PruneRetainOverride: c.flagPruneRetain >= 0,
 			})
 			if err != nil {
 				app.UI.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
@@ -140,6 +134,22 @@ func (c *DeploymentCreateCommand) Run(args []string) int {
 			result.Deployment.Generation.Id != "" &&
 			result.Deployment.Generation.InitialSequence != result.Deployment.Sequence
 
+		// Ensure deploy and release Urls have a scheme
+		du, err := url.Parse(deployUrl)
+		if err != nil && du.Scheme != "" {
+			return err
+		}
+		if du.Scheme == "" && deployUrl != "" {
+			deployUrl = fmt.Sprintf("https://%s", deployUrl)
+		}
+		ru, err := url.Parse(releaseUrl)
+		if err != nil && ru.Scheme != "" {
+			return err
+		}
+		if ru.Scheme == "" && releaseUrl != "" {
+			releaseUrl = fmt.Sprintf("https://%s", releaseUrl)
+		}
+
 		// Output
 		app.UI.Output("")
 		switch {
@@ -147,17 +157,17 @@ func (c *DeploymentCreateCommand) Run(args []string) int {
 			printInplaceInfo(inplace, app)
 			app.UI.Output("   Release URL: %s", releaseUrl, terminal.WithSuccessStyle())
 			if deployUrl != "" {
-				app.UI.Output("Deployment URL: https://%s", deployUrl, terminal.WithSuccessStyle())
+				app.UI.Output("Deployment URL: %s", deployUrl, terminal.WithSuccessStyle())
 			} else {
 				app.UI.Output(strings.TrimSpace(deployNoURL)+"\n", terminal.WithSuccessStyle())
 			}
 		case hostname != nil:
 			printInplaceInfo(inplace, app)
-			app.UI.Output("           URL: https://%s", hostname.Fqdn, terminal.WithSuccessStyle())
-			app.UI.Output("Deployment URL: https://%s", deployUrl, terminal.WithSuccessStyle())
+			app.UI.Output("           URL: %s", hostname.Fqdn, terminal.WithSuccessStyle())
+			app.UI.Output("Deployment URL: %s", deployUrl, terminal.WithSuccessStyle())
 		case deployUrl != "":
 			printInplaceInfo(inplace, app)
-			app.UI.Output("Deployment URL: https://%s", deployUrl, terminal.WithSuccessStyle())
+			app.UI.Output("Deployment URL: %s", deployUrl, terminal.WithSuccessStyle())
 		default:
 			app.UI.Output(strings.TrimSpace(deployNoURL)+"\n", terminal.WithSuccessStyle())
 		}
@@ -187,6 +197,23 @@ func (c *DeploymentCreateCommand) Flags() *flag.Sets {
 			Target:  &c.flagRelease,
 			Usage:   "Release this deployment immediately.",
 			Default: true,
+		})
+
+		f.BoolVar(&flag.BoolVar{
+			Name:    "prune",
+			Target:  &c.flagPrune,
+			Usage:   "Prune old unreleased deployments.",
+			Default: true,
+		})
+
+		f.IntVar(&flag.IntVar{
+			Name:   "prune-retain",
+			Target: &c.flagPruneRetain,
+			Usage: "The number of unreleased deployments to keep. " +
+				"If this isn't set or is set to any negative number, " +
+				"then this will default to 1 on the server. If you want to prune " +
+				"all unreleased deployments, set this to 0.",
+			Default: -1,
 		})
 	})
 }

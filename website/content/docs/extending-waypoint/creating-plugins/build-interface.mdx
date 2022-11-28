@@ -94,18 +94,18 @@ Let’s look at the implementation of the `build` method. You will need to provi
 plugin. To do this, you can use `terminal.UI`; this allows you to write output to the terminal using a common UX across
 all Waypoint plugins.
 
-The method `ui.Status()` requests a live updating status; you use this to write updates to the Waypoint terminal output.
-When finished with `Status` you should always close a Status, using`st.Close()`; this ensures that the status is updated
-correctly in the terminal. Finally, in the example, the Status is updated with the message "Building application".
-Unlike a scrolling log output, Waypoint allows the user to focus on the critical information at the current time. The
-`terminal.Status` allows you to replace content already written to the terminal, which may no longer be relevant.
-
 ```go
   u := ui.Status()
-  defer st.Close()
+  defer u.Close()
 
   u.Update("Building application")
 ```
+
+The method `ui.Status()` requests a live updating status; you use this to write updates to the Waypoint terminal output.
+When finished with `Status` you should always close a Status, using`u.Close()`; this ensures that the status is updated
+correctly in the terminal. Finally, in the example, the Status is updated with the message "Building application".
+Unlike a scrolling log output, Waypoint allows the user to focus on the critical information at the current time. The
+`terminal.Status` allows you to replace content already written to the terminal, which may no longer be relevant.
 
 After the `Update` call, let's add some code to the `build` method, which will set the configuration's defaults if they
 are not set.

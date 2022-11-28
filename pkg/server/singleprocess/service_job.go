@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/pkg/server"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
+	"github.com/hashicorp/waypoint/pkg/server/hcerr"
 	serverptypes "github.com/hashicorp/waypoint/pkg/server/ptypes"
 	"github.com/hashicorp/waypoint/pkg/serverconfig"
 	"github.com/hashicorp/waypoint/pkg/serverstate"
@@ -26,9 +27,15 @@ func (s *Service) GetJob(
 	ctx context.Context,
 	req *pb.GetJobRequest,
 ) (*pb.Job, error) {
-	job, err := s.state(ctx).JobById(req.JobId, nil)
+	job, err := s.state(ctx).JobById(ctx, req.JobId, nil)
 	if err != nil {
-		return nil, err
+		return nil, hcerr.Externalize(
+			hclog.FromContext(ctx),
+			err,
+			"failed to get job by id",
+			"job_id",
+			req.JobId,
+		)
 	}
 	if job == nil || job.Job == nil {
 		return nil, status.Errorf(codes.NotFound, "job not found")
@@ -41,9 +48,13 @@ func (s *Service) ListJobs(
 	ctx context.Context,
 	req *pb.ListJobsRequest,
 ) (*pb.ListJobsResponse, error) {
-	jobs, err := s.state(ctx).JobList(req)
+	jobs, err := s.state(ctx).JobList(ctx, req)
 	if err != nil {
-		return nil, err
+		return nil, hcerr.Externalize(
+			hclog.FromContext(ctx),
+			err,
+			"error listing jobs",
+		)
 	}
 
 	return &pb.ListJobsResponse{
@@ -55,8 +66,14 @@ func (s *Service) CancelJob(
 	ctx context.Context,
 	req *pb.CancelJobRequest,
 ) (*empty.Empty, error) {
-	if err := s.state(ctx).JobCancel(req.JobId, req.Force); err != nil {
-		return nil, err
+	if err := s.state(ctx).JobCancel(ctx, req.JobId, req.Force); err != nil {
+		return nil, hcerr.Externalize(
+			hclog.FromContext(ctx),
+			err,
+			"error cancelling job",
+			"job_id",
+			req.JobId,
+		)
 	}
 
 	return &empty.Empty{}, nil
@@ -83,7 +100,7 @@ func (s *Service) queueJobMulti(
 	}
 
 	// Queue the jobs
-	if err := s.state(ctx).JobCreate(jobQueue...); err != nil {
+	if err := s.state(ctx).JobCreate(ctx, jobQueue...); err != nil {
 		return nil, err
 	}
 
@@ -100,6 +117,8 @@ func (s *Service) queueJobMulti(
 // does not queue it. This may return multiple jobs if the queue job
 // request requires an on-demand runner. They should all be queued
 // atomically with JobCreate.
+//
+// Precondition: req parameter must be validated
 func (s *Service) queueJobReqToJob(
 	ctx context.Context,
 	req *pb.QueueJobRequest,
@@ -107,23 +126,9 @@ func (s *Service) queueJobReqToJob(
 	log := hclog.FromContext(ctx)
 	job := req.Job
 
-	// Validation
-	if job == nil {
-		return nil, "", status.Errorf(codes.FailedPrecondition, "job must be set")
-	}
-	if job.Operation == nil {
-		// We special case this check and return "Unimplemented" because
-		// the primary case where operation is nil is if a client is sending
-		// us an unsupported operation.
-		return nil, "", status.Errorf(codes.Unimplemented, "operation is nil or unknown")
-	}
-	if err := serverptypes.ValidateJob(job); err != nil {
-		return nil, "", status.Errorf(codes.FailedPrecondition, err.Error())
-	}
-
 	// Verify the project exists and use that to set the default data source
 	log.Debug("checking job project", "project", job.Application.Project)
-	project, err := s.state(ctx).ProjectGet(&pb.Ref_Project{Project: job.Application.Project})
+	project, err := s.state(ctx).ProjectGet(ctx, &pb.Ref_Project{Project: job.Application.Project})
 	if status.Code(err) == codes.NotFound {
 		return nil, "", status.Errorf(codes.NotFound,
 			"Project %q was not found! Please ensure that 'waypoint init' was run with this project.",
@@ -145,12 +150,41 @@ func (s *Service) queueJobReqToJob(
 		job.DataSource = project.DataSource
 	}
 
-	// Get the next id
-	id, err := server.Id()
-	if err != nil {
-		return nil, "", status.Errorf(codes.Internal, "uuid generation failed: %s", err)
+	// If the data source is set to remote, then let the server hook populate it.
+	if job.DataSource.GetRemote() != nil {
+		if s.populateDataSource != nil {
+			job, err = s.populateDataSource(ctx, job)
+			if err != nil {
+				log.Error("error populating data source for job", "error", err)
+				return nil, "", status.Errorf(codes.Internal,
+					"An internal server issue was detected when calculating the data source")
+			}
+
+			// The new job can't still have remote, so if it wasn't updated, then
+			// error out.
+			if job.DataSource.GetRemote() != nil {
+				log.Error("populateDataSource returned another remote DS job")
+				return nil, "", status.Errorf(codes.Internal,
+					"An internal server issue was detected when calculating the data source")
+			}
+		} else {
+			log.Error("job has a remote DataSource but server provided no populateDataSource")
+			// This is a server misconfiguration.
+			if job.DataSource.GetRemote() != nil {
+				return nil, "", status.Errorf(codes.Internal,
+					"An internal server issue was detected when calculating the data source")
+			}
+		}
 	}
-	job.Id = id
+
+	// Get the next id
+	if job.Id == "" {
+		id, err := server.Id()
+		if err != nil {
+			return nil, "", status.Errorf(codes.Internal, "uuid generation failed: %s", err)
+		}
+		job.Id = id
+	}
 
 	// Validate expiry if we have one
 	job.ExpireTime = nil
@@ -167,7 +201,7 @@ func (s *Service) queueJobReqToJob(
 	// Use a default ODR profile if it doesn't already have one assigned.
 	if _, ok := job.TargetRunner.Target.(*pb.Ref_Runner_Any); ok {
 		if job.OndemandRunner == nil {
-			ods, err := s.state(ctx).OnDemandRunnerConfigDefault()
+			ods, err := s.state(ctx).OnDemandRunnerConfigDefault(ctx)
 			if err != nil {
 				return nil, "", err
 			}
@@ -196,6 +230,16 @@ func (s *Service) queueJobReqToJob(
 		if err != nil {
 			return nil, "", err
 		}
+
+		// If we are skipping, then the job we queued is the watch job.
+		if job.OndemandRunnerTask != nil && job.OndemandRunnerTask.SkipOperation {
+			for _, j := range result {
+				if _, ok := j.Operation.(*pb.Job_WatchTask); ok {
+					job = j
+					break
+				}
+			}
+		}
 	}
 
 	return result, job.Id, nil
@@ -205,13 +249,26 @@ func (s *Service) QueueJob(
 	ctx context.Context,
 	req *pb.QueueJobRequest,
 ) (*pb.QueueJobResponse, error) {
+	if req.Job == nil {
+		return nil, status.Errorf(codes.FailedPrecondition, "job must be set")
+	}
+	if req.Job.Operation == nil {
+		// We special case this check and return "Unimplemented" because
+		// the primary case where operation is nil is if a client is sending
+		// us an unsupported operation.
+		return nil, status.Errorf(codes.Unimplemented, "operation is nil or unknown")
+	}
+	if err := serverptypes.ValidateJob(req.Job); err != nil {
+		return nil, status.Errorf(codes.FailedPrecondition, err.Error())
+	}
+
 	jobs, jobId, err := s.queueJobReqToJob(ctx, req)
 	if err != nil {
 		return nil, err
 	}
 
 	// Queue the job
-	if err := s.state(ctx).JobCreate(jobs...); err != nil {
+	if err := s.state(ctx).JobCreate(ctx, jobs...); err != nil {
 		return nil, err
 	}
 
@@ -255,7 +312,7 @@ func (s *Service) wrapJobWithRunner(
 	source *pb.Job,
 ) ([]*pb.Job, error) {
 	// Get the runner profile we're going to use for this runner.
-	od, err := s.state(ctx).OnDemandRunnerConfigGet(source.OndemandRunner)
+	od, err := s.state(ctx).OnDemandRunnerConfigGet(ctx, source.OndemandRunner)
 	if err != nil {
 		return nil, err
 	}
@@ -263,6 +320,20 @@ func (s *Service) wrapJobWithRunner(
 		return nil, status.Errorf(codes.FailedPrecondition,
 			"the on-demand runner config for id %q and job %q was nil",
 			source.OndemandRunner.Id, source.Id)
+	}
+
+	// Determine if we're skipping this job. This is done for custom tasks.
+	skip := source.OndemandRunnerTask != nil && source.OndemandRunnerTask.SkipOperation
+	if skip {
+		// We only allow noop operations to be skipped out of safety. These
+		// make sense to skip, whereas skipping a build or deploy might be
+		// a bug in the client.
+		_, ok := source.Operation.(*pb.Job_Noop_)
+		if !ok {
+			return nil, status.Errorf(codes.FailedPrecondition,
+				"only noop operations can be skipped with custom tasks, got %T",
+				source.Operation)
+		}
 	}
 
 	// Generate our job to start the ODR
@@ -287,7 +358,7 @@ func (s *Service) wrapJobWithRunner(
 	}
 
 	// Our source job depends on the starting job.
-	source.DependsOn = []string{startJob.Id}
+	source.DependsOn = append(source.DependsOn, startJob.Id)
 
 	// Job to stop the ODR
 	stopJob, err := s.onDemandRunnerStopJob(ctx, startJob, watchJob, source, od)
@@ -295,20 +366,31 @@ func (s *Service) wrapJobWithRunner(
 		return nil, err
 	}
 
+	// For our task tracking, the primary job is usually the job. But
+	// if we're skipping, then it is the watch task.
+	sourceJob := source
+	if skip {
+		sourceJob = watchJob
+	}
+
 	// Write a Task state with the On-Demand Runner job triple
 	task := &pb.Task{
 		StartJob: &pb.Ref_Job{Id: startJob.Id},
-		TaskJob:  &pb.Ref_Job{Id: source.Id},
+		TaskJob:  &pb.Ref_Job{Id: sourceJob.Id},
 		StopJob:  &pb.Ref_Job{Id: stopJob.Id},
 		WatchJob: &pb.Ref_Job{Id: watchJob.Id},
 		JobState: pb.Task_PENDING,
 	}
-	if err := s.state(ctx).TaskPut(task); err != nil {
+	if skip {
+		// If we're skipping, the primary task job becomes the watch.
+		task.TaskJob = &pb.Ref_Job{Id: watchJob.Id}
+	}
+	if err := s.state(ctx).TaskPut(ctx, task); err != nil {
 		return nil, err
 	} else {
-		task, err := s.state(ctx).TaskGet(&pb.Ref_Task{
+		task, err := s.state(ctx).TaskGet(ctx, &pb.Ref_Task{
 			Ref: &pb.Ref_Task_JobId{
-				JobId: source.Id,
+				JobId: sourceJob.Id,
 			},
 		})
 		if err != nil {
@@ -324,20 +406,17 @@ func (s *Service) wrapJobWithRunner(
 		}
 
 		startJob.Task = taskRef
-		source.Task = taskRef
+		sourceJob.Task = taskRef
 		stopJob.Task = taskRef
 		watchJob.Task = taskRef
 	}
 
-	// These must be in order of dependency currently. This is a limitation
-	// of the state.JobCreate API and we should fix it one day. If we get
-	// this wrong it'll just error, so we'll know quickly.
-	return []*pb.Job{
-		startJob,
-		watchJob,
-		source,
-		stopJob,
-	}, nil
+	jobs := []*pb.Job{startJob, watchJob, stopJob}
+	if !skip {
+		jobs = append(jobs, sourceJob)
+	}
+
+	return jobs, nil
 }
 
 // onDemandRunnerStartJob generates a StartJob template for a Task.
@@ -394,7 +473,8 @@ func (s *Service) onDemandRunnerStartJob(
 	// We generate a new login token for each ondemand-runner used. This will inherit
 	// the user of the token to be the user that queued the original job, which is
 	// the correct behavior.
-	token, err := s.newToken(ctx, 60*time.Minute, DefaultKeyId, nil, &pb.Token{
+	token, err := s.newToken(ctx, 60*time.Minute, s.activeAuthKeyId, nil, &pb.Token{
+		// TODO(emp) should this be a Token_Runner_?
 		Kind: &pb.Token_Login_{Login: &pb.Token_Login{
 			UserId: encodedDefaultUserId,
 		}},
@@ -419,14 +499,40 @@ func (s *Service) onDemandRunnerStartJob(
 		envVars[k] = v
 	}
 
-	// Arguments for the runner image. Waypoint is ALWAYS assumed to be
-	// the entrypoint for ODR images.
-	args := []string{"runner", "agent", "-vv", "-id", runnerId, "-odr", "-odr-profile-id", od.Id}
+	// Build our task launch info.
+	launchInfo := &pb.TaskLaunchInfo{}
+	if override := source.OndemandRunnerTask; override != nil {
+		if info := override.LaunchInfo; info != nil {
+			launchInfo = info
+		}
+	}
+	if launchInfo.OciUrl == "" {
+		launchInfo.OciUrl = od.OciUrl
+
+		// Arguments for the runner image. Waypoint is ALWAYS assumed to be
+		// the entrypoint for ODR images if no custom one is specified.
+		launchInfo.Arguments = []string{
+			"runner", "agent", "-vv", "-id", runnerId, "-odr", "-odr-profile-id", od.Id,
+		}
+	}
+
+	// We always default our env vars so that a custom image can still
+	// behave like a runner and has access to the token, runner ID, etc.
+	for k, v := range launchInfo.EnvironmentVariables {
+		envVars[k] = v
+	}
+	launchInfo.EnvironmentVariables = envVars
 
 	job := &pb.Job{
 		// Inherit the workspace/application of the source job.
 		Workspace:   source.Workspace,
 		Application: source.Application,
+
+		// Depend on the same dependencies as the source job. This way,
+		// we don't start up the ODR very early when the job is not ready
+		// to execute.
+		DependsOn:             source.DependsOn,
+		DependsOnAllowFailure: source.DependsOnAllowFailure,
 
 		Operation: &pb.Job_StartTask{
 			StartTask: &pb.Job_StartTaskLaunchOp{
@@ -435,11 +541,7 @@ func (s *Service) onDemandRunnerStartJob(
 					HclConfig:  od.PluginConfig,
 					HclFormat:  od.ConfigFormat,
 				},
-				Info: &pb.TaskLaunchInfo{
-					OciUrl:               od.OciUrl,
-					EnvironmentVariables: envVars,
-					Arguments:            args,
-				},
+				Info: launchInfo,
 			},
 		},
 	}
@@ -450,16 +552,6 @@ func (s *Service) onDemandRunnerStartJob(
 		return nil, "", status.Errorf(codes.Internal, "uuid generation failed: %s", err)
 	}
 	job.Id = id
-
-	// We're going to wait up to 60s for the job be picked up. No reason it won't be
-	// picked up immediately.
-	dur, err := time.ParseDuration("60s")
-	if err != nil {
-		return nil, "", status.Errorf(codes.FailedPrecondition,
-			"Invalid expiry duration: %s", err.Error())
-	}
-
-	job.ExpireTime = timestamppb.New(time.Now().Add(dur))
 
 	// This will be either "Any" or a specific static runner.
 	job.TargetRunner = od.TargetRunner
@@ -512,6 +604,13 @@ func (s *Service) onDemandRunnerStopJob(
 	source *pb.Job,
 	od *pb.OnDemandRunnerConfig,
 ) (*pb.Job, error) {
+	depends := []string{startJob.Id, watchJob.Id}
+
+	// Only add the source job if we're not skipping it.
+	if over := source.OndemandRunnerTask; over == nil || !over.SkipOperation {
+		depends = append(depends, source.Id)
+	}
+
 	job := &pb.Job{
 		// Inherit the workspace/application of the source job.
 		Workspace:   source.Workspace,
@@ -519,8 +618,8 @@ func (s *Service) onDemandRunnerStopJob(
 
 		// We depend on both the start job and the main job. We allow them
 		// both to fail, however, because we want to try to stop no matter what.
-		DependsOn:             []string{startJob.Id, watchJob.Id, source.Id},
-		DependsOnAllowFailure: []string{startJob.Id, watchJob.Id, source.Id},
+		DependsOn:             depends,
+		DependsOnAllowFailure: depends,
 
 		// Use the same targeting as the start job. We assume the start job
 		// had proper access to stop, too, so we just copy it.
@@ -585,7 +684,7 @@ func (s *Service) GetJobStream(
 
 	// Get the job
 	ws := memdb.NewWatchSet()
-	job, err := s.state(ctx).JobById(req.JobId, ws)
+	job, err := s.state(ctx).JobById(ctx, req.JobId, ws)
 	if err != nil {
 		return err
 	}
@@ -626,7 +725,7 @@ func (s *Service) GetJobStream(
 
 			// Updated job, requery it
 			ws = memdb.NewWatchSet()
-			job, err = s.state(ctx).JobById(job.Id, ws)
+			job, err = s.state(ctx).JobById(ctx, job.Id, ws)
 			if err != nil {
 				log.Error("error acquiring job by id", "error", err, "id", req.JobId)
 				errCh <- err

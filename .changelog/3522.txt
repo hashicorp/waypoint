@@ -1,0 +1,3 @@
+```release-note:improvement
+core: Adds string `replace` function for HCL configs
+```

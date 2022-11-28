@@ -5,7 +5,9 @@ import (
 
 	empty "google.golang.org/protobuf/types/known/emptypb"
 
+	"github.com/hashicorp/go-hclog"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
+	"github.com/hashicorp/waypoint/pkg/server/hcerr"
 	serverptypes "github.com/hashicorp/waypoint/pkg/server/ptypes"
 )
 
@@ -17,9 +19,15 @@ func (s *Service) GetAuthMethod(
 		return nil, err
 	}
 
-	value, err := s.state(ctx).AuthMethodGet(req.AuthMethod)
+	value, err := s.state(ctx).AuthMethodGet(ctx, req.AuthMethod)
 	if err != nil {
-		return nil, err
+		return nil, hcerr.Externalize(
+			hclog.FromContext(ctx),
+			err,
+			"failed to get auth method",
+			"auth_method",
+			req.AuthMethod.GetName(),
+		)
 	}
 
 	return &pb.GetAuthMethodResponse{
@@ -41,8 +49,14 @@ func (s *Service) UpsertAuthMethod(
 	}
 
 	// Write it
-	if err := s.state(ctx).AuthMethodPut(req.AuthMethod); err != nil {
-		return nil, err
+	if err := s.state(ctx).AuthMethodPut(ctx, req.AuthMethod); err != nil {
+		return nil, hcerr.Externalize(
+			hclog.FromContext(ctx),
+			err,
+			"failed to put auth method",
+			"auth_method",
+			req.AuthMethod.GetName(),
+		)
 	}
 
 	return &pb.UpsertAuthMethodResponse{
@@ -59,14 +73,26 @@ func (s *Service) DeleteAuthMethod(
 	}
 
 	// Validate that the auth method exists
-	if _, err := s.state(ctx).AuthMethodGet(req.AuthMethod); err != nil {
-		return nil, err
+	if _, err := s.state(ctx).AuthMethodGet(ctx, req.AuthMethod); err != nil {
+		return nil, hcerr.Externalize(
+			hclog.FromContext(ctx),
+			err,
+			"failed to get auth method when attempting to delete it",
+			"auth_method",
+			req.AuthMethod.GetName(),
+		)
 	}
 
 	// There may be a race between deleting and checking above, but that
 	// is okay because the delete is idempotent.
-	if err := s.state(ctx).AuthMethodDelete(req.AuthMethod); err != nil {
-		return nil, err
+	if err := s.state(ctx).AuthMethodDelete(ctx, req.AuthMethod); err != nil {
+		return nil, hcerr.Externalize(
+			hclog.FromContext(ctx),
+			err,
+			"failed to delete auth method",
+			"auth_method",
+			req.AuthMethod.GetName(),
+		)
 	}
 
 	// Delete from the cache. If this auth method isn't OIDC that's okay
@@ -80,9 +106,13 @@ func (s *Service) ListAuthMethods(
 	ctx context.Context,
 	req *empty.Empty,
 ) (*pb.ListAuthMethodsResponse, error) {
-	values, err := s.state(ctx).AuthMethodList()
+	values, err := s.state(ctx).AuthMethodList(ctx)
 	if err != nil {
-		return nil, err
+		return nil, hcerr.Externalize(
+			hclog.FromContext(ctx),
+			err,
+			"failed listing auth methods",
+		)
 	}
 
 	return &pb.ListAuthMethodsResponse{AuthMethods: values}, nil

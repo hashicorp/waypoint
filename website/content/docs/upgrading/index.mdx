@@ -123,14 +123,14 @@ in the future.
 
 4. When ready, run the upgrade command for your given platform. For example:
 
-```shell
+```shell-session
 waypoint server upgrade -platform=kubernetes -auto-approve
 ```
 
 This will automatically save a snapshot of the server in your current directory
 prior to upgrading.
 
-If the server was installed with a remote runner, Waypoint will uninstall the existing runner and install a new one with the new version.
+If the server was installed with a static runner, Waypoint will uninstall the existing runner and install a new one with the new version.
 
 ### Client Upgrade
 

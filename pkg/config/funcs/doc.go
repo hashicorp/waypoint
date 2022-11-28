@@ -50,6 +50,7 @@ func Docs() map[string]string {
 		"range":           "generate a list of numbers",
 		"regex":           "match the given string against the given regular expression pattern, returning captures if defined",
 		"regexall":        "same as regex but look for all matches of the given pattern rather than just the first",
+		"replace":         "searches a given string for another given substring, and replaces each occurrence with a given replacement string.",
 		"reverse":         "reverse the order of the elements in the list",
 		"selectormatch":   "applies a selector to a map and returns true if the selector matches",
 		"selectorlookup":  "applies a map of selectors to a map of labels. The value for the first matching selector is returned. If none match, the default is returned.",

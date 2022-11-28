@@ -1,6 +1,7 @@
 package boltdbstate
 
 import (
+	"context"
 	"strings"
 
 	"github.com/hashicorp/go-memdb"
@@ -21,7 +22,7 @@ func init() {
 }
 
 // AuthMethodPut creates or updates the given auth method. .
-func (s *State) AuthMethodPut(v *pb.AuthMethod) error {
+func (s *State) AuthMethodPut(ctx context.Context, v *pb.AuthMethod) error {
 	memTxn := s.inmem.Txn(true)
 	defer memTxn.Abort()
 
@@ -36,7 +37,7 @@ func (s *State) AuthMethodPut(v *pb.AuthMethod) error {
 }
 
 // AuthMethodGet gets a auth method by reference.
-func (s *State) AuthMethodGet(ref *pb.Ref_AuthMethod) (*pb.AuthMethod, error) {
+func (s *State) AuthMethodGet(ctx context.Context, ref *pb.Ref_AuthMethod) (*pb.AuthMethod, error) {
 	memTxn := s.inmem.Txn(false)
 	defer memTxn.Abort()
 
@@ -51,7 +52,7 @@ func (s *State) AuthMethodGet(ref *pb.Ref_AuthMethod) (*pb.AuthMethod, error) {
 }
 
 // AuthMethodDelete deletes an auth method by reference.
-func (s *State) AuthMethodDelete(ref *pb.Ref_AuthMethod) error {
+func (s *State) AuthMethodDelete(ctx context.Context, ref *pb.Ref_AuthMethod) error {
 	memTxn := s.inmem.Txn(true)
 	defer memTxn.Abort()
 
@@ -66,7 +67,7 @@ func (s *State) AuthMethodDelete(ref *pb.Ref_AuthMethod) error {
 }
 
 // AuthMethodList returns the list of projects.
-func (s *State) AuthMethodList() ([]*pb.AuthMethod, error) {
+func (s *State) AuthMethodList(ctx context.Context) ([]*pb.AuthMethod, error) {
 	memTxn := s.inmem.Txn(false)
 	defer memTxn.Abort()
 

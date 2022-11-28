@@ -8,6 +8,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/encoding/protojson"
+	empty "google.golang.org/protobuf/types/known/emptypb"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/internal/clierrors"
@@ -32,44 +33,61 @@ func (c *RunnerProfileInspectCommand) Run(args []string) int {
 		return 1
 	}
 
+	var (
+		name   string
+		odrCfg *pb.OnDemandRunnerConfig
+	)
 	if len(c.args) == 0 {
-		c.ui.Output("Runner profile name required.", terminal.WithErrorStyle())
-		return 1
-	}
-	name := c.args[0]
-
-	resp, err := c.project.Client().GetOnDemandRunnerConfig(c.Ctx, &pb.GetOnDemandRunnerConfigRequest{
-		Config: &pb.Ref_OnDemandRunnerConfig{
-			Name: name,
-		},
-	})
-	if err != nil && status.Code(err) != codes.NotFound {
-		c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
-		return 1
-	}
-
-	// Try again with arg as the ID
-	if resp == nil {
-		resp, err = c.project.Client().GetOnDemandRunnerConfig(c.Ctx, &pb.GetOnDemandRunnerConfigRequest{
-			Config: &pb.Ref_OnDemandRunnerConfig{
-				Id: name,
-			},
-		})
-		if err != nil {
-			if status.Code(err) != codes.NotFound {
-				c.ui.Output("runner profile not found", terminal.WithErrorStyle())
-				return 1
-			}
+		c.ui.Output("Runner profile name not specified, inspecting default profile.", terminal.WithWarningStyle())
+		resp, err := c.project.Client().GetDefaultOnDemandRunnerConfig(c.Ctx, &empty.Empty{})
+		if err != nil && status.Code(err) != codes.NotFound {
 			c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 			return 1
 		}
+
+		if resp.Config == nil {
+			c.ui.Output("No default profile found, please specify a profile name to inspect instead.", terminal.WithWarningStyle())
+			return 1
+		}
+
+		odrCfg = resp.Config
+	} else {
+		name = c.args[0]
+
+		resp, err := c.project.Client().GetOnDemandRunnerConfig(c.Ctx, &pb.GetOnDemandRunnerConfigRequest{
+			Config: &pb.Ref_OnDemandRunnerConfig{
+				Name: name,
+			},
+		})
+		if err != nil && status.Code(err) != codes.NotFound {
+			c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+			return 1
+		}
+
+		// Try again with arg as the ID
+		if resp == nil {
+			resp, err = c.project.Client().GetOnDemandRunnerConfig(c.Ctx, &pb.GetOnDemandRunnerConfigRequest{
+				Config: &pb.Ref_OnDemandRunnerConfig{
+					Id: name,
+				},
+			})
+			if err != nil {
+				if status.Code(err) != codes.NotFound {
+					c.ui.Output("runner profile not found", terminal.WithErrorStyle())
+					return 1
+				}
+				c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+				return 1
+			}
+		}
+
+		odrCfg = resp.Config
 	}
 
-	config := resp.Config
 	if c.flagJson {
 		data, err := protojson.MarshalOptions{
 			Indent: "\t",
-		}.Marshal(config)
+		}.Marshal(odrCfg)
 		if err != nil {
 			c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 			return 1
@@ -79,8 +97,8 @@ func (c *RunnerProfileInspectCommand) Run(args []string) int {
 	}
 
 	var targetRunner string
-	if config.TargetRunner != nil {
-		switch t := config.TargetRunner.Target.(type) {
+	if odrCfg.TargetRunner != nil {
+		switch t := odrCfg.TargetRunner.Target.(type) {
 		case *pb.Ref_Runner_Any:
 			targetRunner = "*"
 		case *pb.Ref_Runner_Id:
@@ -93,34 +111,34 @@ func (c *RunnerProfileInspectCommand) Run(args []string) int {
 	c.ui.Output("Runner profile:", terminal.WithHeaderStyle())
 	c.ui.NamedValues([]terminal.NamedValue{
 		{
-			Name: "Name", Value: config.Name,
+			Name: "Name", Value: odrCfg.Name,
 		},
 		{
-			Name: "ID", Value: config.Id,
+			Name: "ID", Value: odrCfg.Id,
 		},
 		{
-			Name: "Default", Value: config.Default,
+			Name: "Default", Value: odrCfg.Default,
 		},
 		{
-			Name: "OCI URL", Value: config.OciUrl,
+			Name: "OCI URL", Value: odrCfg.OciUrl,
 		},
 		{
-			Name: "Plugin Type", Value: config.PluginType,
+			Name: "Plugin Type", Value: odrCfg.PluginType,
 		},
 		{
 			Name: "Target Runner", Value: targetRunner,
 		},
 		{
-			Name: "Environment Variables", Value: config.EnvironmentVariables,
+			Name: "Environment Variables", Value: odrCfg.EnvironmentVariables,
 		},
 	}, terminal.WithInfoStyle())
 
-	if len(config.PluginConfig) > 0 {
+	if len(odrCfg.PluginConfig) > 0 {
 		c.ui.Output("Additional Plugin Configuration:", terminal.WithHeaderStyle())
 
 		// We have to do the %s here in case the plugin config contains
 		// formatting chars we don't want to error.
-		c.ui.Output("\n%s", string(config.PluginConfig))
+		c.ui.Output("\n%s", string(odrCfg.PluginConfig))
 	}
 
 	return 0
@@ -157,5 +175,5 @@ Usage: waypoint runner profile inspect <name>
 
   Show detailed information about a runner profile.
 
-`)
+` + c.Flags().Help())
 }

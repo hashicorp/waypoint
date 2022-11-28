@@ -19,6 +19,14 @@ a specific setup that doesn't work for you with `waypoint install`, we recommend
 looking at the [server run](/docs/server/run) documentation instead or opening
 an issue on GitHub and requesting a feature enhancement.
 
+The server installed by the `waypoint install` command runs Waypoint
+server in a Docker container, which runs the `waypoint server run`
+command:
+
+```shell-session
+waypoint server run -accept-tos -vv -db=/data/data.db -listen-grpc=0.0.0.0:9701 -listen-http=0.0.0.0:9702
+```
+
 ## Officially Supported Server Platforms
 
 Currently, Waypoint supports running its server on the following platforms:
@@ -30,17 +38,15 @@ Currently, Waypoint supports running its server on the following platforms:
 
 ### Kubernetes Platform
 
-Installing Waypoint server onto Kubernetes has a couple of options: Using the
-waypoint-helm chart or using `waypoint install`.
+Installing the Waypoint server to Kubernetes using the `waypoint install` command
+uses the [hashicorp/waypoint-helm](https://github.com/hashicorp/waypoint-helm)
+chart. Waypoint install will set sensible defaults for many of the Helm chart's
+values, while using flags for customization of some values as well.
 
-The officially supported [hashicorp/waypoint-helm](https://github.com/hashicorp/waypoint-helm)
-chart can be used to deploy Waypoint server directly onto a Kubernetes cluster with Helm charts.
-We recommend reading the README detailed on that project for more information on
-how to get going using Helm and Waypoint.
-
-You can also install Waypoint server onto Kubernetes using the `waypoint install`
-command. This command sets up a Service, Statefulset, Deployment, and Replicaset
-and deploys Waypoint server and its runner as two separate pods by default.
+You may also use the Helm chart directly and install Waypoint using `helm install`.
+We recommend reading the README detailed on the waypoint-helm project for more
+information on how to further customize your Waypoint installation to Kubernetes
+with Helm.
 
 ### Nomad Platform
 
@@ -69,8 +75,8 @@ expected host for a Consul service, i.e. `waypoint-server.service.dc1.consul`.
 When running the install helper, the CLI should show the Consul DNS backed hostname of Waypoint
 server at the end of an install:
 
-```shell
-waypoint@hashicorp:waypoint λ waypoint install -platform=nomad -accept-tos -nomad-host-volume="waypoint"
+```shell-session
+$ waypoint install -platform=nomad -nomad-host-volume="waypoint" -nomad-runner-host-volume="waypoint-runner" -accept-tos
 ✓ Waypoint server ready
 ✓ The CLI has been configured to automatically install a Consul service for
 the Waypoint service backend and ui service in Nomad.
@@ -106,12 +112,77 @@ up Waypoint server.
 
 If you do not wish to automatically register a Consul service in Nomad for
 Waypoint server by default with `waypoint install`, it can always be disabled
-by including the `-nomad-consul-service=false` flag. You should then see
+by including the `-nomad-service-provider=none` flag. You should then see
 an IP address from the Nomad allocation after the Waypoint install helper finishes.
+You may also use Nomad as the service discovery provider with `-nomad-service-provider=nomad`.
+
+If your Nomad cluster is ACL-enabled, you will need the `NOMAD_TOKEN` environment variable
+set with a token that has permissions for submitting a job to the specified namespace.
+Likewise, if you are installing the Waypoint server and using Consul for service
+discovery to an ACL-enabled Consul cluster, you may need to set the environment
+variable `CONSUL_HTTP_TOKEN`, depending on your Nomad client configuration.
 
 ### AWS ECS Platform
 
-This section still needs to be filled out.
+Waypoint supports installing the server in AWS ECS. Several AWS resources are created
+as part of the install. The default cluster name is `waypoint-server`; this can
+be changed by specifying the value for the flag `-ecs-cluster`. The resources
+are tagged with `waypoint-server` as the tag name; this is not able to be changed
+as Waypoint needs a way to track all the resources that are part of the server install.
+
+The main components installed are:
+
+- EFS Filesystem: used for persisting the Waypoint server database
+- EC2 Security Group: authorizing traffic in to the cluster, as well as enabling access to the EFS FileSystem from the Cluster
+- CloudWatch Log Groups: a log group is created for each of the Waypoint server and runner services
+- IAM Execution role
+- Network load balancer: required to enable both HTTP and gRPC connections (see `NOTE`)
+- Load balancing target groups: a target group is created for each of the Waypoint server and runner services
+- ECS Cluster: a cluster dedicated to running the Waypoint server and runner
+- ECS server service: runs the Waypoint server task
+- ECS runner service: runs the default Waypoint runner task
+- ECS Task Definitions: for both the server and runner
+
+~> **NOTE**: A Network Load Balancer is required because user-supplied TLS certificates are not yet supported.
+
+An example ECS install should result in output similar to the below:
+
+```shell-session
+$ waypoint install -platform=ecs -accept-tos
+✓ Networking setup
+✓ Created new ECS cluster: waypoint-server
+✓ EFS ready
+✓ Found existing IAM role to use: waypoint-server-execution-role
+✓ Created CloudWatchLogs group to store logs in: waypoint-server-logs
+✓ Network load balancer created
+✓ Created ECS Service (waypoint, cluster-name: waypoint-server)
+✓ Waiting for target group to be healthy...
+✓ Service launched!
+✓ Server installed and configured!
+✓ Successfully connected to Waypoint server in ECS!
+✓ Installing runner...
+✓ Registered ondemand runner!
+✓ Found existing IAM role to use: waypoint-server-execution-role
+✓ Found existing IAM role to use: waypoint-runner
+✓ Created CloudWatchLogs group to store logs in: waypoint-runner-logs
+✓ Runner service created
+Waypoint server successfully installed and configured!
+
+The CLI has been configured to connect to the server automatically. This
+connection information is saved in the CLI context named "install-1656552433".
+Use the "waypoint context" CLI to manage CLI contexts.
+
+The server has been configured to advertise the following address for
+entrypoint communications. This must be a reachable address for all your
+deployments. If this is incorrect, manually set it using the CLI command
+"waypoint server config-set".
+
+To launch and authenticate into the Web UI, run:
+waypoint ui -authenticate
+
+Advertise Address: waypoint-server-nlb-xyz123.elb.us-west-2.amazonaws.com:9701
+Web UI Address: https://waypoint-server-nlb-xyz123.elb.us-west-2.amazonaws.com:9702
+```
 
 ### Docker Platform
 
@@ -120,4 +191,5 @@ is recommended only for development to get started using Waypoint. We do not
 recommend using Waypoint running in Docker for production workflows.
 
 This command sets up Docker containers for running Waypoint server and its
-runner as two separate containers by default.
+runner as two separate containers by default. They are each installed to a Docker
+network called "waypoint".

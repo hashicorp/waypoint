@@ -89,13 +89,9 @@ func (p *Platform) Deploy(
 		return nil, err
 	}
 
-	chartNS := ""
-	if v := p.config.Namespace; v != "" {
-		chartNS = v
-	}
-	if chartNS == "" {
-		// If all else fails, default the namespace to "default"
-		chartNS = "default"
+	if p.config.Namespace == "" {
+		// default the namespace to "default"
+		p.config.Namespace = "default"
 	}
 
 	// From here on out, we will always return a partial deployment if we error.
@@ -115,18 +111,18 @@ func (p *Platform) Deploy(
 		client.Devel = p.config.Devel
 		client.DependencyUpdate = false
 		client.Timeout = 300 * time.Second
-		client.Namespace = chartNS
+		client.Namespace = p.config.Namespace
 		client.ReleaseName = p.config.Name
 		client.GenerateName = false
 		client.NameTemplate = ""
 		client.OutputDir = ""
 		client.Atomic = false
-		client.SkipCRDs = false
+		client.SkipCRDs = p.config.SkipCRDs
 		client.SubNotes = true
 		client.DisableOpenAPIValidation = false
 		client.Replace = false
 		client.Description = ""
-		client.CreateNamespace = true
+		client.CreateNamespace = p.config.CreateNamespace
 
 		s.Update("Installing Chart...")
 		rel, err := client.Run(c, values)
@@ -151,9 +147,9 @@ func (p *Platform) Deploy(
 	client.Devel = p.config.Devel
 	client.DependencyUpdate = false
 	client.Timeout = 300 * time.Second
-	client.Namespace = chartNS
+	client.Namespace = p.config.Namespace
 	client.Atomic = false
-	client.SkipCRDs = false
+	client.SkipCRDs = p.config.SkipCRDs
 	client.SubNotes = true
 	client.DisableOpenAPIValidation = false
 	client.Description = ""
@@ -235,8 +231,10 @@ type Config struct {
 	Driver    string `hcl:"driver,optional"`
 	Namespace string `hcl:"namespace,optional"`
 
-	KubeconfigPath string `hcl:"kubeconfig,optional"`
-	Context        string `hcl:"context,optional"`
+	KubeconfigPath  string `hcl:"kubeconfig,optional"`
+	Context         string `hcl:"context,optional"`
+	CreateNamespace bool   `hcl:"create_namespace,optional"`
+	SkipCRDs        bool   `hcl:"skip_crds,optional"`
 }
 
 func (p *Platform) Documentation() (*docs.Documentation, error) {
@@ -267,7 +265,7 @@ These must be passed in using Helm values (i.e. the chart must make
 environment variables configurable).
 
 This is documented in more detail with a full example in the
-[Kubernetes Helm Deployment documentation](/docs/kubernetes/helm-deploy).
+[Kubernetes Helm Deployment documentation](/docs/platforms/kubernetes/helm-deploy).
 
 #### URL Service
 
@@ -380,8 +378,24 @@ deploy {
 		"namespace",
 		"Namespace to deploy the Helm chart.",
 		docs.Summary(
-			"This will be created if it does not exist. This defaults to the ",
+			"This will be created if it does not exist (see create_namespace). This defaults to the ",
 			"current namespace of the auth settings.",
+		),
+	)
+
+	doc.SetField(
+		"create_namespace",
+		"Create Namespace if it doesn't exist.",
+		docs.Summary(
+			"This option will instruct Helm to create a namespace if it doesn't exist.",
+		),
+	)
+
+	doc.SetField(
+		"skip_crds",
+		"Do not create CRDs",
+		docs.Summary(
+			"This option will tell Helm to skip the creation of CRDs.",
 		),
 	)
 

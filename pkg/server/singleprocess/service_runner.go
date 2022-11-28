@@ -2,8 +2,12 @@ package singleprocess
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"strings"
+	"time"
+
+	"github.com/hashicorp/waypoint/pkg/server/hcerr"
 
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-memdb"
@@ -11,9 +15,10 @@ import (
 	"github.com/pkg/errors"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"google.golang.org/protobuf/types/known/emptypb"
 	empty "google.golang.org/protobuf/types/known/emptypb"
+	"google.golang.org/protobuf/types/known/timestamppb"
 
+	"github.com/hashicorp/waypoint/internal/telemetry/metrics"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	"github.com/hashicorp/waypoint/pkg/server/logstream"
 	serverptypes "github.com/hashicorp/waypoint/pkg/server/ptypes"
@@ -24,9 +29,9 @@ func (s *Service) ListRunners(
 	ctx context.Context,
 	req *pb.ListRunnersRequest,
 ) (*pb.ListRunnersResponse, error) {
-	runners, err := s.state(ctx).RunnerList()
+	runners, err := s.state(ctx).RunnerList(ctx)
 	if err != nil {
-		return nil, err
+		return nil, hcerr.Externalize(hclog.FromContext(ctx), err, "failed to list runners")
 	}
 	return &pb.ListRunnersResponse{Runners: runners}, nil
 }
@@ -36,7 +41,11 @@ func (s *Service) GetRunner(
 	ctx context.Context,
 	req *pb.GetRunnerRequest,
 ) (*pb.Runner, error) {
-	return s.state(ctx).RunnerById(req.RunnerId, nil)
+	result, err := s.state(ctx).RunnerById(ctx, req.RunnerId, nil)
+	if err != nil {
+		return nil, hcerr.Externalize(hclog.FromContext(ctx), err, "failed to get runner", "id", req.RunnerId)
+	}
+	return result, err
 }
 
 func (s *Service) RunnerGetDeploymentConfig(
@@ -44,7 +53,7 @@ func (s *Service) RunnerGetDeploymentConfig(
 	req *pb.RunnerGetDeploymentConfigRequest,
 ) (*pb.RunnerGetDeploymentConfigResponse, error) {
 	// Get our server config
-	serverConfig, err := s.GetServerConfig(ctx, &emptypb.Empty{})
+	serverConfig, err := s.GetServerConfig(ctx, &empty.Empty{})
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to get server config to populate runner start job server addr")
 	}
@@ -79,30 +88,36 @@ func (s *Service) AdoptRunner(
 	ctx context.Context,
 	req *pb.AdoptRunnerRequest,
 ) (*empty.Empty, error) {
-	if err := serverptypes.ValidateAdoptRunnerRequest(req); err != nil {
+	var err error
+	if err = serverptypes.ValidateAdoptRunnerRequest(req); err != nil {
 		return nil, err
 	}
-
-	var err error
+	log := hclog.FromContext(ctx)
 	if req.Adopt {
-		err = s.state(ctx).RunnerAdopt(req.RunnerId, false)
+		if err = s.state(ctx).RunnerAdopt(ctx, req.RunnerId, false); err != nil {
+			return &empty.Empty{}, hcerr.Externalize(log, err, "failed to adopt runner", "id", req.RunnerId)
+		}
 	} else {
-		err = s.state(ctx).RunnerReject(req.RunnerId)
+		if err = s.state(ctx).RunnerReject(ctx, req.RunnerId); err != nil {
+			return &empty.Empty{}, hcerr.Externalize(log, err, "failed to reject runner", "id", req.RunnerId)
+		}
 	}
 
-	return &empty.Empty{}, err
+	return &empty.Empty{}, nil
 }
 
 func (s *Service) ForgetRunner(
 	ctx context.Context,
 	req *pb.ForgetRunnerRequest,
 ) (*empty.Empty, error) {
-	if err := serverptypes.ValidateForgetRunnerRequest(req); err != nil {
+	var err error
+	if err = serverptypes.ValidateForgetRunnerRequest(req); err != nil {
 		return nil, err
 	}
-
-	err := s.state(ctx).RunnerDelete(req.RunnerId)
-	return &empty.Empty{}, err
+	if err = s.state(ctx).RunnerDelete(ctx, req.RunnerId); err != nil {
+		return &empty.Empty{}, hcerr.Externalize(hclog.FromContext(ctx), err, "failed to delete runner", "id", req.RunnerId)
+	}
+	return &empty.Empty{}, nil
 }
 
 func (s *Service) RunnerToken(
@@ -114,7 +129,7 @@ func (s *Service) RunnerToken(
 
 	// Get our token because our behavior changes a bit with different tokens.
 	// Token may be nil because this is an unauthenticated endpoint.
-	if tok := s.tokenFromContext(ctx); tok != nil {
+	if tok := s.decodedTokenFromContext(ctx); tok != nil {
 		switch k := tok.Kind.(type) {
 		case *pb.Token_Login_:
 			// Legacy (pre WP 0.8) token. We accept these as preadopted. We just
@@ -175,27 +190,27 @@ func (s *Service) RunnerToken(
 	// Create our record
 	log = log.With("runner_id", record.Id)
 	log.Trace("registering runner")
-	if err := s.state(ctx).RunnerCreate(record); err != nil {
-		return nil, err
+	if err := s.state(ctx).RunnerCreate(ctx, record); err != nil {
+		return nil, hcerr.Externalize(log, err, "failed to create runner", "id", record.Id)
 	}
 
 	// When we exit, mark the runner as offline. This will delete the record
 	// if we're never adopted.
 	defer func() {
 		log.Trace("marking runner as offline")
-		if err := s.state(ctx).RunnerOffline(record.Id); err != nil {
+		if err := s.state(ctx).RunnerOffline(ctx, record.Id); err != nil {
 			log.Error("failed to mark runner as offline. This should not happen.", "err", err)
 		}
 	}()
 
 	// Get the runner
-	r, err := s.state(ctx).RunnerById(record.Id, nil)
+	r, err := s.state(ctx).RunnerById(ctx, record.Id, nil)
 	if status.Code(err) == codes.NotFound {
 		err = nil
 		r = nil
 	}
 	if err != nil {
-		return nil, err
+		return nil, hcerr.Externalize(log, err, "unknown runner connected", "id", record.Id)
 	}
 	prevAdopted := r != nil && r.AdoptionState == pb.Runner_ADOPTED
 
@@ -212,9 +227,9 @@ func (s *Service) RunnerToken(
 	for {
 		// Get the runner
 		ws := memdb.NewWatchSet()
-		r, err := s.state(ctx).RunnerById(record.Id, ws)
+		r, err := s.state(ctx).RunnerById(ctx, record.Id, ws)
 		if err != nil {
-			return nil, err
+			return nil, hcerr.Externalize(log, err, "failed to get runner while waiting for adoption state to change", "id", record.Id)
 		}
 
 		switch r.AdoptionState {
@@ -228,12 +243,18 @@ func (s *Service) RunnerToken(
 
 			hash, err := serverptypes.RunnerLabelHash(record.Labels)
 			if err != nil {
-				return nil, err
+				return nil, hcerr.Externalize(log, err, "failed to calculate runner hash", "id", record.Id)
 			}
 
 			encodedId, err := s.encodeId(ctx, record.Id)
 			if err != nil {
-				return nil, errors.Wrapf(err, "failed to encode runner id %s", record.Id)
+				return nil, hcerr.Externalize(
+					log,
+					fmt.Errorf("failed to encode runner id %s", record.Id),
+					"failed to encode runner id",
+					"id",
+					record.Id,
+				)
 			}
 
 			tok, err := s.newToken(ctx,
@@ -242,7 +263,7 @@ func (s *Service) RunnerToken(
 				// expire and introduce rotation as a feature of adoption.
 				0,
 
-				DefaultKeyId,
+				s.activeAuthKeyId,
 				nil,
 				&pb.Token{
 					Kind: &pb.Token_Runner_{
@@ -254,7 +275,11 @@ func (s *Service) RunnerToken(
 				},
 			)
 			if err != nil {
-				return nil, err
+				return nil, hcerr.Externalize(
+					log,
+					err,
+					"failed to generate new runner token",
+				)
 			}
 
 			return &pb.RunnerTokenResponse{Token: tok}, nil
@@ -263,7 +288,11 @@ func (s *Service) RunnerToken(
 		// Wait for changes
 		log.Trace("runner is not adopted, waiting for state change")
 		if err := ws.WatchCtx(ctx); err != nil {
-			return nil, err
+			return nil, hcerr.Externalize(
+				log,
+				err,
+				"error waiting for runner state changes",
+			)
 		}
 	}
 }
@@ -278,7 +307,11 @@ func (s *Service) RunnerConfig(
 	// Get the request
 	event, err := srv.Recv()
 	if err != nil {
-		return err
+		return hcerr.Externalize(
+			log,
+			err,
+			"error receiving runner config request",
+		)
 	}
 	req, ok := event.Event.(*pb.RunnerConfigRequest_Open_)
 	if !ok {
@@ -289,37 +322,41 @@ func (s *Service) RunnerConfig(
 
 	// Get our token and reverify that we are adopted.
 	if err := s.runnerVerifyToken(log, ctx, record.Id, record.Labels); err != nil {
-		return err
+		return hcerr.Externalize(
+			log,
+			err,
+			"error verifying runner token",
+		)
 	}
 
 	// Create our record
 	log = log.With("runner_id", record.Id)
 	log.Trace("registering runner")
-	if err := s.state(ctx).RunnerCreate(record); err != nil {
-		return err
+	if err := s.state(ctx).RunnerCreate(ctx, record); err != nil {
+		return hcerr.Externalize(log, err, "failed to create runner", "id", record.Id)
 	}
 
 	// Mark the runner as offline if they disconnect from the config stream loop.
 	defer func() {
 		log.Trace("marking runner as offline")
-		if err := s.state(ctx).RunnerOffline(record.Id); err != nil {
+		if err := s.state(ctx).RunnerOffline(ctx, record.Id); err != nil {
 			log.Error("failed to mark runner as offline. This should not happen.", "err", err)
 		}
 	}()
 
 	// If the runner we just registered is explicitly rejected then we
 	// do not allow it to continue, even with a preadoption token.
-	r, err := s.state(ctx).RunnerById(record.Id, nil)
+	r, err := s.state(ctx).RunnerById(ctx, record.Id, nil)
 	if err != nil {
-		return err
+		return hcerr.Externalize(log, err, "failed to get newly-registered runner", "id", record.Id)
 	}
 	if r.AdoptionState == pb.Runner_REJECTED {
 		return status.Errorf(codes.PermissionDenied,
 			"runner is explicitly rejected (unadopted)")
 	}
 	if r.AdoptionState != pb.Runner_ADOPTED {
-		if err := s.state(ctx).RunnerAdopt(record.Id, true); err != nil {
-			return err
+		if err := s.state(ctx).RunnerAdopt(ctx, record.Id, true); err != nil {
+			return hcerr.Externalize(log, err, "failed to adopt runner", "id", record.Id)
 		}
 	}
 
@@ -353,7 +390,7 @@ func (s *Service) RunnerConfig(
 		// Get a job assignment for this runner, non-blocking
 		sjob, err := s.state(ctx).JobPeekForRunner(ctx, record)
 		if err != nil {
-			return err
+			return hcerr.Externalize(log, err, "failed to get job for runner", "id", record.Id)
 		}
 		if sjob == nil {
 			return status.Errorf(codes.FailedPrecondition,
@@ -363,6 +400,20 @@ func (s *Service) RunnerConfig(
 
 		// Set our job
 		job = sjob.Job
+
+		// We know a job was accepted, so it shouldn't be hanging around because this runner
+		// is available.
+		log.Trace("updating expiry time for job to be 60 seconds now that runner has been assigned job")
+		dur, err := time.ParseDuration("60s")
+		if err != nil {
+			return status.Errorf(codes.FailedPrecondition,
+				"Invalid expiry duration: %s", err.Error())
+		}
+
+		newExpireTime := timestamppb.New(time.Now().Add(dur))
+		if err := s.state(ctx).JobUpdateExpiry(ctx, job.Id, newExpireTime); err != nil {
+			return hcerr.Externalize(log, err, "failed to update job expiry time after runner accepted job", "id", job.Id)
+		}
 
 		log.Debug("runner is scoped for config",
 			"project/application", job.Application,
@@ -393,9 +444,9 @@ func (s *Service) RunnerConfig(
 			configReq.Labels = job.Labels
 		}
 
-		vars, err := s.state(ctx).ConfigGetWatch(configReq, ws)
+		vars, err := s.state(ctx).ConfigGetWatch(ctx, configReq, ws)
 		if err != nil {
-			return err
+			return hcerr.Externalize(log, err, "failed to get configuration variables")
 		}
 		config.ConfigVars = vars
 
@@ -410,13 +461,13 @@ func (s *Service) RunnerConfig(
 			// config sourcers that are needed by vars. We cannot do that because
 			// waypoint.hcl config can now source dynamic config too and we can't
 			// know those in advance perfectly. Always send down all config sources.
-			sources, err := s.state(ctx).ConfigSourceGetWatch(&pb.GetConfigSourceRequest{
+			sources, err := s.state(ctx).ConfigSourceGetWatch(ctx, &pb.GetConfigSourceRequest{
 				Scope: &pb.GetConfigSourceRequest_Global{
 					Global: &pb.Ref_Global{},
 				},
 			}, ws)
 			if err != nil {
-				return err
+				return hcerr.Externalize(log, err, "failed to get the configuration for a dynamic source plugin")
 			}
 
 			config.ConfigSources = sources
@@ -426,7 +477,11 @@ func (s *Service) RunnerConfig(
 		if err := srv.Send(&pb.RunnerConfigResponse{
 			Config: config,
 		}); err != nil {
-			return err
+			return hcerr.Externalize(
+				log,
+				err,
+				"error sending runner config response",
+			)
 		}
 
 		// Nil out the stuff we used so that if we're waiting awhile we can GC
@@ -434,7 +489,11 @@ func (s *Service) RunnerConfig(
 
 		// Wait for any changes
 		if err := ws.WatchCtx(ctx); err != nil {
-			return err
+			return hcerr.Externalize(
+				log,
+				err,
+				"error waiting for runner config state changes",
+			)
 		}
 	}
 }
@@ -449,35 +508,49 @@ func (s *Service) RunnerJobStream(
 	// Receive our opening message so we can determine the runner ID.
 	req, err := server.Recv()
 	if err != nil {
-		return err
+		return hcerr.Externalize(
+			log,
+			err,
+			"failed to receive first message for RunnerJobStrem",
+		)
 	}
 	reqEvent, ok := req.Event.(*pb.RunnerJobStreamRequest_Request_)
 	if !ok {
-		return status.Errorf(codes.FailedPrecondition,
-			"first message must be a Request event")
+		return hcerr.Externalize(
+			log,
+			status.Errorf(codes.FailedPrecondition,
+				"first message must be a Request event"),
+			"first message to RunnerJobStream must be a Request event",
+		)
 	}
-	log = log.With("runner_id", reqEvent.Request.RunnerId)
 
 	// Get the runner to validate it is registered
 	runnerId := reqEvent.Request.RunnerId
 
-	runner, err := s.state(ctx).RunnerById(runnerId, nil)
+	runner, err := s.state(ctx).RunnerById(ctx, runnerId, nil)
 	if err != nil {
-		log.Error("unknown runner connected", "id", runnerId)
-		return err
+		return hcerr.Externalize(log, err, "failed to get this runner", "id", runnerId)
 	}
-	log.With("runner-id", runner.Id)
+	log = log.With("runner_id", reqEvent.Request.RunnerId)
 
 	// The runner must be adopted to get a job.
 	if runner.AdoptionState != pb.Runner_ADOPTED &&
 		runner.AdoptionState != pb.Runner_PREADOPTED {
-		return status.Errorf(codes.FailedPrecondition,
-			"runner must be adopted prior to requesting jobs")
+		return hcerr.Externalize(
+			log,
+			status.Errorf(codes.FailedPrecondition,
+				"runner must be adopted prior to requesting jobs"),
+			"runner must be adopted prior to requesting jobs",
+		)
 	}
 
 	// Verify our token matches the request
 	if err := s.runnerVerifyToken(log, ctx, runner.Id, runner.Labels); err != nil {
-		return err
+		return hcerr.Externalize(
+			log,
+			err,
+			"runner token verification failed",
+		)
 	}
 
 	// Get the job for this runner. If this is a reattach, we lookup
@@ -488,22 +561,34 @@ func (s *Service) RunnerJobStream(
 		reattach = true
 
 		log.Info("runner reattaching to an existing job", "job_id", jobId)
-		job, err = s.state(ctx).JobById(jobId, nil)
+		job, err = s.state(ctx).JobById(ctx, jobId, nil)
 		if err != nil {
-			return err
+			return hcerr.Externalize(log, err, "failed to get job", "id", jobId)
 		}
 
 		// If the job is not found, that is an error.
 		if job == nil {
-			return status.Errorf(codes.InvalidArgument,
-				"reattach job ID does not exist")
+			return hcerr.Externalize(
+				log,
+				status.Errorf(codes.InvalidArgument,
+					"reattach job ID does not exist"),
+				"reattach job ID does not exist",
+				"id",
+				jobId,
+			)
 		}
 
 		// The runner reattaching must be the assigned runner.
 		assigned := job.Job.AssignedRunner
 		if assigned == nil || assigned.Id != runner.Id {
-			return status.Errorf(codes.InvalidArgument,
-				"reattach job is not assigned to this runner")
+			return hcerr.Externalize(
+				log,
+				status.Errorf(codes.InvalidArgument,
+					"reattach job is not assigned to this runner"),
+				"reattach job is not assigned to this runner",
+				"id",
+				jobId,
+			)
 		}
 
 		// NOTE(mitchellh): things we should check in the future:
@@ -515,7 +600,7 @@ func (s *Service) RunnerJobStream(
 		log.Info("waiting for job assignment")
 		job, err = s.state(ctx).JobAssignForRunner(ctx, runner)
 		if err != nil {
-			return err
+			return hcerr.Externalize(log, err, "failed to get job assignment for runner")
 		}
 	}
 	if job == nil || job.Job == nil {
@@ -524,18 +609,23 @@ func (s *Service) RunnerJobStream(
 	log = log.With("job_id", job.Id)
 
 	// Load config sourcers to send along with the job assignment
-	cfgSrcs, err := s.state(ctx).ConfigSourceGetWatch(&pb.GetConfigSourceRequest{
+	cfgSrcs, err := s.state(ctx).ConfigSourceGetWatch(ctx, &pb.GetConfigSourceRequest{
 		Scope: &pb.GetConfigSourceRequest_Global{
 			Global: &pb.Ref_Global{},
 		},
 	}, nil)
 	if err != nil {
-		log.Warn("failed to load config sourcers for job assignment", "err", err)
-		return err
+		return hcerr.Externalize(log, err, "failed to get the configuration for a dynamic source plugin to send with job assignment")
 	}
 	log.Trace("loaded config sources for job", "total_sourcers", len(cfgSrcs))
 
 	log.Debug("sending job assignment to runner")
+
+	operation := operationString(job.Job)
+	defer func(start time.Time) {
+		metrics.MeasureOperation(ctx, start, operation)
+	}(time.Now())
+	metrics.CountOperation(ctx, operation)
 	// Send the job assignment.
 	//
 	// If this has an error, we continue to accumulate the error until
@@ -586,11 +676,15 @@ func (s *Service) RunnerJobStream(
 	if !reattach {
 		// Send the ack OR nack, based on the value of +ack+.
 		var ackerr error
-		job, ackerr = s.state(ctx).JobAck(job.Id, ack)
+		job, ackerr = s.state(ctx).JobAck(ctx, job.Id, ack)
 		if ackerr != nil {
 			// If this fails, we just log, there is nothing more we can do.
 			log.Warn("job ack failed", "outer_error", err, "error", ackerr)
 
+			// Check if job is nil, so not to panic later on
+			if job == nil {
+				return hcerr.Externalize(log, ackerr, "job is nil, db might not be open")
+			}
 			// If we had no outer error, set the ackerr so that we exit. If
 			// we do have an outer error, then the ack error only shows up in
 			// the log.
@@ -605,25 +699,33 @@ func (s *Service) RunnerJobStream(
 		// we cancel the job.
 		if !ack {
 			log.Warn("reattach job was nacked, force cancelling")
-			err = s.state(ctx).JobCancel(job.Id, true)
+			err = s.state(ctx).JobCancel(ctx, job.Id, true)
 		}
 	}
 
 	// If we have an error, return that. We also return if we didn't ack for
 	// any reason. This error can be set at any point since job assignment.
-	if err != nil || !ack {
-		return err
+	if err != nil {
+		return hcerr.Externalize(log, err, "failed to ack the job or the job was cancelled", "id")
+	}
+	if !ack {
+		// If runners don't ack the job, this means close the stream
+		return nil
 	}
 
 	var logStreamWriter logstream.Writer
 	if s.logStreamProvider != nil {
 		logStreamWriter, err = s.logStreamProvider.StartWriter(ctx, log, s.state(ctx), job)
 		if err != nil {
-			return errors.Wrapf(err, "failed to start a log writer to handle jog logs")
+			return hcerr.Externalize(log, err, "failed to start a log writer to handle jog logs")
 		}
 	}
 
-	defer logStreamWriter.Flush(ctx)
+	// We don't want the log stream writer to use the request context, because we want to
+	// ensure that flushing occurs even if it needs to happen after the request context
+	// is closed.
+	logStreamCtx := context.Background()
+	defer logStreamWriter.Flush(logStreamCtx)
 
 	// Start a goroutine that watches for job changes
 	jobCh := make(chan *serverstate.Job, 1)
@@ -631,7 +733,7 @@ func (s *Service) RunnerJobStream(
 	go func() {
 		for {
 			ws := memdb.NewWatchSet()
-			job, err = s.state(ctx).JobById(job.Id, ws)
+			job, err = s.state(ctx).JobById(ctx, job.Id, ws)
 			if err != nil {
 				errCh <- err
 				return
@@ -713,7 +815,7 @@ func (s *Service) RunnerJobStream(
 				select {
 				case req := <-eventCh:
 					if err := s.handleJobStreamRequest(log, job, server, req, logStreamWriter); err != nil {
-						return err
+						return hcerr.Externalize(log, err, "error handling job stream request during drain", "req", req)
 					}
 				default:
 					return nil
@@ -721,11 +823,19 @@ func (s *Service) RunnerJobStream(
 			}
 
 		case err := <-errCh:
-			return err
+			return hcerr.Externalize(log, err, "err from err channel")
 
 		case req := <-eventCh:
+			if job == nil {
+				select {
+				case err := <-errCh:
+					log.Error("Job disappeared and there was an error while processing job event", "error", err, "event", req)
+					return hcerr.Externalize(log, err, "failed to process job event")
+				default:
+				}
+			}
 			if err := s.handleJobStreamRequest(log, job, server, req, logStreamWriter); err != nil {
-				return err
+				return hcerr.Externalize(log, err, "error handling job stream request", "req", req)
 			}
 
 		case job := <-jobCh:
@@ -738,6 +848,8 @@ func (s *Service) RunnerJobStream(
 			// cancel requests are made.
 			if job.CancelTime != nil &&
 				(lastJob == nil || !lastJob.CancelTime.AsTime().Equal(job.CancelTime.AsTime())) {
+				log.Trace("job cancellation request received")
+
 				// The job is forced if we're in an error state. This must be true
 				// because we would've already exited the loop if we naturally
 				// got a terminal event.
@@ -751,7 +863,7 @@ func (s *Service) RunnerJobStream(
 					},
 				})
 				if err != nil {
-					return err
+					return hcerr.Externalize(log, err, "error sending job cancel event to runner")
 				}
 
 				// On force we exit immediately.
@@ -760,6 +872,7 @@ func (s *Service) RunnerJobStream(
 				}
 			}
 
+			log.Trace("updating job from state store", "last_job", lastJob, "job", job.Job)
 			lastJob = job.Job
 		}
 	}
@@ -776,34 +889,47 @@ func (s *Service) handleJobStreamRequest(
 	log.Trace("event received", "event", req.Event)
 	switch event := req.Event.(type) {
 	case *pb.RunnerJobStreamRequest_Complete_:
-		return s.state(ctx).JobComplete(job.Id, event.Complete.Result, nil)
-
+		if event.Complete == nil {
+			log.Error("event.Complete was not filled when we expected it to be", "id", job.Id, "event", req.Event)
+			return hcerr.Externalize(log, fmt.Errorf("failed to complete job"), "failed to complete job", "id", job.Id)
+		}
+		if err := s.state(ctx).JobComplete(ctx, job.Id, event.Complete.Result, nil); err != nil {
+			return hcerr.Externalize(log, err, "failed to complete job", "id", job.Id)
+		}
 	case *pb.RunnerJobStreamRequest_Error_:
-		return s.state(ctx).JobComplete(job.Id, nil, status.FromProto(event.Error.Error).Err())
-
+		if err := s.state(ctx).JobComplete(ctx, job.Id, nil, status.FromProto(event.Error.Error).Err()); err != nil {
+			return hcerr.Externalize(log, err, "failed to complete job", "id", job.Id)
+		}
 	case *pb.RunnerJobStreamRequest_Heartbeat_:
-		return s.state(ctx).JobHeartbeat(job.Id)
-
+		if err := s.state(ctx).JobHeartbeat(ctx, job.Id); err != nil {
+			return hcerr.Externalize(log, err, "job heartbeat failed", "id", job.Id)
+		}
 	case *pb.RunnerJobStreamRequest_Download:
-		if err := s.state(ctx).JobUpdateRef(job.Id, event.Download.DataSourceRef); err != nil {
-			return err
+		if err := s.state(ctx).JobUpdateRef(ctx, job.Id, event.Download.DataSourceRef); err != nil {
+			return hcerr.Externalize(log, err, "failed to update the job reference", "id", job.Id)
 		}
 
-		return s.state(ctx).ProjectUpdateDataRef(&pb.Ref_Project{
+		if err := s.state(ctx).ProjectUpdateDataRef(ctx, &pb.Ref_Project{
 			Project: job.Application.Project,
-		}, job.Workspace, event.Download.DataSourceRef)
+		}, job.Workspace, event.Download.DataSourceRef); err != nil {
+			return hcerr.Externalize(log, err, "failed to update the project", "project", job.Application.Project)
+		}
 
 	case *pb.RunnerJobStreamRequest_ConfigLoad_:
-		return s.state(ctx).JobUpdate(job.Id, func(jobpb *pb.Job) error {
+		if err := s.state(ctx).JobUpdate(ctx, job.Id, func(jobpb *pb.Job) error {
 			jobpb.Config = event.ConfigLoad.Config
 			return nil
-		})
+		}); err != nil {
+			return hcerr.Externalize(log, err, "failed to update the job with config", "id", job.Id)
+		}
 
 	case *pb.RunnerJobStreamRequest_VariableValuesSet_:
-		return s.state(ctx).JobUpdate(job.Id, func(jobpb *pb.Job) error {
+		if err := s.state(ctx).JobUpdate(ctx, job.Id, func(jobpb *pb.Job) error {
 			jobpb.VariableFinalValues = event.VariableValuesSet.FinalValues
 			return nil
-		})
+		}); err != nil {
+			return hcerr.Externalize(log, err, "failed to update the job with variables", "id", job.Id)
+		}
 
 	case *pb.RunnerJobStreamRequest_Terminal:
 		// Write the events
@@ -827,7 +953,7 @@ func (s *Service) runnerVerifyToken(
 	runnerLabels map[string]string, // real runner labels
 ) error {
 	// Get our token and reverify that we are adopted.
-	tok := s.tokenFromContext(ctx)
+	tok := s.decodedTokenFromContext(ctx)
 	if tok == nil {
 		log.Error("no token, should not be possible")
 		return status.Errorf(codes.Unauthenticated, "no token")
@@ -873,4 +999,51 @@ func (s *Service) runnerVerifyToken(
 	}
 
 	return nil
+}
+
+func operationString(job *pb.Job) string {
+	// Types that are assignable to Operation:
+	switch job.Operation.(type) {
+	case *pb.Job_Noop_:
+		return "noop"
+	case *pb.Job_Build:
+		return "build"
+	case *pb.Job_Push:
+		return "push"
+	case *pb.Job_Deploy:
+		return "deploy"
+	case *pb.Job_Destroy:
+		return "destroy"
+	case *pb.Job_Release:
+		return "release"
+	case *pb.Job_Validate:
+		return "validate"
+	case *pb.Job_Auth:
+		return "auth"
+	case *pb.Job_Docs:
+		return "docs"
+	case *pb.Job_ConfigSync:
+		return "config_sync"
+	case *pb.Job_Exec:
+		return "exec"
+	case *pb.Job_Up:
+		return "up"
+	case *pb.Job_Logs:
+		return "logs"
+	case *pb.Job_QueueProject:
+		return "queue_project"
+	case *pb.Job_Poll:
+		return "poll"
+	case *pb.Job_StatusReport:
+		return "status_report"
+	case *pb.Job_StartTask:
+		return "start_task"
+	case *pb.Job_StopTask:
+		return "stop_task"
+	case *pb.Job_WatchTask:
+		return "watch_task"
+	case *pb.Job_Init:
+		return "init"
+	}
+	return "unknown"
 }

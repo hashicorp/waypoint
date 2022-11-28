@@ -2,6 +2,7 @@ package cli
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
 	"sort"
@@ -13,11 +14,16 @@ import (
 	"google.golang.org/grpc/status"
 	empty "google.golang.org/protobuf/types/known/emptypb"
 
+	"github.com/hashicorp/go-version"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
+
+	"github.com/hashicorp/waypoint/builtin/k8s"
 	clientpkg "github.com/hashicorp/waypoint/internal/client"
 	"github.com/hashicorp/waypoint/internal/clierrors"
 	"github.com/hashicorp/waypoint/internal/clisnapshot"
+	"github.com/hashicorp/waypoint/internal/installutil"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
+	"github.com/hashicorp/waypoint/internal/runnerinstall"
 	"github.com/hashicorp/waypoint/internal/serverinstall"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	"github.com/hashicorp/waypoint/pkg/serverclient"
@@ -225,6 +231,17 @@ func (c *ServerUpgradeCommand) Run(args []string) int {
 
 	c.ui.Output("Upgrading...", terminal.WithHeaderStyle())
 
+	// TODO(demophoon): Remove when we can handle automatic snapshot backup and
+	// restore for kubernetes servers.
+	if strings.ToLower(c.platform) == "kubernetes" {
+		upgradeFrom, _ := version.NewVersion(initServerVersion)
+		postHelmVersion, _ := version.NewVersion("v0.9.0")
+		if upgradeFrom.LessThan(postHelmVersion) {
+			c.ui.Output(upgradeToHelmRefused, terminal.WithErrorStyle())
+			return 1
+		}
+	}
+
 	c.ui.Output("Waypoint server will now upgrade from version %q",
 		initServerVersion, terminal.WithInfoStyle())
 
@@ -232,6 +249,11 @@ func (c *ServerUpgradeCommand) Run(args []string) int {
 		Log:            log,
 		UI:             c.ui,
 		ServerRunFlags: c.args,
+	}
+	runnerOpts := &runnerinstall.InstallOpts{
+		Log: log,
+		UI:  c.ui,
+		Id:  "static",
 	}
 
 	// Upgrade in place
@@ -325,7 +347,7 @@ func (c *ServerUpgradeCommand) Run(args []string) int {
 
 	// Upgrade the runner
 	if code := c.upgradeRunner(
-		ctx, client, p, installOpts, advertiseAddr,
+		ctx, client, p, installOpts, runnerOpts, advertiseAddr,
 	); code > 0 {
 		return code
 	}
@@ -347,6 +369,7 @@ func (c *ServerUpgradeCommand) upgradeRunner(
 	client pb.WaypointClient,
 	p serverinstall.Installer,
 	installOpts *serverinstall.InstallOpts,
+	runnerOpts *runnerinstall.InstallOpts,
 	advertiseAddr *pb.ServerConfig_AdvertiseAddr,
 ) int {
 	// Connect
@@ -374,8 +397,8 @@ func (c *ServerUpgradeCommand) upgradeRunner(
 		return 0
 	}
 
-	s.Update("Runner found. Uninstalling previous runner...")
-	if err := p.UninstallRunner(ctx, installOpts); err != nil {
+	s.Update("Runner found on Waypoint server. Uninstalling previous runner...")
+	if err := p.UninstallRunner(ctx, runnerOpts); err != nil {
 		c.ui.Output(
 			"Error uninstalling runner from %s: %s\n\n"+
 				"The runner will not be upgraded.",
@@ -389,10 +412,119 @@ func (c *ServerUpgradeCommand) upgradeRunner(
 	s.Update("Previous runner uninstalled")
 	s.Done()
 
-	// TODO(mitchellh): This creates a new auth token for the new runner.
-	// In the future, we need to invalidate the old token. We don't have
-	// the functionality to do this today.
-	return installRunner(ctx, installOpts.Log, client, c.ui, p, advertiseAddr)
+	if odc, ok := p.(installutil.OnDemandRunnerConfigProvider); ok {
+		odr := odc.OnDemandRunnerConfig()
+
+		runnerConfigName := odr.PluginType + "-bootstrap-profile"
+		// We attempt to look up the default runner profile from the previous
+		// installation. If we find it, we get the ID, so we can delete it after
+		// the new runner profile is set up
+		oldRunnerConfig, err := client.GetOnDemandRunnerConfig(ctx, &pb.GetOnDemandRunnerConfigRequest{
+			Config: &pb.Ref_OnDemandRunnerConfig{
+				Name: runnerConfigName,
+			}})
+
+		if err != nil && status.Code(err) != codes.NotFound {
+			c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+			return 1
+		} else if err != nil && status.Code(err) == codes.NotFound {
+			c.ui.Output("Waypoint runner profile %q not found, creating new profile", runnerConfigName, terminal.WithWarningStyle())
+		} else {
+			ociUrl := odr.OciUrl
+			if ociUrl == "" {
+				ociUrl = installutil.DefaultODRImage
+			}
+			odr = &pb.OnDemandRunnerConfig{
+				Id:                   oldRunnerConfig.Config.Id,
+				Name:                 oldRunnerConfig.Config.Name,
+				TargetRunner:         oldRunnerConfig.Config.TargetRunner,
+				OciUrl:               ociUrl,
+				EnvironmentVariables: oldRunnerConfig.Config.EnvironmentVariables,
+				PluginType:           oldRunnerConfig.Config.PluginType,
+				PluginConfig:         oldRunnerConfig.Config.PluginConfig,
+				ConfigFormat:         oldRunnerConfig.Config.ConfigFormat,
+				Default:              true,
+			}
+		}
+
+		// Look at the existing on-demand runner configs and let the user know
+		// they should not have multiple defaults
+		// NOTE(briancain): A better way to handle this going forward is to enforce
+		// a single default at the Waypoint state level. That should likely happen
+		// soon.
+		resp, err := client.ListOnDemandRunnerConfigs(ctx, &empty.Empty{})
+		if err != nil {
+			c.ui.Output("Failed to determine if default runner profiles are already set: %s", clierrors.Humanize(err), terminal.WithErrorStyle())
+			return 1
+		}
+
+		if len(resp.Configs) > 0 {
+			var (
+				runnerUnsetStr     []string
+				runnerDefaultNames []string
+			)
+
+			for _, cfg := range resp.Configs {
+				if cfg.Name != runnerConfigName {
+					runnerDefaultNames = append(runnerDefaultNames, fmt.Sprintf(runnerDefaultName, cfg.Name))
+					runnerUnsetStr = append(runnerUnsetStr, fmt.Sprintf(runnerUnsetDefault, cfg.PluginType, cfg.Name))
+				}
+
+				// Checking if the default runner profile for a platform, pre-0.9, has the correct task launcher configs
+				if c.platform == cfg.Name {
+					switch c.platform {
+					case "kubernetes":
+						// attempt to parse the runner profile config into the correct task launcher config struct
+						var result *k8s.TaskLauncherConfig
+						// NOTE(briancain): This is here due to a k8s task plugin bug. When
+						// we attempt to upgrade if we detect the previous mistake we warn
+						// users that certain key values in their plugin config are wrong.
+						if cfg.ConfigFormat == pb.Hcl_JSON {
+							err = json.Unmarshal(cfg.PluginConfig, result)
+							if err != nil {
+								c.ui.Output(runnerProfileUpgradeConfigError, cfg.Name,
+									cfg.Name, clierrors.Humanize(err), terminal.WithWarningStyle())
+								var content map[string]interface{}
+								err = json.Unmarshal(cfg.PluginConfig, &content)
+								if err != nil {
+									c.ui.Output("Error parsing plugin content: %s", clierrors.Humanize(err), terminal.WithErrorStyle())
+									return 1
+								}
+								if content["cpu"] != nil {
+									cpuBody := content["cpu"].(map[string]interface{})
+									if cpuBody["Requested"] != nil {
+										c.ui.Output("The 'Requested' key specified for the CPU resources should instead be 'request'",
+											terminal.WithWarningStyle())
+									}
+								}
+								if content["memory"] != nil {
+									memBody := content["memory"].(map[string]interface{})
+									if memBody["Requested"] != nil {
+										c.ui.Output("The 'Requested' key specified for the Memory resources should instead be 'request'",
+											terminal.WithWarningStyle())
+									}
+								}
+							}
+						}
+					default:
+					}
+
+				}
+			}
+
+			if len(runnerDefaultNames) > 0 {
+				c.ui.Output("")
+				c.ui.Output(runnerMultiDefault, strings.Join(runnerDefaultNames[:], "\n"), strings.Join(runnerUnsetStr[:], "\n"), terminal.WithWarningStyle())
+				c.ui.Output("")
+			}
+		}
+
+		// TODO(mitchellh): This creates a new auth token for the new runner.
+		// In the future, we need to invalidate the old token. We don't have
+		// the functionality to do this today.
+		return installRunner(ctx, installOpts.Log, client, c.ui, p, advertiseAddr, odr, true, true)
+	}
+	return 0
 }
 
 func (c *ServerUpgradeCommand) Flags() *flag.Sets {
@@ -402,7 +534,7 @@ func (c *ServerUpgradeCommand) Flags() *flag.Sets {
 			Name:    "auto-approve",
 			Target:  &c.confirm,
 			Default: false,
-			Usage:   "Confirm server upgrade.",
+			Usage:   "Auto-approve server upgrade. If unset, confirmation will be requested.",
 		})
 		f.StringVar(&flag.StringVar{
 			Name:    "context-name",
@@ -500,5 +632,50 @@ https://www.waypointproject.io/docs/server/run/maintenance#backup-restore
 	addrSuccess = strings.TrimSpace(`
 Advertise Address: %[1]s
    Web UI Address: %[2]s
+`)
+
+	runnerUnsetDefault = strings.TrimSpace(`
+waypoint runner profile set -default=false -plugin-type=%[1]s -name=%[2]s
+`)
+
+	runnerDefaultName = "=> %[1]s"
+
+	runnerMultiDefault = strings.TrimSpace(`
+Waypoint expects only one runner profile to be a default. During the upgrade,
+we have detected that there are multiple default runner profiles. This can
+cause issues with launching on-demand runner tasks. The following profile names
+have been set to be a default runner profile:
+
+%[1]s
+
+Please run the following commands if you wish to unset these runner profiles
+from being the default:
+
+%[2]s
+`)
+
+	upgradeToHelmRefused = strings.TrimSpace(`
+Upgrading directly to 0.9.0 is not currently supported via this method on Kubernetes.
+
+You can manually perform the upgrade by taking a snapshot of your Waypoint
+server and restoring the snapshot to a fresh install of Waypoint Server using
+the commands:
+
+waypoint server snapshot
+waypoint install -platform=kubernetes
+waypoint server restore [snapshot-name]
+`)
+
+	runnerProfileUpgradeConfigError = strings.TrimSpace(`
+The plugin config for runner profile %[1]s failed to correctly be parsed. 
+Plugin Config Error: %[3]s
+
+Please run the following with the corrected plugin configuration to fix this.
+
+waypoint runner profile set -name=%[2]s -plugin-config=<path_to_config_file>
+
+Starting in v0.9.0, ODR plugin configurations are validated for correctness.
+The previous configuration for this profile is invalid, and ODRs will not launch
+unless it is updated.
 `)
 )

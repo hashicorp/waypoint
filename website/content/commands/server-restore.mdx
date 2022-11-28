@@ -32,13 +32,13 @@ standard input. Using a name of '-' will force reading from standard input.
 
 #### Global Options
 
-- `-plain` - Plain output: no colors, no animation.
+- `-plain` - Plain output: no colors, no animation. The default is false.
 - `-app=<string>` (`-a`) - App to target. Certain commands require a single app target for Waypoint configurations with multiple apps. If you have a single app, then this can be ignored.
 - `-project=<string>` (`-p`) - Project to target.
 - `-workspace=<string>` (`-w`) - Workspace to operate in.
 
 #### Command Options
 
-- `-exit` - After restoring, the server should exit so it can be restarted.
+- `-exit` - After restoring, the server should exit so it can be restarted. The default is false.
 
 @include "commands/server-restore_more.mdx"

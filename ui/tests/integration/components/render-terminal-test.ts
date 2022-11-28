@@ -35,24 +35,4 @@ module('Integration | Component | render-terminal', function (hooks) {
     }, 10);
     await settled();
   });
-
-  test('non-canvas rendering renders the proper html output', async function (assert) {
-    // Setup terminal externally, as expected by the component
-    let terminal = createTerminal({ inputDisabled: true, domRendering: true });
-    this.set('terminal', terminal);
-    // pass terminal and render
-    await render(hbs`<RenderTerminal @terminal={{this.terminal}}/>`);
-    // write line and see if it renders
-    terminal.writeln('Welcome to Waypoint!');
-    // We have to use the runloop as writeln isn't async
-    // Note that even the xterm.js rendering tests use polling to evaluate rendering
-    later(() => {
-      assert.dom(terminal?.element).includesText('Welcome to Waypoint!');
-    }, 50);
-    assert.dom('[data-test-xterm-pane]').exists('the xterm pane renders');
-    assert.dom('.xterm').exists('the xterm terminal renders');
-    // Clean up terminal
-    await settled();
-    await clearRender();
-  });
 });

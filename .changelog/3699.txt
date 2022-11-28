@@ -1,0 +1,3 @@
+```release-note:bug
+cli: Set plugin configuration on runner profile created during `runner install`
+```

@@ -196,7 +196,7 @@ func jobIsCompleted(state pb.Job_State) bool {
 // JobCreate queues the given jobs. If any job fails to queue, no jobs
 // are queued. If partial failures are acceptable, call this multiple times
 // with a single job.
-func (s *State) JobCreate(jobs ...*pb.Job) error {
+func (s *State) JobCreate(ctx context.Context, jobs ...*pb.Job) error {
 	txn := s.inmem.Txn(true)
 	defer txn.Abort()
 
@@ -240,7 +240,7 @@ func (s *State) JobCreate(jobs ...*pb.Job) error {
 			// that means its just a root node or some other dep already exists.
 			job, ok := jobMap[id.(string)]
 			if ok {
-				if err := s.jobCreate(dbTxn, txn, job); err != nil {
+				if err := s.jobCreate(ctx, dbTxn, txn, job); err != nil {
 					return err
 				}
 			}
@@ -258,11 +258,12 @@ func (s *State) JobCreate(jobs ...*pb.Job) error {
 // Given a Project Ref and a Job Template, this function will generate a slice
 // of QueueJobRequests for every application inside the requested Project
 func (s *State) JobProjectScopedRequest(
+	ctx context.Context,
 	pRef *pb.Ref_Project,
 	jobTemplate *pb.Job,
 ) ([]*pb.QueueJobRequest, error) {
 	var result []*pb.QueueJobRequest
-	project, err := s.ProjectGet(pRef)
+	project, err := s.ProjectGet(ctx, pRef)
 	if err != nil {
 		return nil, err
 	}
@@ -293,6 +294,7 @@ func (s *State) JobProjectScopedRequest(
 
 // JobList returns the list of jobs.
 func (s *State) JobList(
+	ctx context.Context,
 	req *pb.ListJobsRequest,
 ) ([]*pb.Job, error) {
 	memTxn := s.inmem.Txn(false)
@@ -402,6 +404,22 @@ func (s *State) JobList(
 			}
 		}
 
+		if req.Pipeline != nil {
+			if job.Pipeline == nil {
+				continue
+			}
+			// check whether the job is a match for pipeline name or id, and run sequence (if specified).
+			if req.Pipeline.RunSequence != 0 && (req.Pipeline.RunSequence != job.Pipeline.RunSequence) {
+				continue
+			}
+			if req.Pipeline.PipelineName != "" && (req.Pipeline.PipelineName != job.Pipeline.PipelineName) {
+				continue
+			}
+			if req.Pipeline.PipelineId != "" && (req.Pipeline.PipelineId != job.Pipeline.PipelineId) {
+				continue
+			}
+		}
+
 		result = append(result, job)
 	}
 
@@ -411,7 +429,7 @@ func (s *State) JobList(
 // JobById looks up a job by ID. The returned Job will be a deep copy
 // of the job so it is safe to read/write. If the job can't be found,
 // a nil result with no error is returned.
-func (s *State) JobById(id string, ws memdb.WatchSet) (*serverstate.Job, error) {
+func (s *State) JobById(ctx context.Context, id string, ws memdb.WatchSet) (*serverstate.Job, error) {
 	memTxn := s.inmem.Txn(false)
 	defer memTxn.Abort()
 
@@ -486,7 +504,7 @@ RETRY_ASSIGN:
 	// If our runner exists, it must be adopted. We're lax right about allowing
 	// runners that don't exist for JobPeek. If it doesn't exist, callers should
 	// handle this. For example, RunnerJobStream handles this itself.
-	rCheck, err := s.RunnerById(r.Id, ws)
+	rCheck, err := s.RunnerById(ctx, r.Id, ws)
 	if err != nil && status.Code(err) != codes.NotFound {
 		return nil, err
 	}
@@ -644,7 +662,7 @@ RETRY_ASSIGN:
 		// Create our timer to requeue this if it isn't acked
 		job.StateTimer = time.AfterFunc(serverstate.JobWaitingTimeout, func() {
 			s.log.Info("job ack timer expired", "job", job.Id, "timeout", serverstate.JobWaitingTimeout)
-			s.JobAck(job.Id, false)
+			s.JobAck(ctx, job.Id, false)
 		})
 
 		if err := txn.Insert(jobTableName, job); err != nil {
@@ -653,7 +671,7 @@ RETRY_ASSIGN:
 
 		// Update our assignment state
 		if err := s.jobAssignedSet(txn, job, true); err != nil {
-			s.JobAck(job.Id, false)
+			s.JobAck(ctx, job.Id, false)
 			return nil, err
 		}
 
@@ -669,10 +687,10 @@ RETRY_ASSIGN:
 // JobAck acknowledges that a job has been accepted or rejected by the runner.
 // If ack is false, then this will move the job back to the queued state
 // and be eligible for assignment.
-// Additionally, if a job is associated with an on-demand runner task, this
-// func will progress the Tasks state machine depending on which job has
-// currently been acked.
-func (s *State) JobAck(id string, ack bool) (*serverstate.Job, error) {
+// Additionally, if a job is associated with an on-demand runner task and/or pipeline,
+// this func will progress the Tasks and Pipeline state machines depending on which job
+// has currently been acked.
+func (s *State) JobAck(ctx context.Context, id string, ack bool) (*serverstate.Job, error) {
 	txn := s.inmem.Txn(true)
 	defer txn.Abort()
 
@@ -731,8 +749,7 @@ func (s *State) JobAck(id string, ack bool) (*serverstate.Job, error) {
 	job.StateTimer = time.AfterFunc(serverstate.JobHeartbeatTimeout, func() {
 		s.log.Info("canceling job due to heartbeat timeout", "job", job.Id)
 		// Force cancel
-		err := s.JobCancel(job.Id, true)
-		if err != nil {
+		if err := s.JobCancel(ctx, job.Id, true); err != nil {
 			s.log.Error("error canceling job due to heartbeat failure", "error", err, "job", job.Id)
 		}
 	})
@@ -754,19 +771,33 @@ func (s *State) JobAck(id string, ack bool) (*serverstate.Job, error) {
 	txn.Commit()
 
 	// Update the task state machine if acked job is part of an on-demand runner task.
-	if err := s.taskAck(job.Id); err != nil {
+	if err := s.taskAck(ctx, job.Id); err != nil {
 		s.log.Error("error updating task state", "error", err, "job", job.Id)
 		return nil, err
 	}
-
+	if err := s.pipelineAck(ctx, job.Id); err != nil {
+		s.log.Error("error updating pipeline state", "error", err, "job", job.Id)
+		return nil, err
+	}
 	return job.Job(result), nil
 }
 
 // JobUpdateRef sets the data_source_ref field for a job. This job can be
 // in any state.
-func (s *State) JobUpdateRef(id string, ref *pb.Job_DataSource_Ref) error {
-	return s.JobUpdate(id, func(jobpb *pb.Job) error {
+func (s *State) JobUpdateRef(ctx context.Context, id string, ref *pb.Job_DataSource_Ref) error {
+	return s.JobUpdate(ctx, id, func(jobpb *pb.Job) error {
 		jobpb.DataSourceRef = ref
+		return nil
+	})
+}
+
+// JobUpdateExpiry will update the jobs expiration time with the new value. This
+// method is used when a runner has accepted a job and peeks at its runner
+// config. By this point, we know the runner has accepted a job to work on,
+// so the runner should handle the job soon.
+func (s *State) JobUpdateExpiry(ctx context.Context, id string, newExpire *timestamppb.Timestamp) error {
+	return s.JobUpdate(ctx, id, func(jobpb *pb.Job) error {
+		jobpb.ExpireTime = newExpire
 		return nil
 	})
 }
@@ -777,7 +808,7 @@ func (s *State) JobUpdateRef(id string, ref *pb.Job_DataSource_Ref) error {
 // an error to abort the transaction.
 //
 // Job states should NOT be modified using this, only metadata.
-func (s *State) JobUpdate(id string, cb func(jobpb *pb.Job) error) error {
+func (s *State) JobUpdate(ctx context.Context, id string, cb func(jobpb *pb.Job) error) error {
 	txn := s.inmem.Txn(true)
 	defer txn.Abort()
 
@@ -810,7 +841,7 @@ func (s *State) JobUpdate(id string, cb func(jobpb *pb.Job) error) error {
 // JobComplete marks a running job as complete. If an error is given,
 // the job is marked as failed (a completed state). If no error is given,
 // the job is marked as successful.
-func (s *State) JobComplete(id string, result *pb.Job_Result, cerr error) error {
+func (s *State) JobComplete(ctx context.Context, id string, result *pb.Job_Result, cerr error) error {
 	txn := s.inmem.Txn(true)
 	defer txn.Abort()
 
@@ -872,8 +903,15 @@ func (s *State) JobComplete(id string, result *pb.Job_Result, cerr error) error 
 
 	// If the job is part of an on-demand runner task, update the task state machine
 	// to mark the job in the task as complete
-	if err := s.taskComplete(job.Id); err != nil {
+	if err := s.taskComplete(ctx, job.Id); err != nil {
 		s.log.Error("error updating task state for complete", "error", err, "job", job.Id)
+		return err
+	}
+
+	// If the job is part of a pipeline, update the pipeline state machine
+	// to mark the pipeline as complete
+	if err := s.pipelineComplete(ctx, job.Id); err != nil {
+		s.log.Error("error updating pipeline state for complete", "error", err, "job", job.Id)
 		return err
 	}
 
@@ -883,7 +921,7 @@ func (s *State) JobComplete(id string, result *pb.Job_Result, cerr error) error 
 // JobCancel marks a job as cancelled. This will set the internal state
 // and request the cancel but if the job is running then it is up to downstream
 // to listen for and react to Job changes for cancellation.
-func (s *State) JobCancel(id string, force bool) error {
+func (s *State) JobCancel(ctx context.Context, id string, force bool) error {
 	txn := s.inmem.Txn(true)
 	defer txn.Abort()
 
@@ -902,6 +940,11 @@ func (s *State) JobCancel(id string, force bool) error {
 	}
 
 	txn.Commit()
+
+	if err := s.pipelineCancel(ctx, id); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -975,7 +1018,7 @@ func (s *State) jobCancel(txn *memdb.Txn, job *jobIndex, force bool) error {
 // JobHeartbeat resets the heartbeat timer for a running job. If the job
 // is not currently running this does nothing, it will not return an error.
 // If the job doesn't exist then this will return an error.
-func (s *State) JobHeartbeat(id string) error {
+func (s *State) JobHeartbeat(ctx context.Context, id string) error {
 	txn := s.inmem.Txn(true)
 	defer txn.Abort()
 
@@ -1018,7 +1061,7 @@ func (s *State) jobHeartbeat(txn *memdb.Txn, id string) error {
 }
 
 // JobExpire expires a job. This will cancel the job if it is still queued.
-func (s *State) JobExpire(id string) error {
+func (s *State) JobExpire(ctx context.Context, id string) error {
 	txn := s.inmem.Txn(true)
 	defer txn.Abort()
 
@@ -1162,6 +1205,7 @@ func (s *State) jobIndexInit(dbTxn *bolt.Tx, memTxn *memdb.Txn) error {
 
 // jobIndexSet writes an index record for a single job.
 func (s *State) jobIndexSet(txn *memdb.Txn, id []byte, jobpb *pb.Job) (*jobIndex, error) {
+	ctx := context.Background()
 	rec := &jobIndex{
 		Id:          jobpb.Id,
 		SingletonId: jobpb.SingletonId,
@@ -1206,7 +1250,7 @@ func (s *State) jobIndexSet(txn *memdb.Txn, id []byte, jobpb *pb.Job) (*jobIndex
 	if rec.State == pb.Job_WAITING {
 		// Create our timer to requeue this if it isn't acked
 		rec.StateTimer = time.AfterFunc(serverstate.JobWaitingTimeout, func() {
-			s.JobAck(rec.Id, false)
+			s.JobAck(ctx, rec.Id, false)
 		})
 	}
 
@@ -1215,7 +1259,7 @@ func (s *State) jobIndexSet(txn *memdb.Txn, id []byte, jobpb *pb.Job) (*jobIndex
 	if rec.State == pb.Job_RUNNING {
 		rec.StateTimer = time.AfterFunc(serverstate.JobHeartbeatTimeout, func() {
 			// Force cancel
-			s.JobCancel(rec.Id, true)
+			s.JobCancel(ctx, rec.Id, true)
 		})
 	}
 
@@ -1230,14 +1274,14 @@ func (s *State) jobIndexSet(txn *memdb.Txn, id []byte, jobpb *pb.Job) (*jobIndex
 			dur = 1
 		}
 
-		time.AfterFunc(dur, func() { s.JobExpire(jobpb.Id) })
+		time.AfterFunc(dur, func() { s.JobExpire(ctx, jobpb.Id) })
 	}
 
 	// Insert the index
 	return rec, txn.Insert(jobTableName, rec)
 }
 
-func (s *State) jobCreate(dbTxn *bolt.Tx, memTxn *memdb.Txn, jobpb *pb.Job) error {
+func (s *State) jobCreate(ctx context.Context, dbTxn *bolt.Tx, memTxn *memdb.Txn, jobpb *pb.Job) error {
 	// Setup our initial job state
 	var err error
 	jobpb.State = pb.Job_QUEUED
@@ -1296,6 +1340,11 @@ func (s *State) jobCreate(dbTxn *bolt.Tx, memTxn *memdb.Txn, jobpb *pb.Job) erro
 
 		// Go through and ensure that each exists.
 		for _, id := range jobpb.DependsOn {
+			if id == "" {
+				return status.Errorf(codes.FailedPrecondition,
+					"job %q has an empty string id for depends_on", jobpb.Id)
+			}
+
 			dependsMap[id] = struct{}{}
 
 			_, err := s.jobById(dbTxn, id)
@@ -1598,11 +1647,11 @@ func (s *State) jobCandidateAny(
 	return nil, nil
 }
 
-// taskAck looks to see if the referenced job id has a Task ref associated with it,
+// taskAck checks if the referenced job id has a Task ref associated with it,
 // and if so, Ack the specific job inside the Task job triple to progress the
 // Task state machine.
-func (s *State) taskAck(jobId string) error {
-	job, err := s.JobById(jobId, nil)
+func (s *State) taskAck(ctx context.Context, jobId string) error {
+	job, err := s.JobById(ctx, jobId, nil)
 	if err != nil {
 		s.log.Error("error getting job by id", "job", jobId, "err", err)
 		return err
@@ -1612,7 +1661,7 @@ func (s *State) taskAck(jobId string) error {
 	}
 
 	// grab the full task message based on the Task Ref on the job
-	task, err := s.TaskGet(job.Task)
+	task, err := s.TaskGet(ctx, job.Task)
 	if err != nil {
 		s.log.Error("failed to get task to ack job", "job", job.Id, "task", job.Task.Ref)
 		return err
@@ -1640,7 +1689,7 @@ func (s *State) taskAck(jobId string) error {
 	}
 
 	// TaskPut the new state
-	if err := s.TaskPut(task); err != nil {
+	if err := s.TaskPut(ctx, task); err != nil {
 		s.log.Error("failed to ack task state", "job", job.Id, "task", task.Id)
 		return err
 	}
@@ -1651,8 +1700,8 @@ func (s *State) taskAck(jobId string) error {
 // taskComplete will look up the referenced job to see if it has a Task ref
 // associated with it, and if so, mark the specific job inside the Task job triple
 // as complete to progress the task state machine.
-func (s *State) taskComplete(jobId string) error {
-	job, err := s.JobById(jobId, nil)
+func (s *State) taskComplete(ctx context.Context, jobId string) error {
+	job, err := s.JobById(ctx, jobId, nil)
 	if err != nil {
 		s.log.Error("error getting job by id", "job", jobId, "err", err)
 		return err
@@ -1662,7 +1711,7 @@ func (s *State) taskComplete(jobId string) error {
 	}
 
 	// grab the full task message based on the Task Ref on the job
-	task, err := s.TaskGet(job.Task)
+	task, err := s.TaskGet(ctx, job.Task)
 	if err != nil {
 		s.log.Error("failed to get task to mark complete", "job", job.Id, "task", job.Task.Ref)
 		return err
@@ -1690,8 +1739,128 @@ func (s *State) taskComplete(jobId string) error {
 	}
 
 	// TaskPut the new state
-	if err := s.TaskPut(task); err != nil {
+	if err := s.TaskPut(ctx, task); err != nil {
 		s.log.Error("failed to complete task state", "job", job.Id, "task", task.Id)
+		return err
+	}
+
+	return nil
+}
+
+// pipelineComplete will look up the referenced job to see if it has a PipelineStep ref
+// associated with it, and if so, progress the pipelineRun state machine.
+func (s *State) pipelineComplete(ctx context.Context, jobId string) error {
+	// grab the job
+	job, err := s.JobById(ctx, jobId, nil)
+	if err != nil {
+		s.log.Error("error getting job by id", "job", jobId, "err", err)
+		return err
+	} else if job.Pipeline == nil {
+		s.log.Trace("job is not part of a pipeline", "job", jobId)
+		return nil
+	}
+	// grab the pipeline run
+	run, err := s.PipelineRunGetByJobId(ctx, jobId)
+	if run == nil {
+		return nil
+	}
+	if err != nil {
+		s.log.Error("failed to retrieve pipeline to complete", "job", job.Id)
+		return err
+	}
+
+	if job.State == pb.Job_ERROR {
+		run.State = pb.PipelineRun_ERROR
+	} else if job.State == pb.Job_SUCCESS {
+		// Look at all job ids in a run and check if any are not SUCCESS
+		runComplete := true
+		for _, j := range run.Jobs {
+			if j.Id == job.Id {
+				continue
+			}
+
+			rj, err := s.JobById(ctx, j.Id, nil)
+			if err != nil {
+				return err
+			}
+
+			if rj.State != pb.Job_SUCCESS {
+				runComplete = false
+				break
+			}
+		}
+
+		if runComplete {
+			run.State = pb.PipelineRun_SUCCESS
+			s.log.Trace("pipeline run is complete", "job", job.Id, "pipeline", job.Pipeline.PipelineId, "run", run.Sequence)
+		}
+	}
+
+	// PipelineRunPut the new state
+	if err = s.PipelineRunPut(ctx, run); err != nil {
+		s.log.Error("failed to complete pipeline run", "job", job.Id, "pipeline", job.Pipeline.PipelineId, "run", job.Pipeline.RunSequence)
+		return err
+	}
+
+	return nil
+}
+
+// pipelineAck checks if the referenced job id has a PipelineStep ref associated with it,
+// and if so, progress the PipelineRun state machine.
+func (s *State) pipelineAck(ctx context.Context, jobId string) error {
+	// grab pipeline run that triggered the job based on the PipelineTask Ref
+	run, err := s.PipelineRunGetByJobId(ctx, jobId)
+	if run == nil {
+		return nil
+	}
+	if err != nil {
+		s.log.Error("failed to retrieve pipeline to complete", "job", jobId)
+		return err
+	}
+
+	// Update the new pipeline run state if it's not already running
+	if run.State != pb.PipelineRun_RUNNING {
+		run.State = pb.PipelineRun_RUNNING
+	}
+	s.log.Trace("pipeline is running", "job", jobId, "pipeline", run.Pipeline, "run", run.Sequence)
+	if err := s.PipelineRunPut(ctx, run); err != nil {
+		s.log.Error("failed to ack pipeline run state", "job", jobId, "pipeline", run.Pipeline, "run", run.Sequence)
+		return err
+	}
+
+	return nil
+}
+
+// pipelineCancel will look up the referenced job to see if it has a PipelineStep ref
+// associated with it, and if so, progress the pipelineRun state machine.
+func (s *State) pipelineCancel(ctx context.Context, jobId string) error {
+	job, err := s.JobById(ctx, jobId, nil)
+	if err != nil {
+		s.log.Error("error getting job by id", "job", jobId, "err", err)
+		return err
+	} else if job.Pipeline == nil {
+		s.log.Trace("job is not part of a pipeline", "job", jobId)
+		return nil
+	}
+
+	run, err := s.PipelineRunGetByJobId(ctx, jobId)
+	if run == nil {
+		return nil
+	}
+	if err != nil {
+		s.log.Error("failed to retrieve pipeline to complete", "job", job.Id)
+		return err
+	}
+
+	if job.State == pb.Job_SUCCESS {
+		return nil
+	} else {
+		run.State = pb.PipelineRun_CANCELLED
+		s.log.Trace("pipeline run cancelled", "job", job.Id, "pipeline", job.Pipeline.PipelineId, "run", run.Sequence)
+	}
+	// PipelineRunPut the new state
+	if err := s.PipelineRunPut(ctx, run); err != nil {
+		s.log.Error("failed to cancel pipeline run", "job", job.Id, "pipeline", job.Pipeline.PipelineId, "run", job.Pipeline.RunSequence)
 		return err
 	}
 

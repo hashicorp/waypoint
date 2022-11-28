@@ -26,6 +26,7 @@ import (
 
 	wphzn "github.com/hashicorp/waypoint-hzn/pkg/server"
 	"github.com/hashicorp/waypoint/internal/server/boltdbstate"
+	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	"github.com/hashicorp/waypoint/pkg/server/singleprocess"
 
 	"github.com/hashicorp/waypoint/internal/telemetry"
@@ -183,6 +184,7 @@ func (c *ServerRunCommand) Run(args []string) int {
 		singleprocess.WithConfig(&c.config),
 		singleprocess.WithLogger(log.Named("singleprocess")),
 		singleprocess.WithAcceptURLTerms(c.flagAcceptTOS),
+		singleprocess.WithFeatures(pb.ServerFeatures_FEATURE_INLINE_KEEPALIVES),
 	)
 	if c, ok := impl.(io.Closer); ok {
 		defer c.Close()
@@ -271,7 +273,8 @@ func (c *ServerRunCommand) Run(args []string) int {
 	}
 	if httpInsecureLn != nil {
 		values = append(values, terminal.NamedValue{
-			Name: "HTTP Address (Insecure)", Value: httpInsecureLn.Addr().String()})
+			Name: "HTTP Address (Insecure)", Value: httpInsecureLn.Addr().String(),
+		})
 	}
 	if auth {
 		values = append(values, terminal.NamedValue{Name: "Auth Required", Value: "yes"})
@@ -374,7 +377,9 @@ This command will bootstrap the server and setup a CLI context.
 			telemetryOptions = append(telemetryOptions, telemetry.WithDatadogExporter(
 				datadog.Options{
 					TraceAddr: c.flagTelemetryDatadogTraceAddr,
+					StatsAddr: c.flagTelemetryDatadogTraceAddr,
 					Service:   "waypoint",
+					Namespace: "waypoint",
 				},
 			))
 		}

@@ -1,0 +1,8 @@
+{
+   "mappers": null,
+   "name": "nomad",
+   "optionalFields": null,
+   "requiredFields": null,
+   "type": "configsourcer",
+   "use": "`dynamic` for sourcing [configuration values](/docs/app-config/dynamic) or [input variable values](/docs/waypoint-hcl/variables/dynamic)."
+}

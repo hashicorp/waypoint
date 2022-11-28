@@ -1,6 +1,7 @@
 package boltdbstate
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -9,6 +10,7 @@ import (
 )
 
 func TestInstanceLogsCreate(t *testing.T) {
+	ctx := context.Background()
 	require := require.New(t)
 
 	s := TestState(t)
@@ -18,24 +20,24 @@ func TestInstanceLogsCreate(t *testing.T) {
 		// Create an instance exec
 		rec := &InstanceLogs{}
 
-		require.NoError(s.InstanceLogsCreate("a", rec))
+		require.NoError(s.InstanceLogsCreate(ctx, "a", rec))
 		require.NotEmpty(rec.Id)
 		require.Equal("a", rec.InstanceId)
 
 		// Test single get
-		found, err := s.InstanceLogsById(rec.Id)
+		found, err := s.InstanceLogsById(ctx, rec.Id)
 		require.NoError(err)
 		require.Equal(rec, found)
 
 		// Test single get
-		found2, err := s.InstanceLogsByInstanceId("a")
+		found2, err := s.InstanceLogsByInstanceId(ctx, "a")
 		require.NoError(err)
 		require.Equal(rec, found2)
 	}
 
 	// List them
 	ws := memdb.NewWatchSet()
-	list, err := s.InstanceLogsListByInstanceId("a", ws)
+	list, err := s.InstanceLogsListByInstanceId(ctx, "a", ws)
 	require.NoError(err)
 	require.Len(list, 1)
 	require.True(ws.Watch(time.After(50 * time.Millisecond)))

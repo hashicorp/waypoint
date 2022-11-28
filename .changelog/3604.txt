@@ -1,0 +1,3 @@
+```release-note:improvement
+ui: Update alert copy to reflect change that we are no longer removing project definitively in 0.10.0
+```

@@ -1,0 +1,98 @@
+---
+layout: commands
+page_title: 'Commands: Runner install'
+sidebar_title: 'runner install'
+description: 'Install a Waypoint runner to Kubernetes, Nomad, ECS, or Docker'
+---
+
+# Waypoint Runner install
+
+Command: `waypoint runner install`
+
+Install a Waypoint runner to Kubernetes, Nomad, ECS, or Docker
+
+@include "commands/runner-install_desc.mdx"
+
+## Usage
+
+Usage: `waypoint runner install [options]`
+
+Install a Waypoint runner to the specified platform: kubernetes, nomad, ecs,
+or docker.
+
+This command will attempt to install a runner for the server configured in
+the current Waypoint context. It will adopt the runner after installation,
+unless the '-skip-adopt' flag is set to true.
+
+To further customize the runner installation, you may pass advanced flag
+options specified in the documentation for the 'runner agent' command. To set
+these values, include a '--' after the full argument list for 'install',
+followed by these advanced flag options. As an example, to set a label k/v
+on the runner profile that is generated as part of adopting a runner during
+the install, the command would be:
+
+    waypoint runner install -server-addr=localhost:9701 -server-tls-skip-verify -- -label=environment=primary
+
+#### Global Options
+
+- `-plain` - Plain output: no colors, no animation. The default is false.
+- `-app=<string>` (`-a`) - App to target. Certain commands require a single app target for Waypoint configurations with multiple apps. If you have a single app, then this can be ignored.
+- `-project=<string>` (`-p`) - Project to target.
+- `-workspace=<string>` (`-w`) - Workspace to operate in.
+
+#### Command Options
+
+- `-platform=<string>` - Platform to install the Waypoint runner into. If unset, uses the platform of the local context. One possible value from: docker, ecs, kubernetes, nomad.
+- `-server-addr=<string>` - Address of the Waypoint server.
+- `-odr-image=<string>` - Docker image for the on-demand runners. The default is hashicorp/waypoint-odr:latest.
+- `-server-tls` - Connect the runner to the server over TLS. The default is true.
+- `-server-tls-skip-verify` - Skip TLS verification for runner connection to server. The default is false.
+- `-server-require-auth` - Send authentication details from runner to server. The default is false.
+- `-skip-adopt` - Skip adoption of runner after it is installed. The default is false.
+- `-id=<string>` - If this is set, the runner will use the specified id.
+
+#### docker Options
+
+- `-docker-runner-image=<string>` - The Docker image for the Waypoint runner. The default is hashicorp/waypoint.
+- `-docker-runner-network=<string>` - The Docker network in which to deploy the Waypoint runner.
+
+#### ecs Options
+
+- `-ecs-region=<string>` - AWS region in which to install the Waypoint runner.
+- `-ecs-exeuction-role-name=<string>` - The name of the execution task IAM Role to associate with the ECS Service. The default is waypoint-runner-execution-role.
+- `-ecs-task-role-name=<string>` - IAM Execution Role to assign to the on-demand runner. The default is waypoint-runner.
+- `-ecs-cpu=<string>` - The amount of CPU to allocate for the Waypoint runner task. The default is 512.
+- `-ecs-memory=<string>` - The amount of memory to allocate for the Waypoint runner task. The default is 2048.
+- `-ecs-runner-image=<string>` - The Waypoint runner Docker image. The default is hashicorp/waypoint.
+- `-ecs-cluster=<string>` - The name of the ECS Cluster to install the Waypoint runner into. The default is waypoint-server.
+- `-ecs-subnets=<string>` - Subnets to install the Waypoint runner into.
+
+#### kubernetes Options
+
+- `-k8s-config-path=<string>` - Path to the kubeconfig file to use.
+- `-k8s-context=<string>` - The Kubernetes context to install the Waypoint runner to. If left unset, Waypoint will use the current Kubernetes context.
+- `-k8s-helm-version=<string>` - The version of the Helm chart to use for the Waypoint runner install. The required version number format is: 'vX.Y.Z'.
+- `-k8s-namespace=<string>` - The namespace in the Kubernetes cluster into which the Waypoint runner will be installed. The default is default.
+- `-k8s-runner-image=<string>` - Docker image for the Waypoint runner. The default is hashicorp/waypoint:latest.
+- `-k8s-cpu-request=<string>` - Requested amount of CPU for Waypoint runner. The default is 250m.
+- `-k8s-mem-request=<string>` - Requested amount of memory for Waypoint runner. The default is 256Mi.
+- `-k8s-runner-service-account-init` - Create the service account if it does not exist. The default is true.
+- `-k8s-image-pull-policy=<string>` - Set the pull policy for the Waypoint runner image.
+
+#### nomad Options
+
+- `-nomad-dc=<string>` - Datacenters to install to for Nomad. The default is dc1.
+- `-nomad-runner-image=<string>` - Docker image for the Waypoint runner. The default is hashicorp/waypoint.
+- `-nomad-host-volume=<string>` - Nomad host volume name.
+- `-nomad-csi-volume-plugin-id=<string>` - The ID of the CSI plugin that manages the volume, required for volume type 'csi'.
+- `-nomad-csi-volume-provider=<string>` - Nomad CSI volume provider, required for volume type 'csi'.
+- `-nomad-csi-volume-capacity-min=<int>` - Nomad CSI volume capacity minimum, in bytes. The default is 1073741824.
+- `-nomad-csi-volume-capacity-max=<int>` - Nomad CSI volume capacity maximum, in bytes. The default is 2147483648.
+- `-nomad-csi-fs=<string>` - Nomad CSI volume mount option file system. The default is xfs.
+- `-nomad-csi-params=<key=value>` - Parameters passed directly to the CSI plugin to configure the volume.
+- `-nomad-csi-topologies=<key=value>` - Locations from which the Nomad Volume will be accessible.
+- `-nomad-csi-external-id=<string>` - The ID of the physical volume from the Nomad storage provider.
+- `-nomad-csi-secrets=<key=value>` - Credentials for publishing volume for Waypoint runner.
+- `-nomad-csi-volume=<string>` - The name of the volume to initialize within the CSI provider. The default is waypoint-[runner_id]-runner.
+
+@include "commands/runner-install_more.mdx"

@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/opaqueany"
 	"github.com/mitchellh/mapstructure"
+	"github.com/pkg/errors"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/proto"
@@ -83,7 +84,12 @@ func (a *App) Release(ctx context.Context, target *pb.Deployment) (
 		release = result.(component.Release)
 	}
 
-	return releasepb.(*pb.Release), release, nil
+	releaseResult, ok := releasepb.(*pb.Release)
+	if !ok {
+		return nil, nil, status.Error(codes.Internal, "app_release failed to convert the operation message into a Release proto")
+	}
+
+	return releaseResult, release, nil
 }
 
 // createReleaser creates the releaser component instance by trying to
@@ -205,7 +211,7 @@ func (op *releaseOperation) Upsert(
 		Release: msg.(*pb.Release),
 	})
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrapf(err, "failed upserting release operation")
 	}
 
 	return resp.Release, nil

@@ -4,11 +4,13 @@ import (
 	"context"
 	"time"
 
+	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-memdb"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
+	"github.com/hashicorp/waypoint/pkg/server/hcerr"
 	"github.com/hashicorp/waypoint/pkg/serverstate"
 )
 
@@ -39,10 +41,16 @@ func (s *Service) ListInstances(
 
 		for {
 			ws := memdb.NewWatchSet()
-			result, err = s.state(ctx).InstancesByDeployment(scope.DeploymentId, ws)
+			result, err = s.state(ctx).InstancesByDeployment(ctx, scope.DeploymentId, ws)
 
 			if err != nil {
-				return nil, err
+				return nil, hcerr.Externalize(
+					hclog.FromContext(ctx),
+					err,
+					"failed to list instances by deployment",
+					"deployment_id",
+					scope.DeploymentId,
+				)
 			}
 
 			if len(result) > 0 || req.WaitTimeout == "" {
@@ -51,11 +59,16 @@ func (s *Service) ListInstances(
 
 			// Wait for any changes
 			if err := ws.WatchCtx(ctx); err != nil {
-				return nil, err
+				return nil, hcerr.Externalize(
+					hclog.FromContext(ctx),
+					err,
+					"error watching for instance changes",
+				)
 			}
 		}
 	case *pb.ListInstancesRequest_Application_:
 		result, err = s.state(ctx).InstancesByApp(
+			ctx,
 			scope.Application.Application,
 			scope.Application.Workspace,
 			nil,
@@ -66,7 +79,11 @@ func (s *Service) ListInstances(
 			"scope is invalid")
 	}
 	if err != nil {
-		return nil, err
+		return nil, hcerr.Externalize(
+			hclog.FromContext(ctx),
+			err,
+			"error listing instances",
+		)
 	}
 
 	final := make([]*pb.Instance, len(result))

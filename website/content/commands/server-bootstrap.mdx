@@ -34,7 +34,7 @@ a CLI context by default.
 
 #### Global Options
 
-- `-plain` - Plain output: no colors, no animation.
+- `-plain` - Plain output: no colors, no animation. The default is false.
 - `-app=<string>` (`-a`) - App to target. Certain commands require a single app target for Waypoint configurations with multiple apps. If you have a single app, then this can be ignored.
 - `-project=<string>` (`-p`) - Project to target.
 - `-workspace=<string>` (`-w`) - Workspace to operate in.
@@ -42,12 +42,12 @@ a CLI context by default.
 #### Connection Options
 
 - `-server-addr=<string>` - Address for the server.
-- `-server-tls` - True if the server should be connected to via TLS.
-- `-server-tls-skip-verify` - True to skip verification of the TLS certificate advertised by the server.
+- `-server-tls` - True if the server should be connected to via TLS. The default is true.
+- `-server-tls-skip-verify` - True to skip verification of the TLS certificate advertised by the server. The default is false.
 
 #### Command Options
 
-- `-context-create=<string>` - Create a CLI context for this bootstrapped server. The context name will be the value of this flag. If this is an empty string, a context will not be created
-- `-context-set-default` - Set the newly bootstrapped server as the default CLI context. This only has an effect if -context-create is non-empty.
+- `-context-create=<string>` - Create a CLI context for this bootstrapped server. The context name will be the value of this flag. If this is an empty string, a context will not be created. The default is bootstrap-timestamp.
+- `-context-set-default` - Set the newly bootstrapped server as the default CLI context. This only has an effect if -context-create is non-empty. The default is true.
 
 @include "commands/server-bootstrap_more.mdx"

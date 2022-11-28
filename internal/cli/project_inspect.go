@@ -99,7 +99,10 @@ func (c *ProjectInspectCommand) FormatProject(projectTarget string) error {
 		workspaceNames = append(workspaceNames, ws.Workspace.Workspace)
 	}
 
-	var gitUrl, gitRef, gitPath string
+	var datasourcePollEnabled bool
+	var datasourcePollInterval string
+
+	var gitUrl, gitRef, gitPath, remoteDesc string
 	dataSource := "Local" // if unset, assume local
 	if project.DataSource != nil {
 		switch ds := project.DataSource.Source.(type) {
@@ -111,11 +114,22 @@ func (c *ProjectInspectCommand) FormatProject(projectTarget string) error {
 			gitUrl = ds.Git.Url
 			gitRef = ds.Git.Ref
 			gitPath = ds.Git.Path
+		case *pb.Job_DataSource_Remote:
+			dataSource = "Remote"
+			remoteDesc = ds.Remote.Description
+
+			if ds.Remote.GitRemote != nil {
+				gitRef = ds.Remote.GitRemote.Ref
+				gitPath = ds.Remote.GitRemote.Path
+
+				if ds.Remote.DeployOnChange {
+					datasourcePollEnabled = true
+					datasourcePollInterval = "automatic"
+				}
+			}
 		}
 	}
 
-	var datasourcePollEnabled bool
-	var datasourcePollInterval string
 	if project.DataSourcePoll != nil {
 		datasourcePollEnabled = project.DataSourcePoll.Enabled
 		datasourcePollInterval = project.DataSourcePoll.Interval
@@ -158,6 +172,9 @@ func (c *ProjectInspectCommand) FormatProject(projectTarget string) error {
 		},
 		{
 			Name: "Git Path", Value: gitPath,
+		},
+		{
+			Name: "Remote Info", Value: remoteDesc,
 		},
 		{
 			Name: "Data Source Poll Enabled", Value: strconv.FormatBool(datasourcePollEnabled),

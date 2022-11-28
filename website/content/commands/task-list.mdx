@@ -22,7 +22,7 @@ Waypoint Job tuple made up of a StartTask, RunTask, and StopTask.
 
 #### Global Options
 
-- `-plain` - Plain output: no colors, no animation.
+- `-plain` - Plain output: no colors, no animation. The default is false.
 - `-app=<string>` (`-a`) - App to target. Certain commands require a single app target for Waypoint configurations with multiple apps. If you have a single app, then this can be ignored.
 - `-project=<string>` (`-p`) - Project to target.
 - `-workspace=<string>` (`-w`) - Workspace to operate in.
@@ -39,8 +39,8 @@ Waypoint Job tuple made up of a StartTask, RunTask, and StopTask.
 
 #### Command Options
 
-- `-desc` - Output the list of Tasks from newest to oldest.
-- `-json` - Output the list of Tasks as json.
+- `-desc` - Output the list of Tasks from newest to oldest. The default is false.
+- `-json` - Output the list of Tasks as json. The default is false.
 - `-limit=<int>` - If set, will limit the number of Tasks to list.
 - `-state=<string>` - List Tasks that only match the requested state. Can be repeated multiple times. One possible value from: UNKNOWN, PENDING, STARTING, STARTED, RUNNING, COMPLETED, STOPPING, STOPPED, MIXED.
 

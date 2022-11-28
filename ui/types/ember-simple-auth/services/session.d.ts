@@ -4,7 +4,7 @@ type Transition = ReturnType<RouterService['transitionTo']>;
 declare module 'ember-simple-auth/services/session' {
   type SessionEvent = 'authenticationSucceeded' | 'invalidationSucceeded';
 
-  export default interface SessionService {
+  export default class SessionService {
     authenticate(authenticator: string, params: unknown): Promise<void>;
     isAuthenticated: boolean;
     invalidate(): Promise<void>;
@@ -13,6 +13,8 @@ declare module 'ember-simple-auth/services/session' {
 
     on(event: SessionEvent, callback: () => void): void;
     set(key: string, value: unknown): void;
+    setup(): Promise<void>;
+    handleInvalidation(routeAfterInvalidation: string): void;
   }
 
   interface SessionData {

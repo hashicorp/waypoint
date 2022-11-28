@@ -21,25 +21,25 @@ Lists the deployments that were created.
 
 #### Global Options
 
-- `-plain` - Plain output: no colors, no animation.
+- `-plain` - Plain output: no colors, no animation. The default is false.
 - `-app=<string>` (`-a`) - App to target. Certain commands require a single app target for Waypoint configurations with multiple apps. If you have a single app, then this can be ignored.
 - `-project=<string>` (`-p`) - Project to target.
 - `-workspace=<string>` (`-w`) - Workspace to operate in.
 
 #### Command Options
 
-- `-workspace-all` - List builds in all workspaces for this project and application.
-- `-verbose` (`-V`) - Display more details about each deployment.
-- `-url` (`-u`) - Display deployment URL.
-- `-json` - Output the deployment information as JSON.
-- `-long-ids` - Show long identifiers rather than sequence numbers.
+- `-workspace-all` - List builds in all workspaces for this project and application. The default is false.
+- `-verbose` (`-V`) - Display more details about each deployment. The default is false.
+- `-url` (`-u`) - Display deployment URL. The default is false.
+- `-json` - Output the deployment information as JSON. The default is false.
+- `-long-ids` - Show long identifiers rather than sequence numbers. The default is false.
 
 #### Filter Options
 
 - `-state=<string>` - Filter values to have the given status. One possible value from: error, running, success, unknown.
-- `-physical-state=<string>` - Show values in the given physical states. One possible value from: any, created, destroyed, pending.
+- `-physical-state=<string>` - Show values in the given physical states. One possible value from: any, created, destroyed, pending. The default is created.
 - `-order-by=<string>` - Order the values by which field. One possible value from: start-time, complete-time.
-- `-desc` - Sort the values in descending order.
+- `-desc` - Sort the values in descending order. The default is false.
 - `-limit=<uint>` - How many values to show.
 
 @include "commands/deployment-list_more.mdx"

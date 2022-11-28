@@ -1,6 +1,7 @@
 package statetest
 
 import (
+	"context"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -21,13 +22,14 @@ func init() {
 }
 
 func TestWorkspace(t *testing.T, factory Factory, restartF RestartFactory) {
+	ctx := context.Background()
 	t.Run("List is empty by default", func(t *testing.T) {
 		require := require.New(t)
 
 		s := factory(t)
 		defer s.Close()
 
-		result, err := s.WorkspaceList()
+		result, err := s.WorkspaceList(ctx)
 		require.NoError(err)
 		require.Empty(result)
 	})
@@ -39,13 +41,13 @@ func TestWorkspace(t *testing.T, factory Factory, restartF RestartFactory) {
 		defer s.Close()
 
 		// Create a build
-		require.NoError(s.BuildPut(false, serverptypes.TestValidBuild(t, &pb.Build{
+		require.NoError(s.BuildPut(ctx, false, serverptypes.TestValidBuild(t, &pb.Build{
 			Id: "1",
 		})))
-		require.NoError(s.BuildPut(false, serverptypes.TestValidBuild(t, &pb.Build{
+		require.NoError(s.BuildPut(ctx, false, serverptypes.TestValidBuild(t, &pb.Build{
 			Id: "2",
 		})))
-		require.NoError(s.BuildPut(false, serverptypes.TestValidBuild(t, &pb.Build{
+		require.NoError(s.BuildPut(ctx, false, serverptypes.TestValidBuild(t, &pb.Build{
 			Id: "3",
 			Application: &pb.Ref_Application{
 				Application: "B",
@@ -54,13 +56,13 @@ func TestWorkspace(t *testing.T, factory Factory, restartF RestartFactory) {
 		})))
 
 		// Create some other resources
-		require.NoError(s.DeploymentPut(false, serverptypes.TestValidDeployment(t, &pb.Deployment{
+		require.NoError(s.DeploymentPut(ctx, false, serverptypes.TestValidDeployment(t, &pb.Deployment{
 			Id: "1",
 		})))
 
 		// Workspace list should only list one
 		{
-			result, err := s.WorkspaceList()
+			result, err := s.WorkspaceList(ctx)
 			require.NoError(err)
 			require.Len(result, 1)
 
@@ -71,14 +73,14 @@ func TestWorkspace(t *testing.T, factory Factory, restartF RestartFactory) {
 		}
 
 		// Create a new workspace
-		require.NoError(s.BuildPut(false, serverptypes.TestValidBuild(t, &pb.Build{
+		require.NoError(s.BuildPut(ctx, false, serverptypes.TestValidBuild(t, &pb.Build{
 			Id: "4",
 			Workspace: &pb.Ref_Workspace{
 				Workspace: "w2",
 			},
 		})))
 		{
-			result, err := s.WorkspaceList()
+			result, err := s.WorkspaceList(ctx)
 			require.NoError(err)
 			require.Len(result, 2)
 		}
@@ -86,6 +88,7 @@ func TestWorkspace(t *testing.T, factory Factory, restartF RestartFactory) {
 }
 
 func TestWorkspacePut(t *testing.T, factory Factory, _ RestartFactory) {
+	ctx := context.Background()
 	t.Run("Default", func(t *testing.T) {
 		require := require.New(t)
 
@@ -93,20 +96,20 @@ func TestWorkspacePut(t *testing.T, factory Factory, _ RestartFactory) {
 		defer s.Close()
 
 		{
-			workspace, err := s.WorkspaceGet("default")
+			workspace, err := s.WorkspaceGet(ctx, "default")
 			require.Equal(codes.NotFound, status.Code(err))
 			require.Error(err)
 			require.Nil(workspace)
 		}
 
 		// Put
-		err := s.WorkspacePut(serverptypes.TestWorkspace(t, &pb.Workspace{
+		err := s.WorkspacePut(ctx, serverptypes.TestWorkspace(t, &pb.Workspace{
 			Name: "default",
 		}))
 		require.NoError(err)
 
 		{
-			workspace, err := s.WorkspaceGet("default")
+			workspace, err := s.WorkspaceGet(ctx, "default")
 			require.NoError(err)
 			require.NotNil(workspace)
 			require.Equal(workspace.Name, "default")
@@ -120,7 +123,7 @@ func TestWorkspacePut(t *testing.T, factory Factory, _ RestartFactory) {
 		defer s.Close()
 
 		// Put with a bad name
-		err := s.WorkspacePut(serverptypes.TestWorkspace(t, &pb.Workspace{
+		err := s.WorkspacePut(ctx, serverptypes.TestWorkspace(t, &pb.Workspace{
 			Name: "no spaces allowed",
 		}))
 		require.Error(err)
@@ -133,7 +136,7 @@ func TestWorkspacePut(t *testing.T, factory Factory, _ RestartFactory) {
 		defer s.Close()
 
 		// Underscores and hyphens are fine
-		err := s.WorkspacePut(serverptypes.TestWorkspace(t, &pb.Workspace{
+		err := s.WorkspacePut(ctx, serverptypes.TestWorkspace(t, &pb.Workspace{
 			Name: "special_and-allowed",
 		}))
 		require.NoError(err)
@@ -146,25 +149,25 @@ func TestWorkspacePut(t *testing.T, factory Factory, _ RestartFactory) {
 		defer s.Close()
 
 		// Put default
-		err := s.WorkspacePut(serverptypes.TestWorkspace(t, &pb.Workspace{
+		err := s.WorkspacePut(ctx, serverptypes.TestWorkspace(t, &pb.Workspace{
 			Name: "default",
 		}))
 		require.NoError(err)
 
 		// Put dev
-		err = s.WorkspacePut(serverptypes.TestWorkspace(t, &pb.Workspace{
+		err = s.WorkspacePut(ctx, serverptypes.TestWorkspace(t, &pb.Workspace{
 			Name: "dev",
 		}))
 		require.NoError(err)
 
 		// Put staging
-		err = s.WorkspacePut(serverptypes.TestWorkspace(t, &pb.Workspace{
+		err = s.WorkspacePut(ctx, serverptypes.TestWorkspace(t, &pb.Workspace{
 			Name: "staging",
 		}))
 		require.NoError(err)
 
 		{
-			workspace, err := s.WorkspaceList()
+			workspace, err := s.WorkspaceList(ctx)
 			require.NoError(err)
 			require.NotNil(workspace)
 			require.Len(workspace, 3)
@@ -178,7 +181,7 @@ func TestWorkspacePut(t *testing.T, factory Factory, _ RestartFactory) {
 		defer s.Close()
 
 		// Put a Workspace with a Project
-		err := s.WorkspacePut(serverptypes.TestWorkspace(t, &pb.Workspace{
+		err := s.WorkspacePut(ctx, serverptypes.TestWorkspace(t, &pb.Workspace{
 			Name: "staging",
 			Projects: []*pb.Workspace_Project{
 				{
@@ -190,13 +193,13 @@ func TestWorkspacePut(t *testing.T, factory Factory, _ RestartFactory) {
 		require.NoError(err)
 
 		// Put again, without projects
-		err = s.WorkspacePut(serverptypes.TestWorkspace(t, &pb.Workspace{
+		err = s.WorkspacePut(ctx, serverptypes.TestWorkspace(t, &pb.Workspace{
 			Name: "staging",
 		}))
 		require.NoError(err)
 
 		{
-			workspace, err := s.WorkspaceGet("staging")
+			workspace, err := s.WorkspaceGet(ctx, "staging")
 			require.NoError(err)
 			require.NotNil(workspace)
 			require.Equal(workspace.Name, "staging")
@@ -224,7 +227,7 @@ func TestWorkspacePut(t *testing.T, factory Factory, _ RestartFactory) {
 			defer s.Close()
 
 			// Workspace names cannot start with underscore or hyphens
-			err := s.WorkspacePut(serverptypes.TestWorkspace(t, &pb.Workspace{
+			err := s.WorkspacePut(ctx, serverptypes.TestWorkspace(t, &pb.Workspace{
 				Name: invalidName,
 			}))
 			require.Error(err)
@@ -233,6 +236,7 @@ func TestWorkspacePut(t *testing.T, factory Factory, _ RestartFactory) {
 }
 
 func TestWorkspaceProject(t *testing.T, factory Factory, restartF RestartFactory) {
+	ctx := context.Background()
 	t.Run("List non-empty", func(t *testing.T) {
 		require := require.New(t)
 
@@ -240,13 +244,13 @@ func TestWorkspaceProject(t *testing.T, factory Factory, restartF RestartFactory
 		defer s.Close()
 
 		// Create a build
-		require.NoError(s.BuildPut(false, serverptypes.TestValidBuild(t, &pb.Build{
+		require.NoError(s.BuildPut(ctx, false, serverptypes.TestValidBuild(t, &pb.Build{
 			Id: "1",
 		})))
-		require.NoError(s.BuildPut(false, serverptypes.TestValidBuild(t, &pb.Build{
+		require.NoError(s.BuildPut(ctx, false, serverptypes.TestValidBuild(t, &pb.Build{
 			Id: "2",
 		})))
-		require.NoError(s.BuildPut(false, serverptypes.TestValidBuild(t, &pb.Build{
+		require.NoError(s.BuildPut(ctx, false, serverptypes.TestValidBuild(t, &pb.Build{
 			Id: "3",
 			Application: &pb.Ref_Application{
 				Application: "B",
@@ -259,7 +263,7 @@ func TestWorkspaceProject(t *testing.T, factory Factory, restartF RestartFactory
 
 		// Workspace list should return only 1 for B
 		{
-			result, err := s.WorkspaceListByProject(&pb.Ref_Project{
+			result, err := s.WorkspaceListByProject(ctx, &pb.Ref_Project{
 				Project: "B",
 			})
 			require.NoError(err)
@@ -271,7 +275,7 @@ func TestWorkspaceProject(t *testing.T, factory Factory, restartF RestartFactory
 		}
 
 		// Create a new workspace
-		require.NoError(s.BuildPut(false, serverptypes.TestValidBuild(t, &pb.Build{
+		require.NoError(s.BuildPut(ctx, false, serverptypes.TestValidBuild(t, &pb.Build{
 			Id: "4",
 			Application: &pb.Ref_Application{
 				Application: "B",
@@ -282,7 +286,7 @@ func TestWorkspaceProject(t *testing.T, factory Factory, restartF RestartFactory
 			},
 		})))
 		{
-			result, err := s.WorkspaceListByProject(&pb.Ref_Project{
+			result, err := s.WorkspaceListByProject(ctx, &pb.Ref_Project{
 				Project: "B",
 			})
 			require.NoError(err)
@@ -292,6 +296,7 @@ func TestWorkspaceProject(t *testing.T, factory Factory, restartF RestartFactory
 }
 
 func TestWorkspaceApp(t *testing.T, factory Factory, restartF RestartFactory) {
+	ctx := context.Background()
 	t.Run("List non-empty", func(t *testing.T) {
 		require := require.New(t)
 
@@ -299,17 +304,17 @@ func TestWorkspaceApp(t *testing.T, factory Factory, restartF RestartFactory) {
 		defer s.Close()
 
 		// Create a build
-		require.NoError(s.BuildPut(false, serverptypes.TestValidBuild(t, &pb.Build{
+		require.NoError(s.BuildPut(ctx, false, serverptypes.TestValidBuild(t, &pb.Build{
 			Id: "1",
 		})))
-		require.NoError(s.BuildPut(false, serverptypes.TestValidBuild(t, &pb.Build{
+		require.NoError(s.BuildPut(ctx, false, serverptypes.TestValidBuild(t, &pb.Build{
 			Id: "2",
 			Application: &pb.Ref_Application{
 				Application: "B",
 				Project:     "A",
 			},
 		})))
-		require.NoError(s.BuildPut(false, serverptypes.TestValidBuild(t, &pb.Build{
+		require.NoError(s.BuildPut(ctx, false, serverptypes.TestValidBuild(t, &pb.Build{
 			Id: "3",
 			Application: &pb.Ref_Application{
 				Application: "B",
@@ -322,7 +327,7 @@ func TestWorkspaceApp(t *testing.T, factory Factory, restartF RestartFactory) {
 
 		// Workspace list should return only 1 for B,B
 		{
-			result, err := s.WorkspaceListByApp(&pb.Ref_Application{
+			result, err := s.WorkspaceListByApp(ctx, &pb.Ref_Application{
 				Application: "B",
 				Project:     "B",
 			})

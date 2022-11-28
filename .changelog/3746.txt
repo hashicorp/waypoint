@@ -1,0 +1,8 @@
+```release-note:improvement
+install/runner: Allow additional arguments for `waypoint runner agent` command
+to be supplied to `waypoint runner install` CLI
+```
+```release-note:improvement
+cli: Internal-only labels on runners are hidden from CLI output for `waypoint runner
+list` and `waypoint runner inspect`
+```

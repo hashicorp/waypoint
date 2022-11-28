@@ -26,6 +26,27 @@
   </Pds::CtaLink>
 </PageHeader>
 
+<Hds::Alert class='deprecation-banner' @type='inline' @color='neutral' @icon='info' as |A|>
+  <A.Title>
+    {{t 'page.project.deprecation-banner.title'}}
+  </A.Title>
+  <A.Description>
+    <div class='deprecation-description'>
+      {{t 'page.project.deprecation-banner.description'}}
+      <div>
+        <Hds::Link::Standalone
+          @icon='external-link'
+          @iconPosition='trailing'
+          @text={{
+            t 'page.project.deprecation-banner.link'
+          }}
+          @href='https://discuss.hashicorp.com/t/deprecating-projects-or-how-i-learned-to-love-apps/40888'
+        />
+      </div>
+    </div>
+  </A.Description>
+</Hds::Alert>
+
 <div data-test-project-list>
   {{#each @model as |project|}}
   <Card>

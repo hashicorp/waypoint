@@ -51,7 +51,7 @@ func TestServiceAuth(t *testing.T) {
 		ctx, err := s.Authenticate(context.Background(), bootstrapToken, "test", nil)
 		require.NoError(t, err)
 
-		user := s.userFromContext(ctx)
+		user := s.UserFromContext(ctx)
 		require.NotNil(t, user)
 		require.Equal(t, DefaultUserId, user.Id)
 	})
@@ -134,7 +134,7 @@ func TestServiceAuth(t *testing.T) {
 		// Auth
 		ctx, err := s.Authenticate(context.Background(), token, "UpsertDeployment", nil)
 		require.NoError(err)
-		user := s.userFromContext(ctx)
+		user := s.UserFromContext(ctx)
 		require.NotNil(user)
 		require.NotEqual(DefaultUserId, user.Id)
 		require.Equal("alice", user.Username)
@@ -156,7 +156,7 @@ func TestServiceAuth(t *testing.T) {
 			// Verify authing works
 			ctx, err := s.Authenticate(context.Background(), token, "test", nil)
 			require.NoError(err)
-			user := s.userFromContext(ctx)
+			user := s.UserFromContext(ctx)
 			require.NotNil(t, user)
 			require.NotEqual(t, DefaultUserId, user.Id)
 			require.Equal("alice", user.Username)
@@ -279,7 +279,7 @@ func TestServiceAuth(t *testing.T) {
 		require.NoError(err)
 
 		var buf bytes.Buffer
-		buf.WriteString(tokenMagic)
+		buf.WriteString("wp24")
 		buf.Write(ttData)
 
 		rogue := base58.Encode(buf.Bytes())
@@ -328,15 +328,15 @@ func TestServiceAuth(t *testing.T) {
 		labels := map[string]string{"foo": "bar"}
 
 		// Create a runner and adopt it.
-		require.NoError(s.state(ctx).RunnerCreate(&pb.Runner{
+		require.NoError(s.state(ctx).RunnerCreate(ctx, &pb.Runner{
 			Id:     "A",
 			Labels: labels,
 			Kind: &pb.Runner_Remote_{
 				Remote: &pb.Runner_Remote{},
 			},
 		}))
-		defer s.state(ctx).RunnerDelete("A")
-		require.NoError(s.state(ctx).RunnerAdopt("A", false))
+		defer s.state(ctx).RunnerDelete(ctx, "A")
+		require.NoError(s.state(ctx).RunnerAdopt(ctx, "A", false))
 
 		token, err := s.newToken(ctx, 0, DefaultKeyId, nil, &pb.Token{
 			Kind: &pb.Token_Runner_{
@@ -360,15 +360,15 @@ func TestServiceAuth(t *testing.T) {
 		require.NoError(err)
 
 		// Create a runner and adopt it.
-		require.NoError(s.state(ctx).RunnerCreate(&pb.Runner{
+		require.NoError(s.state(ctx).RunnerCreate(ctx, &pb.Runner{
 			Id:     "A",
 			Labels: labels,
 			Kind: &pb.Runner_Remote_{
 				Remote: &pb.Runner_Remote{},
 			},
 		}))
-		defer s.state(ctx).RunnerDelete("A")
-		require.NoError(s.state(ctx).RunnerAdopt("A", false))
+		defer s.state(ctx).RunnerDelete(ctx, "A")
+		require.NoError(s.state(ctx).RunnerAdopt(ctx, "A", false))
 
 		token, err := s.newToken(ctx, 0, DefaultKeyId, nil, &pb.Token{
 			Kind: &pb.Token_Runner_{
@@ -475,7 +475,7 @@ func TestServiceAuth_userSuperuserForced(t *testing.T) {
 	s := impl.(*Service)
 	ctx := context.Background()
 
-	user := s.userFromContext(ctx)
+	user := s.UserFromContext(ctx)
 	require.NotNil(t, user)
 	require.Equal(t, DefaultUserId, user.Id)
 }

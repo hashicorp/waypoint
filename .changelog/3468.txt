@@ -1,0 +1,3 @@
+```release-note:improvement
+plugin/nomad: convert Nomad job for ODR to batch job
+```

@@ -20,6 +20,7 @@ export default Factory.extend({
     afterCreate(project, server) {
       server.createList('variable', 2, 'random-str', { project });
       server.create('variable', 'random-hcl', { project });
+      server.create('variable', 'is-sensitive', { project });
     },
   }),
 

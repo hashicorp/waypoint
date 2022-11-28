@@ -81,10 +81,13 @@ type TaskLauncherConfig struct {
 	// Optionally define various memory resource limits and requests for kubernetes pod containers
 	Memory *ResourceConfig `hcl:"memory,block"`
 
+	// Optionally define various ephemeral storage resource limits and requests for kubernetes pod containers
+	EphemeralStorage *ResourceConfig `hcl:"ephemeral_storage,block"`
+
 	// How long WatchTask should wait for a pod to startup. This option is specifically
 	// wordy because it's only for the WatchTask timing out waiting for the pod
 	// its watching to start up before it attempts to stream its logs.
-	WatchTaskStartupTimeoutSeconds int `hcl:watchtask_startup_timeout_seconds,optional"`
+	WatchTaskStartupTimeoutSeconds int `hcl:"watchtask_startup_timeout_seconds,optional"`
 }
 
 func (p *TaskLauncher) Documentation() (*docs.Documentation, error) {
@@ -153,6 +156,11 @@ task {
 	)
 
 	doc.SetField(
+		"ephemeral_storage",
+		"ephemeral_storage resource request to be added to the task container",
+	)
+
+	doc.SetField(
 		"image_pull_policy",
 		"pull policy to use for the task container image",
 	)
@@ -178,14 +186,14 @@ func (p *TaskLauncher) Config() (interface{}, error) {
 	return &p.config, nil
 }
 
-// StopTask signals to docker to stop the container created previously
+// StopTask signals to Kubernetes to stop the container created previously
 func (p *TaskLauncher) StopTask(
 	ctx context.Context,
 	log hclog.Logger,
 	ti *TaskInfo,
 ) error {
-	// If a job completes and the coresponding pod exits with a "completed"
-	// status, we urposely do nothing here. We leverage the job TTL feature in
+	// If a job completes and the corresponding pod exits with a "completed"
+	// status, we purposely do nothing here. We leverage the job TTL feature in
 	// Kube 1.19+ so that Kubernetes automatically deletes old jobs and pods
 	// after they complete running.
 	//
@@ -312,11 +320,11 @@ func (p *TaskLauncher) StartTask(
 	resourceRequests := make(map[corev1.ResourceName]k8sresource.Quantity)
 
 	if p.config.CPU != nil {
-		if p.config.CPU.Requested != "" {
-			q, err := k8sresource.ParseQuantity(p.config.CPU.Requested)
+		if p.config.CPU.Request != "" {
+			q, err := k8sresource.ParseQuantity(p.config.CPU.Request)
 			if err != nil {
 				return nil,
-					status.Errorf(codes.InvalidArgument, "failed to parse cpu request %q to k8s quantity: %s", p.config.CPU.Requested, err)
+					status.Errorf(codes.InvalidArgument, "failed to parse cpu request %q to k8s quantity: %s", p.config.CPU.Request, err)
 			}
 			resourceRequests[corev1.ResourceCPU] = q
 		}
@@ -332,11 +340,11 @@ func (p *TaskLauncher) StartTask(
 	}
 
 	if p.config.Memory != nil {
-		if p.config.Memory.Requested != "" {
-			q, err := k8sresource.ParseQuantity(p.config.Memory.Requested)
+		if p.config.Memory.Request != "" {
+			q, err := k8sresource.ParseQuantity(p.config.Memory.Request)
 			if err != nil {
 				return nil,
-					status.Errorf(codes.InvalidArgument, "failed to parse memory requested %q to k8s quantity: %s", p.config.Memory.Requested, err)
+					status.Errorf(codes.InvalidArgument, "failed to parse memory requested %q to k8s quantity: %s", p.config.Memory.Request, err)
 			}
 			resourceRequests[corev1.ResourceMemory] = q
 		}
@@ -348,6 +356,26 @@ func (p *TaskLauncher) StartTask(
 					status.Errorf(codes.InvalidArgument, "failed to parse memory limit %q to k8s quantity: %s", p.config.Memory.Limit, err)
 			}
 			resourceLimits[corev1.ResourceMemory] = q
+		}
+	}
+
+	if p.config.EphemeralStorage != nil {
+		if p.config.EphemeralStorage.Request != "" {
+			q, err := k8sresource.ParseQuantity(p.config.EphemeralStorage.Request)
+			if err != nil {
+				return nil,
+					status.Errorf(codes.InvalidArgument, "failed to parse ephemeral-storage requested %q to k8s quantity: %s", p.config.EphemeralStorage.Request, err)
+			}
+			resourceRequests[corev1.ResourceEphemeralStorage] = q
+		}
+
+		if p.config.EphemeralStorage.Limit != "" {
+			q, err := k8sresource.ParseQuantity(p.config.EphemeralStorage.Limit)
+			if err != nil {
+				return nil,
+					status.Errorf(codes.InvalidArgument, "failed to parse ephemeral-storage limit %q to k8s quantity: %s", p.config.EphemeralStorage.Limit, err)
+			}
+			resourceLimits[corev1.ResourceEphemeralStorage] = q
 		}
 	}
 
@@ -445,10 +473,17 @@ func (p *TaskLauncher) WatchTask(
 	}
 
 	if pods == nil {
-		log.Info("no pods found for job, returning", "job_id", ti.Id)
-		ui.Output("no pods found for job id %q, cannot watch task job...", ti.Id, terminal.WithErrorStyle())
+		log.Info("no pods found for job label, returning", "job_id", ti.Id)
+		ui.Output("no pods found for job-name %q, cannot watch task job...", ti.Id, terminal.WithErrorStyle())
 
 		return nil, nil
+	}
+
+	if len(pods.Items) < 1 {
+		// This is an error. We found the pods by job name but for some reason there
+		// are no actual pods inside the job. This might happen if Waypoint server
+		// encounters an internal error or panic mid-task launch.
+		return nil, status.Errorf(codes.NotFound, "No pods found in job %q for WatchTask", ti.Id)
 	}
 
 	// Assume first one exists for now? Our task launcher for k8s only launches

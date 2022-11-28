@@ -1,0 +1,181 @@
+---
+layout: docs
+page_title: Version 0.9.0 - Upgrade Guide
+description: |-
+  This upgrade guide describes any considerations for upgrading to Waypoint 0.9.0.
+---
+
+# Upgrading to Waypoint 0.9.0 from 0.8.x
+
+Waypoint 0.8.x can be upgraded to Waypoint 0.9.0 using a [standard upgrade](/docs/upgrading#standard-upgrade).
+There are some considerations depending on what platform your server is installed on.
+There are no breaking changes in the protocol or `waypoint.hcl` configuration file.
+Due to the changes in `runner` management, we cannot guarantee that all Waypoint
+components (CLI, entrypoint, and server) are forwards and backwards
+compatible. We encourge users to have all components on the same version.
+
+## ECS Upgrades
+
+During prerelease testing, we discovered an issue that has exited since the 0.8.1
+release, and possibly earlier, that means `waypoint upgrade` does not work on
+servers installed on ECS. We found this too late to fix it for the 0.9.0 release,
+but plan to fix it for a future release. You can track [the issue here](https://github.com/hashicorp/waypoint/issues/3527).
+
+If you want to upgrade your Waypoint server installed on ECS, you will need to
+snapshot your sever, do a Waypoint server uninstall, complete a new express
+install with v0.9.0, and restore your server snapshot. Note that the
+`waypoint uninstall` command creates a snapshot by default.
+An example is in the below [Kubernetes Upgrades](#kubernetes-upgrades) section.
+
+### Change to Region Flag
+
+We removed the default value for the flag `-ecs-region`. This was previously set
+to `us-west-2`. If you used the default on the install of Waypoint to ECS, you will
+need to specify `us-west-2` moving forward.
+
+## Kubernetes Upgrades
+
+With 0.9 comes a significant change in how Waypoint manages express server installs.
+Waypoint now uses Helm under the hood to all Waypoint components. If you previously
+installed with Helm, you can run a standard Waypoint upgrade.
+
+If you previously installed with the Waypoint express install for Kubernetes,
+you will need to snapshot your sever, do a Waypoint server uninstall, complete a
+new express install with v0.9.0, and restore your server snapshot. Note that the
+`waypoint uninstall` command does create a snapshot by default. **It is vitally
+important that you set `-delete-context=false` on the uninstall.**
+An example is below, showing the following steps:
+
+- verify the Waypoint version
+- verify the server connection by checking the status of a deployed and release app
+- uninstall the server with `delete-context` set to `false`
+- upgrade Waypoint CLI as verified by another version check
+- re-install Waypoint server onto k8s
+- verify the installed server version
+- get the context path
+- restore the server snapshot
+- overwrite the token in the new context with the token from the previous install's context
+- delete the waypoint-server pod
+- verify the server snapshot has been succesfully restored by checking `waypoint status` again and seeing the same output as before
+
+```shell-session
+$ waypoint version
+CLI: v0.8.2 (5b8885480)
+Server: v0.8.2
+
+$ waypoint status
+Current project statuses in server context "localhost:9701"
+
+PROJECT          	WORKSPACE	DEPLOYMENT STATUSES	RELEASE STATUSES
+example-nodejs   	default  	1 READY            	1 READY
+
+The projects listed above represent their current state known
+in the Waypoint server. For more information about a project’s applications and
+their current state, run ‘waypoint status -project=PROJECT-NAME’.
+
+$ waypoint server uninstall -platform=kubernetes -delete-context=false -auto-approve
+Uninstalling Waypoint server on platform "kubernetes" with context "install-1657050368"
+✓ Snapshot "waypoint-server-snapshot-1657050483" generated
+...
+
+Waypoint server successfully uninstalled for kubernetes platform
+
+$ waypoint version
+CLI: v0.9.0 (88a2e83eb)
+
+$ waypoint install -platform=kubernetes
+✓ Inspecting Kubernetes cluster
+✓ Waypoint server installed with Helm!
+...
+The CLI has been configured to connect to the server automatically. This
+connection information is saved in the CLI context named "install-1657050581".
+Use the "waypoint context" CLI to manage CLI contexts.
+...
+
+$ waypoint version
+CLI: v0.9.0 (88a2e83eb)
+Server: v0.9.0
+
+$ waypoint context inspect
+
+» Context Settings:
+      config path: /Users/username/Library/Preferences/waypoint
+  default context: install-1657050581
+
+$ waypoint server restore waypoint-server-snapshot-1657050483
+
+$ cp /Users/username/Library/Preferences/waypoint/context/install-1657050368.hcl /Users/username/Library/Preferences/waypoint/context/install-1657050581.hcl
+
+$ kubectl delete pod/waypoint-server-0
+pod "waypoint-server-0" deleted
+
+$ waypoint status
+Current project statuses in server context "localhost:9701"
+
+PROJECT       	WORKSPACE	DEPLOYMENT STATUSES	RELEASE STATUSES
+example-nodejs	default  	1 READY            	1 READY
+
+
+The projects listed above represent their current state known
+in the Waypoint server. For more information about a project’s applications and
+their current state, run ‘waypoint status -project=PROJECT-NAME’.
+```
+
+## Other Considerations
+
+### Notice of change for multi-app config files
+
+We are exploring the possibility of disallowing the configuration of multiple
+applications within a single waypoint.hcl file but want to continue to enable
+multi-applications in Waypoint. We are very interested to hear how you
+envision configuring multiple applications with Waypoint, and develop our
+product in a way that can support your workflows.
+
+Please see [this Discuss post](https://discuss.hashicorp.com/t/deprecating-projects-or-how-i-learned-to-love-apps/40888)
+for more information. If you have questions, concerns, or suggestions
+about this change in functionality, we invite you to discuss with us there.
+
+### Default runner profiles
+
+After an upgrade, you will have two default runner profiles, as the upgrade
+will create a new default runner profile with the new server version.
+
+We recommend you remove old runner profiles that depend on older versions of
+the `waypoint-odr` image. Additionally, having only one default runner profile
+is recommended so you have consistent behavior.
+
+#### Helm installs
+
+With the Helm upgrade, a new runner profile will not be created. We recommend
+overwriting the current default runner profile to update the `waypoint-odr`
+image version it uses. You can do that by running:
+
+```shell-session
+$ waypoint runner profile set -name=01G68E50FKQA2JZM8Q79C0NQE7 -plugin-type=kubernetes -default
+```
+
+### Server Image
+
+`waypoint install` uses the `hashicorp/waypoint:latest` container image for
+Kubernetes, Nomad, ECS, and Docker. When upgrading, your platform may require
+you to pull the latest image instead of using a cache.
+
+Kubernetes and Nomad both specify an "always pull" policy for `:latest` images
+so restarting the Deployment or Job should pull the latest released version.
+Docker may require an explicit `docker pull` and container recreate.
+
+#### Verifying the Server Version with the UI
+
+You can verify the server version by loading the UI and looking at the footer.
+You should see a version starting with `v0.9`. If you see an earlier version,
+your platform may be using an old cached image.
+
+#### Verifying the Server Version with the CLI
+
+You can verify both the CLI version and server version by running:
+
+```shell-session
+$ waypoint version
+CLI: v0.9.0 (622f37bd1)
+Server: v0.9.0
+```

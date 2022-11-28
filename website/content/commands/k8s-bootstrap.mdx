@@ -39,7 +39,7 @@ should be no concern of data loss in the event of a bootstrap failure.
 
 #### Global Options
 
-- `-plain` - Plain output: no colors, no animation.
+- `-plain` - Plain output: no colors, no animation. The default is false.
 - `-app=<string>` (`-a`) - App to target. Certain commands require a single app target for Waypoint configurations with multiple apps. If you have a single app, then this can be ignored.
 - `-project=<string>` (`-p`) - Project to target.
 - `-workspace=<string>` (`-w`) - Workspace to operate in.
@@ -47,8 +47,8 @@ should be no concern of data loss in the event of a bootstrap failure.
 #### Connection Options
 
 - `-server-addr=<string>` - Address for the server.
-- `-server-tls` - True if the server should be connected to via TLS.
-- `-server-tls-skip-verify` - True to skip verification of the TLS certificate advertised by the server.
+- `-server-tls` - True if the server should be connected to via TLS. The default is true.
+- `-server-tls-skip-verify` - True to skip verification of the TLS certificate advertised by the server. The default is false.
 
 #### Command Options
 
@@ -58,7 +58,7 @@ should be no concern of data loss in the event of a bootstrap failure.
 - `-odr-service-account=<string>` - The name of the Kubernetes service account to use for ODR.
 - `-odr-image-pull-policy=<string>` - The pull policy to use for the container image.
 - `-advertise-service=<string>` - The name of the service to advertise.
-- `-advertise-tls` - True if the advertise addr supports TLS.
-- `-advertise-tls-skip-verify` - True if the advertise addr TLS shouldn't be verified.
+- `-advertise-tls` - True if the advertise addr supports TLS. The default is true.
+- `-advertise-tls-skip-verify` - True if the advertise addr TLS shouldn't be verified. The default is false.
 
 @include "commands/k8s-bootstrap_more.mdx"

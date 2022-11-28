@@ -3,9 +3,11 @@ package singleprocess
 import (
 	"context"
 
+	"github.com/hashicorp/go-hclog"
 	empty "google.golang.org/protobuf/types/known/emptypb"
 
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
+	"github.com/hashicorp/waypoint/pkg/server/hcerr"
 	serverptypes "github.com/hashicorp/waypoint/pkg/server/ptypes"
 )
 
@@ -14,14 +16,14 @@ func (s *Service) GetUser(
 	req *pb.GetUserRequest,
 ) (*pb.GetUserResponse, error) {
 	// Currently logged in user by default
-	user := s.userFromContext(ctx)
+	user := s.UserFromContext(ctx)
 
 	// If we have a request, get that user
 	if req.User != nil {
 		var err error
-		user, err = s.state(ctx).UserGet(req.User)
+		user, err = s.state(ctx).UserGet(ctx, req.User)
 		if err != nil {
-			return nil, err
+			return nil, hcerr.Externalize(hclog.FromContext(ctx), err, "failed to get user")
 		}
 	}
 
@@ -39,13 +41,13 @@ func (s *Service) UpdateUser(
 	}
 
 	// Get the user so that we don't overwrite fields that shouldn't be.
-	user, err := s.state(ctx).UserGet(&pb.Ref_User{
+	user, err := s.state(ctx).UserGet(ctx, &pb.Ref_User{
 		Ref: &pb.Ref_User_Id{
 			Id: &pb.Ref_UserId{Id: req.User.Id},
 		},
 	})
 	if err != nil {
-		return nil, err
+		return nil, hcerr.Externalize(hclog.FromContext(ctx), err, "failed to get user in update")
 	}
 
 	// Update our writable fields
@@ -53,8 +55,8 @@ func (s *Service) UpdateUser(
 	user.Display = req.User.Display
 
 	// Write it
-	if err := s.state(ctx).UserPut(user); err != nil {
-		return nil, err
+	if err := s.state(ctx).UserPut(ctx, user); err != nil {
+		return nil, hcerr.Externalize(hclog.FromContext(ctx), err, "failed to update user")
 	}
 
 	return &pb.UpdateUserResponse{
@@ -70,8 +72,8 @@ func (s *Service) DeleteUser(
 		return nil, err
 	}
 
-	if err := s.state(ctx).UserDelete(req.User); err != nil {
-		return nil, err
+	if err := s.state(ctx).UserDelete(ctx, req.User); err != nil {
+		return nil, hcerr.Externalize(hclog.FromContext(ctx), err, "failed to delete user")
 	}
 
 	return &empty.Empty{}, nil
@@ -81,9 +83,9 @@ func (s *Service) ListUsers(
 	ctx context.Context,
 	req *empty.Empty,
 ) (*pb.ListUsersResponse, error) {
-	users, err := s.state(ctx).UserList()
+	users, err := s.state(ctx).UserList(ctx)
 	if err != nil {
-		return nil, err
+		return nil, hcerr.Externalize(hclog.FromContext(ctx), err, "failed to list users")
 	}
 
 	return &pb.ListUsersResponse{Users: users}, nil

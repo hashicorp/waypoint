@@ -18,6 +18,7 @@ module('Unit | Service | api', function (hooks) {
             ref: 'head',
             path: '',
             ignoreChangesOutsidePath: true,
+            recurseSubmodules: 1,
           },
         },
         remoteEnabled: false,

@@ -1,0 +1,24 @@
+{
+   "description": "Generates a value representing a path on disk",
+   "example": "build {\n  use \"files\" {}\n}",
+   "mappers": null,
+   "name": "files",
+   "optionalFields": null,
+   "outputAttrs": [
+      {
+         "Field": "path",
+         "Type": "string",
+         "Synopsis": "",
+         "Summary": "",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      }
+   ],
+   "outputAttrsHelp": "Output attributes can be used in your `waypoint.hcl` as [variables](/docs/waypoint-hcl/variables) via [`artifact`](/docs/waypoint-hcl/variables/artifact) or [`deploy`](/docs/waypoint-hcl/variables/deploy).",
+   "requiredFields": null,
+   "type": "builder",
+   "use": "the [`use` stanza](/docs/waypoint-hcl/use) for this plugin."
+}

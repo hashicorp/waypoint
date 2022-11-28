@@ -81,7 +81,7 @@ func (p *Platform) StatusFunc() interface{} {
 func (p *Platform) resourceManager(log hclog.Logger) *resource.Manager {
 	return resource.NewManager(
 		resource.WithLogger(log.Named("resource_manager")),
-		resource.WithValueProvider(p.getNomadClient),
+		resource.WithValueProvider(getNomadClient),
 		resource.WithResource(resource.NewResource(
 			resource.WithName(rmResourceJobName),
 			resource.WithState(&Resource_Job{}),
@@ -93,7 +93,7 @@ func (p *Platform) resourceManager(log hclog.Logger) *resource.Manager {
 
 // getNomadClient is a value provider for our resource manager and provides
 // the client connection used by resources to interact with Nomad.
-func (p *Platform) getNomadClient() (*api.Client, error) {
+func getNomadClient() (*api.Client, error) {
 	// Get our client
 	client, err := api.NewClient(api.DefaultConfig())
 	if err != nil {
@@ -139,12 +139,12 @@ func (p *Platform) resourceJobCreate(
 			},
 		}
 
-		// Register app to Consul. If Nomad is not using Consul, this service
-		// is not used when job is registered
+		// Register service with app deployment
 		tg.Services = []*api.Service{
 			{
 				Name:      result.Name,
 				PortLabel: "waypoint", // matches dynamic port label in NetworkResource
+				Provider:  p.config.ServiceProvider,
 			},
 		}
 
@@ -438,6 +438,9 @@ type Config struct {
 	// or default to another port.
 	ServicePort uint `hcl:"service_port,optional"`
 
+	// Specifies the service registration provider to use for service registrations
+	ServiceProvider string `hcl:"service_provider,optional"`
+
 	// Environment variables that are meant to configure the application in a static
 	// way. This might be control an image that has multiple modes of operation,
 	// selected via environment variable. Most configuration should use the waypoint
@@ -548,6 +551,12 @@ deploy {
 	doc.SetField(
 		"static_environment",
 		"Environment variables to add to the job.",
+	)
+
+	doc.SetField(
+		"service_provider",
+		"Specifies the service registration provider to use for registering a service for the job",
+		docs.Default("consul"),
 	)
 
 	doc.SetField(

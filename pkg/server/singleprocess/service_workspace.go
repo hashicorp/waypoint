@@ -6,7 +6,9 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	"github.com/hashicorp/go-hclog"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
+	"github.com/hashicorp/waypoint/pkg/server/hcerr"
 	"github.com/hashicorp/waypoint/pkg/server/ptypes"
 )
 
@@ -19,9 +21,15 @@ func (s *Service) GetWorkspace(
 		return nil, err
 	}
 
-	result, err := s.state(ctx).WorkspaceGet(req.Workspace.Workspace)
+	result, err := s.state(ctx).WorkspaceGet(ctx, req.Workspace.Workspace)
 	if err != nil {
-		return nil, err
+		return nil, hcerr.Externalize(
+			hclog.FromContext(ctx),
+			err,
+			"error getting workspace",
+			"workspace",
+			req.Workspace.GetWorkspace(),
+		)
 	}
 
 	return &pb.GetWorkspaceResponse{Workspace: result}, nil
@@ -38,23 +46,27 @@ func (s *Service) ListWorkspaces(
 	switch v := req.Scope.(type) {
 	case nil:
 		// This is the same as Global for backwards compat reasons.
-		result, err = s.state(ctx).WorkspaceList()
+		result, err = s.state(ctx).WorkspaceList(ctx)
 
 	case *pb.ListWorkspacesRequest_Global:
-		result, err = s.state(ctx).WorkspaceList()
+		result, err = s.state(ctx).WorkspaceList(ctx)
 
 	case *pb.ListWorkspacesRequest_Project:
-		result, err = s.state(ctx).WorkspaceListByProject(v.Project)
+		result, err = s.state(ctx).WorkspaceListByProject(ctx, v.Project)
 
 	case *pb.ListWorkspacesRequest_Application:
-		result, err = s.state(ctx).WorkspaceListByApp(v.Application)
+		result, err = s.state(ctx).WorkspaceListByApp(ctx, v.Application)
 
 	default:
 		return nil, status.Errorf(codes.FailedPrecondition,
 			"unknown ListWorkspaces scope type: %T", req.Scope)
 	}
 	if err != nil {
-		return nil, err
+		return nil, hcerr.Externalize(
+			hclog.FromContext(ctx),
+			err,
+			"error listing workspaces",
+		)
 	}
 
 	return &pb.ListWorkspacesResponse{Workspaces: result}, nil
@@ -69,8 +81,14 @@ func (s *Service) UpsertWorkspace(
 		return nil, err
 	}
 
-	if err := s.state(ctx).WorkspacePut(req.Workspace); err != nil {
-		return nil, err
+	if err := s.state(ctx).WorkspacePut(ctx, req.Workspace); err != nil {
+		return nil, hcerr.Externalize(
+			hclog.FromContext(ctx),
+			err,
+			"error upserting workspace",
+			"workspace",
+			req.GetWorkspace(),
+		)
 	}
 
 	return &pb.UpsertWorkspaceResponse{Workspace: req.Workspace}, nil

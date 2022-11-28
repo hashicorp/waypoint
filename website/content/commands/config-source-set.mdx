@@ -28,9 +28,16 @@ To use this command, you should specify a "-type" flag along with one or more
 "-config" values. Please see the documentation for the config source type
 you're configuring for details on what configuration fields are available.
 
+This command overrides all configuration already set for a configuration
+source plugin. When modifying an existing configuration, all desired
+"-config" flags will need to be set each time the command is ran.
+
+Configuration for this command is global. The "-app", "-project", and
+"-workspace" flags are ignored on this command.
+
 #### Global Options
 
-- `-plain` - Plain output: no colors, no animation.
+- `-plain` - Plain output: no colors, no animation. The default is false.
 - `-app=<string>` (`-a`) - App to target. Certain commands require a single app target for Waypoint configurations with multiple apps. If you have a single app, then this can be ignored.
 - `-project=<string>` (`-p`) - Project to target.
 - `-workspace=<string>` (`-w`) - Workspace to operate in.
@@ -39,6 +46,6 @@ you're configuring for details on what configuration fields are available.
 
 - `-type=<string>` - Dynamic source type to configure, such as 'vault'.
 - `-config=<key=value>` - Configuration for the dynamic source type. This may be repeated. The fields available are dependent on the dynamic source type, so please check the documentation for that specific type for more information.
-- `-delete` - Delete the configuration for this source type. If this is set then the -config flag is ignored.
+- `-delete` - Delete the configuration for this source type. If this is set then the -config flag is ignored. The default is false.
 
 @include "commands/config-source-set_more.mdx"

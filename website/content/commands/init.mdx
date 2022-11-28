@@ -28,7 +28,7 @@ delete your configuration or any data in the server.
 
 #### Global Options
 
-- `-plain` - Plain output: no colors, no animation.
+- `-plain` - Plain output: no colors, no animation. The default is false.
 - `-app=<string>` (`-a`) - App to target. Certain commands require a single app target for Waypoint configurations with multiple apps. If you have a single app, then this can be ignored.
 - `-project=<string>` (`-p`) - Project to target.
 - `-workspace=<string>` (`-w`) - Workspace to operate in.
@@ -36,7 +36,7 @@ delete your configuration or any data in the server.
 #### Command Options
 
 - `-from-project=<string>` - Create a new application by fetching the given application from a remote source or from a local project folder or file on disk.
-- `-into=<string>` - Where to write the application fetched via -from-project
-- `-update` - Update the project configuration if it already exists. This can be used to update settings such as the remote runner data source.
+- `-into=<string>` - Where to write the application fetched via -from-project.
+- `-update` - Update the project configuration if it already exists. This can be used to update settings such as the remote runner data source. The default is false.
 
 @include "commands/init_more.mdx"

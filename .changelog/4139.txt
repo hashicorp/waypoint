@@ -1,0 +1,3 @@
+```release-note:improvement
+ui/input-variables: Adds the ability to set an input variable as sensitive and hides its value from the list and form
+```

@@ -9,6 +9,11 @@ import "google/protobuf/timestamp.proto";
 import "google/rpc/status.proto";
 import "any.proto";
 
+/********************************************************************
+* PERMANENTLY RESERVED FIELD NUMBERS
+* 100000000 - inline keepalives
+********************************************************************/
+
 // The service that is implemented for the server backend.
 service Waypoint {
   //----------------------------------------------------------------------
@@ -92,6 +97,10 @@ service Waypoint {
   // ListApplications because applications are a part of projects and you
   // can use GetProject to get more information about the project.
   rpc ListProjects(google.protobuf.Empty) returns (ListProjectsResponse) {}
+
+  // DestroyProject deletes a project from the database as well as (optionally)
+  // destroys all resources created within a project
+  rpc DestroyProject(DestroyProjectRequest) returns (google.protobuf.Empty) {};
 
   // GetApplication returns one application on the project.
   rpc GetApplication(GetApplicationRequest) returns (GetApplicationResponse);
@@ -345,6 +354,12 @@ service Waypoint {
   // GetOnDemandRunnerConfig returns the on-demand runner configuration.
   rpc GetOnDemandRunnerConfig(GetOnDemandRunnerConfigRequest) returns (GetOnDemandRunnerConfigResponse);
 
+  // GetOnDemandRunnerConfig returns the on-demand runner configuration.
+  rpc GetDefaultOnDemandRunnerConfig(google.protobuf.Empty) returns (GetOnDemandRunnerConfigResponse);
+
+  // GetOnDemandRunnerConfig returns the on-demand runner configuration.
+  rpc DeleteOnDemandRunnerConfig(DeleteOnDemandRunnerConfigRequest) returns (DeleteOnDemandRunnerConfigResponse);
+
   // ListOnDemandRunnerConfigs returns a list of all the on-demand runners configs.
   rpc ListOnDemandRunnerConfigs(google.protobuf.Empty) returns (ListOnDemandRunnerConfigsResponse);
 
@@ -406,6 +421,44 @@ service Waypoint {
   rpc RunTrigger(RunTriggerRequest) returns (RunTriggerResponse);
 
   //----------------------------------------------------------------------
+  // Pipeline endpoints
+  //----------------------------------------------------------------------
+
+  // UpsertPipeline updates or inserts a pipeline. This is an INTERNAL ONLY
+  // endpoint that is meant to only be called by runners. Calling this manually
+  // can risk the internal state for pipelines. In the future, we'll restrict
+  // access to this via ACLs.
+  rpc UpsertPipeline(UpsertPipelineRequest) returns (UpsertPipelineResponse);
+
+  // RunPipeline queues a pipeline execution.
+  rpc RunPipeline(RunPipelineRequest) returns (RunPipelineResponse);
+
+  // GetPipeline returns a pipeline proto by pipeline ref id
+  rpc GetPipeline(GetPipelineRequest) returns (GetPipelineResponse);
+
+  // GetPipelineRun returns a pipeline run proto by pipeline ref id and sequence
+  rpc GetPipelineRun(GetPipelineRunRequest) returns (GetPipelineRunResponse);
+
+  // GetLatestPipelineRun returns a pipeline run proto by pipeline ref id and sequence
+  rpc GetLatestPipelineRun(GetPipelineRequest) returns (GetPipelineRunResponse);
+
+  // ListPipelines takes a project and evaluates the projects config to get
+  // a list of Pipeline protos to return in the response. These pipelines
+  // are scoped to a single project from the request. It will return an
+  // error if the requested project does not exist, or an empty response
+  // if no pipelines are defined for the project.
+  rpc ListPipelines(ListPipelinesRequest) returns (ListPipelinesResponse);
+
+  // ListPipelineRuns takes a pipeline ref and returns a list of runs of that pipeline.
+  // It will return an error if the requested pipeline does not exist, or an empty response
+  // if there are no runs for the pipeline.
+  rpc ListPipelineRuns(ListPipelineRunsRequest) returns (ListPipelineRunsResponse);
+
+  // ConfigSyncPipeline takes a request for a given project and syncs the current
+  // project config to the Waypoint database.
+  rpc ConfigSyncPipeline(ConfigSyncPipelineRequest) returns (ConfigSyncPipelineResponse);
+
+  //----------------------------------------------------------------------
   // UI endpoints. The endpoints below are convenience methods for Waypoint's
   // various UIs (web GUI and CLI). They contain no unique functionality, i.e.
   // anything achievable through these endpoints should also be achievable through
@@ -417,6 +470,9 @@ service Waypoint {
 
   // List deployments for a given application.
   rpc UI_ListDeployments(UI.ListDeploymentsRequest) returns (UI.ListDeploymentsResponse);
+
+  // GetDeployment returns a deployment
+  rpc UI_GetDeployment(UI.GetDeploymentRequest) returns (UI.GetDeploymentResponse);
 
   // List releases for a given application.
   rpc UI_ListReleases(UI.ListReleasesRequest) returns (UI.ListReleasesResponse);
@@ -434,7 +490,6 @@ message UI {
     Project project = 1;
     Job latest_init_job = 2;
   }
-
 
   message ListDeploymentsRequest {
     // Application that the deployments belong to.
@@ -458,6 +513,19 @@ message UI {
   message ListDeploymentsResponse {
     // The list of deployments with related messages prefetched.
     repeated UI.DeploymentBundle deployments = 1;
+  }
+
+  message GetDeploymentRequest {
+    Ref.Operation ref = 1;
+
+    // Indicate if the fetched deployments should include additional information
+    // about each deployment.
+    Deployment.LoadDetails load_details = 2;
+  }
+
+  message GetDeploymentResponse {
+    // The deployment with related messages prefetched.
+    UI.DeploymentBundle deployment = 1;
   }
 
   // A deployment packaged alongside prefetched related messages.
@@ -534,6 +602,22 @@ message UI {
 
 message GetVersionInfoResponse {
   VersionInfo info = 1;
+
+  // Represents additional features that the current server supports.
+  ServerFeatures server_features = 2;
+}
+
+// Represents features that the server supports.
+// Useful for ensuring compatibility between clients and servers.
+message ServerFeatures {
+  repeated feature features = 1;
+
+  enum feature {
+    FEATURE_UNSPECIFIED = 0;
+
+    // Advertises that this server is capable of receiving inline keepalive messages
+    FEATURE_INLINE_KEEPALIVES = 1;
+  }
 }
 
 message VersionInfo {
@@ -642,7 +726,7 @@ message Variable {
     // matching protobuf format, or any complex hcl type as a raw string.
     oneof value {
       // 'sensitive' values are hashed as SHA256 values for
-	    // the purposes of output and logging
+      // the purposes of output and logging
       string sensitive = 1;
       string str = 2;
       bool bool = 3;
@@ -742,6 +826,15 @@ message Project {
     // The server may enforce minimum values, in which case a value lower
     // than the minimum will be ignored.
     string interval = 2;
+  }
+
+  ProjectState state = 11;
+
+  // ProjectState is set to active when the project is created and throughout its lifetime.
+  // When a project destroy operation begins, the state is set to destroying.
+  enum ProjectState {
+    ACTIVE = 0;
+    DESTROYING = 1;
   }
 }
 
@@ -862,6 +955,24 @@ message Ref {
     string workspace = 1;
   }
 
+  message Deployment {
+    // Either reference the latest deployment, or a specific deployment id
+    oneof ref {
+      bool latest = 1;
+
+      uint64 sequence = 2;
+    }
+  }
+
+  message Artifact {
+    // Either reference the latest artifact, or a specific artifact id
+    oneof ref {
+      bool latest = 1;
+
+      uint64 sequence = 2;
+    }
+  }
+
   // Component references a component.
   message Component {
     hashicorp.waypoint.Component.Type type = 1;
@@ -968,6 +1079,41 @@ message Ref {
       // The main "run" job ID that the task initiated
       string job_id = 2;
     }
+  }
+
+  // Pipeline references a pipeline using one or more lookup types.
+  message Pipeline {
+    oneof ref {
+      // Reference a single pipeline by ID.
+      string id = 1;
+
+      // Reference an existing pipeline by Project name and Pipeline name
+      // Format: "project-name/pipeline-name"
+      // This assumes that a project cannot have two pipelines with the same name.
+      PipelineOwner owner = 2;
+    }
+  }
+
+  message PipelineOwner {
+    // the project this pipeline is associated with
+    Ref.Project project = 1;
+
+    // the name of the defined pipeline config
+    string pipeline_name = 2;
+  }
+
+  message PipelineStep {
+    // ID of the pipeline
+    string pipeline_id = 1;
+
+    // Name of the pipeline
+    string pipeline_name = 2;
+
+    // Step name within the pipeline.
+    string step = 3;
+
+    // Pipeline run sequence
+    uint64 run_sequence = 4;
   }
 }
 
@@ -1121,6 +1267,24 @@ message DeclaredResource {
   ResourceCategoryDisplayHint category_display_hint = 5;
 }
 
+message DestroyedResource {
+  // Unique name name for the resource. Usually derived from the platform. Required.
+  string name = 1;
+
+  // platform-specific type of the resource type. i.e. instance, pod, auto-scaling group, etc
+  string type = 2;
+
+  // The platform on which the resource should exist, i.e. docker, gcp, k8s, etc.
+  string platform = 3;
+
+  // Internal ResourceManager representation of the resource.
+  opaqueany.Any state = 4;
+
+  // Any additional information a plugin wants to expose on this resource.
+  // EX: Availability zones on a load balancer, concurrency limit on a lambda function, etc.
+  string state_json = 5;
+}
+
 enum ResourceCategoryDisplayHint {
   UNKNOWN = 0;
   OTHER = 1; // catch-all for types that do not fit well into other predefined roles. i.e. aws target group
@@ -1179,7 +1343,7 @@ message Task {
   Ref.Job watch_job = 9;
 
   // Both start_job and stop_job relate to task_job.These jobs were
-  // responsibile for starting and stopping the runner which executed the task
+  // responsible for starting and stopping the runner which executed the task
   // job.
   Ref.Job start_job = 3;
   Ref.Job stop_job = 4;
@@ -1194,7 +1358,7 @@ message Task {
 
   // The overall state of the Task triple. See the enum def for details for
   // each possible Task state. This will be computed for each GetTaskResponse
-  // based on the Task job ids receieved from the database.
+  // based on the Task job ids received from the database.
   State job_state = 7;
 
   // The resource that gets created to run the task job for this Task
@@ -1206,7 +1370,7 @@ message Task {
     UNKNOWN = 0; // no state defined, the default
     PENDING = 1; // no jobs have been ran yet
     STARTING = 2; // start_job is running
-    STARTED  = 3; // start_job complete, task is not running yet
+    STARTED = 3; // start_job complete, task is not running yet
     RUNNING = 4; // task is running
     COMPLETED = 5; // task is done
     STOPPING = 6; // stop_job is running
@@ -1267,6 +1431,12 @@ message ListTaskResponse {
 message CancelTaskRequest {
   // A reference to the task to cancel
   Ref.Task ref = 1;
+}
+
+// ErrorDetail is intended for use in `status`.
+message ErrorDetail {
+  string key = 1;
+  string value = 2;
 }
 
 /********************************************************************
@@ -1532,7 +1702,7 @@ message ValidateJobResponse {
 
 // A Job is a job that executes on a runner and is queued by QueueOperation.
 message Job {
-  reserved 70 to 99; // future operation range
+  reserved 72 to 99; // future operation range
 
   // id of the job. This is generated on the server side when queued. If
   // you are queueing a job, this must be empty or unset.
@@ -1582,6 +1752,27 @@ message Job {
   // If target_runner is Any and this is set, the job will be executed
   // on an ODR spawned from this config.
   Ref.OnDemandRunnerConfig ondemand_runner = 112;
+
+  // This is optional and overrides the task that is used by the on-demand
+  // runner. This requires ODR to exist since the ODR system is used to
+  // launch tasks. If an ODR config is not available, queueing this job will
+  // fail.
+  //
+  // This can be used to run custom runner binaries or custom tasks without
+  // a runner.
+  TaskOverride ondemand_runner_task = 115;
+
+  message TaskOverride {
+    // Launch info for the task. The environment variables will be merged
+    // with the defaults. If no OCI URL is specified, the ODR profile
+    // settings are used.
+    TaskLaunchInfo launch_info = 1;
+
+    // If true, the operation will not be queued. This only works with
+    // Noop operations out of safety. This is primarliy for tasks that
+    // are NOT runners.
+    bool skip_operation = 2;
+  }
 
   // Labels are the labels to set for this operation.
   // This is optional.
@@ -1635,6 +1826,8 @@ message Job {
     StopTaskLaunchOp stop_task = 67;
     InitOp init = 68;
     WatchTaskOp watch_task = 69;
+    PipelineStepOp pipeline_step = 70;
+    DestroyProjectOp destroy_project = 71;
   }
 
   //-----------------------------------------------------------------
@@ -1699,6 +1892,11 @@ message Job {
   // is part of the referenced task id.
   Ref.Task task = 114;
 
+  // PipelineStep is a reference to the pipeline and step that might have triggered this job.
+  // If the PipelineStep is nil, this job was not initiated by a pipeline.
+  // If the Pipeline Ref is set, this job is part of the referenced pipeline.
+  Ref.PipelineStep pipeline = 117;
+
   enum State {
     UNKNOWN = 0;
     QUEUED = 1; // queued and waiting for assignment
@@ -1724,6 +1922,9 @@ message Job {
     StartTaskResult start_task = 13;
     InitResult init = 14;
     WatchTaskResult watch_task = 15;
+    PipelineStepResult pipeline_step = 16;
+    PipelineConfigSyncResult pipeline_config_sync = 17;
+    ProjectDestroyResult project_destroy = 18;
   }
 
   message Config {
@@ -1759,6 +1960,10 @@ message Job {
 
       // git will check out the data from a Git repository.
       Git git = 2;
+
+      // remote means that the Waypoint server has special logic for how to
+      // fetch the data.
+      Remote remote = 3;
     }
 
     // Ref is a reference to the exact set of data used by a data source.
@@ -1775,6 +1980,20 @@ message Job {
   }
 
   message Local {}
+
+  message Remote {
+    // Description is information about how the Waypoint server
+    // acquires the data.
+    string description = 1;
+
+    // If remote refers to a git repo, git_remote will be partially populate
+    // with information about which information within the git repo to use.
+    Git git_remote = 2;
+
+    // This corresponds with the implicit behavior associated with data source
+    // polling, whereby if the polling is successful, we perform an Up operation.
+    bool deploy_on_change = 3;
+  }
 
   message Git {
     // url of the repository to clone. Local paths are not allowed.
@@ -1843,6 +2062,9 @@ message Job {
 
       // timestamp is the timestamp of the commit
       google.protobuf.Timestamp timestamp = 2;
+
+      // commit_message is the commit message, contains arbitrary text
+      string commit_message = 3;
     }
   }
 
@@ -2119,6 +2341,16 @@ message Job {
 
   message ConfigSyncResult {}
 
+  message PipelineConfigSyncResult {
+    // synced_pipelines is a map of Pipeline Name Keys to Pipeline ID Refs for
+    // each pipeline that was synced in the config sync request.
+    map<string, Ref.Pipeline> synced_pipelines = 1;
+  }
+
+  message ProjectDestroyResult {
+    string job_id = 1;
+  }
+
   // PollOp triggers a poll action for a project. The job will fail if there
   // is no data source configured for the project.
   //
@@ -2154,6 +2386,28 @@ message Job {
     // NOTE(jgwhite): In the future I think we may want to communicate what
     // entities were created during the init operation. At the time of writing,
     // there is no pressing reason to add this data.
+  }
+
+  // PipelineStepOp triggers the execution of a pipeline step.
+  message PipelineStepOp {
+    // The step to execute.
+    Pipeline.Step step = 1;
+  }
+
+  // DestroyProjectOp triggers the deletion of a project from the database
+  // as well as (optionally) the destruction of all resources created within
+  // a project
+  message DestroyProjectOp {
+    Ref.Project project = 1;
+    bool skip_destroy_resources = 2;
+  }
+
+  // Note that since we run pipeline steps as jobs, the output of the pipeline
+  // execution is in the job log.
+  message PipelineStepResult {
+    // The resulting status from the pipeline step execution. This will
+    // always be non-nil. On success the code will be OK.
+    google.rpc.Status result = 1;
   }
 
   // QueueProjectOp queues a job for all applications in a project. The
@@ -2219,7 +2473,8 @@ message ListJobsRequest {
   Ref.Project project = 2;
   Ref.Application application = 3;
   Ref.Runner targetRunner = 4;
-  repeated Job.State jobState = 5;
+  Ref.PipelineStep pipeline = 5;
+  repeated Job.State jobState = 6;
 }
 
 message ListJobsResponse {
@@ -2876,6 +3131,10 @@ message ListProjectsResponse {
   repeated Ref.Project projects = 1;
 }
 
+message DestroyProjectRequest {
+  Ref.Project project = 1;
+}
+
 message GetApplicationRequest {
   Ref.Application application = 1;
 }
@@ -3062,6 +3321,14 @@ message GetOnDemandRunnerConfigRequest {
 }
 
 message GetOnDemandRunnerConfigResponse {
+  OnDemandRunnerConfig config = 1;
+}
+
+message DeleteOnDemandRunnerConfigRequest {
+  Ref.OnDemandRunnerConfig config = 1;
+}
+
+message DeleteOnDemandRunnerConfigResponse {
   OnDemandRunnerConfig config = 1;
 }
 
@@ -3329,6 +3596,9 @@ message Deployment {
   // Resources that this deployment has created or manages.
   repeated DeclaredResource declared_resources = 19;
 
+  // Resources that a destroy operation has destroyed
+  repeated DestroyedResource destroyed_resources = 21;
+
   // This is the populated preload data. Most of this data can be retrieved
   // through additional API calls or manually computed, but certain API
   // calls will pre-populate some of these fields for convenience. The exact
@@ -3561,6 +3831,9 @@ message Release {
 
   // A platform resource that this release has created, depends on, or manages.
   repeated DeclaredResource declared_resources = 19;
+
+  // Resources that a destroy operation has destroyed
+  repeated DestroyedResource destroyed_resources = 20;
 
   // This is the populated preload data. Most of this data can be retrieved
   // through additional API calls or manually computed, but certain API
@@ -4185,7 +4458,16 @@ message ConfigSource {
   // scopes will use a default configuration set by the plugin.
   oneof scope {
     Ref.Global global = 50;
+    Ref.Project project = 51;
+    Ref.Application application = 52;
   }
+
+  // workspace, if set, will limit this config source to a specific
+  // workspace. This is in addition to the app scoping above. For example,
+  // if you specify project scoping above, and set this too, then only
+  // matching projects in the matching workspace will have this config var
+  // set.
+  Ref.Workspace workspace = 5;
 
   // type of the config source. This should match the plugin name.
   string type = 1;
@@ -4210,7 +4492,14 @@ message GetConfigSourceRequest {
   // scope is the scoping for the config source.
   oneof scope {
     Ref.Global global = 50;
+    Ref.Project project = 51;
+    Ref.Application application = 52;
   }
+
+  // Workspace that the target environment is in. This will limit configuration
+  // source to those that which is for this workspace. If this isn't set, all
+  // configuration sources will be returned.
+  Ref.Workspace workspace = 2;
 
   // config source type. This is optional. If this is omitted, all
   // config source types matching the above scoping will be returned.
@@ -4455,6 +4744,290 @@ message EntrypointExecResponse {
 }
 
 /********************************************************************
+* Pipelines
+********************************************************************/
+
+message Pipeline {
+  // Unique ID for this pipeline.
+  string id = 1;
+
+  // Human-friendly name for the pipeline. This is not unique! Users should
+  // use the ID and other metadata to differentiate pipelines. In general,
+  // we recommend avoiding reusing names.
+  string name = 2;
+
+  // The owner is the thing that manages this pipeline.
+  //
+  // NOTE(mitchellh): We currently only support project-synced pipelines.
+  // In the future, we may want to consider pipelines not attached to
+  // projects (just created via the API/UI/CLI on their own). This "oneof"
+  // is here to represent that. If we ever decide NOT to do that, we can just
+  // remove the "oneof" which is backwards compatible.
+  oneof owner {
+    // This pipeline is created from a waypoint.hcl file that is synced via VCS.
+    Ref.Project project = 3;
+  }
+
+  // The steps that make up this pipeline. This is a set and the order
+  // has no meaning; it does not imply any ordering that the steps will
+  // be executed. The execution order is purely defined by the "depends_on"
+  // fields on the steps.
+  //
+  // There must be only one "root" step. A root step is a step with no
+  // dependencies. It is an error for there to be more than one root step.
+  //
+  // For API users, the GetPipelineResponse has a number of fields that
+  // help make this much easier to consume, such as a dedicated field for
+  // the root step, mermaid-formatted graph output, and more.
+  //
+  // These requirements are usually hidden from users through nicer user
+  // experiences for editing: waypoint.hcl syntax (which implicitly creates
+  // ordering and root steps), UIs, etc. All these requirements are noted for
+  // _internal_ users who are modifying pipelines via the API. For those
+  // internal users, they must manage the tedium of adhering to these requirements.
+  map<string, Step> steps = 4;
+
+  // A single step within the pipeline.
+  message Step {
+    // Name of the step. This is unique within a pipeline. In the "steps"
+    // map, this must match the map key.
+    string name = 1;
+
+    // The steps that must come before this step. If this is empty,
+    // this is considered a "root" step. Only one step may be root.
+    // See "steps" on the Pipeline message for details.
+    repeated string depends_on = 2;
+
+    // The kind of step this is. IMPORTANT: the string values stored
+    // by the kind messages may contain HCL that needs further parsing.
+    // They are "partially" evaluated (similar to ConfigVars) using
+    // internal/pkg/partial.
+    oneof kind {
+      // Docker execute.
+      Exec exec = 3;
+
+      //
+      // "reserved" built-in pipeline step operations. These map directly to
+      // the lifecycle operations in Waypoint, i.e. Build, Deploy, Release, Up.
+      //
+
+      // Built-in build operation
+      Build build = 4;
+
+      // Built-in deploy operation
+      Deploy deploy = 6;
+
+      // Built-in release operation
+      Release release = 7;
+
+      // Built-in up operation
+      Up up = 8;
+
+      // A reference to a different pipeline
+      Pipeline pipeline = 9;
+
+      // TODO: custom plugins, pipeline references
+    }
+
+    // Docker image to execute. This should be a fully qualified image URL.
+    string image = 5;
+
+    // Workspace to use in step execution. If undefined, will default to the
+    // Workspace used when running the pipeline, otherwise 'default'
+    Ref.Workspace workspace = 10;
+
+    message Exec {
+      // TODO(briancain): update this to use the Step exec instead of the plugin
+      // Docker image to execute. This should be a fully qualified image URL.
+      string image = 1;
+
+      // Command to execute within the image. If blank, the default command
+      // will be executed.
+      string command = 2;
+      repeated string args = 3;
+    }
+
+    message Build {
+      // Whether or not to push the built artifact to a remote container registry
+      // TODO(briancain): ensure default to false because this will be inside
+      // an ODR container
+      bool disable_push = 2;
+    }
+
+    message Deploy {
+      // Whether or not to run a release immediately after the deploy. Defaults
+      // to false. Users would probably write a Release step to opt into a release
+      // but lets support the option here just like the CLI does.
+      bool release = 1;
+    }
+
+    message Release {
+      Ref.Deployment deployment = 1;
+      bool prune = 2;
+
+      // This sets the number of unreleased deployments to retain when pruning.
+      // This only has an effect if "prune_retain_override" is true. If that
+      // is false, then pruning uses the default behavior (retain 2).
+      int32 prune_retain = 3;
+      bool prune_retain_override = 4;
+    }
+
+    message Up {
+      bool prune = 1;
+
+      // This sets the number of unreleased deployments to retain when pruning.
+      // This only has an effect if "prune_retain_override" is true. If that
+      // is false, then pruning uses the default behavior (retain 2).
+      int32 prune_retain = 2;
+      bool prune_retain_override = 3;
+    }
+
+    message Pipeline {
+      Ref.Pipeline ref = 1;
+    }
+  }
+}
+
+message PipelineRun {
+  string id = 1;
+  // The sequence number for this pipeline run.
+  uint64 sequence = 2;
+
+  // The pipeline associated with this run.
+  Ref.Pipeline pipeline = 3;
+
+  // The full list of jobs that are associated with this run.
+  repeated Ref.Job jobs = 4;
+
+  // The current state of this pipeline run,
+  State state = 5;
+
+  enum State {
+    UNKNOWN = 0; // no state defined, the default
+    PENDING = 1; // pipeline run created
+    STARTING = 2; // root_job queued
+    RUNNING = 3; // jobs are working
+    ERROR = 4; // when any job errors, the pipeline aborts
+    CANCELLED = 5; // when any job gets manually cancelled, the entire pipeline aborts
+    SUCCESS = 6; // last_job completed
+  }
+}
+
+message UpsertPipelineRequest {
+  Pipeline pipeline = 1;
+}
+
+message UpsertPipelineResponse {
+  // This is the inserted/updated pipeline. This may not match the
+  // input since this will contain fully normalized data.
+  Pipeline pipeline = 1;
+}
+
+message GetPipelineRequest {
+  Ref.Pipeline pipeline = 1;
+}
+
+message GetPipelineResponse {
+  // Pipeline is the pipeline that was requested.
+  Pipeline pipeline = 1;
+
+  // Root step is the name of the step in pipeline that is the first
+  // step executed.
+  string root_step = 2;
+
+  // Graph is the execution graph for the pipeline steps. This can be
+  // used to better visualize pipeline execution since the internal data
+  // format of pipeline.steps is optimized more for storage rather than usage.
+  Graph graph = 3;
+
+  // Graph represents the execution graph for the pipeline steps. This
+  // may support multiple formats.
+  message Graph {
+    bytes content = 1;
+    Format format = 2;
+
+    enum Format {
+      INVALID = 0;
+      MERMAID = 1; // https://mermaid-js.github.io/mermaid/
+    }
+  }
+}
+
+message RunPipelineRequest {
+  // The pipeline to execute.
+  Ref.Pipeline pipeline = 1;
+
+  // This is the job template to use for all the queued steps. This should
+  // set all the required fields of a job except for "operation".
+  Job job_template = 2;
+
+  // In the future, we'll put input variables and other options here.
+}
+
+message RunPipelineResponse {
+  // The root job of the pipeline.
+  string job_id = 1;
+
+  // All job IDs are the list of all jobs that were queued for this pipeline.
+  // They are in topologically sorted order. This means that a job's dependencies
+  // are guaranteed to be satisfied by previous jobs in the list, but all
+  // previous jobs may not be necessary. This is because two jobs may be
+  // totally independent of each other and can execute concurrently. To get
+  // a better view, a graph should be built using step dependencies, and
+  // the job IDs can be correlated using the job_map field.
+  repeated string all_job_ids = 2;
+
+  // This provides a lookup from job ID to what step and pipeline a job
+  // corresponds to. Note that some jobs may correspond to pipelines other
+  // than the initial pipeline if nested pipelines are used.
+  map<string, Ref.PipelineStep> job_map = 3;
+
+  uint64 sequence = 4;
+}
+
+message ListPipelinesRequest {
+  // The project to list all pipelines on
+  Ref.Project project = 1;
+}
+
+message ListPipelinesResponse {
+  // All of the listed pipelines
+  repeated Pipeline pipelines = 1;
+}
+
+// NOTE(xx): these requests will be refactored in a future PR to optimize for UI
+// Will also add PipelineBundle and PipelineRunBundle objects
+message ListPipelineRunsRequest {
+  Ref.Pipeline pipeline = 1;
+}
+
+message ListPipelineRunsResponse {
+  // All of the listed pipelines
+  repeated PipelineRun pipeline_runs = 1;
+}
+
+message GetPipelineRunRequest {
+  Ref.Pipeline pipeline = 1;
+  uint64 sequence = 2;
+}
+
+message GetPipelineRunResponse {
+  // A single pipeline run
+  PipelineRun pipeline_run = 1;
+}
+
+message ConfigSyncPipelineRequest {
+  // The project to sync all pipeline configs on
+  Ref.Project project = 1;
+}
+
+message ConfigSyncPipelineResponse {
+  // synced_pipelines is a map of Pipeline Name Keys to Pipeline ID Refs for
+  // each pipeline that was synced in the config sync request.
+  map<string, Ref.Pipeline> synced_pipelines = 1;
+}
+
+/********************************************************************
 * Token
 ********************************************************************/
 
@@ -4474,6 +5047,30 @@ message TokenTransport {
   // Any configuration style metadata that can be passed along with the token
   // without invalidating the token body itself.
   map<string, string> metadata = 4;
+
+  // The external creds are stored outside of the authenticated token body
+  // because we want clients that see the creds in the transport to use
+  // them BUT then strip them out before transmitting the token, so that
+  // the creds aren't be transfer constantly.
+  oneof external_creds {
+    // A client that sees this populated will use the details to fetch a token
+    // via oauth instead of submitting this token directly.
+    OAuthCredentials oauth_creds = 12;
+  }
+
+  // The OAuth message contains information that the client should use
+  // to generate on OAuth token for authenticating with the server rather
+  // than just submitting the waypoint token directly.
+  message OAuthCredentials {
+    // The url for the oauth2 provider
+    string url = 1;
+
+    // The OAuth client id to submit
+    string client_id = 2;
+
+    // The OAuth client secret that goes along with the client_id
+    string client_secret = 3;
+  }
 }
 
 // The authenticated Token information. This is used to authenticate requests.
@@ -4507,12 +5104,6 @@ message Token {
 
     // trigger tokens can be used to trigger lifecycle actions via HTTP
     Trigger trigger = 10;
-  }
-
-  oneof external_creds {
-    // A client that sees this populated will use the details to fetch a token
-    // via oauth instead of submitting this token directly.
-    OAuthCredentials oauth_creds = 12;
   }
 
   message Login {
@@ -4573,20 +5164,6 @@ message Token {
   message Trigger {
     // The user that initiated the trigger token generation
     string from_user_id = 1;
-  }
-
-  // The OAuth message contains information that the client should use
-  // to generate on OAuth token for authenticating with the server rather
-  // than just submitting the waypoint token directly.
-  message OAuthCredentials {
-    // The url for the oauth2 provider
-    string url = 1;
-
-    // The OAuth client id to submit
-    string client_id = 2;
-
-    // The OAuth client secret that goes along with the client_id
-    string client_secret = 3;
   }
 
   // OLD FIELDS FOR BACKWARDS COMPATIBILITY. These are no longer used
@@ -4825,4 +5402,23 @@ message WaypointHclFmtRequest {
 
 message WaypointHclFmtResponse {
   bytes waypoint_hcl = 1;
+}
+
+/********************************************************************
+* Util/Meta
+********************************************************************/
+
+// InlineKeepalive is a message intended to be sent down existing grpc streams
+// to induce traffic and prevent them from being idle terminated by load
+// balancers that do not respect http2 pings. They will be sent on streams
+// that do not have this message as part of their protobuf contract. Client and
+// server grpc interceptors intercept these messages and prevent them from being
+// exposed to the rpc handlers.
+message InlineKeepalive {
+  // Signature for validating that the message is, in fact, a keepalive message.
+  // Must be set to value "inline_keepalive".
+
+  // WARNING: NO OTHER MESSAGE MAY USE THIS FIELD NUMBER. Doing so will cause
+  // that message to be confused with an inline keepalive
+  string signature = 100000000;
 }

@@ -17,15 +17,17 @@ Show detailed information about a runner profile.
 
 Usage: `waypoint runner profile inspect <name>`
 
+Show detailed information about a runner profile.
+
 #### Global Options
 
-- `-plain` - Plain output: no colors, no animation.
+- `-plain` - Plain output: no colors, no animation. The default is false.
 - `-app=<string>` (`-a`) - App to target. Certain commands require a single app target for Waypoint configurations with multiple apps. If you have a single app, then this can be ignored.
 - `-project=<string>` (`-p`) - Project to target.
 - `-workspace=<string>` (`-w`) - Workspace to operate in.
 
 #### Command Options
 
-- `-json` - Output runner profile information as JSON. This includes more fields since this is the complete API structure.
+- `-json` - Output runner profile information as JSON. This includes more fields since this is the complete API structure. The default is false.
 
 @include "commands/runner-profile-inspect_more.mdx"

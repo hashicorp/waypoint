@@ -18,6 +18,7 @@ Create or update a runner profile.
 Usage: `waypoint runner profile set [OPTIONS]`
 
 Create or update a runner profile.
+
 This will register a new runner profile with the given options. If
 a runner profile with the same id already exists, this will update the
 existing runner profile using the fields that are set.
@@ -27,7 +28,7 @@ lifecycle operation.
 
 #### Global Options
 
-- `-plain` - Plain output: no colors, no animation.
+- `-plain` - Plain output: no colors, no animation. The default is false.
 - `-app=<string>` (`-a`) - App to target. Certain commands require a single app target for Waypoint configurations with multiple apps. If you have a single app, then this can be ignored.
 - `-project=<string>` (`-p`) - Project to target.
 - `-workspace=<string>` (`-w`) - Workspace to operate in.
@@ -35,7 +36,7 @@ lifecycle operation.
 #### Command Options
 
 - `-name=<string>` - The name of an existing runner profile to update.
-- `-oci-url=<string>` - The url for the OCI image to launch for the on-demand runner.
+- `-oci-url=<string>` - The url for the OCI image to launch for the on-demand runner. The default is hashicorp/waypoint-odr:latest.
 - `-env-var=<key=value>` - Environment variable to expose to the on-demand runner set in 'k=v' format. Typically used to introduce configuration for the plugins that the runner will execute. Can be specified multiple times.
 - `-env-vars=<string>` - DEPRECATED. Please see `-env-var`.
 - `-plugin-type=<string>` - The type of the plugin to launch for the on-demand runner, such as aws-ecs, kubernetes, etc.
@@ -43,5 +44,6 @@ lifecycle operation.
 - `-default` - Indicates that this remote runner profile should be the default for any project that doesn't otherwise specify its own remote runner.
 - `-target-runner-id=<string>` - ID of the runner to target for this remote runner profile.
 - `-target-runner-label=<key=value>` - Labels on the runner to target for this remote runner profile. e.g. `-target-runner-label=k=v`. Can be specified multiple times.
+- `-target-runner-any` - Set profile to target any available runner.
 
 @include "commands/runner-profile-set_more.mdx"

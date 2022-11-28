@@ -1,0 +1,4 @@
+```release-note:improvement
+CLI: Show list of existing default runner profiles on post-upgrade to warn user
+that only one runner profile should be default.
+```

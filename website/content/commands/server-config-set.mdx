@@ -29,7 +29,7 @@ together in one call.
 
 #### Global Options
 
-- `-plain` - Plain output: no colors, no animation.
+- `-plain` - Plain output: no colors, no animation. The default is false.
 - `-app=<string>` (`-a`) - App to target. Certain commands require a single app target for Waypoint configurations with multiple apps. If you have a single app, then this can be ignored.
 - `-project=<string>` (`-p`) - Project to target.
 - `-workspace=<string>` (`-w`) - Workspace to operate in.
@@ -40,7 +40,7 @@ together in one call.
   binaries to communicate back to the server. If this is blank, then
   the entrypoints will not communicate to the server. Features such as
   logs, exec, etc. will not work.
-- `-advertise-tls` - If true, the advertised address should be connected to with TLS.
-- `-advertise-tls-skip-verify` - Do not verify the TLS certificate presented by the server.
+- `-advertise-tls` - If true, the advertised address should be connected to with TLS. The default is true.
+- `-advertise-tls-skip-verify` - Do not verify the TLS certificate presented by the server. The default is false.
 
 @include "commands/server-config-set_more.mdx"

@@ -1,6 +1,6 @@
 # Waypoint Documentation Website
 
-This subdirectory contains the content for the [Waypoint Website](https://waypointproject.io/).
+This subdirectory contains the content for the [Waypoint Reference Documentation](https://developer.hashicorp.com/waypoint/docs).
 
 <!--
   This readme file contains several blocks of generated text, to make it easier to share common information
@@ -103,14 +103,14 @@ There are several custom markdown plugins that are available by default that enh
 - If you see `# Headline ((#slug))`, this is an example of an [anchor link alias](https://github.com/hashicorp/remark-plugins/tree/je.anchor-link-adjustments/plugins/anchor-links#anchor-link-aliases). It adds an extra permalink to a headline for compatibility and is removed from the output.
 - Due to [automatically generated permalinks](https://github.com/hashicorp/remark-plugins/tree/je.anchor-link-adjustments/plugins/anchor-links#anchor-links), any text changes to _headlines_ or _list items that begin with inline code_ can and will break existing permalinks. Be very cautious when changing either of these two text items.
 
-  Headlines are fairly self-explanitory, but here's an example of how list items that begin with inline code look.
+  Headlines are fairly self-explanatory, but here's an example of how list items that begin with inline code look.
 
   ```markdown
   - this is a normal list item
   - `this` is a list item that begins with inline code
   ```
 
-  Its worth noting that _only the inline code at the beginning of the list item_ will cause problems if changed. So if you changed the above markup to...
+  It's worth noting that _only the inline code at the beginning of the list item_ will cause problems if changed. So if you changed the above markup to...
 
   ```markdown
   - lsdhfhksdjf
@@ -486,6 +486,8 @@ We support the following browsers targeting roughly the versions specified.
 
 ## Deployment
 
-This website is hosted on Vercel and configured to automatically deploy anytime you push code to the `stable-website` branch. Any time a pull request is submitted that changes files within the `website` folder, a deployment preview will appear in the github checks which can be used to validate the way docs changes will look live. Deployments from `stable-website` will look and behave the same way as deployment previews.
+This website is hosted on Vercel and configured to automatically deploy anytime you push code to the `stable-website` branch. Any time a pull request is submitted that changes files within the `website` folder, a deployment preview will appear in the github checks which can be used to validate the way docs changes will look live. Deployments from `stable-website` will look and behave the same way as deployment previews. 
+
+Add the `backport/website` label to your PR to automate this process.
 
 <!-- END: deployment -->

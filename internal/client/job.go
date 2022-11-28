@@ -3,19 +3,17 @@ package client
 import (
 	"context"
 	"fmt"
-	"io"
 	"path/filepath"
 	"strings"
 	"time"
 
-	"github.com/hashicorp/go-hclog"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	configpkg "github.com/hashicorp/waypoint/internal/config"
-	"github.com/hashicorp/waypoint/internal/pkg/finalcontext"
+	"github.com/hashicorp/waypoint/internal/jobstream"
 	"github.com/hashicorp/waypoint/internal/pkg/gitdirty"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	"github.com/hashicorp/waypoint/pkg/server/grpcmetadata"
@@ -41,6 +39,15 @@ func (c *Project) job() *pb.Job {
 	}
 
 	return job
+}
+
+// DoJobDangerously executes the given job and returns the result. The
+// "Dangerously" suffix is because this function isn't meant to be generally
+// used; it is dangerous because it doesn't perform many validation steps.
+// In almost all cases, callers should use a more focused function such as
+// Build or Deploy, or write a new one.
+func (c *Project) DoJobDangerously(ctx context.Context, job *pb.Job) (*pb.Job_Result, error) {
+	return c.doJob(ctx, job, c.UI)
 }
 
 // doJob will queue and execute the job, and target the proper runner.
@@ -286,292 +293,20 @@ func (c *Project) queueAndStreamJob(
 	}
 	log = log.With("job_id", queueResp.JobId)
 
-	// Get the stream
-	log.Debug("opening job stream")
-	stream, err := c.client.GetJobStream(ctx, &pb.GetJobStreamRequest{
-		JobId: queueResp.JobId,
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	// Wait for open confirmation
-	resp, err := stream.Recv()
-	if err != nil {
-		return nil, err
-	}
-	if _, ok := resp.Event.(*pb.GetJobStreamResponse_Open_); !ok {
-		return nil, status.Errorf(codes.Aborted,
-			"job stream failed to open, got unexpected message %T",
-			resp.Event)
-	}
-
-	type stepData struct {
-		terminal.Step
-
-		out io.Writer
-	}
-
-	// Process events
-	var (
-		completed bool
-
-		stateEventTimer *time.Timer
-		tstatus         terminal.Status
-
-		stdout, stderr io.Writer
-
-		sg    terminal.StepGroup
-		steps = map[int32]*stepData{}
+	// Stream
+	return jobstream.Stream(ctx, queueResp.JobId,
+		jobstream.WithClient(c.client),
+		jobstream.WithLogger(log),
+		jobstream.WithUI(ui),
+		jobstream.WithCancelOnError(localJob),
+		jobstream.WithIgnoreTerminal(localJob),
+		jobstream.WithStateCh(monCh),
 	)
-
-	if localJob {
-		defer func() {
-			// If we completed then do nothing, or if the context is still
-			// active since this means that we're not cancelled.
-			if completed || ctx.Err() == nil {
-				return
-			}
-
-			ctx, cancel := finalcontext.Context(log)
-			defer cancel()
-
-			log.Warn("canceling job")
-			_, err := c.client.CancelJob(ctx, &pb.CancelJobRequest{
-				JobId: queueResp.JobId,
-			})
-			if err != nil {
-				log.Warn("error canceling job", "err", err)
-			} else {
-				log.Info("job cancelled successfully")
-			}
-		}()
-	}
-
-	var assignedRunner *pb.Ref_RunnerId
-
-	for {
-		resp, err := stream.Recv()
-		if err != nil {
-			return nil, err
-		}
-		if resp == nil {
-			// This shouldn't happen, but if it does, just ignore it.
-			log.Warn("nil response received, ignoring")
-			continue
-		}
-
-		switch event := resp.Event.(type) {
-
-		case *pb.GetJobStreamResponse_Complete_:
-			completed = true
-
-			if event.Complete.Error == nil {
-				log.Info("job completed successfully")
-				return event.Complete.Result, nil
-			}
-
-			st := status.FromProto(event.Complete.Error)
-			log.Warn("job failed", "code", st.Code(), "message", st.Message())
-			return nil, st.Err()
-
-		case *pb.GetJobStreamResponse_Error_:
-			completed = true
-
-			st := status.FromProto(event.Error.Error)
-			log.Warn("job stream failure", "code", st.Code(), "message", st.Message())
-			return nil, st.Err()
-
-		case *pb.GetJobStreamResponse_Terminal_:
-			// Ignore this for local jobs since we're using our UI directly.
-			if localJob {
-				continue
-			}
-
-			for _, ev := range event.Terminal.Events {
-				log.Trace("job terminal output", "event", ev)
-
-				switch ev := ev.Event.(type) {
-				case *pb.GetJobStreamResponse_Terminal_Event_Line_:
-					ui.Output(ev.Line.Msg, terminal.WithStyle(ev.Line.Style))
-				case *pb.GetJobStreamResponse_Terminal_Event_NamedValues_:
-					var values []terminal.NamedValue
-
-					for _, tnv := range ev.NamedValues.Values {
-						values = append(values, terminal.NamedValue{
-							Name:  tnv.Name,
-							Value: tnv.Value,
-						})
-					}
-
-					ui.NamedValues(values)
-				case *pb.GetJobStreamResponse_Terminal_Event_Status_:
-					if tstatus == nil {
-						tstatus = ui.Status()
-						defer tstatus.Close()
-					}
-
-					if ev.Status.Msg == "" && !ev.Status.Step {
-						tstatus.Close()
-					} else if ev.Status.Step {
-						tstatus.Step(ev.Status.Status, ev.Status.Msg)
-					} else {
-						tstatus.Update(ev.Status.Msg)
-					}
-				case *pb.GetJobStreamResponse_Terminal_Event_Raw_:
-					if stdout == nil {
-						stdout, stderr, err = ui.OutputWriters()
-						if err != nil {
-							return nil, err
-						}
-					}
-
-					if ev.Raw.Stderr {
-						stderr.Write(ev.Raw.Data)
-					} else {
-						stdout.Write(ev.Raw.Data)
-					}
-				case *pb.GetJobStreamResponse_Terminal_Event_Table_:
-					tbl := terminal.NewTable(ev.Table.Headers...)
-
-					for _, row := range ev.Table.Rows {
-						var trow []terminal.TableEntry
-
-						for _, ent := range row.Entries {
-							trow = append(trow, terminal.TableEntry{
-								Value: ent.Value,
-								Color: ent.Color,
-							})
-						}
-					}
-
-					ui.Table(tbl)
-				case *pb.GetJobStreamResponse_Terminal_Event_StepGroup_:
-					if !ev.StepGroup.Close {
-						sg = ui.StepGroup()
-					}
-				case *pb.GetJobStreamResponse_Terminal_Event_Step_:
-					if sg == nil {
-						continue
-					}
-
-					step, ok := steps[ev.Step.Id]
-					if !ok {
-						step = &stepData{
-							Step: sg.Add(ev.Step.Msg),
-						}
-						steps[ev.Step.Id] = step
-					} else {
-						if ev.Step.Msg != "" {
-							step.Update(ev.Step.Msg)
-						}
-					}
-
-					if ev.Step.Status != "" {
-						if ev.Step.Status == terminal.StatusAbort {
-							step.Abort()
-						} else {
-							step.Status(ev.Step.Status)
-						}
-					}
-
-					if len(ev.Step.Output) > 0 {
-						if step.out == nil {
-							step.out = step.TermOutput()
-						}
-
-						step.out.Write(ev.Step.Output)
-					}
-
-					if ev.Step.Close {
-						step.Done()
-					}
-				default:
-					c.logger.Error("Unknown terminal event seen", "type", hclog.Fmt("%T", ev))
-				}
-			}
-		case *pb.GetJobStreamResponse_State_:
-			// Stop any state event timers if we have any since the state
-			// has changed and we don't want to output that information anymore.
-			if stateEventTimer != nil {
-				stateEventTimer.Stop()
-				stateEventTimer = nil
-			}
-
-			// Check if this job has been assigned a runner for the first time
-			if event.State != nil &&
-				event.State.Job != nil &&
-				event.State.Job.AssignedRunner != nil &&
-				assignedRunner == nil {
-
-				assignedRunner = event.State.Job.AssignedRunner
-
-				runner, err := c.client.GetRunner(ctx, &pb.GetRunnerRequest{RunnerId: assignedRunner.Id})
-				if err != nil {
-					ui.Output("Failed to inspect the runner (id %q) assigned for this operation: %s", assignedRunner.Id, err, terminal.WithErrorStyle())
-					break
-				}
-				switch runnerType := runner.Kind.(type) {
-				case *pb.Runner_Local_:
-					ui.Output("Performing operation locally", terminal.WithInfoStyle())
-				case *pb.Runner_Remote_:
-					ui.Output("Performing this operation on a remote runner with id %q", runner.Id, terminal.WithInfoStyle())
-				case *pb.Runner_Odr:
-					log.Debug("Executing operation on an on-demand runner from profile with ID %q", runnerType.Odr.ProfileId)
-					profile, err := c.client.GetOnDemandRunnerConfig(
-						ctx, &pb.GetOnDemandRunnerConfigRequest{
-							Config: &pb.Ref_OnDemandRunnerConfig{
-								Id: runnerType.Odr.ProfileId,
-							},
-						})
-					if err != nil {
-						ui.Output("Performing operation on an on-demand runner from profile with ID %q", runnerType.Odr.ProfileId, terminal.WithInfoStyle())
-						ui.Output("Failed inspecting runner profile with id %q: %s", runnerType.Odr.GetProfileId(), err, terminal.WithErrorStyle())
-					} else {
-						ui.Output("Performing operation on %q with runner profile %q", profile.Config.PluginType, profile.Config.Name, terminal.WithInfoStyle())
-					}
-				}
-			}
-
-			// For certain states, we do a quality of life UI message if
-			// the wait time ends up being long.
-			switch event.State.Current {
-			case pb.Job_QUEUED:
-				stateEventTimer = time.AfterFunc(stateEventPause, func() {
-					ui.Output("Operation is queued waiting for job %q. Waiting for runner assignment...",
-						queueResp.JobId,
-						terminal.WithHeaderStyle())
-					ui.Output("If you interrupt this command, the job will still run in the background.",
-						terminal.WithInfoStyle())
-				})
-
-			case pb.Job_WAITING:
-				stateEventTimer = time.AfterFunc(stateEventPause, func() {
-					ui.Output("Operation is assigned to a runner. Waiting for start...",
-						terminal.WithHeaderStyle())
-					ui.Output("If you interrupt this command, the job will still run in the background.",
-						terminal.WithInfoStyle())
-				})
-			}
-
-			if monCh != nil {
-				select {
-				case <-ctx.Done():
-					break
-				case monCh <- event.State.Current:
-					// ok
-				}
-			}
-
-		default:
-			log.Warn("unknown stream event", "event", resp.Event)
-		}
-	}
 }
 
 // The time here is meant to encompass the typical case for an operation to begin.
 // With the introduction of ondemand runners, we bumped it up from 1500 to 3000
-// to accomidate the additional time before the job was picked up when testing in
+// to accommodate the additional time before the job was picked up when testing in
 // local Docker.
 const stateEventPause = 3000 * time.Millisecond
 

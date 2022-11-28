@@ -48,7 +48,7 @@ func TestRunner(t testing.T, src *pb.Runner) *pb.Runner {
 // ValidateAdoptRunnerRequest
 func ValidateAdoptRunnerRequest(v *pb.AdoptRunnerRequest) error {
 	return validationext.Error(validation.ValidateStruct(v,
-		validation.Field(&v.RunnerId, validation.Required),
+		validation.Field(&v.RunnerId, validation.Required, validation.By(validatePathToken)),
 	))
 }
 

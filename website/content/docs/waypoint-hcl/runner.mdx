@@ -7,7 +7,7 @@ description: |-
 
 # `runner` Stanza
 
-<Placement groups={[['runner']]} />
+<Placement groups={[['runner'], ['app', 'runner']]} />
 
 The `runner` stanza configures a project for [remote operations](/docs/runner),
 including configuring how to source a project's source code from Git and
@@ -80,6 +80,9 @@ The `runner` stanza has no required parameters.
 - `poll` <code>([poll][poll]: nil)</code> - Settings for polling the data
   source for changes and automatically running `waypoint up`. By default
   polling is disabled.
+
+- `profile` `(string: "")` - The name of the runner profile to target for the
+  project/app to use for remote operations.
 
 ## `data_source` Parameters
 

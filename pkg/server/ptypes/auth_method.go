@@ -50,7 +50,7 @@ func ValidateAuthMethod(v *pb.AuthMethod) error {
 // ValidateAuthMethodRules
 func ValidateAuthMethodRules(v *pb.AuthMethod) []*validation.FieldRules {
 	return []*validation.FieldRules{
-		validation.Field(&v.Name, validation.Required, validation.By(isNotToken)),
+		validation.Field(&v.Name, validation.Required, validation.By(isNotToken), validation.By(validatePathToken)),
 		validation.Field(&v.AccessSelector, validation.By(isBExpr)),
 
 		validation.Field(&v.Method, validation.Required),

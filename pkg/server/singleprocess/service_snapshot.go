@@ -13,6 +13,7 @@ import (
 	empty "google.golang.org/protobuf/types/known/emptypb"
 
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
+	"github.com/hashicorp/waypoint/pkg/server/hcerr"
 )
 
 func (s *Service) CreateSnapshot(
@@ -26,13 +27,21 @@ func (s *Service) CreateSnapshot(
 			Open: &pb.CreateSnapshotResponse_Open{},
 		},
 	}); err != nil {
-		return err
+		return hcerr.Externalize(
+			hclog.FromContext(ctx),
+			err,
+			"failed to send create snapshot message",
+		)
 	}
 
 	// Create the snapshot and write the data
 	bw := bufio.NewWriter(&snapshotWriter{srv: srv})
-	if err := s.state(ctx).CreateSnapshot(bw); err != nil {
-		return err
+	if err := s.state(ctx).CreateSnapshot(ctx, bw); err != nil {
+		return hcerr.Externalize(
+			hclog.FromContext(ctx),
+			err,
+			"error creating snapshot",
+		)
 	}
 
 	return bw.Flush()
@@ -48,7 +57,11 @@ func (s *Service) RestoreSnapshot(
 	log.Trace("waiting for Open message")
 	req, err := srv.Recv()
 	if err != nil {
-		return err
+		return hcerr.Externalize(
+			log,
+			err,
+			"error reading snapshot events",
+		)
 	}
 	open, ok := req.Event.(*pb.RestoreSnapshotRequest_Open_)
 	if !ok {
@@ -91,7 +104,7 @@ func (s *Service) RestoreSnapshot(
 	go func() {
 		defer close(restoreCloseCh)
 		defer pr.Close()
-		restoreCloseCh <- s.state(ctx).StageRestoreSnapshot(pr)
+		restoreCloseCh <- s.state(ctx).StageRestoreSnapshot(ctx, pr)
 	}()
 
 	// Buffer our writes so that we store some window of restore data in memory
@@ -107,7 +120,11 @@ func (s *Service) RestoreSnapshot(
 		case err := <-clientCloseCh:
 			// The client closed the connection so we want to exit the stream.
 			if err != nil {
-				return err
+				return hcerr.Externalize(
+					log,
+					err,
+					"client closed connection",
+				)
 			}
 
 			return srv.SendAndClose(&empty.Empty{})
@@ -115,7 +132,11 @@ func (s *Service) RestoreSnapshot(
 		case err := <-restoreCloseCh:
 			// The restore ended
 			if err != nil {
-				return err
+				return hcerr.Externalize(
+					log,
+					err,
+					"error during restore",
+				)
 			}
 
 			// Restore was successful.
@@ -157,8 +178,11 @@ func (s *Service) RestoreSnapshot(
 
 			_, err := io.Copy(bw, bytes.NewReader(chunk.Chunk))
 			if err != nil {
-				return status.Errorf(codes.Aborted,
-					"error reading request data: %s", err)
+				return hcerr.Externalize(
+					log,
+					err,
+					"error reading request data during restore",
+				)
 			}
 		}
 	}

@@ -1,0 +1,6 @@
+```release-note:feature
+CLI: New `runner install` and `runner uninstall` commands to install/uninstall Waypoint runners to a specified platform
+```
+```release-note:feature
+CLI: Refactor k8s server install to use Helm
+```

@@ -53,7 +53,7 @@ func instanceExecSchema() *memdb.TableSchema {
 
 var _ serverstate.InstanceExecHandler = (*State)(nil)
 
-func (s *State) InstanceExecCreateByTargetedInstance(id string, exec *serverstate.InstanceExec) error {
+func (s *State) InstanceExecCreateByTargetedInstance(ctx context.Context, id string, exec *serverstate.InstanceExec) error {
 	txn := s.inmem.Txn(true)
 	defer txn.Abort()
 
@@ -123,7 +123,7 @@ func (s *State) InstanceExecCreateForVirtualInstance(ctx context.Context, id str
 	return nil
 }
 
-func (s *State) InstanceExecCreateByDeployment(did string, exec *serverstate.InstanceExec) error {
+func (s *State) InstanceExecCreateByDeployment(ctx context.Context, did string, exec *serverstate.InstanceExec) error {
 	txn := s.inmem.Txn(true)
 	defer txn.Abort()
 
@@ -212,7 +212,7 @@ func (s *State) InstanceExecCreateByDeployment(did string, exec *serverstate.Ins
 	return nil
 }
 
-func (s *State) InstanceExecDelete(id int64) error {
+func (s *State) InstanceExecDelete(ctx context.Context, id int64) error {
 	txn := s.inmem.Txn(true)
 	defer txn.Abort()
 
@@ -224,7 +224,7 @@ func (s *State) InstanceExecDelete(id int64) error {
 	return nil
 }
 
-func (s *State) InstanceExecById(id int64) (*serverstate.InstanceExec, error) {
+func (s *State) InstanceExecById(ctx context.Context, id int64) (*serverstate.InstanceExec, error) {
 	txn := s.inmem.Txn(false)
 	raw, err := txn.First(instanceExecTableName, instanceExecIdIndexName, id)
 	txn.Abort()
@@ -239,14 +239,14 @@ func (s *State) InstanceExecById(id int64) (*serverstate.InstanceExec, error) {
 }
 
 func (s *State) InstanceExecConnect(ctx context.Context, id int64) (*serverstate.InstanceExec, error) {
-	return s.InstanceExecById(id)
+	return s.InstanceExecById(ctx, id)
 }
 
 func (s *State) InstanceExecWaitConnected(ctx context.Context, exec *serverstate.InstanceExec) error {
 	return nil
 }
 
-func (s *State) InstanceExecListByInstanceId(id string, ws memdb.WatchSet) ([]*serverstate.InstanceExec, error) {
+func (s *State) InstanceExecListByInstanceId(ctx context.Context, id string, ws memdb.WatchSet) ([]*serverstate.InstanceExec, error) {
 	txn := s.inmem.Txn(false)
 	defer txn.Abort()
 	return s.instanceExecListByInstanceId(txn, id, ws)

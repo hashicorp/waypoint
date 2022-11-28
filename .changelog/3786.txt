@@ -1,0 +1,3 @@
+```release-note:bug
+ui: Make UI more resilient to invalid state JSON
+```

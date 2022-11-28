@@ -12,14 +12,11 @@ message Deployment {
   opaqueany.Any resource_state = 3;
 }
 
-message Release {
-  string Url = 1;
-  opaqueany.Any resource_state = 2;
-}
-
 // Resource contains the internal resource states.
 message Resource {
   message Job {
     string name = 1;
+    string id = 2;
+    string namespace = 3;
   }
 }

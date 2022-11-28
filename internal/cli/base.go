@@ -170,6 +170,24 @@ func (c *baseCommand) checkDeprecatedFlags() error {
 	return nil
 }
 
+func (c *baseCommand) showValidations(validationResults config.ValidationResults) {
+	if len(validationResults) == 0 {
+		return
+	}
+
+	c.ui.Output("The following validation issues were detected:", terminal.WithHeaderStyle())
+
+	for _, vr := range validationResults {
+		if vr.Error != nil {
+			c.ui.Output(vr.Error.Error(), terminal.WithErrorStyle())
+		} else if vr.Warning != "" {
+			c.ui.Output(vr.Warning, terminal.WithWarningStyle())
+		}
+	}
+
+	c.ui.Output("")
+}
+
 // Init initializes the command by parsing flags, parsing the configuration,
 // setting up the project, etc. You can control what is done by using the
 // options.
@@ -298,10 +316,14 @@ func (c *baseCommand) Init(opts ...Option) error {
 	// 1. Parse the configuration
 
 	if !baseCfg.NoConfig {
+		var vr config.ValidationResults
+
 		// Try parsing config
-		c.cfg, err = c.initConfig("")
+		c.cfg, vr, err = c.initConfig("")
+
+		c.showValidations(vr)
+
 		if err != nil {
-			c.logError(c.Log, "failed to load config", err)
 			return err
 		}
 

@@ -21,7 +21,7 @@ Configure an OIDC auth method.
 
 #### Global Options
 
-- `-plain` - Plain output: no colors, no animation.
+- `-plain` - Plain output: no colors, no animation. The default is false.
 - `-app=<string>` (`-a`) - App to target. Certain commands require a single app target for Waypoint configurations with multiple apps. If you have a single app, then this can be ignored.
 - `-project=<string>` (`-p`) - Project to target.
 - `-workspace=<string>` (`-w`) - Workspace to operate in.
@@ -41,7 +41,7 @@ Configure an OIDC auth method.
 - `-issuer=<string>` - Discovery URL of the OIDC provider that implements the .well-known/openid-configuration metadata endpoint.
 - `-issuer-ca-pem=<string>` - PEM-encoded certificates for connecting to the issuer. May be specified multiple times.
 - `-allowed-redirect-uri=<string>` - Allowed URI for auth redirection. This automatically has localhost (for CLI auth) and the server address configured. If you have additional external addresses, you can specify them here. May be specified multiple times.
-- `-claim-mapping=<key=value>` - Mapping of a claim to a variable value for the access selector. This can be specified multiple times. Example value: 'http://example.com/key=key'
+- `-claim-mapping=<key=value>` - Mapping of a claim to a variable value for the access selector. This can be specified multiple times. Example value: 'http://example.com/key=key'.
 - `-list-claim-mapping=<key=value>` - Same as claim-mapping but for list values. This can be repeated multiple times.
 
 @include "commands/auth-method-set-oidc_more.mdx"

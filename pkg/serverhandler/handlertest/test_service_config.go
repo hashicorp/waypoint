@@ -20,7 +20,7 @@ func TestServiceConfig(t *testing.T, factory Factory) {
 	ctx := context.Background()
 
 	// Create our server
-	_, client := factory(t)
+	client, _ := factory(t)
 
 	// Simplify writing tests
 	type (
@@ -74,7 +74,7 @@ func TestServiceConfigSource(t *testing.T, factory Factory) {
 	ctx := context.Background()
 
 	// Create our server
-	_, client := factory(t)
+	client, _ := factory(t)
 
 	// Simplify writing tests
 	type (

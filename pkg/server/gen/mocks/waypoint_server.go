@@ -131,6 +131,29 @@ func (_m *WaypointServer) CompleteOIDCAuth(_a0 context.Context, _a1 *gen.Complet
 	return r0, r1
 }
 
+// ConfigSyncPipeline provides a mock function with given fields: _a0, _a1
+func (_m *WaypointServer) ConfigSyncPipeline(_a0 context.Context, _a1 *gen.ConfigSyncPipelineRequest) (*gen.ConfigSyncPipelineResponse, error) {
+	ret := _m.Called(_a0, _a1)
+
+	var r0 *gen.ConfigSyncPipelineResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.ConfigSyncPipelineRequest) *gen.ConfigSyncPipelineResponse); ok {
+		r0 = rf(_a0, _a1)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gen.ConfigSyncPipelineResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.ConfigSyncPipelineRequest) error); ok {
+		r1 = rf(_a0, _a1)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // ConvertInviteToken provides a mock function with given fields: _a0, _a1
 func (_m *WaypointServer) ConvertInviteToken(_a0 context.Context, _a1 *gen.ConvertInviteTokenRequest) (*gen.NewTokenResponse, error) {
 	ret := _m.Called(_a0, _a1)
@@ -260,6 +283,29 @@ func (_m *WaypointServer) DeleteHostname(_a0 context.Context, _a1 *gen.DeleteHos
 	return r0, r1
 }
 
+// DeleteOnDemandRunnerConfig provides a mock function with given fields: _a0, _a1
+func (_m *WaypointServer) DeleteOnDemandRunnerConfig(_a0 context.Context, _a1 *gen.DeleteOnDemandRunnerConfigRequest) (*gen.DeleteOnDemandRunnerConfigResponse, error) {
+	ret := _m.Called(_a0, _a1)
+
+	var r0 *gen.DeleteOnDemandRunnerConfigResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.DeleteOnDemandRunnerConfigRequest) *gen.DeleteOnDemandRunnerConfigResponse); ok {
+		r0 = rf(_a0, _a1)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gen.DeleteOnDemandRunnerConfigResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.DeleteOnDemandRunnerConfigRequest) error); ok {
+		r1 = rf(_a0, _a1)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // DeleteTrigger provides a mock function with given fields: _a0, _a1
 func (_m *WaypointServer) DeleteTrigger(_a0 context.Context, _a1 *gen.DeleteTriggerRequest) (*emptypb.Empty, error) {
 	ret := _m.Called(_a0, _a1)
@@ -298,6 +344,29 @@ func (_m *WaypointServer) DeleteUser(_a0 context.Context, _a1 *gen.DeleteUserReq
 
 	var r1 error
 	if rf, ok := ret.Get(1).(func(context.Context, *gen.DeleteUserRequest) error); ok {
+		r1 = rf(_a0, _a1)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// DestroyProject provides a mock function with given fields: _a0, _a1
+func (_m *WaypointServer) DestroyProject(_a0 context.Context, _a1 *gen.DestroyProjectRequest) (*emptypb.Empty, error) {
+	ret := _m.Called(_a0, _a1)
+
+	var r0 *emptypb.Empty
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.DestroyProjectRequest) *emptypb.Empty); ok {
+		r0 = rf(_a0, _a1)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*emptypb.Empty)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.DestroyProjectRequest) error); ok {
 		r1 = rf(_a0, _a1)
 	} else {
 		r1 = ret.Error(1)
@@ -578,6 +647,29 @@ func (_m *WaypointServer) GetConfigSource(_a0 context.Context, _a1 *gen.GetConfi
 	return r0, r1
 }
 
+// GetDefaultOnDemandRunnerConfig provides a mock function with given fields: _a0, _a1
+func (_m *WaypointServer) GetDefaultOnDemandRunnerConfig(_a0 context.Context, _a1 *emptypb.Empty) (*gen.GetOnDemandRunnerConfigResponse, error) {
+	ret := _m.Called(_a0, _a1)
+
+	var r0 *gen.GetOnDemandRunnerConfigResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *emptypb.Empty) *gen.GetOnDemandRunnerConfigResponse); ok {
+		r0 = rf(_a0, _a1)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gen.GetOnDemandRunnerConfigResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *emptypb.Empty) error); ok {
+		r1 = rf(_a0, _a1)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetDeployment provides a mock function with given fields: _a0, _a1
 func (_m *WaypointServer) GetDeployment(_a0 context.Context, _a1 *gen.GetDeploymentRequest) (*gen.Deployment, error) {
 	ret := _m.Called(_a0, _a1)
@@ -653,6 +745,29 @@ func (_m *WaypointServer) GetLatestBuild(_a0 context.Context, _a1 *gen.GetLatest
 
 	var r1 error
 	if rf, ok := ret.Get(1).(func(context.Context, *gen.GetLatestBuildRequest) error); ok {
+		r1 = rf(_a0, _a1)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetLatestPipelineRun provides a mock function with given fields: _a0, _a1
+func (_m *WaypointServer) GetLatestPipelineRun(_a0 context.Context, _a1 *gen.GetPipelineRequest) (*gen.GetPipelineRunResponse, error) {
+	ret := _m.Called(_a0, _a1)
+
+	var r0 *gen.GetPipelineRunResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.GetPipelineRequest) *gen.GetPipelineRunResponse); ok {
+		r0 = rf(_a0, _a1)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gen.GetPipelineRunResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.GetPipelineRequest) error); ok {
 		r1 = rf(_a0, _a1)
 	} else {
 		r1 = ret.Error(1)
@@ -782,6 +897,52 @@ func (_m *WaypointServer) GetOnDemandRunnerConfig(_a0 context.Context, _a1 *gen.
 
 	var r1 error
 	if rf, ok := ret.Get(1).(func(context.Context, *gen.GetOnDemandRunnerConfigRequest) error); ok {
+		r1 = rf(_a0, _a1)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetPipeline provides a mock function with given fields: _a0, _a1
+func (_m *WaypointServer) GetPipeline(_a0 context.Context, _a1 *gen.GetPipelineRequest) (*gen.GetPipelineResponse, error) {
+	ret := _m.Called(_a0, _a1)
+
+	var r0 *gen.GetPipelineResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.GetPipelineRequest) *gen.GetPipelineResponse); ok {
+		r0 = rf(_a0, _a1)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gen.GetPipelineResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.GetPipelineRequest) error); ok {
+		r1 = rf(_a0, _a1)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetPipelineRun provides a mock function with given fields: _a0, _a1
+func (_m *WaypointServer) GetPipelineRun(_a0 context.Context, _a1 *gen.GetPipelineRunRequest) (*gen.GetPipelineRunResponse, error) {
+	ret := _m.Called(_a0, _a1)
+
+	var r0 *gen.GetPipelineRunResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.GetPipelineRunRequest) *gen.GetPipelineRunResponse); ok {
+		r0 = rf(_a0, _a1)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gen.GetPipelineRunResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.GetPipelineRunRequest) error); ok {
 		r1 = rf(_a0, _a1)
 	} else {
 		r1 = ret.Error(1)
@@ -1227,6 +1388,52 @@ func (_m *WaypointServer) ListOnDemandRunnerConfigs(_a0 context.Context, _a1 *em
 	return r0, r1
 }
 
+// ListPipelineRuns provides a mock function with given fields: _a0, _a1
+func (_m *WaypointServer) ListPipelineRuns(_a0 context.Context, _a1 *gen.ListPipelineRunsRequest) (*gen.ListPipelineRunsResponse, error) {
+	ret := _m.Called(_a0, _a1)
+
+	var r0 *gen.ListPipelineRunsResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.ListPipelineRunsRequest) *gen.ListPipelineRunsResponse); ok {
+		r0 = rf(_a0, _a1)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gen.ListPipelineRunsResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.ListPipelineRunsRequest) error); ok {
+		r1 = rf(_a0, _a1)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// ListPipelines provides a mock function with given fields: _a0, _a1
+func (_m *WaypointServer) ListPipelines(_a0 context.Context, _a1 *gen.ListPipelinesRequest) (*gen.ListPipelinesResponse, error) {
+	ret := _m.Called(_a0, _a1)
+
+	var r0 *gen.ListPipelinesResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.ListPipelinesRequest) *gen.ListPipelinesResponse); ok {
+		r0 = rf(_a0, _a1)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gen.ListPipelinesResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.ListPipelinesRequest) error); ok {
+		r1 = rf(_a0, _a1)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // ListProjects provides a mock function with given fields: _a0, _a1
 func (_m *WaypointServer) ListProjects(_a0 context.Context, _a1 *emptypb.Empty) (*gen.ListProjectsResponse, error) {
 	ret := _m.Called(_a0, _a1)
@@ -1494,6 +1701,29 @@ func (_m *WaypointServer) RestoreSnapshot(_a0 gen.Waypoint_RestoreSnapshotServer
 	return r0
 }
 
+// RunPipeline provides a mock function with given fields: _a0, _a1
+func (_m *WaypointServer) RunPipeline(_a0 context.Context, _a1 *gen.RunPipelineRequest) (*gen.RunPipelineResponse, error) {
+	ret := _m.Called(_a0, _a1)
+
+	var r0 *gen.RunPipelineResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.RunPipelineRequest) *gen.RunPipelineResponse); ok {
+		r0 = rf(_a0, _a1)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gen.RunPipelineResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.RunPipelineRequest) error); ok {
+		r1 = rf(_a0, _a1)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // RunTrigger provides a mock function with given fields: _a0, _a1
 func (_m *WaypointServer) RunTrigger(_a0 context.Context, _a1 *gen.RunTriggerRequest) (*gen.RunTriggerResponse, error) {
 	ret := _m.Called(_a0, _a1)
@@ -1672,6 +1902,29 @@ func (_m *WaypointServer) StartExecStream(_a0 gen.Waypoint_StartExecStreamServer
 	}
 
 	return r0
+}
+
+// UI_GetDeployment provides a mock function with given fields: _a0, _a1
+func (_m *WaypointServer) UI_GetDeployment(_a0 context.Context, _a1 *gen.UI_GetDeploymentRequest) (*gen.UI_GetDeploymentResponse, error) {
+	ret := _m.Called(_a0, _a1)
+
+	var r0 *gen.UI_GetDeploymentResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.UI_GetDeploymentRequest) *gen.UI_GetDeploymentResponse); ok {
+		r0 = rf(_a0, _a1)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gen.UI_GetDeploymentResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.UI_GetDeploymentRequest) error); ok {
+		r1 = rf(_a0, _a1)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
 }
 
 // UI_GetProject provides a mock function with given fields: _a0, _a1
@@ -1873,6 +2126,29 @@ func (_m *WaypointServer) UpsertOnDemandRunnerConfig(_a0 context.Context, _a1 *g
 
 	var r1 error
 	if rf, ok := ret.Get(1).(func(context.Context, *gen.UpsertOnDemandRunnerConfigRequest) error); ok {
+		r1 = rf(_a0, _a1)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// UpsertPipeline provides a mock function with given fields: _a0, _a1
+func (_m *WaypointServer) UpsertPipeline(_a0 context.Context, _a1 *gen.UpsertPipelineRequest) (*gen.UpsertPipelineResponse, error) {
+	ret := _m.Called(_a0, _a1)
+
+	var r0 *gen.UpsertPipelineResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.UpsertPipelineRequest) *gen.UpsertPipelineResponse); ok {
+		r0 = rf(_a0, _a1)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gen.UpsertPipelineResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.UpsertPipelineRequest) error); ok {
 		r1 = rf(_a0, _a1)
 	} else {
 		r1 = ret.Error(1)

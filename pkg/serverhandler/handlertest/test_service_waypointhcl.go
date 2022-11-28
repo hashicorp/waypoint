@@ -19,7 +19,7 @@ func TestServiceWaypointHclFmt(t *testing.T, factory Factory) {
 	ctx := context.Background()
 
 	// Create our server
-	_, client := factory(t)
+	client, _ := factory(t)
 
 	t.Run("basic formatting", func(t *testing.T) {
 		require := require.New(t)

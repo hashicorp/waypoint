@@ -1,0 +1,3 @@
+```release-note:bug
+cli: Fix order of CLI outputs during install
+```

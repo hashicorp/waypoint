@@ -1,6 +1,7 @@
 package statetest
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -19,6 +20,7 @@ func init() {
 }
 
 func TestBuild(t *testing.T, factory Factory, restartF RestartFactory) {
+	ctx := context.Background()
 	t.Run("CRUD operations", func(t *testing.T) {
 		require := require.New(t)
 
@@ -27,13 +29,13 @@ func TestBuild(t *testing.T, factory Factory, restartF RestartFactory) {
 
 		// Write project
 		ref := &pb.Ref_Project{Project: "foo"}
-		require.NoError(s.ProjectPut(serverptypes.TestProject(t, &pb.Project{
+		require.NoError(s.ProjectPut(ctx, serverptypes.TestProject(t, &pb.Project{
 			Name: ref.Project,
 		})))
 
 		// Has no apps
 		{
-			resp, err := s.ProjectGet(ref)
+			resp, err := s.ProjectGet(ctx, ref)
 			require.NoError(err)
 			require.NotNil(resp)
 			require.Empty(resp.Applications)
@@ -49,7 +51,7 @@ func TestBuild(t *testing.T, factory Factory, restartF RestartFactory) {
 		}
 
 		// Add
-		err := s.BuildPut(false, serverptypes.TestBuild(t, &pb.Build{
+		err := s.BuildPut(ctx, false, serverptypes.TestBuild(t, &pb.Build{
 			Id:          "d1",
 			Application: app,
 			Workspace:   ws,
@@ -62,7 +64,7 @@ func TestBuild(t *testing.T, factory Factory, restartF RestartFactory) {
 
 		// Can read
 		{
-			resp, err := s.BuildGet(&pb.Ref_Operation{
+			resp, err := s.BuildGet(ctx, &pb.Ref_Operation{
 				Target: &pb.Ref_Operation_Id{
 					Id: "d1",
 				},
@@ -73,14 +75,14 @@ func TestBuild(t *testing.T, factory Factory, restartF RestartFactory) {
 
 		// Can read latest
 		{
-			resp, err := s.BuildLatest(app, &pb.Ref_Workspace{Workspace: "default"})
+			resp, err := s.BuildLatest(ctx, app, &pb.Ref_Workspace{Workspace: "default"})
 			require.NoError(err)
 			require.NotNil(resp)
 		}
 
 		// Update
 		ts := timestamppb.Now()
-		err = s.BuildPut(true, serverptypes.TestBuild(t, &pb.Build{
+		err = s.BuildPut(ctx, true, serverptypes.TestBuild(t, &pb.Build{
 			Id:          "d1",
 			Application: app,
 			Workspace:   ws,
@@ -93,7 +95,7 @@ func TestBuild(t *testing.T, factory Factory, restartF RestartFactory) {
 		require.NoError(err)
 
 		{
-			resp, err := s.BuildGet(&pb.Ref_Operation{
+			resp, err := s.BuildGet(ctx, &pb.Ref_Operation{
 				Target: &pb.Ref_Operation_Id{
 					Id: "d1",
 				},
@@ -106,7 +108,7 @@ func TestBuild(t *testing.T, factory Factory, restartF RestartFactory) {
 
 		// Add another and see Latset change
 		// Add
-		err = s.BuildPut(false, serverptypes.TestBuild(t, &pb.Build{
+		err = s.BuildPut(ctx, false, serverptypes.TestBuild(t, &pb.Build{
 			Id:          "d2",
 			Application: app,
 			Workspace:   ws,
@@ -119,14 +121,14 @@ func TestBuild(t *testing.T, factory Factory, restartF RestartFactory) {
 		require.NoError(err)
 
 		{
-			resp, err := s.BuildLatest(app, &pb.Ref_Workspace{Workspace: "default"})
+			resp, err := s.BuildLatest(ctx, app, &pb.Ref_Workspace{Workspace: "default"})
 			require.NoError(err)
 			require.NotNil(resp)
 			require.Equal("d2", resp.Id)
 		}
 
 		{
-			resp, err := s.BuildList(app)
+			resp, err := s.BuildList(ctx, app)
 			require.NoError(err)
 
 			require.Len(resp, 2)
@@ -149,7 +151,7 @@ func TestBuild(t *testing.T, factory Factory, restartF RestartFactory) {
 		*/
 
 		{
-			resp, err := s.BuildList(app, serverstate.ListWithOrder(&pb.OperationOrder{
+			resp, err := s.BuildList(ctx, app, serverstate.ListWithOrder(&pb.OperationOrder{
 				Order: pb.OperationOrder_START_TIME,
 				Desc:  true,
 				Limit: 1,
@@ -161,7 +163,7 @@ func TestBuild(t *testing.T, factory Factory, restartF RestartFactory) {
 			require.Equal("d2", resp[0].Id)
 		}
 
-		err = s.BuildPut(false, serverptypes.TestBuild(t, &pb.Build{
+		err = s.BuildPut(ctx, false, serverptypes.TestBuild(t, &pb.Build{
 			Id:          "d3",
 			Application: app,
 			Workspace:   ws,
@@ -173,14 +175,14 @@ func TestBuild(t *testing.T, factory Factory, restartF RestartFactory) {
 		require.NoError(err)
 
 		{
-			resp, err := s.BuildList(app)
+			resp, err := s.BuildList(ctx, app)
 			require.NoError(err)
 
 			require.Len(resp, 3)
 		}
 
 		{
-			resp, err := s.BuildList(app,
+			resp, err := s.BuildList(ctx, app,
 				serverstate.ListWithOrder(&pb.OperationOrder{
 					Order: pb.OperationOrder_START_TIME,
 					Desc:  true,
@@ -202,7 +204,7 @@ func TestBuild(t *testing.T, factory Factory, restartF RestartFactory) {
 			require.Equal("d3", resp[0].Id)
 		}
 		{
-			resp, err := s.BuildList(app,
+			resp, err := s.BuildList(ctx, app,
 				serverstate.ListWithOrder(&pb.OperationOrder{
 					Order: pb.OperationOrder_START_TIME,
 					Desc:  true,

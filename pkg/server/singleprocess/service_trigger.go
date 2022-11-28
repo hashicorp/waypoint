@@ -10,6 +10,7 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
+	"github.com/hashicorp/waypoint/pkg/server/hcerr"
 	serverptypes "github.com/hashicorp/waypoint/pkg/server/ptypes"
 )
 
@@ -22,8 +23,14 @@ func (s *Service) UpsertTrigger(
 	}
 
 	result := req.Trigger
-	if err := s.state(ctx).TriggerPut(result); err != nil {
-		return nil, err
+	if err := s.state(ctx).TriggerPut(ctx, result); err != nil {
+		return nil, hcerr.Externalize(
+			hclog.FromContext(ctx),
+			err,
+			"failed to upsert trigger",
+			"trigger_id",
+			result.GetId(),
+		)
 	}
 
 	return &pb.UpsertTriggerResponse{Trigger: result}, nil
@@ -38,9 +45,15 @@ func (s *Service) GetTrigger(
 		return nil, err
 	}
 
-	t, err := s.state(ctx).TriggerGet(req.Ref)
+	t, err := s.state(ctx).TriggerGet(ctx, req.Ref)
 	if err != nil {
-		return nil, err
+		return nil, hcerr.Externalize(
+			hclog.FromContext(ctx),
+			err,
+			"failed to get trigger",
+			"trigger_id",
+			req.Ref.GetId(),
+		)
 	}
 
 	return &pb.GetTriggerResponse{Trigger: t}, nil
@@ -55,9 +68,15 @@ func (s *Service) DeleteTrigger(
 		return nil, err
 	}
 
-	err := s.state(ctx).TriggerDelete(req.Ref)
+	err := s.state(ctx).TriggerDelete(ctx, req.Ref)
 	if err != nil {
-		return nil, err
+		return nil, hcerr.Externalize(
+			hclog.FromContext(ctx),
+			err,
+			"failed to delete trigger",
+			"trigger_id",
+			req.Ref.GetId(),
+		)
 	}
 
 	return &empty.Empty{}, nil
@@ -69,9 +88,13 @@ func (s *Service) ListTriggers(
 ) (*pb.ListTriggerResponse, error) {
 	// NOTE: no ptype validation at the moment, as all Ref fields are optional
 
-	result, err := s.state(ctx).TriggerList(req.Workspace, req.Project, req.Application, req.Tags)
+	result, err := s.state(ctx).TriggerList(ctx, req.Workspace, req.Project, req.Application, req.Tags)
 	if err != nil {
-		return nil, err
+		return nil, hcerr.Externalize(
+			hclog.FromContext(ctx),
+			err,
+			"failed to list triggers",
+		)
 	}
 
 	return &pb.ListTriggerResponse{Triggers: result}, nil
@@ -93,7 +116,7 @@ func (s *Service) NoAuthRunTrigger(
 	log := hclog.FromContext(ctx)
 	log.Trace("attempting to find and run trigger from authless func", "trigger_id", req.Ref.Id)
 
-	trigger, err := s.state(ctx).TriggerGet(req.Ref)
+	trigger, err := s.state(ctx).TriggerGet(ctx, req.Ref)
 	if err != nil {
 		log.Error("failed to get requested trigger", "trigger_id", req.Ref.Id, "error", err)
 		return nil, status.Errorf(codes.NotFound,
@@ -121,9 +144,15 @@ func (s *Service) RunTrigger(
 	}
 	log := hclog.FromContext(ctx)
 
-	runTrigger, err := s.state(ctx).TriggerGet(req.Ref)
+	runTrigger, err := s.state(ctx).TriggerGet(ctx, req.Ref)
 	if err != nil {
-		return nil, err
+		return nil, hcerr.Externalize(
+			log,
+			err,
+			"failed to run trigger",
+			"trigger_id",
+			req.Ref.GetId(),
+		)
 	}
 
 	log = log.With("run_trigger", runTrigger.Id)
@@ -187,9 +216,17 @@ func (s *Service) RunTrigger(
 	if runTrigger.Application == nil || runTrigger.Application.Application == "" {
 		// we're gonna queue multiple jobs for every application in a project
 		log.Debug("building multi-jobs for all apps in project", "project", runTrigger.Project.Project)
-		jobList, err = s.state(ctx).JobProjectScopedRequest(runTrigger.Project, job)
+		jobList, err = s.state(ctx).JobProjectScopedRequest(ctx, runTrigger.Project, job)
 		if err != nil {
-			return nil, err
+			return nil, hcerr.Externalize(
+				hclog.FromContext(ctx),
+				err,
+				"error creating job scoped to project when running a trigger",
+				"trigger_id",
+				req.Ref.GetId(),
+				"project",
+				runTrigger.Project.GetProject(),
+			)
 		}
 	} else {
 		log.Debug("building a single job for target", "project",
@@ -213,9 +250,13 @@ func (s *Service) RunTrigger(
 		switch op := qJob.Job.Operation.(type) {
 		case *pb.Job_Push:
 			if op.Push.Build.Sequence == 0 {
-				buildLatest, err := s.state(ctx).BuildLatest(qJob.Job.Application, qJob.Job.Workspace)
+				buildLatest, err := s.state(ctx).BuildLatest(ctx, qJob.Job.Application, qJob.Job.Workspace)
 				if err != nil {
-					return nil, status.Errorf(codes.Internal, "failed to obtain latest build: %s", err)
+					return nil, hcerr.Externalize(
+						log,
+						err,
+						"failed to obtain latest build",
+					)
 				}
 
 				jobList[i].Job.Operation = &pb.Job_Push{
@@ -224,7 +265,7 @@ func (s *Service) RunTrigger(
 					},
 				}
 			} else {
-				build, err := s.state(ctx).BuildGet(&pb.Ref_Operation{
+				build, err := s.state(ctx).BuildGet(ctx, &pb.Ref_Operation{
 					Target: &pb.Ref_Operation_Sequence{
 						Sequence: &pb.Ref_OperationSeq{
 							Application: qJob.Job.Application,
@@ -233,7 +274,13 @@ func (s *Service) RunTrigger(
 					},
 				})
 				if err != nil {
-					return nil, status.Errorf(codes.Internal, "failed to obtain build by id %q: %s", op.Push.Build.Sequence, err)
+					return nil, hcerr.Externalize(
+						log,
+						err,
+						"failed to obtain build by id",
+						"build_id",
+						op.Push.Build.Sequence,
+					)
 				}
 
 				jobList[i].Job.Operation = &pb.Job_Push{
@@ -247,10 +294,17 @@ func (s *Service) RunTrigger(
 			case *pb.Job_DestroyOp_Deployment:
 				if destroyTarget.Deployment.Sequence == 0 {
 					// get latest deployment
-					deployLatest, err := s.state(ctx).DeploymentLatest(destroyTarget.Deployment.Application, destroyTarget.Deployment.Workspace)
+					deployLatest, err := s.state(ctx).DeploymentLatest(ctx, destroyTarget.Deployment.Application, destroyTarget.Deployment.Workspace)
 					if err != nil {
-						return nil, status.Errorf(codes.Internal,
-							"failed to obtain latest deployment for destroying deployment operation trigger: %s", err)
+						return nil, hcerr.Externalize(
+							log,
+							err,
+							"failed to obtain latest deployment for destroying deployment operation trigger",
+							"application",
+							destroyTarget.Deployment.GetApplication(),
+							"workspace",
+							destroyTarget.Deployment.GetWorkspace(),
+						)
 					}
 
 					jobList[i].Job.Operation = &pb.Job_Destroy{
@@ -262,7 +316,7 @@ func (s *Service) RunTrigger(
 					}
 				} else {
 					// get deployment by id seq
-					deploy, err := s.state(ctx).DeploymentGet(&pb.Ref_Operation{
+					deploy, err := s.state(ctx).DeploymentGet(ctx, &pb.Ref_Operation{
 						Target: &pb.Ref_Operation_Sequence{
 							Sequence: &pb.Ref_OperationSeq{
 								Application: qJob.Job.Application,
@@ -271,8 +325,15 @@ func (s *Service) RunTrigger(
 						},
 					})
 					if err != nil {
-						return nil, status.Errorf(codes.Internal,
-							"failed to obtain deployment by id %q for destroying deployment operation trigger: %s", destroyTarget.Deployment.Sequence, err)
+						return nil, hcerr.Externalize(
+							log,
+							err,
+							"failed to obtain deployment by id for destroying deployment operation trigger",
+							"application",
+							qJob.Job.GetApplication(),
+							"sequence",
+							destroyTarget.Deployment.GetSequence(),
+						)
 					}
 
 					jobList[i].Job.Operation = &pb.Job_Destroy{
@@ -290,9 +351,17 @@ func (s *Service) RunTrigger(
 		case *pb.Job_Deploy:
 			if op.Deploy.Artifact == nil {
 				// get latest pushed artifact, then set it on the operation
-				artifactLatest, err := s.state(ctx).ArtifactLatest(qJob.Job.Application, qJob.Job.Workspace)
+				artifactLatest, err := s.state(ctx).ArtifactLatest(ctx, qJob.Job.Application, qJob.Job.Workspace)
 				if err != nil {
-					return nil, status.Errorf(codes.Internal, "failed to obtain latest pushed artifact: %s", err)
+					return nil, hcerr.Externalize(
+						log,
+						err,
+						"failed to obtain latest pushed artifact",
+						"application",
+						qJob.Job.GetApplication(),
+						"workspace",
+						qJob.Job.GetWorkspace(),
+					)
 				}
 
 				jobList[i].Job.Operation = &pb.Job_Deploy{
@@ -303,7 +372,7 @@ func (s *Service) RunTrigger(
 			} else {
 				// Set the actual pushed artifact on the operation
 				buildSeq := op.Deploy.Artifact.Sequence
-				artifact, err := s.state(ctx).ArtifactGet(&pb.Ref_Operation{
+				artifact, err := s.state(ctx).ArtifactGet(ctx, &pb.Ref_Operation{
 					Target: &pb.Ref_Operation_Sequence{
 						Sequence: &pb.Ref_OperationSeq{
 							Application: qJob.Job.Application,
@@ -312,7 +381,15 @@ func (s *Service) RunTrigger(
 					},
 				})
 				if err != nil {
-					return nil, status.Errorf(codes.Internal, "failed to obtain pushed artifact id %q: %s", buildSeq, err)
+					return nil, hcerr.Externalize(
+						log,
+						err,
+						"failed to obtain pushed artifact for id",
+						"application",
+						qJob.Job.GetApplication(),
+						"sequence",
+						buildSeq,
+					)
 				}
 
 				jobList[i].Job.Operation = &pb.Job_Deploy{
@@ -326,10 +403,17 @@ func (s *Service) RunTrigger(
 			// take a ref. This is a similar issue that Deployments have with artifacts
 			if op.Release.Deployment.Sequence == 0 {
 				// get latest deployment
-				deployLatest, err := s.state(ctx).DeploymentLatest(op.Release.Deployment.Application, op.Release.Deployment.Workspace)
+				deployLatest, err := s.state(ctx).DeploymentLatest(ctx, op.Release.Deployment.Application, op.Release.Deployment.Workspace)
 				if err != nil {
-					return nil, status.Errorf(codes.Internal,
-						"failed to obtain latest deployment for running release operation trigger: %s", err)
+					return nil, hcerr.Externalize(
+						log,
+						err,
+						"failed to obtain latest deployment for running release operation trigger",
+						"application",
+						op.Release.Deployment.GetApplication(),
+						"workspace",
+						op.Release.Deployment.GetWorkspace(),
+					)
 				}
 
 				jobList[i].Job.Operation = &pb.Job_Release{
@@ -342,7 +426,7 @@ func (s *Service) RunTrigger(
 				}
 			} else {
 				// get deployment by id seq
-				deploy, err := s.state(ctx).DeploymentGet(&pb.Ref_Operation{
+				deploy, err := s.state(ctx).DeploymentGet(ctx, &pb.Ref_Operation{
 					Target: &pb.Ref_Operation_Sequence{
 						Sequence: &pb.Ref_OperationSeq{
 							Application: qJob.Job.Application,
@@ -351,8 +435,15 @@ func (s *Service) RunTrigger(
 					},
 				})
 				if err != nil {
-					return nil, status.Errorf(codes.Internal,
-						"failed to obtain deployment by id %q for running release operation trigger: %s", op.Release.Deployment.Sequence, err)
+					return nil, hcerr.Externalize(
+						log,
+						err,
+						"failed to obtain deployment by id for running release operation trigger",
+						"application",
+						op.Release.Deployment.GetApplication(),
+						"sequence",
+						op.Release.Deployment.GetSequence(),
+					)
 				}
 
 				jobList[i].Job.Operation = &pb.Job_Release{
@@ -370,10 +461,17 @@ func (s *Service) RunTrigger(
 			case *pb.Job_StatusReportOp_Deployment:
 				if srTarget.Deployment.Sequence == 0 {
 					// get latest deployment
-					deployLatest, err := s.state(ctx).DeploymentLatest(srTarget.Deployment.Application, srTarget.Deployment.Workspace)
+					deployLatest, err := s.state(ctx).DeploymentLatest(ctx, srTarget.Deployment.Application, srTarget.Deployment.Workspace)
 					if err != nil {
-						return nil, status.Errorf(codes.Internal,
-							"failed to obtain latest deployment for running a status report operation trigger: %s", err)
+						return nil, hcerr.Externalize(
+							log,
+							err,
+							"failed to obtain latest deployment for running a status report operation trigger",
+							"application",
+							srTarget.Deployment.GetApplication(),
+							"workspace",
+							srTarget.Deployment.GetWorkspace(),
+						)
 					}
 
 					jobList[i].Job.Operation = &pb.Job_StatusReport{
@@ -385,7 +483,7 @@ func (s *Service) RunTrigger(
 					}
 				} else {
 					// get deployment by id seq
-					deploy, err := s.state(ctx).DeploymentGet(&pb.Ref_Operation{
+					deploy, err := s.state(ctx).DeploymentGet(ctx, &pb.Ref_Operation{
 						Target: &pb.Ref_Operation_Sequence{
 							Sequence: &pb.Ref_OperationSeq{
 								Application: qJob.Job.Application,
@@ -394,8 +492,15 @@ func (s *Service) RunTrigger(
 						},
 					})
 					if err != nil {
-						return nil, status.Errorf(codes.Internal,
-							"failed to obtain deployment by id %q for running status report operation trigger: %s", srTarget.Deployment.Sequence, err)
+						return nil, hcerr.Externalize(
+							log,
+							err,
+							"failed to obtain deployment by id for running status report operation trigger",
+							"application",
+							srTarget.Deployment.GetApplication(),
+							"sequence",
+							srTarget.Deployment.GetSequence(),
+						)
 					}
 
 					jobList[i].Job.Operation = &pb.Job_StatusReport{
@@ -408,10 +513,17 @@ func (s *Service) RunTrigger(
 				}
 			case *pb.Job_StatusReportOp_Release:
 				if srTarget.Release.Sequence == 0 {
-					releaseLatest, err := s.state(ctx).ReleaseLatest(srTarget.Release.Application, srTarget.Release.Workspace)
+					releaseLatest, err := s.state(ctx).ReleaseLatest(ctx, srTarget.Release.Application, srTarget.Release.Workspace)
 					if err != nil {
-						return nil, status.Errorf(codes.Internal,
-							"failed to obtain latest release for running a status report operation trigger: %s", err)
+						return nil, hcerr.Externalize(
+							log,
+							err,
+							"failed to obtain latest release for running a status report operation trigger",
+							"application",
+							srTarget.Release.GetApplication(),
+							"workspace",
+							srTarget.Release.GetWorkspace(),
+						)
 					}
 
 					jobList[i].Job.Operation = &pb.Job_StatusReport{
@@ -423,7 +535,7 @@ func (s *Service) RunTrigger(
 					}
 				} else {
 					// get deployment by id seq
-					release, err := s.state(ctx).ReleaseGet(&pb.Ref_Operation{
+					release, err := s.state(ctx).ReleaseGet(ctx, &pb.Ref_Operation{
 						Target: &pb.Ref_Operation_Sequence{
 							Sequence: &pb.Ref_OperationSeq{
 								Application: qJob.Job.Application,
@@ -432,8 +544,15 @@ func (s *Service) RunTrigger(
 						},
 					})
 					if err != nil {
-						return nil, status.Errorf(codes.Internal,
-							"failed to obtain release by id %q for running status report operation trigger: %s", srTarget.Release.Sequence, err)
+						return nil, hcerr.Externalize(
+							log,
+							err,
+							"failed to obtain release by id for running status report operation trigger",
+							"application",
+							qJob.Job.GetApplication(),
+							"sequence",
+							srTarget.Release.GetSequence(),
+						)
 					}
 
 					jobList[i].Job.Operation = &pb.Job_StatusReport{
@@ -477,7 +596,7 @@ func (s *Service) RunTrigger(
 
 	// Trigger has been requested to queue jobs, update active time
 	runTrigger.ActiveTime = timestamppb.Now()
-	err = s.state(ctx).TriggerPut(runTrigger)
+	err = s.state(ctx).TriggerPut(ctx, runTrigger)
 	if err != nil {
 		return nil, err
 	}

@@ -1,0 +1,4 @@
+``release-note:improvement
+cli: Update `waypoint job list -pipeline-name` and `waypoint job list -pipeline-id` to display the latest run
+if no `-run` flag is supplied.
+```

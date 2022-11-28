@@ -1,0 +1,5 @@
+```release-note:improvement
+cli: Implement `waypoint job get-stream` to allow users to attach to running job
+streams and receieve output, or get the output from an existing job stream that
+already finished.
+```

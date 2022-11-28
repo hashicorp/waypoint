@@ -18,73 +18,6 @@ use "kubernetes" {
 
 These parameters are used in the [`use` stanza](/docs/waypoint-hcl/use) for this plugin.
 
-#### autoscale (category)
-
-Sets up a horizontal pod autoscaler to scale deployments automatically.
-
-This configuration will automatically set up and associate the current deployment with a horizontal pod autoscaler in Kuberentes. Note that for this to work, you must also define resource limits and requests for a deployment otherwise the metrics-server will not be able to properly determine a deployments target CPU utilization.
-
-##### autoscale.cpu_percent
-
-The target CPU percent utilization before the horizontal pod autoscaler scales up a deployments replicas.
-
-- Type: **int32**
-- **Optional**
-
-##### autoscale.max_replicas
-
-The maximum amount of pods to scale to for a deployment.
-
-- Type: **int32**
-- **Optional**
-
-##### autoscale.min_replicas
-
-The minimum amount of pods to have for a deployment.
-
-- Type: **int32**
-- **Optional**
-
-#### cpu (category)
-
-Cpu resource configuration.
-
-CPU lets you define resource limits and requests for a container in a deployment.
-
-##### cpu.limit
-
-Maximum amount of cpu to give the container. Supports m to indicate milli-cores.
-
-- Type: **string**
-- **Optional**
-
-##### cpu.request
-
-How much cpu to give the container in cpu cores. Supports m to indicate milli-cores.
-
-- Type: **string**
-- **Optional**
-
-#### memory (category)
-
-Memory resource configuration.
-
-Memory lets you define resource limits and requests for a container in a deployment.
-
-##### memory.limit
-
-Maximum amount of memory to give the container. Supports k for kilobytes, m for megabytes, and g for gigabytes.
-
-- Type: **string**
-- **Optional**
-
-##### memory.request
-
-How much memory to give the container in bytes. Supports k for kilobytes, m for megabytes, and g for gigabytes.
-
-- Type: **string**
-- **Optional**
-
 #### pod (category)
 
 The configuration for a pod.
@@ -465,6 +398,128 @@ Image of the sidecar container.
 
 - Type: **string**
 
+### Optional Parameters
+
+These parameters are used in the [`use` stanza](/docs/waypoint-hcl/use) for this plugin.
+
+#### annotations
+
+Annotations to be added to the application pod.
+
+Annotations are added to the pod spec of the deployed application. This is useful when using mutating webhook admission controllers to further process pod events.
+
+- Type: **map of string to string**
+- **Optional**
+
+#### autoscale (category)
+
+Sets up a horizontal pod autoscaler to scale deployments automatically.
+
+This configuration will automatically set up and associate the current deployment with a horizontal pod autoscaler in Kuberentes. Note that for this to work, you must also define resource limits and requests for a deployment otherwise the metrics-server will not be able to properly determine a deployments target CPU utilization.
+
+##### autoscale.cpu_percent
+
+The target CPU percent utilization before the horizontal pod autoscaler scales up a deployments replicas.
+
+- Type: **int32**
+- **Optional**
+
+##### autoscale.max_replicas
+
+The maximum amount of pods to scale to for a deployment.
+
+- Type: **int32**
+- **Optional**
+
+##### autoscale.min_replicas
+
+The minimum amount of pods to have for a deployment.
+
+- Type: **int32**
+- **Optional**
+
+#### context
+
+The kubectl context to use, as defined in the kubeconfig file.
+
+- Type: **string**
+- **Optional**
+
+#### cpu (category)
+
+Cpu resource configuration.
+
+CPU lets you define resource limits and requests for a container in a deployment.
+
+##### cpu.limit
+
+Maximum amount of cpu to give the container. Supports m to indicate milli-cores.
+
+- Type: **string**
+- **Optional**
+
+##### cpu.request
+
+How much cpu to give the container in cpu cores. Supports m to indicate milli-cores.
+
+- Type: **string**
+- **Optional**
+
+#### image_secret
+
+Name of the Kubernetes secrete to use for the image.
+
+This references an existing secret, waypoint does not create this secret.
+
+- Type: **string**
+- **Optional**
+
+#### kubeconfig
+
+Path to the kubeconfig file to use.
+
+By default uses from current user's home directory.
+
+- Type: **string**
+- **Optional**
+- Environment Variable: **KUBECONFIG**
+
+#### labels
+
+A map of key value labels to apply to the deployment pod.
+
+- Type: **map of string to string**
+- **Optional**
+
+#### memory (category)
+
+Memory resource configuration.
+
+Memory lets you define resource limits and requests for a container in a deployment.
+
+##### memory.limit
+
+Maximum amount of memory to give the container. Supports k for kilobytes, m for megabytes, and g for gigabytes.
+
+- Type: **string**
+- **Optional**
+
+##### memory.request
+
+How much memory to give the container in bytes. Supports k for kilobytes, m for megabytes, and g for gigabytes.
+
+- Type: **string**
+- **Optional**
+
+#### namespace
+
+Namespace to target deployment into.
+
+Namespace is the name of the Kubernetes namespace to apply the deployment in. This is useful to create deployments in non-default namespaces without creating kubeconfig contexts for each.
+
+- Type: **string**
+- **Optional**
+
 #### probe (category)
 
 Configuration to control liveness and readiness probes.
@@ -497,60 +552,6 @@ Time in seconds before the probe fails.
 - **Optional**
 - Default: 5
 
-### Optional Parameters
-
-These parameters are used in the [`use` stanza](/docs/waypoint-hcl/use) for this plugin.
-
-#### annotations
-
-Annotations to be added to the application pod.
-
-Annotations are added to the pod spec of the deployed application. This is useful when using mutating webhook admission controllers to further process pod events.
-
-- Type: **map of string to string**
-- **Optional**
-
-#### context
-
-The kubectl context to use, as defined in the kubeconfig file.
-
-- Type: **string**
-- **Optional**
-
-#### image_secret
-
-Name of the Kubernetes secrete to use for the image.
-
-This references an existing secret, waypoint does not create this secret.
-
-- Type: **string**
-- **Optional**
-
-#### kubeconfig
-
-Path to the kubeconfig file to use.
-
-By default uses from current user's home directory.
-
-- Type: **string**
-- **Optional**
-
-#### labels
-
-A map of key value labels to apply to the deployment pod.
-
-- Type: **map of string to string**
-- **Optional**
-
-#### namespace
-
-Namespace to target deployment into.
-
-Namespace is the name of the Kubernetes namespace to apply the deployment in. This is useful to create deployments in non-default namespaces without creating kubeconfig contexts for each.
-
-- Type: **string**
-- **Optional**
-
 #### probe_path
 
 The HTTP path to request to test that the application is running.
@@ -582,7 +583,7 @@ Resource limits and requests for a container. This exists to allow any possible 
 
 A path for the service to store temporary data.
 
-A path to a directory that will be created for the service to store temporary data using tmpfs.
+A path to a directory that will be created for the service to store temporary data using EmptyDir.
 
 - Type: **list of string**
 - **Optional**

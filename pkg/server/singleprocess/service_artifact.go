@@ -2,12 +2,12 @@ package singleprocess
 
 import (
 	"context"
+	"fmt"
 
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
-
+	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/waypoint/pkg/server"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
+	"github.com/hashicorp/waypoint/pkg/server/hcerr"
 	serverptypes "github.com/hashicorp/waypoint/pkg/server/ptypes"
 	"github.com/hashicorp/waypoint/pkg/serverstate"
 )
@@ -28,15 +28,19 @@ func (s *Service) UpsertPushedArtifact(
 		// Get the next id
 		id, err := server.Id()
 		if err != nil {
-			return nil, status.Errorf(codes.Internal, "uuid generation failed: %s", err)
+			return nil, hcerr.Externalize(
+				hclog.FromContext(ctx),
+				fmt.Errorf("uuid generation failed: %w", err),
+				"failed to generate a uuid while upserting a pushed artifact",
+			)
 		}
 
 		// Specify the id
 		result.Id = id
 	}
 
-	if err := s.state(ctx).ArtifactPut(!insert, result); err != nil {
-		return nil, err
+	if err := s.state(ctx).ArtifactPut(ctx, !insert, result); err != nil {
+		return nil, hcerr.Externalize(hclog.FromContext(ctx), err, "failed to upsert artifact")
 	}
 
 	return &pb.UpsertPushedArtifactResponse{Artifact: result}, nil
@@ -50,25 +54,35 @@ func (s *Service) ListPushedArtifacts(
 		return nil, err
 	}
 
-	result, err := s.state(ctx).ArtifactList(req.Application,
+	result, err := s.state(ctx).ArtifactList(ctx, req.Application,
 		serverstate.ListWithStatusFilter(req.Status...),
 		serverstate.ListWithOrder(req.Order),
 		serverstate.ListWithWorkspace(req.Workspace),
 	)
 	if err != nil {
-		return nil, err
+		return nil, hcerr.Externalize(
+			hclog.FromContext(ctx),
+			err,
+			"failed to list artifacts",
+		)
 	}
 
 	if req.IncludeBuild {
 		for _, a := range result {
-			b, err := s.state(ctx).BuildGet(&pb.Ref_Operation{
+			b, err := s.state(ctx).BuildGet(ctx, &pb.Ref_Operation{
 				Target: &pb.Ref_Operation_Id{
 					Id: a.BuildId,
 				},
 			})
 
 			if err != nil {
-				return nil, err
+				return nil, hcerr.Externalize(
+					hclog.FromContext(ctx),
+					err,
+					"failed to get artifact",
+					"build_id",
+					a.BuildId,
+				)
 			}
 
 			a.Build = b
@@ -87,7 +101,17 @@ func (s *Service) GetLatestPushedArtifact(
 		return nil, err
 	}
 
-	return s.state(ctx).ArtifactLatest(req.Application, req.Workspace)
+	a, err := s.state(ctx).ArtifactLatest(ctx, req.Application, req.Workspace)
+	if err != nil {
+		return nil, hcerr.Externalize(
+			hclog.FromContext(ctx),
+			err,
+			"failed to get latest artifact",
+			"application",
+			req.Application.Application,
+		)
+	}
+	return a, nil
 }
 
 // GetPushedArtifact returns a PushedArtifact based on ID
@@ -99,5 +123,15 @@ func (s *Service) GetPushedArtifact(
 		return nil, err
 	}
 
-	return s.state(ctx).ArtifactGet(req.Ref)
+	a, err := s.state(ctx).ArtifactGet(ctx, req.Ref)
+	if err != nil {
+		return nil, hcerr.Externalize(
+			hclog.FromContext(ctx),
+			err,
+			"failed to get pushed artifact",
+			"reference",
+			req.Ref,
+		)
+	}
+	return a, nil
 }

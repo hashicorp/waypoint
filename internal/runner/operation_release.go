@@ -31,7 +31,35 @@ func (r *Runner) executeReleaseOp(
 	}
 
 	// Our target deployment
-	target := op.Release.Deployment
+	var target *pb.Deployment
+	if op.Release.Deployment == nil {
+		log.Debug("no deployment specified, using latest deployment")
+
+		// TODO(briancain): we need a GetLatestDeployment endpoint. That would be way better.
+		resp, err := r.client.ListDeployments(ctx, &pb.ListDeploymentsRequest{
+			Application: job.Application,
+			Workspace:   job.Workspace,
+			Order: &pb.OperationOrder{
+				Limit: 1, // we just care about the latest deployment
+			},
+
+			// NOTE(briancain): we _MUST_ preload the deployment details here. This is
+			// because when the runner goes to invoke the app_deploy operation, it
+			// assumes that the Deployment has pre-loaded the Artifact details.
+			LoadDetails: pb.Deployment_ARTIFACT,
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		if len(resp.Deployments) == 0 {
+			return nil, status.Error(codes.FailedPrecondition, "there are no deployments to release")
+		}
+
+		target = resp.Deployments[0]
+	} else {
+		target = op.Release.Deployment
+	}
 
 	// Get our last release. If it's the same generation, then release is
 	// a no-op and return this value. We only do this if we have a generation.
@@ -63,6 +91,9 @@ func (r *Runner) executeReleaseOp(
 	// If we're pruning, then let's query the deployments we want to prune
 	// ahead of time so that fails fast.
 	var pruneDeploys []*pb.Deployment
+	// If we are pruning deployments, we also prune the releases which
+	// released the deployments we're pruning
+	var pruneReleases []*pb.Release
 	if op.Release.Prune {
 		// Determine the number of deployments to keep around.
 		retain := 2
@@ -98,7 +129,7 @@ func (r *Runner) executeReleaseOp(
 		ds := make([]*pb.Deployment, 0, len(resp.Deployments))
 		for _, d := range resp.Deployments {
 			// If this is the deployment we're releasing, then do NOT delete it.
-			if d.Id == op.Release.Deployment.Id {
+			if d.Id == target.Id {
 				continue
 			}
 
@@ -113,21 +144,37 @@ func (r *Runner) executeReleaseOp(
 			// TODO this should instead check against the app's platform component
 			// and ignore any deployments that are NOT the app's current platform
 			// component (ya dig?)
-			if d.Component.Name != op.Release.Deployment.Component.Name {
+			if d.Component.Name != target.Component.Name {
 				continue
 			}
 
 			// Mark for deletion
 			ds = append(ds, d)
 		}
+		rl, err := r.client.ListReleases(ctx, &pb.ListReleasesRequest{
+			Application: app.Ref(),
+			Workspace:   project.WorkspaceRef(),
+		})
+
+		var rs []*pb.Release
+		for _, release := range rl.Releases {
+			for _, d := range ds {
+				if release.DeploymentId == d.Id {
+					rs = append(rs, release)
+				}
+			}
+
+		}
 
 		log.Info("will prune deploys", "len", len(ds))
 		pruneDeploys = ds
+		log.Info("will prune releases", "len", len(rs))
+		pruneReleases = rs
 	}
 
 	// Do the release
 	if release == nil {
-		release, _, err = app.Release(ctx, op.Release.Deployment)
+		release, _, err = app.Release(ctx, target)
 		if err != nil {
 			return nil, err
 		}
@@ -152,6 +199,22 @@ func (r *Runner) executeReleaseOp(
 				return result, err
 			}
 		}
+	}
+	if len(pruneReleases) > 0 {
+		log.Info("pruning releases", "len", len(pruneReleases))
+		app.UI.Output("Pruning old releases...", terminal.WithHeaderStyle())
+		for _, release := range pruneReleases {
+			app.UI.Output("Release: %s (v%d)", release.Id, release.Sequence, terminal.WithInfoStyle())
+			if err := app.DestroyRelease(ctx, release); err != nil {
+				return result, err
+			}
+		}
+	}
+
+	// Run a status report operation on the recent release
+	_, err = app.ReleaseStatusReport(ctx, release)
+	if err != nil {
+		return nil, err
 	}
 
 	return result, nil

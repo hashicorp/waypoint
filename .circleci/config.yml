@@ -3,8 +3,7 @@ version: 2.1
 
 references:
   images:
-    go: &GOLANG_IMAGE docker.mirror.hashicorp.services/circleci/golang:1.17
-    middleman: &MIDDLEMAN_IMAGE docker.mirror.hashicorp.services/hashicorp/middleman-hashicorp:0.3.44
+    go: &GOLANG_IMAGE docker.mirror.hashicorp.services/cimg/go:1.17
     ember: &EMBER_IMAGE docker.mirror.hashicorp.services/circleci/node:14-browsers
     website: &WEBSITE_IMAGE docker.mirror.hashicorp.services/node:14
 
@@ -13,7 +12,6 @@ references:
 
   cache:
     yarn: &YARN_CACHE_KEY waypoint-ui-v1-{{ checksum "ui/yarn.lock" }}-{{ checksum "uilib.md5" }}
-    rubygem: &RUBYGEM_CACHE_KEY static-site-gems-v1-{{ checksum "Gemfile.lock" }}
 
   environment: &ENVIRONMENT
     TEST_RESULTS_DIR: *TEST_RESULTS_DIR
@@ -23,7 +21,6 @@ references:
     GIT_COMMITTER_NAME: circleci-waypoint
     BASH_ENV: /home/circleci/project/.circleci/bash_env.sh
     DOCKER_BUILDKIT: 1
-    REBUILD_UI: &REBUILD_UI 1
 
 jobs:
   # Runs Go linters
@@ -38,11 +35,11 @@ jobs:
           name: Install golangci-lint
           command: |
             download=https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh
-            wget -O- -q $download | sh -x -s -- -d -b /go/bin/ v1.27.0
+            wget -O- -q $download | sh -x -s -- -d -b /home/circleci/go v1.47.3
       - run: go mod download
       - run:
           name: lint
-          command: &lintcmd |
+          command: |
             golangci-lint run --build-tags="$GOTAGS" -v --concurrency 2 \
               --disable-all \
               --timeout 10m \
@@ -118,6 +115,49 @@ jobs:
           fi
       - notify_main_failure
 
+  generate-json-docs:
+    docker:
+      - image: *GOLANG_IMAGE
+    environment:
+      <<: *ENVIRONMENT
+    steps:
+      - checkout
+      - attach_workspace:
+          at: .
+      - run:
+          name: generate json plugin docs
+          command: go run ./cmd/waypoint docs -json
+      - run:
+          command: rm waypoint-restore.db.lock; git status
+      - persist_to_workspace:
+          root: .
+          paths:
+            - .
+      - notify_main_failure
+
+  check-json-docs:
+    docker:
+      - image: *WEBSITE_IMAGE
+    environment:
+      <<: *ENVIRONMENT
+    steps:
+      - attach_workspace:
+          at: .
+      - run:
+          command: git status
+      - run: |
+          if ! git diff --exit-code embedJson/gen > /dev/null; then
+            echo "Website directory has unstaged json changes. This is because you have modified doc strings"
+            echo "that must be reflected in the json docs. Run the following make command:"
+            echo
+            echo "make gen/website-mdx"
+            echo
+            echo "And then validate that the corresponding json docs look acceptable."
+            git status
+            exit 1
+          fi
+      - notify_main_failure
+
   go-test:
     docker:
       - image: *GOLANG_IMAGE
@@ -146,10 +186,10 @@ jobs:
     steps:
       - checkout
       - attach_workspace:
-          at: /go/bin
+          at: /home/circleci/go/bin
       - setup_remote_docker:
-          docker_layer_cache: true
-      - run: &install_gotestsum
+          docker_layer_caching: true
+      - run:
           name: Install gotestsum
           command: |
             url=https://github.com/gotestyourself/gotestsum/releases/download
@@ -197,11 +237,11 @@ jobs:
       - run:
           command: |
             go get github.com/kevinburke/go-bindata/...
-            PATH=/go/bin:$PATH make bin
-            cp waypoint /go/bin
+            PATH=/home/circleci/go/bin:$PATH make bin
+            cp waypoint /home/circleci/go/bin
       # save dev build to pass to downstream jobs
       - persist_to_workspace:
-          root: /go/bin
+          root: /home/circleci/go/bin
           paths:
             - waypoint
       - notify_main_failure
@@ -220,7 +260,7 @@ jobs:
       - run:
           command: |
             go get github.com/kevinburke/go-bindata/...
-            PATH=/go/bin:$PATH make bin/windows
+            PATH=/home/circleci/go/bin:$PATH make bin/windows
       - notify_main_failure
 
   integration:
@@ -231,7 +271,7 @@ jobs:
       - run:
           name: Setup k3s
           command: |
-            curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="--docker --disable=traefik --write-kubeconfig-mode 664" sh -
+            curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION="v1.23.8+k3s2" INSTALL_K3S_EXEC="--docker --disable=traefik --write-kubeconfig-mode 664" sh -
             sleep 5
       - run:
           name: Get k3s nodes
@@ -242,6 +282,34 @@ jobs:
       - run:
           name: Execute Integration Tests
           command: ./ci/integration.sh
+      - notify_main_failure
+
+  e2e-docker:
+    # we use the latest version of ubuntu on circleci here, as opposed to the 2004
+    # version that our integration test uses, because we need the updated docker
+    # things, whereas k3s does not like the updated docker things; le sigh
+    machine:
+      image: ubuntu-2204:current
+    environment:
+      E2E_PLATFORM: "Docker"
+    steps:
+      - checkout
+      - attach_workspace:
+          at: .
+      # This is just to remind ourselves of what version of Go is default
+      # on this machine image; currently it's 1.18, but we should use 1.17
+      - run: go version
+      - run:
+          name: Install go v1.17.6
+          command: |
+            curl -SL --fail -o /tmp/golang.tar.gz https://dl.google.com/go/go1.17.6.linux-amd64.tar.gz
+            sudo rm -rf /usr/local/go
+            sudo tar -C /usr/local/ -xzf /tmp/golang.tar.gz
+            rm -rf /tmp/golang.tar.gz
+            go version
+      - run:
+          name: Execute E2E Docker Tests
+          command: ./test-e2e/run-test.sh
       - notify_main_failure
 
   image-release:
@@ -412,7 +480,7 @@ jobs:
     resource_class: xlarge
     environment:
       EMBER_TEST_REPORT: test-results/report-oss.xml #outputs test report for CircleCI test summary
-      EMBER_TEST_PARALLEL: true #enables test parallelization with ember-exam
+      EMBER_TEST_PARALLEL: "true" #enables test parallelization with ember-exam
     steps:
       - checkout
       - md5uilib
@@ -500,6 +568,13 @@ workflows:
             branches:
               only:
                 - main
+      - e2e-docker:
+          requires:
+            - image-release
+          filters:
+            branches:
+              only:
+                - main
 
   website-mdx:
     jobs:
@@ -511,6 +586,21 @@ workflows:
       - check-website-mdx:
           requires:
             - generate-website-mdx
+          filters:
+            branches:
+              ignore:
+                - main
+
+  json-docs:
+    jobs:
+      - generate-json-docs:
+          filters:
+            branches:
+              ignore:
+                - main
+      - check-json-docs:
+          requires:
+            - generate-json-docs
           filters:
             branches:
               ignore:

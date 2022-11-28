@@ -28,6 +28,12 @@ Cpu resource request to be added to the task container.
 
 - Type: **k8s.ResourceConfig**
 
+#### ephemeral_storage
+
+Ephemeral_storage resource request to be added to the task container.
+
+- Type: **k8s.ResourceConfig**
+
 #### memory
 
 Memory resource request to be added to the task container.
@@ -69,6 +75,7 @@ By default uses from current user's home directory.
 
 - Type: **string**
 - **Optional**
+- Environment Variable: **KUBECONFIG**
 
 #### namespace
 
@@ -85,6 +92,14 @@ Service account is the name of the Kubernetes service account to add to the pod.
 
 - Type: **string**
 - **Optional**
+
+#### watchtask_startup_timeout_seconds
+
+This option configures how long the WatchTask should wait for a task pod to start-up before attempting to stream its logs. If the pod does not start up within the given timeout, WatchTask will exit.
+
+- Type: **int**
+- **Optional**
+- Default: 30
 
 ### Output Attributes
 

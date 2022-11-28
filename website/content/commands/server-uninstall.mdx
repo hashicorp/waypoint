@@ -25,8 +25,6 @@ The platform can be specified as kubernetes, nomad, ecs, or docker. If not
 specified, the CLI command will attempt to retrieve the platform defined in
 the server context.
 
-'-auto-approve' is required.
-
 By default, this command deletes the default server's context and creates
 a server snapshot.
 
@@ -39,28 +37,28 @@ command) will not be affected.
 
 #### Global Options
 
-- `-plain` - Plain output: no colors, no animation.
+- `-plain` - Plain output: no colors, no animation. The default is false.
 - `-app=<string>` (`-a`) - App to target. Certain commands require a single app target for Waypoint configurations with multiple apps. If you have a single app, then this can be ignored.
 - `-project=<string>` (`-p`) - Project to target.
 - `-workspace=<string>` (`-w`) - Workspace to operate in.
 
 #### Command Options
 
-- `-auto-approve` - Auto-approve server uninstallation.
-- `-delete-context` - Delete the context for the server once it's uninstalled.
+- `-auto-approve` - Auto-approve server uninstallation. If unset, confirmation will be requested. The default is false.
+- `-delete-context` - Delete the context for the server once it's uninstalled. The default is true.
 - `-platform=<string>` - Platform to uninstall the Waypoint server from.
-- `-snapshot-name=<string>` - Filename to write the snapshot to. If no name is specified, by default a timestamp will be appended to the default snapshot name.
-- `-snapshot` - Enable or disable taking a snapshot of Waypoint server prior to uninstall.
-- `-ignore-runner-error` - Ignore any errors encountered while uninstalling runners. This allows the server to be uninstalled even if runner uninstallation fails. Note that this may leave runners dangling since future 'uninstall' runs will do nothing if the server is uninstalled.
+- `-snapshot-name=<string>` - Filename to write the snapshot to. If no name is specified, by default a timestamp will be appended to the default snapshot name. The default is waypoint-server-snapshot.
+- `-snapshot` - Enable or disable taking a snapshot of Waypoint server prior to uninstall. The default is true.
+- `-ignore-runner-error` - Ignore any errors encountered while uninstalling runners. This allows the server to be uninstalled even if runner uninstallation fails. Note that this may leave runners dangling since future 'uninstall' runs will do nothing if the server is uninstalled. The default is false.
 
 #### ecs Options
 
-- `-ecs-cluster=<string>` - Configures the Cluster to uninstall.
+- `-ecs-cluster=<string>` - Configures the Cluster to uninstall. The default is waypoint-server.
 - `-ecs-region=<string>` - Configures which AWS region to uninstall from.
 
 #### kubernetes Options
 
 - `-k8s-context=<string>` - The Kubernetes context to unisntall the Waypoint server from. If left unset, Waypoint will use the current Kubernetes context.
-- `-k8s-namespace=<string>` - Namespace in Kubernetes to uninstall the Waypoint server from.
+- `-k8s-namespace=<string>` - Namespace in Kubernetes to uninstall the Waypoint server from. The default is default.
 
 @include "commands/server-uninstall_more.mdx"

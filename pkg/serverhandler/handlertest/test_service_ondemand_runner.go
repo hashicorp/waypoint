@@ -8,6 +8,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
+	empty "google.golang.org/protobuf/types/known/emptypb"
 
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	serverptypes "github.com/hashicorp/waypoint/pkg/server/ptypes"
@@ -18,14 +19,55 @@ func init() {
 		TestServiceOnDemandRunnerConfig,
 		TestServiceOnDemandRunnerConfig_GetOnDemandRunnerConfig,
 		TestServiceOnDemandRunnerConfig_ListOnDemandRunnerConfigs,
+		TestServiceOndemandRunnerConfig_duplicateName,
+		TestServiceOnDemandRunnerConfig_DeleteOnDemandRunnerConfigs,
 	}
+}
+
+// Should not be able to create two runner profiles with the same name
+func TestServiceOndemandRunnerConfig_duplicateName(t *testing.T, factory Factory) {
+	ctx := context.Background()
+
+	// Create our server
+	client, _ := factory(t)
+
+	require := require.New(t)
+
+	// Create a new profile
+	resp, err := client.UpsertOnDemandRunnerConfig(ctx, &pb.UpsertOnDemandRunnerConfigRequest{
+		Config: &pb.OnDemandRunnerConfig{
+			Name:       "foo",
+			PluginType: "docker",
+		},
+	})
+	require.NoError(err)
+	require.NotNil(resp)
+	require.Equal(resp.Config.Name, "foo")
+
+	// Attempt to upsert again with the same name
+	resp2, err := client.UpsertOnDemandRunnerConfig(ctx, &pb.UpsertOnDemandRunnerConfigRequest{
+		Config: &pb.OnDemandRunnerConfig{
+			Name:       "foo",
+			PluginType: "docker",
+			OciUrl:     "test",
+		},
+	})
+	require.NoError(err)
+	require.Equal(resp2.Config.Id, resp.Config.Id)
+	require.NotNil(resp)
+
+	// Listing gives only the one entry
+	configs, err := client.ListOnDemandRunnerConfigs(ctx, &emptypb.Empty{})
+	require.NoError(err)
+	require.NotEmpty(configs)
+	require.Len(configs.Configs, 1)
 }
 
 func TestServiceOnDemandRunnerConfig(t *testing.T, factory Factory) {
 	ctx := context.Background()
 
 	// Create our server
-	_, client := factory(t)
+	client, _ := factory(t)
 
 	// Simplify writing tests
 	type Req = pb.UpsertOnDemandRunnerConfigRequest
@@ -57,7 +99,6 @@ func TestServiceOnDemandRunnerConfig(t *testing.T, factory Factory) {
 	t.Run("update non-existent", func(t *testing.T) {
 		require := require.New(t)
 
-		// Create, should get an ID back
 		resp, err := client.UpsertOnDemandRunnerConfig(ctx, &Req{
 			Config: serverptypes.TestOnDemandRunnerConfig(t, &pb.OnDemandRunnerConfig{
 				Id: "nope",
@@ -67,7 +108,10 @@ func TestServiceOnDemandRunnerConfig(t *testing.T, factory Factory) {
 		require.Nil(resp)
 		st, ok := status.FromError(err)
 		require.True(ok)
-		require.Equal(codes.NotFound, st.Code())
+
+		// It's unclear if this is an attempt to create a new ODR profile with a given ID,
+		// or update an ODR profile that doesn't exist. Either way, it's illegal.
+		require.True(st.Code() == codes.NotFound || st.Code() == codes.InvalidArgument)
 	})
 
 	t.Run("create with target runner labels", func(t *testing.T) {
@@ -104,14 +148,16 @@ func TestServiceOnDemandRunnerConfig_GetOnDemandRunnerConfig(t *testing.T, facto
 	ctx := context.Background()
 
 	// Create our server
-	_, client := factory(t)
+	client, _ := factory(t)
 
 	// Best way to mock for now is to make a request
 	resp, err := client.UpsertOnDemandRunnerConfig(ctx, &pb.UpsertOnDemandRunnerConfigRequest{
-		Config: serverptypes.TestOnDemandRunnerConfig(t, nil),
+		Config: serverptypes.TestOnDemandRunnerConfig(t, &pb.OnDemandRunnerConfig{Default: true}),
 	})
 
 	require.NoError(t, err)
+
+	odr := resp.Config
 
 	// Simplify writing tests
 	type Req = pb.GetOnDemandRunnerConfigRequest
@@ -128,6 +174,17 @@ func TestServiceOnDemandRunnerConfig_GetOnDemandRunnerConfig(t *testing.T, facto
 		require.NoError(err)
 		require.NotNil(resp)
 		require.NotEmpty(resp.Config)
+	})
+
+	t.Run("get only default", func(t *testing.T) {
+		require := require.New(t)
+
+		// Get, should return a deployment
+		resp, err := client.GetDefaultOnDemandRunnerConfig(ctx, &empty.Empty{})
+		require.NoError(err)
+		require.NotNil(resp)
+		require.NotEmpty(resp.Config)
+		require.Equal(resp.Config.Id, odr.Id)
 	})
 
 	t.Run("get non-existing", func(t *testing.T) {
@@ -151,7 +208,7 @@ func TestServiceOnDemandRunnerConfig_ListOnDemandRunnerConfigs(t *testing.T, fac
 	ctx := context.Background()
 
 	// Create our server
-	_, client := factory(t)
+	client, _ := factory(t)
 
 	dep := serverptypes.TestOnDemandRunnerConfig(t, nil)
 
@@ -166,9 +223,93 @@ func TestServiceOnDemandRunnerConfig_ListOnDemandRunnerConfigs(t *testing.T, fac
 		require := require.New(t)
 
 		// Get, should return a ondemand runner config
-		deployments, err := client.ListOnDemandRunnerConfigs(ctx, &emptypb.Empty{})
+		configs, err := client.ListOnDemandRunnerConfigs(ctx, &emptypb.Empty{})
 		require.NoError(err)
-		require.NotEmpty(deployments)
-		require.Equal(deployments.Configs[0].Id, resp.Config.Id)
+		require.NotEmpty(configs)
+		require.Equal(configs.Configs[0].Id, resp.Config.Id)
+	})
+}
+
+func TestServiceOnDemandRunnerConfig_DeleteOnDemandRunnerConfigs(t *testing.T, factory Factory) {
+	ctx := context.Background()
+
+	// Create our server
+	client, _ := factory(t)
+
+	dep := serverptypes.TestOnDemandRunnerConfig(t, nil)
+
+	t.Run("delete by id", func(t *testing.T) {
+		require := require.New(t)
+
+		// Best way to mock for now is to make a request
+		resp, err := client.UpsertOnDemandRunnerConfig(ctx, &pb.UpsertOnDemandRunnerConfigRequest{
+			Config: dep,
+		})
+		require.NoError(err)
+
+		// Get, should return a ondemand runner config
+		deleteResp, err := client.DeleteOnDemandRunnerConfig(ctx, &pb.DeleteOnDemandRunnerConfigRequest{
+			Config: &pb.Ref_OnDemandRunnerConfig{
+				Id: resp.Config.Id,
+			},
+		})
+		require.NoError(err)
+		require.NotEmpty(deleteResp)
+		require.Equal(deleteResp.Config.Id, resp.Config.Id)
+		require.Equal(deleteResp.Config.Name, resp.Config.Name)
+
+		// Cannot get that config
+		_, err = client.GetOnDemandRunnerConfig(ctx, &pb.GetOnDemandRunnerConfigRequest{
+			Config: &pb.Ref_OnDemandRunnerConfig{
+				Id: resp.Config.Id,
+			},
+		})
+		require.Error(err)
+		require.Equal(status.Code(err), codes.NotFound)
+
+		// Config is not in the list
+		configs, err := client.ListOnDemandRunnerConfigs(ctx, &emptypb.Empty{})
+		require.NoError(err)
+		require.NotEmpty(configs)
+		require.Len(configs.Configs, 0)
+	})
+
+	t.Run("delete by name", func(t *testing.T) {
+		require := require.New(t)
+
+		// Best way to mock for now is to make a request
+		resp, err := client.UpsertOnDemandRunnerConfig(ctx, &pb.UpsertOnDemandRunnerConfigRequest{
+			Config: &pb.OnDemandRunnerConfig{
+				Name:       "testname",
+				PluginType: "docker",
+			},
+		})
+		require.NoError(err)
+
+		// Get, should return a ondemand runner config
+		deleteResp, err := client.DeleteOnDemandRunnerConfig(ctx, &pb.DeleteOnDemandRunnerConfigRequest{
+			Config: &pb.Ref_OnDemandRunnerConfig{
+				Name: "testname",
+			},
+		})
+		require.NoError(err)
+		require.NotEmpty(deleteResp)
+		require.Equal(deleteResp.Config.Id, resp.Config.Id)
+		require.Equal(deleteResp.Config.Name, resp.Config.Name)
+
+		// Cannot get that config
+		_, err = client.GetOnDemandRunnerConfig(ctx, &pb.GetOnDemandRunnerConfigRequest{
+			Config: &pb.Ref_OnDemandRunnerConfig{
+				Id: resp.Config.Id,
+			},
+		})
+		require.Error(err)
+		require.Equal(status.Code(err), codes.NotFound)
+
+		// Config is not in the list
+		configs, err := client.ListOnDemandRunnerConfigs(ctx, &emptypb.Empty{})
+		require.NoError(err)
+		require.NotEmpty(configs)
+		require.Len(configs.Configs, 0)
 	})
 }

@@ -12,8 +12,11 @@ import (
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hclsyntax"
 	hcljson "github.com/hashicorp/hcl/v2/json"
+
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
+
 	"github.com/hashicorp/waypoint/internal/clierrors"
+	"github.com/hashicorp/waypoint/internal/installutil"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 )
@@ -22,13 +25,14 @@ type RunnerProfileSetCommand struct {
 	*baseCommand
 	//TODO(XX): after `-env-vars` as a slice is deprecated, rename flagEnvVar to flagEnvVars
 	flagName               string
-	flagOCIUrl             string
+	flagOCIUrl             *string
 	flagEnvVar             map[string]string
 	flagEnvVars            []string
 	flagPluginType         string
 	flagPluginConfig       string
-	flagDefault            bool
-	flagTargetRunnerId     string
+	flagDefault            *bool
+	flagTargetRunnerAny    *bool
+	flagTargetRunnerId     *string
 	flagTargetRunnerLabels map[string]string
 }
 
@@ -101,13 +105,17 @@ func (c *RunnerProfileSetCommand) Run(args []string) int {
 	}
 
 	// Set target runner for profile
-	if c.flagTargetRunnerId != "" {
+	if c.flagTargetRunnerId != nil {
 		od.TargetRunner = &pb.Ref_Runner{
 			Target: &pb.Ref_Runner_Id{
 				Id: &pb.Ref_RunnerId{
-					Id: c.flagTargetRunnerId,
+					Id: *c.flagTargetRunnerId,
 				},
 			},
+		}
+		if c.flagTargetRunnerAny != nil {
+			c.ui.Output("Both -target-runner-id and -target-runner-any detected, only one can be set at a time. ID takes priority.",
+				terminal.WithWarningStyle())
 		}
 		if c.flagTargetRunnerLabels != nil {
 			c.ui.Output("Both -target-runner-id and -target-runner-label detected, only one can be set at a time. ID takes priority.",
@@ -121,7 +129,11 @@ func (c *RunnerProfileSetCommand) Run(args []string) int {
 				},
 			},
 		}
-	} else {
+		if c.flagTargetRunnerAny != nil {
+			c.ui.Output("Both -target-runner-label and -target-runner-any detected, only one can be set at a time. Labels take priority.",
+				terminal.WithWarningStyle())
+		}
+	} else if od.TargetRunner == nil || (c.flagTargetRunnerAny != nil && *c.flagTargetRunnerAny) {
 		od.TargetRunner = &pb.Ref_Runner{Target: &pb.Ref_Runner_Any{}}
 	}
 
@@ -186,39 +198,62 @@ func (c *RunnerProfileSetCommand) Run(args []string) int {
 		}
 	}
 
-	od.OciUrl = c.flagOCIUrl
-	od.EnvironmentVariables = map[string]string{}
-	od.Default = c.flagDefault
+	if od.OciUrl == "" {
+		od.OciUrl = installutil.DefaultODRImage
+	}
+	if c.flagOCIUrl != nil {
+		od.OciUrl = *c.flagOCIUrl
+	}
+
+	if c.flagDefault != nil {
+		od.Default = *c.flagDefault
+	}
 
 	if c.flagEnvVars != nil {
 		//TODO(XX): Deprecate -env-vars and this logic
 		c.ui.Output(
-			"Flag '-env-vars' is deprecated, please use flag `-env-var=k=v`",
+			"Flag '-env-vars' is deprecated, please use flag '-env-var=k=v'",
 			terminal.WithWarningStyle(),
 		)
+
+		if od.EnvironmentVariables == nil {
+			od.EnvironmentVariables = make(map[string]string)
+		}
 		for _, kv := range c.flagEnvVars {
 			idx := strings.IndexByte(kv, '=')
 			if idx != -1 {
 				od.EnvironmentVariables[kv[:idx]] = kv[idx+1:]
 			}
 		}
-	} else {
-		od.EnvironmentVariables = c.flagEnvVar
 	}
 
-	if c.flagPluginType == "" {
+	if c.flagEnvVar != nil {
+		if od.EnvironmentVariables == nil {
+			od.EnvironmentVariables = make(map[string]string)
+		}
+		for k, v := range c.flagEnvVar {
+			if v == "" {
+				delete(od.EnvironmentVariables, k)
+			} else {
+				od.EnvironmentVariables[k] = v
+			}
+		}
+	}
+
+	if c.flagPluginType == "" && od.PluginType == "" {
 		c.ui.Output(
 			"Flag '-plugin-type' must be set to a valid plugin type like 'docker' or 'kubernetes'.\n\n%s",
 			c.Help(),
 			terminal.WithErrorStyle(),
 		)
 		return 1
-	}
-
-	od.PluginType = c.flagPluginType
+	} else if c.flagPluginType != "" {
+		// override plugin type from flag
+		od.PluginType = c.flagPluginType
+	} // else we stick with whats set originally in od
 
 	// Upsert
-	_, err := c.project.Client().UpsertOnDemandRunnerConfig(ctx, &pb.UpsertOnDemandRunnerConfigRequest{
+	resp, err := c.project.Client().UpsertOnDemandRunnerConfig(ctx, &pb.UpsertOnDemandRunnerConfigRequest{
 		Config: od,
 	})
 	if err != nil {
@@ -230,9 +265,9 @@ func (c *RunnerProfileSetCommand) Run(args []string) int {
 	}
 
 	if updated {
-		s.Update("Runner profile updated")
+		s.Update("Runner profile %q updated", resp.Config.Name)
 	} else {
-		s.Update("Runner profile created")
+		s.Update("Runner profile %q created", resp.Config.Name)
 	}
 	s.Done()
 
@@ -250,10 +285,10 @@ func (c *RunnerProfileSetCommand) Flags() *flag.Sets {
 			Usage:   "The name of an existing runner profile to update.",
 		})
 
-		f.StringVar(&flag.StringVar{
+		f.StringPtrVar(&flag.StringPtrVar{
 			Name:    "oci-url",
 			Target:  &c.flagOCIUrl,
-			Default: "hashicorp/waypoint-odr:latest",
+			Default: installutil.DefaultODRImage,
 			Usage:   "The url for the OCI image to launch for the on-demand runner.",
 		})
 
@@ -287,19 +322,17 @@ func (c *RunnerProfileSetCommand) Flags() *flag.Sets {
 				"the environment the plugin will launch the on-demand runner in.",
 		})
 
-		f.BoolVar(&flag.BoolVar{
-			Name:    "default",
-			Target:  &c.flagDefault,
-			Default: false,
+		f.BoolPtrVar(&flag.BoolPtrVar{
+			Name:   "default",
+			Target: &c.flagDefault,
 			Usage: "Indicates that this remote runner profile should be the default for any project that doesn't " +
 				"otherwise specify its own remote runner.",
 		})
 
-		f.StringVar(&flag.StringVar{
-			Name:    "target-runner-id",
-			Target:  &c.flagTargetRunnerId,
-			Default: "",
-			Usage:   "ID of the runner to target for this remote runner profile.",
+		f.StringPtrVar(&flag.StringPtrVar{
+			Name:   "target-runner-id",
+			Target: &c.flagTargetRunnerId,
+			Usage:  "ID of the runner to target for this remote runner profile.",
 		})
 
 		f.StringMapVar(&flag.StringMapVar{
@@ -307,6 +340,12 @@ func (c *RunnerProfileSetCommand) Flags() *flag.Sets {
 			Target: &c.flagTargetRunnerLabels,
 			Usage: "Labels on the runner to target for this remote runner profile. " +
 				"e.g. `-target-runner-label=k=v`. Can be specified multiple times.",
+		})
+
+		f.BoolPtrVar(&flag.BoolPtrVar{
+			Name:   "target-runner-any",
+			Target: &c.flagTargetRunnerAny,
+			Usage:  "Set profile to target any available runner.",
 		})
 	})
 }
@@ -326,12 +365,15 @@ func (c *RunnerProfileSetCommand) Synopsis() string {
 func (c *RunnerProfileSetCommand) Help() string {
 	return formatHelp(`
 Usage: waypoint runner profile set [OPTIONS]
+
   Create or update a runner profile.
+
   This will register a new runner profile with the given options. If
   a runner profile with the same id already exists, this will update the
   existing runner profile using the fields that are set.
   Waypoint will use a runner profile to spawn containers for
   various kinds of work as needed on the platform requested during any given
   lifecycle operation.
+
 ` + c.Flags().Help())
 }

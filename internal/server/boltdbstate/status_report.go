@@ -1,8 +1,11 @@
 package boltdbstate
 
 import (
+	"context"
+	"github.com/hashicorp/go-memdb"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	"github.com/hashicorp/waypoint/pkg/serverstate"
+	bolt "go.etcd.io/bbolt"
 )
 
 var statusReportOp = &appOperation{
@@ -19,7 +22,7 @@ func init() {
 }
 
 // get status report by referenced operation
-func (s *State) StatusReportGet(ref *pb.Ref_Operation) (*pb.StatusReport, error) {
+func (s *State) StatusReportGet(ctx context.Context, ref *pb.Ref_Operation) (*pb.StatusReport, error) {
 	result, err := statusReportOp.Get(s, ref)
 	if err != nil {
 		return nil, err
@@ -29,11 +32,12 @@ func (s *State) StatusReportGet(ref *pb.Ref_Operation) (*pb.StatusReport, error)
 }
 
 // create or update the latest status report
-func (s *State) StatusReportPut(update bool, report *pb.StatusReport) error {
+func (s *State) StatusReportPut(ctx context.Context, update bool, report *pb.StatusReport) error {
 	return statusReportOp.Put(s, update, report)
 }
 
 func (s *State) StatusReportList(
+	ctx context.Context,
 	ref *pb.Ref_Application,
 	opts ...serverstate.ListOperationOption,
 ) ([]*pb.StatusReport, error) {
@@ -52,6 +56,7 @@ func (s *State) StatusReportList(
 
 // StatusReportLatest gets the latest generated status report
 func (s *State) StatusReportLatest(
+	ctx context.Context,
 	ref *pb.Ref_Application,
 	ws *pb.Ref_Workspace,
 	filter func(*pb.StatusReport) (bool, error),
@@ -69,4 +74,9 @@ func (s *State) StatusReportLatest(
 	}
 
 	return result.(*pb.StatusReport), nil
+}
+
+// statusReportDelete deletes a status report from the database
+func (s *State) statusReportDelete(dbTxn *bolt.Tx, memTxn *memdb.Txn, sr *pb.StatusReport) error {
+	return statusReportOp.delete(dbTxn, memTxn, sr)
 }

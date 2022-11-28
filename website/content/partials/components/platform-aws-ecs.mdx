@@ -158,53 +158,144 @@ The AWS region for the ECS cluster.
 
 - Type: **string**
 
-#### sidecar
+#### sidecar (category)
 
 Additional container to run as a sidecar.
 
 This runs additional containers in addition to the main container that comes from the build phase.
 
-- Type: **list of ecs.ContainerConfig**
-
-#### sidecar.container_port
+##### sidecar.container_port
 
 The port number for the container.
 
-#### sidecar.host_port
+- Type: **int**
+- **Optional**
+
+##### sidecar.health_check
+
+- Type: **ecs.HealthCheckConfig**
+
+##### sidecar.host_port
 
 The port number on the host to reserve for the container.
 
-#### sidecar.image
+- Type: **int**
+- **Optional**
+
+##### sidecar.image
 
 Image of the sidecar container.
 
-#### sidecar.memory
+- Type: **string**
+
+##### sidecar.memory
 
 The amount (in MiB) of memory to present to the container.
 
-#### sidecar.memory_reservation
+- Type: **int**
+- **Optional**
+
+##### sidecar.memory_reservation
 
 The soft limit (in MiB) of memory to reserve for the container.
 
-#### sidecar.name
+- Type: **int**
+- **Optional**
+
+##### sidecar.name
 
 Name of the container.
 
-#### sidecar.protocol
+- Type: **string**
+
+##### sidecar.protocol
 
 The protocol used for port mapping.
 
-#### sidecar.secrets
+- Type: **string**
+- **Optional**
+
+##### sidecar.secrets
 
 Secrets to expose to this container.
 
-#### sidecar.static_environment
+- Type: **map of string to string**
+- **Optional**
+
+##### sidecar.static_environment
 
 Environment variables to expose to this container.
+
+- Type: **map of string to string**
+- **Optional**
 
 ### Optional Parameters
 
 These parameters are used in the [`use` stanza](/docs/waypoint-hcl/use) for this plugin.
+
+#### alb (category)
+
+Provides additional configuration for using an ALB with ECS.
+
+##### alb.certificate
+
+The ARN of an AWS Certificate Manager cert to associate with the ALB.
+
+- Type: **string**
+- **Optional**
+
+##### alb.domain_name
+
+Fully qualified domain name to set for the ALB.
+
+Set along with zone_id to have DNS automatically setup for the ALB. this value should include the full hostname and domain name, for instance app.example.com.
+
+- Type: **string**
+- **Optional**
+
+##### alb.ingress_port
+
+Internet-facing traffic port. Defaults to 80 if 'certificate' is unset, 443 if set.
+
+Used to set the ALB listener port, and the ALB security group ingress port.
+
+- Type: **int64**
+- **Optional**
+
+##### alb.internal
+
+Whether or not the created ALB should be internal.
+
+Used when listener_arn is not set. If set, the created ALB will have a scheme of `internal`, otherwise by default it has a scheme of `internet-facing`.
+
+- Type: **bool**
+- **Optional**
+
+##### alb.listener_arn
+
+The ARN on an existing ALB to configure.
+
+When this is set, no ALB or Listener is created. Instead the application is configured by manipulating this existing Listener. This allows users to configure their ALB outside waypoint but still have waypoint hook the application to that ALB.
+
+- Type: **string**
+- **Optional**
+
+##### alb.subnets
+
+The VPC subnets to use for the ALB.
+
+- Type: **list of string**
+- **Optional**
+- Default: public subnets in the default VPC
+
+##### alb.zone_id
+
+Route53 ZoneID to create a DNS record into.
+
+Set along with alb.domain_name to have DNS automatically setup for the ALB.
+
+- Type: **string**
+- **Optional**
 
 #### architecture
 

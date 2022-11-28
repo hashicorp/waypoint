@@ -1,0 +1,3 @@
+```release-note:bug
+cli: fix panic when setting project datasource to local
+```
