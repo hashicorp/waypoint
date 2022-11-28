@@ -11,7 +11,6 @@ import (
 	"github.com/posener/complete"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	empty "google.golang.org/protobuf/types/known/emptypb"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/internal/clicontext"
@@ -831,7 +830,7 @@ func (c *StatusCommand) FormatProjectStatus() error {
 	// Get our API client
 	client := c.project.Client()
 
-	projectResp, err := client.ListProjects(c.Ctx, &empty.Empty{})
+	projectResp, err := client.ListProjects(c.Ctx, &pb.ListProjectsRequest{Pagination: &pb.PaginationRequest{}})
 	if err != nil {
 		c.ui.Output("Failed to retrieve all projects:"+clierrors.Humanize(err), terminal.WithErrorStyle())
 		return err

@@ -1939,7 +1939,7 @@ func (_m *WaypointClient) ListPipelines(ctx context.Context, in *gen.ListPipelin
 }
 
 // ListProjects provides a mock function with given fields: ctx, in, opts
-func (_m *WaypointClient) ListProjects(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*gen.ListProjectsResponse, error) {
+func (_m *WaypointClient) ListProjects(ctx context.Context, in *gen.ListProjectsRequest, opts ...grpc.CallOption) (*gen.ListProjectsResponse, error) {
 	_va := make([]interface{}, len(opts))
 	for _i := range opts {
 		_va[_i] = opts[_i]
@@ -1950,7 +1950,7 @@ func (_m *WaypointClient) ListProjects(ctx context.Context, in *emptypb.Empty, o
 	ret := _m.Called(_ca...)
 
 	var r0 *gen.ListProjectsResponse
-	if rf, ok := ret.Get(0).(func(context.Context, *emptypb.Empty, ...grpc.CallOption) *gen.ListProjectsResponse); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.ListProjectsRequest, ...grpc.CallOption) *gen.ListProjectsResponse); ok {
 		r0 = rf(ctx, in, opts...)
 	} else {
 		if ret.Get(0) != nil {
@@ -1959,7 +1959,7 @@ func (_m *WaypointClient) ListProjects(ctx context.Context, in *emptypb.Empty, o
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, *emptypb.Empty, ...grpc.CallOption) error); ok {
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.ListProjectsRequest, ...grpc.CallOption) error); ok {
 		r1 = rf(ctx, in, opts...)
 	} else {
 		r1 = ret.Error(1)

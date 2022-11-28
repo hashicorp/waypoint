@@ -256,12 +256,18 @@ func (s *State) ProjectDelete(ctx context.Context, ref *pb.Ref_Project) error {
 	return nil
 }
 
+func (s *State) ProjectCount(ctx context.Context) (uint64, error) {
+	var count uint64
+	var err error
+	return count, err // TODO: Implement count for boltdb
+}
+
 // ProjectList returns the list of projects.
-func (s *State) ProjectList(ctx context.Context) ([]*pb.Ref_Project, error) {
+func (s *State) ProjectList(ctx context.Context, paginationRequest *pb.PaginationRequest) ([]*pb.Ref_Project, *pb.PaginationResponse, error) {
 	memTxn := s.inmem.Txn(false)
 	defer memTxn.Abort()
 
-	return s.projectList(memTxn)
+	return s.projectList(memTxn, paginationRequest)
 }
 
 // ProjectListWorkspaces returns the list of workspaces that a project is in.
@@ -462,10 +468,11 @@ func (s *State) projectGet(
 
 func (s *State) projectList(
 	memTxn *memdb.Txn,
-) ([]*pb.Ref_Project, error) {
+	paginationRequest *pb.PaginationRequest,
+) ([]*pb.Ref_Project, *pb.PaginationResponse, error) {
 	iter, err := memTxn.Get(projectIndexTableName, projectIndexIdIndexName+"_prefix", "")
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	var result []*pb.Ref_Project
@@ -481,7 +488,7 @@ func (s *State) projectList(
 		})
 	}
 
-	return result, nil
+	return result, &pb.PaginationResponse{}, nil // TODO (andrew): fill in for boltdb
 }
 
 func (s *State) projectDelete(
