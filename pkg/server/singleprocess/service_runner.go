@@ -897,7 +897,16 @@ func (s *Service) handleJobStreamRequest(
 			return hcerr.Externalize(log, err, "failed to complete job", "id", job.Id)
 		}
 	case *pb.RunnerJobStreamRequest_Error_:
-		if err := s.state(ctx).JobComplete(ctx, job.Id, nil, status.FromProto(event.Error.Error).Err()); err != nil {
+		var remoteError error
+
+		if event.Error != nil {
+			remoteError = status.FromProto(event.Error.Error).Err()
+		} else {
+			log.Warn("job error did not include error description")
+			remoteError = status.New(codes.Unknown, "remote error not correctly reported").Err()
+		}
+
+		if err := s.state(ctx).JobComplete(ctx, job.Id, nil, remoteError); err != nil {
 			return hcerr.Externalize(log, err, "failed to complete job", "id", job.Id)
 		}
 	case *pb.RunnerJobStreamRequest_Heartbeat_:
@@ -905,6 +914,11 @@ func (s *Service) handleJobStreamRequest(
 			return hcerr.Externalize(log, err, "job heartbeat failed", "id", job.Id)
 		}
 	case *pb.RunnerJobStreamRequest_Download:
+		if event.Download == nil {
+			log.Warn("invalid download event detected")
+			return status.Error(codes.InvalidArgument, "download information missing")
+		}
+
 		if err := s.state(ctx).JobUpdateRef(ctx, job.Id, event.Download.DataSourceRef); err != nil {
 			return hcerr.Externalize(log, err, "failed to update the job reference", "id", job.Id)
 		}
@@ -916,6 +930,11 @@ func (s *Service) handleJobStreamRequest(
 		}
 
 	case *pb.RunnerJobStreamRequest_ConfigLoad_:
+		if event.ConfigLoad == nil {
+			log.Warn("invalid configload event detected")
+			return status.Error(codes.InvalidArgument, "config information missing")
+		}
+
 		if err := s.state(ctx).JobUpdate(ctx, job.Id, func(jobpb *pb.Job) error {
 			jobpb.Config = event.ConfigLoad.Config
 			return nil
@@ -924,6 +943,11 @@ func (s *Service) handleJobStreamRequest(
 		}
 
 	case *pb.RunnerJobStreamRequest_VariableValuesSet_:
+		if event.VariableValuesSet == nil {
+			log.Warn("invalid variableset event detected")
+			return status.Error(codes.InvalidArgument, "variableset information missing")
+		}
+
 		if err := s.state(ctx).JobUpdate(ctx, job.Id, func(jobpb *pb.Job) error {
 			jobpb.VariableFinalValues = event.VariableValuesSet.FinalValues
 			return nil
