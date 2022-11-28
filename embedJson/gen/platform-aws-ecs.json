@@ -71,6 +71,17 @@
                "SubFields": null
             },
             {
+               "Field": "security_group_ids",
+               "Type": "list of string",
+               "Synopsis": "",
+               "Summary": "",
+               "Optional": true,
+               "Default": "",
+               "EnvVar": "",
+               "Category": false,
+               "SubFields": null
+            },
+            {
                "Field": "subnets",
                "Type": "list of string",
                "Synopsis": "the VPC subnets to use for the ALB",
