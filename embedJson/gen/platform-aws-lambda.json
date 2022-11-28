@@ -33,7 +33,7 @@
          "Synopsis": "the amount of memory, in megabytes, to assign the function",
          "Summary": "",
          "Optional": true,
-         "Default": "265",
+         "Default": "256",
          "EnvVar": "",
          "Category": false,
          "SubFields": null
