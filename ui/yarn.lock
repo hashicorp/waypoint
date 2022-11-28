@@ -1093,7 +1093,7 @@
     debug "^4.1.0"
     globals "^11.1.0"
 
-"@babel/types@^7.1.6", "@babel/types@^7.10.2", "@babel/types@^7.16.0", "@babel/types@^7.16.7", "@babel/types@^7.16.8", "@babel/types@^7.18.10", "@babel/types@^7.18.6", "@babel/types@^7.19.0", "@babel/types@^7.4.0", "@babel/types@^7.4.4", "@babel/types@^7.7.0", "@babel/types@^7.7.2":
+"@babel/types@^7.1.6", "@babel/types@^7.10.2", "@babel/types@^7.16.0", "@babel/types@^7.16.7", "@babel/types@^7.16.8", "@babel/types@^7.18.10", "@babel/types@^7.18.6", "@babel/types@^7.19.0", "@babel/types@^7.4.4", "@babel/types@^7.7.0", "@babel/types@^7.7.2":
   version "7.19.0"
   resolved "https://registry.yarnpkg.com/@babel/types/-/types-7.19.0.tgz#75f21d73d73dc0351f3368d28db73465f4814600"
   integrity sha512-YuGopBq3ke25BVSiS6fgF49Ul9gH1x70Bcr6bqRLjWCkcX8Hre1/5+z+IiWOIerRMSSEfGZVB9z9kyq7wVs9YA==
@@ -3038,8 +3038,7 @@ anymatch@~3.1.2:
     picomatch "^2.0.4"
 
 "api-common-protos@link:./lib/api-common-protos":
-  version "0.0.0"
-  uid ""
+  version "1.0.0"
 
 aproba@^1.0.3, aproba@^1.1.1:
   version "1.2.0"
@@ -3507,14 +3506,6 @@ babel-plugin-ember-template-compilation@^1.0.0:
     line-column "^1.0.2"
     magic-string "^0.25.7"
     string.prototype.matchall "^4.0.5"
-
-babel-plugin-filter-imports@^3.0.0:
-  version "3.0.0"
-  resolved "https://registry.yarnpkg.com/babel-plugin-filter-imports/-/babel-plugin-filter-imports-3.0.0.tgz#a849683837ad29960da17492fb32789ab6b09a11"
-  integrity sha512-p/chjzVTgCxUqyLM0q/pfWVZS7IJTwGQMwNg0LOvuQpKiTftQgZDtkGB8XvETnUw19rRcL7bJCTopSwibTN2tA==
-  dependencies:
-    "@babel/types" "^7.4.0"
-    lodash "^4.17.11"
 
 babel-plugin-filter-imports@^4.0.0:
   version "4.0.0"
@@ -6415,13 +6406,15 @@ ember-changeset@^3.15.0:
     ember-cli-babel "^7.26.6"
     validated-changeset "1.0.0"
 
-ember-classic-decorator@^1.0.8:
-  version "1.0.8"
-  resolved "https://registry.yarnpkg.com/ember-classic-decorator/-/ember-classic-decorator-1.0.8.tgz#e290e5b0b1a31a569587a85a9c5c7a2f1242cabb"
-  integrity sha512-IsCDJ7rLsrFjYtgi9UXUmjzUQJaaJzmy/gKwGGtZ6kZwT5yhzSbScRi0P6Cb0guJPtlMMCE0sAQpJRbXmBb/gA==
+ember-classic-decorator@^3.0.1:
+  version "3.0.1"
+  resolved "https://registry.yarnpkg.com/ember-classic-decorator/-/ember-classic-decorator-3.0.1.tgz#13acf53e5fdb1f867919765853eb3592380ed1ef"
+  integrity sha512-IoocHPX1cY93Sma7VeDGbF0M1+TkBWDJLus+RD01902eD+KHEL2+diwM+iayCyO+1/xaUzdzNGh35J+i+TCxoA==
   dependencies:
-    babel-plugin-filter-imports "^3.0.0"
-    ember-cli-babel "^7.11.1"
+    "@embroider/macros" "^1.0.0"
+    babel-plugin-filter-imports "^4.0.0"
+    ember-cli-babel "^7.26.11"
+    ember-cli-htmlbars "^6.0.1"
 
 ember-cli-app-version@^5.0.0:
   version "5.0.0"
@@ -8978,8 +8971,7 @@ growly@^1.3.0:
   integrity sha1-8QdIy+dq+WS3yWyTxrzCivEgwIE=
 
 "grpc-web@link:./lib/grpc-web":
-  version "0.0.0"
-  uid ""
+  version "1.2.1"
 
 gzip-size@^5.0.0:
   version "5.1.1"
@@ -10578,7 +10570,7 @@ lodash.values@^4.3.0:
   resolved "https://registry.yarnpkg.com/lodash.values/-/lodash.values-4.3.0.tgz#a3a6c2b0ebecc5c2cba1c17e6e620fe81b53d347"
   integrity sha1-o6bCsOvsxcLLocF+bmIP6BtT00c=
 
-lodash@^4.17.10, lodash@^4.17.11, lodash@^4.17.12, lodash@^4.17.14, lodash@^4.17.15, lodash@^4.17.19, lodash@^4.17.21, lodash@^4.17.4, lodash@^4.5.1:
+lodash@^4.17.10, lodash@^4.17.12, lodash@^4.17.14, lodash@^4.17.15, lodash@^4.17.19, lodash@^4.17.21, lodash@^4.17.4, lodash@^4.5.1:
   version "4.17.21"
   resolved "https://registry.yarnpkg.com/lodash/-/lodash-4.17.21.tgz#679591c564c3bffaae8454cf0b3df370c3d6911c"
   integrity sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==
@@ -11492,8 +11484,7 @@ onetime@^5.1.0, onetime@^5.1.2:
     mimic-fn "^2.1.0"
 
 "opaqueany@link:./lib/opaqueany":
-  version "0.0.0"
-  uid ""
+  version "1.0.0"
 
 opener@^1.5.1:
   version "1.5.1"
@@ -14570,12 +14561,10 @@ watchpack@^2.4.0:
     graceful-fs "^4.1.2"
 
 "waypoint-client@link:./lib/waypoint-client":
-  version "0.0.0"
-  uid ""
+  version "1.0.0"
 
 "waypoint-pb@link:./lib/waypoint-pb":
-  version "0.0.0"
-  uid ""
+  version "1.0.0"
 
 wcwidth@^1.0.1:
   version "1.0.1"
