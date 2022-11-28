@@ -908,7 +908,7 @@ deploy {
 	doc.SetField(
 		"memory",
 		"the amount of memory, in megabytes, to assign the function",
-		docs.Default("265"),
+		docs.Default("256"),
 	)
 
 	doc.SetField(
