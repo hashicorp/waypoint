@@ -1,17 +1,22 @@
 package cli
 
 import (
+	"fmt"
+	"os"
+
+	"github.com/posener/complete"
+
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/internal/clierrors"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
-	"github.com/posener/complete"
 )
 
 type ConfigSourceGetCommand struct {
 	*baseCommand
 
-	flagType string
+	flagType  string
+	flagScope string
 }
 
 func (c *ConfigSourceGetCommand) Run(args []string) int {
@@ -29,15 +34,48 @@ func (c *ConfigSourceGetCommand) Run(args []string) int {
 		return 1
 	}
 
+	getConfigSourceRequest := &pb.GetConfigSourceRequest{
+		Type: c.flagType,
+		Workspace: &pb.Ref_Workspace{
+			Workspace: c.flagWorkspace,
+		},
+	}
+
+	switch c.flagScope {
+	case "global":
+		getConfigSourceRequest.Scope = &pb.GetConfigSourceRequest_Global{
+			Global: &pb.Ref_Global{},
+		}
+
+	case "project":
+		getConfigSourceRequest.Scope = &pb.GetConfigSourceRequest_Project{
+			Project: &pb.Ref_Project{
+				Project: c.flagProject,
+			},
+		}
+
+	case "app":
+		if c.flagApp == "" {
+			fmt.Fprintf(os.Stderr, "-scope requires -app set if scope is 'app'")
+			return 1
+		}
+
+		getConfigSourceRequest.Scope = &pb.GetConfigSourceRequest_Application{
+			Application: &pb.Ref_Application{
+				Application: c.flagApp,
+				Project:     c.flagProject,
+			},
+		}
+
+	default:
+		err := fmt.Errorf("-scope needs to be one of 'global', 'project', or 'app'")
+		c.project.UI.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+		return 1
+	}
+
 	// Get our config source
 	client := c.project.Client()
-	resp, err := client.GetConfigSource(c.Ctx, &pb.GetConfigSourceRequest{
-		Scope: &pb.GetConfigSourceRequest_Global{
-			Global: &pb.Ref_Global{},
-		},
-
-		Type: c.flagType,
-	})
+	resp, err := client.GetConfigSource(c.Ctx, getConfigSourceRequest)
 	if err != nil {
 		c.project.UI.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 		return 1
@@ -54,7 +92,7 @@ func (c *ConfigSourceGetCommand) Run(args []string) int {
 
 	// we use the first value because this will be the most specific since
 	// we do a prefix search.
-	cs := resp.ConfigSources[0]
+	cs := resp.ConfigSources[len(resp.ConfigSources)-1]
 	table := terminal.NewTable("Key", "Value")
 	for k, v := range cs.Config {
 		table.Rich([]string{
@@ -76,6 +114,15 @@ func (c *ConfigSourceGetCommand) Flags() *flag.Sets {
 			Name:   "type",
 			Target: &c.flagType,
 			Usage:  "Dynamic source type to look up, such as 'vault'.",
+		})
+
+		f.StringVar(&flag.StringVar{
+			Name: "scope",
+			Usage: "The scope for this configuration source. The configuration source " +
+				"will only appear within this scope. This can be one of 'global', 'project'," +
+				" or 'app'.",
+			Default: "project",
+			Target:  &c.flagScope,
 		})
 	})
 }
