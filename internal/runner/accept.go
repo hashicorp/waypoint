@@ -173,7 +173,7 @@ func (r *Runner) accept(ctx context.Context, id string) error {
 			// Grab this lock before updating canceled. You don't
 			// need to have this lock to touch canceled (we use atomic ops)
 			// but it is used when the streamCancel is being reset so that
-			// we don't set it up and race with cancelation.
+			// we don't set it up and race with cancellation.
 			streamCtxLock.Lock()
 			defer streamCtxLock.Unlock()
 
