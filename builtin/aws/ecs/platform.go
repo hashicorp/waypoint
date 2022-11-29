@@ -80,8 +80,13 @@ func (p *Platform) ConfigSet(config interface{}) error {
 				validation.Nil.When(alb.ListenerARN != "").Error("internal cannot be used with listener_arn"),
 			),
 			validation.Field(&alb.ListenerARN,
-				validation.Empty.When(alb.CertificateId != "" || alb.ZoneId != "" || alb.FQDN != "").Error("listener_arn can not be used with other options"),
+				validation.Empty.When(
+					alb.CertificateId != "" ||
+						alb.ZoneId != "" ||
+						alb.FQDN != "" ||
+						len(alb.SecurityGroupIDs) >= 1).Error("listener_arn can not be used with other options"),
 			),
+			validation.Field(&alb.SecurityGroupIDs),
 		))
 		if err != nil {
 			return err
@@ -1974,6 +1979,15 @@ func (p *Platform) resourceExternalSecurityGroupsCreate(
 	s := sg.Add("Initiating creation of external security group named %s", name)
 	defer s.Abort()
 
+	if p.config.ALB != nil && p.config.ALB.SecurityGroupIDs != nil {
+		s.Update("Using specified ALB security group IDs")
+		for _, sgId := range p.config.SecurityGroupIDs {
+			state.SecurityGroups = append(state.SecurityGroups, &Resource_SecurityGroup{Id: *sgId, Managed: false})
+		}
+		s.Done()
+		return nil
+	}
+
 	protocol := "tcp"
 	cidr := "0.0.0.0/0"
 	cidrDescription := "all traffic"
@@ -2623,6 +2637,9 @@ type ALBConfig struct {
 	// Subnets to place the alb into. Defaults to the subnets in the default VPC.
 	// This can be used to explicitly place the ALB on public subnets, leaving the service in private subnets.
 	Subnets []string `hcl:"subnets,optional"`
+
+	// Security Group ID of existing security group to use for ALB.
+	SecurityGroupIDs []string `hcl:"security_group_ids,optional"`
 }
 
 type HealthCheckConfig struct {
