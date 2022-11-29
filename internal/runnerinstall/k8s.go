@@ -7,7 +7,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/mitchellh/mapstructure"
 	dockerparser "github.com/novln/docker-parser"
 	"helm.sh/helm/v3/pkg/action"
@@ -17,6 +16,8 @@ import (
 	k8sErrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
+
+	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 
 	"github.com/hashicorp/waypoint/builtin/k8s"
 	"github.com/hashicorp/waypoint/internal/clierrors"
@@ -124,7 +125,7 @@ func (i *K8sRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) err
 	// Determine if we need to make a service account
 	if i.Config.CreateServiceAccount {
 		saClient := clientSet.CoreV1().ServiceAccounts(i.Config.Namespace)
-		_, err = saClient.Get(ctx, DefaultRunnerTagName, metav1.GetOptions{})
+		_, err = saClient.Get(ctx, defaultRunnerTagName, metav1.GetOptions{})
 		if err != nil {
 			if k8sErrors.IsNotFound(err) {
 				err = nil
@@ -174,7 +175,7 @@ func (i *K8sRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) err
 			},
 			"serviceAccount": map[string]interface{}{
 				"create": i.Config.CreateServiceAccount,
-				"name":   DefaultRunnerTagName,
+				"name":   defaultRunnerTagName,
 			},
 
 			"pullPolicy": "always",
@@ -277,7 +278,7 @@ func (i *K8sRunnerInstaller) Uninstall(ctx context.Context, opts *InstallOpts) e
 	// Search for a runner with 0.8.x tag format, installed with k8s client
 	deploymentClient := clientset.AppsV1().Deployments(i.Config.Namespace)
 	k8sClientList, err := deploymentClient.List(ctx, metav1.ListOptions{
-		LabelSelector: fmt.Sprintf("app=%s", DefaultRunnerTagName),
+		LabelSelector: fmt.Sprintf("app=%s", defaultRunnerTagName),
 	})
 	if err != nil {
 		return fmt.Errorf("could not list deployments in namespace %q with current context: %s", i.Config.Namespace, err)
@@ -368,7 +369,7 @@ func (i *K8sRunnerInstaller) uninstallWithK8s(ctx context.Context, opts *Install
 	w, err := deploymentClient.Watch(
 		ctx,
 		metav1.ListOptions{
-			LabelSelector: "app=" + DefaultRunnerTagName,
+			LabelSelector: "app=" + defaultRunnerTagName,
 		},
 	)
 	if err != nil {
@@ -384,7 +385,7 @@ func (i *K8sRunnerInstaller) uninstallWithK8s(ctx context.Context, opts *Install
 		ctx,
 		metav1.DeleteOptions{},
 		metav1.ListOptions{
-			LabelSelector: "app=" + DefaultRunnerTagName,
+			LabelSelector: "app=" + defaultRunnerTagName,
 		},
 	); err != nil {
 		ui.Output(

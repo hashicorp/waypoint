@@ -9,8 +9,9 @@ import (
 	"time"
 
 	"github.com/hashicorp/nomad/api"
-	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"k8s.io/apimachinery/pkg/util/wait"
+
+	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 
 	"github.com/hashicorp/waypoint/internal/clierrors"
 	"github.com/hashicorp/waypoint/internal/installutil"
@@ -132,7 +133,7 @@ func waypointRunnerNomadJob(c NomadConfig, opts *InstallOpts) *api.Job {
 	job.Namespace = &c.Namespace
 	job.Datacenters = c.Datacenters
 	job.Meta = c.ServiceAnnotations
-	tg := api.NewTaskGroup(DefaultRunnerTagName, 1)
+	tg := api.NewTaskGroup(defaultRunnerTagName, 1)
 	tg.Networks = []*api.NetworkResource{
 		{
 			Mode: "host",
@@ -152,13 +153,13 @@ func waypointRunnerNomadJob(c NomadConfig, opts *InstallOpts) *api.Job {
 	}
 
 	tg.Volumes = map[string]*api.VolumeRequest{
-		DefaultRunnerTagName: &volumeRequest,
+		defaultRunnerTagName: &volumeRequest,
 	}
 
 	job.AddTaskGroup(tg)
 
 	readOnly := false
-	volume := DefaultRunnerTagName
+	volume := defaultRunnerTagName
 	destination := "/data"
 	volumeMounts := []*api.VolumeMount{
 		{
@@ -325,7 +326,7 @@ func (i *NomadRunnerInstaller) Uninstall(ctx context.Context, opts *InstallOpts)
 	var waypointRunnerJobName string
 	possibleRunnerJobNames := []string{
 		installutil.DefaultRunnerName(opts.Id),
-		DefaultRunnerTagName,
+		defaultRunnerTagName,
 	}
 	for _, runnerJobName := range possibleRunnerJobNames {
 		jobs, _, err := client.Jobs().PrefixList(runnerJobName)

@@ -28,9 +28,10 @@ import (
 )
 
 const (
-	defaultRunnerLogGroup = "waypoint-runner-logs"
-	defaultTaskRuntime    = "FARGATE"
-	defaultRunnerTagValue = "runner-component"
+	defaultRunnerLogGroup  = "waypoint-runner-logs"
+	defaultTaskRuntime     = "FARGATE"
+	defaultRunnerTagValue  = "runner-component"
+	defaultRunnerIdTagName = "runner-id"
 )
 
 // odrRolePolicy represents the minimum policies required for an On-Demand
@@ -170,11 +171,11 @@ func (i *ECSRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) err
 
 			efsTags := []*efs.Tag{
 				{
-					Key:   aws.String(DefaultRunnerTagName),
+					Key:   aws.String(defaultRunnerTagName),
 					Value: aws.String(defaultRunnerTagValue),
 				},
 				{
-					Key:   aws.String("runner-id"),
+					Key:   aws.String(defaultRunnerIdTagName),
 					Value: aws.String(opts.Id),
 				},
 			}
@@ -313,7 +314,7 @@ func (i *ECSRunnerInstaller) Uninstall(ctx context.Context, opts *InstallOpts) e
 	// We check for the serviceName before v0.9 and v0.9+
 	ecsSvc := ecs.New(sess)
 	serviceNames := []string{
-		DefaultRunnerTagName,
+		defaultRunnerTagName,
 		installutil.DefaultRunnerName(opts.Id),
 	}
 
@@ -375,58 +376,62 @@ func (i *ECSRunnerInstaller) Uninstall(ctx context.Context, opts *InstallOpts) e
 		fileSystems = append(fileSystems, fileSystemsResp.FileSystems...)
 	}
 
+	var fileSystemId *string
 	for _, fileSystem := range fileSystems {
 		// Check if tags match ID, if so then delete things
 		for _, tag := range fileSystem.Tags {
 			if *tag.Key == "runner-id" && *tag.Value == opts.Id {
-				describeAccessPointsResp, err := efsSvc.DescribeAccessPoints(&efs.DescribeAccessPointsInput{
-					FileSystemId: fileSystem.FileSystemId,
-				})
-				if err != nil {
-					return err
-				}
-				for _, accessPoint := range describeAccessPointsResp.AccessPoints {
-					_, err = efsSvc.DeleteAccessPoint(&efs.DeleteAccessPointInput{AccessPointId: accessPoint.AccessPointId})
-					if err != nil {
-						return err
-					}
-				}
-
-				describeMountTargetsResp, err := efsSvc.DescribeMountTargets(&efs.DescribeMountTargetsInput{
-					FileSystemId: fileSystem.FileSystemId,
-				})
-				for _, mountTarget := range describeMountTargetsResp.MountTargets {
-					_, err = efsSvc.DeleteMountTarget(&efs.DeleteMountTargetInput{MountTargetId: mountTarget.MountTargetId})
-					if err != nil {
-						return err
-					}
-				}
-
-				for {
-					ctx, cancel := context.WithTimeout(ctx, 5*time.Minute)
-					defer cancel()
-					select {
-					case <-ctx.Done():
-						return errors.New("after 5 minutes, the file system could" +
-							"not be deleted, because the mount targets weren't deleted")
-					default:
-						_, err = efsSvc.DeleteFileSystem(&efs.DeleteFileSystemInput{FileSystemId: fileSystem.FileSystemId})
-						if err != nil {
-							if strings.Contains(err.Error(), "because it has mount targets") {
-								// sleep here for 5 seconds to avoid slamming the API
-								time.Sleep(5 * time.Second)
-								continue
-							}
-							return err
-						}
-						// if we reach this point, we're done
-						return nil
-					}
-				}
+				fileSystemId = fileSystem.FileSystemId
+				goto DeleteFileSystem
 			}
 		}
 	}
-	return nil
+
+DeleteFileSystem:
+	describeAccessPointsResp, err := efsSvc.DescribeAccessPoints(&efs.DescribeAccessPointsInput{
+		FileSystemId: fileSystemId,
+	})
+	if err != nil {
+		return err
+	}
+	for _, accessPoint := range describeAccessPointsResp.AccessPoints {
+		_, err = efsSvc.DeleteAccessPoint(&efs.DeleteAccessPointInput{AccessPointId: accessPoint.AccessPointId})
+		if err != nil {
+			return err
+		}
+	}
+
+	describeMountTargetsResp, err := efsSvc.DescribeMountTargets(&efs.DescribeMountTargetsInput{
+		FileSystemId: fileSystemId,
+	})
+	for _, mountTarget := range describeMountTargetsResp.MountTargets {
+		_, err = efsSvc.DeleteMountTarget(&efs.DeleteMountTargetInput{MountTargetId: mountTarget.MountTargetId})
+		if err != nil {
+			return err
+		}
+	}
+
+	for {
+		ctx, cancel := context.WithTimeout(ctx, 5*time.Minute)
+		defer cancel()
+		select {
+		case <-ctx.Done():
+			return errors.New("after 5 minutes, the file system could" +
+				"not be deleted, because the mount targets weren't deleted")
+		default:
+			_, err = efsSvc.DeleteFileSystem(&efs.DeleteFileSystemInput{FileSystemId: fileSystemId})
+			if err != nil {
+				if strings.Contains(err.Error(), "because it has mount targets") {
+					// sleep here for 5 seconds to avoid slamming the API
+					time.Sleep(5 * time.Second)
+					continue
+				}
+				return err
+			}
+			// if we reach this point, we're done
+			return nil
+		}
+	}
 }
 
 func (i *ECSRunnerInstaller) UninstallFlags(set *flag.Set) {
@@ -519,7 +524,7 @@ func launchRunner(
 			{
 				ContainerPath: aws.String("/data/runner"),
 				ReadOnly:      aws.Bool(false),
-				SourceVolume:  aws.String(DefaultRunnerTagName),
+				SourceVolume:  aws.String(defaultRunnerTagName),
 			},
 		},
 	}
@@ -532,13 +537,13 @@ func launchRunner(
 		ExecutionRoleArn:        aws.String(executionRoleArn),
 		Cpu:                     aws.String(cpu),
 		Memory:                  aws.String(memory),
-		Family:                  aws.String(DefaultRunnerTagName),
+		Family:                  aws.String(defaultRunnerTagName),
 		TaskRoleArn:             &taskRoleArn,
 		NetworkMode:             aws.String("awsvpc"),
 		RequiresCompatibilities: []*string{aws.String(defaultTaskRuntime)},
 		Tags: []*ecs.Tag{
 			{
-				Key:   aws.String(DefaultRunnerTagName),
+				Key:   aws.String(defaultRunnerTagName),
 				Value: aws.String(defaultRunnerTagValue),
 			},
 			{
@@ -555,7 +560,7 @@ func launchRunner(
 					FileSystemId:      efsInfo.FileSystemID,
 					TransitEncryption: aws.String(ecs.EFSTransitEncryptionEnabled),
 				},
-				Name: aws.String(DefaultRunnerTagName),
+				Name: aws.String(defaultRunnerTagName),
 			},
 		},
 	}
@@ -633,7 +638,7 @@ func launchRunner(
 		},
 		Tags: []*ecs.Tag{
 			{
-				Key:   aws.String(DefaultRunnerTagName),
+				Key:   aws.String(defaultRunnerTagName),
 				Value: aws.String(defaultRunnerTagValue),
 			},
 			{
@@ -643,7 +648,7 @@ func launchRunner(
 		},
 	}
 
-	s.Update("Creating ECS Service (%s)", DefaultRunnerTagName)
+	s.Update("Creating ECS Service (%s)", defaultRunnerTagName)
 	svc, err := awsinstallutil.CreateService(createServiceInput, ecsSvc)
 	if err != nil {
 		return nil, err
@@ -740,7 +745,7 @@ func (i *ECSRunnerInstaller) setupTaskRole(
 		RoleName:                 aws.String(roleName),
 		Tags: []*iam.Tag{
 			{
-				Key:   aws.String(DefaultRunnerTagName),
+				Key:   aws.String(defaultRunnerTagName),
 				Value: aws.String(defaultRunnerTagValue),
 			},
 			{
