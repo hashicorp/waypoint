@@ -71,6 +71,17 @@
          "SubFields": null
       },
       {
+         "Field": "security_group_ids",
+         "Type": "list of string",
+         "Synopsis": "the existing security groups to add to the ALB",
+         "Summary": "a set of existing security groups to add to the ALB",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
          "Field": "subnets",
          "Type": "list of string",
          "Synopsis": "the subnet ids to allow the ALB to run in",
