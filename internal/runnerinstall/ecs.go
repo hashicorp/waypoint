@@ -413,6 +413,8 @@ func (i *ECSRunnerInstaller) Uninstall(ctx context.Context, opts *InstallOpts) e
 						_, err = efsSvc.DeleteFileSystem(&efs.DeleteFileSystemInput{FileSystemId: fileSystem.FileSystemId})
 						if err != nil {
 							if strings.Contains(err.Error(), "because it has mount targets") {
+								// sleep here for 5 seconds to avoid slamming the API
+								time.Sleep(5 * time.Second)
 								continue
 							}
 							return err
