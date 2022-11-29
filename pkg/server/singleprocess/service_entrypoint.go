@@ -163,7 +163,7 @@ func (s *Service) EntrypointConfig(
 			// NOTE(mitchellh): For now we query all the types and always send it
 			// all down. In the future we may want to consider filtering this
 			// by only the types we actually need above.
-			sources, err := s.state(ctx).ConfigSourceGetWatch(ctx, &pb.GetConfigSourceRequest{
+			sources, err := s.state(ctx).ConfigSourceGetWatch(&pb.GetConfigSourceRequest{
 				Scope: &pb.GetConfigSourceRequest_Application{
 					Application: deployment.Application,
 				},

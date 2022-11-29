@@ -450,7 +450,7 @@ func (s *Service) RunnerConfig(
 					Application: job.Application,
 				}
 			}
-			sources, err := s.state(ctx).ConfigSourceGetWatch(ctx, getConfigSourceRequest, ws)
+			sources, err := s.state(ctx).ConfigSourceGetWatch(getConfigSourceRequest, ws)
 			if err != nil {
 				return hcerr.Externalize(log, err, "failed to get the configuration for a dynamic source plugin")
 			}
@@ -559,7 +559,7 @@ func (s *Service) RunnerJobStream(
 	log = log.With("job_id", job.Id)
 
 	// Load config sourcers to send along with the job assignment
-	cfgSrcs, err := s.state(ctx).ConfigSourceGetWatch(ctx, &pb.GetConfigSourceRequest{
+	cfgSrcs, err := s.state(ctx).ConfigSourceGetWatch(&pb.GetConfigSourceRequest{
 		Scope: &pb.GetConfigSourceRequest_Application{
 			Application: job.Application,
 		},
