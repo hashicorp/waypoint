@@ -1,11 +1,12 @@
 package cli
 
 import (
+	"strings"
+
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/internal/clierrors"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
-	"strings"
 )
 
 type ProjectDestroyCommand struct {
@@ -24,20 +25,21 @@ func (c *ProjectDestroyCommand) Run(args []string) int {
 		return 1
 	}
 
-	if c.project == nil {
-		c.ui.Output("The -project flag must be set.", terminal.WithErrorStyle())
+	if c.flagProject == "" {
+		c.ui.Output("Must explicitly set -project (-p) flag to destroy project.\n %s", c.Flags().Help(), terminal.WithErrorStyle())
 		return 1
 	}
 
-	// Get the project we're destroying
+	// Verify the project we're destroying exists
 	project, err := c.project.Client().GetProject(c.Ctx, &pb.GetProjectRequest{
 		Project: c.project.Ref(),
 	})
 	if err != nil {
+		c.ui.Output("Project %q not found.", c.project.Ref().Project, terminal.WithErrorStyle())
 		return 1
 	}
 
-	// Confirmation is required for destroying a project &/or its resources
+	// Confirmation required without `-auto-approve` flag
 	if !c.confirm {
 		proceed, err := c.ui.Input(&terminal.Input{
 			Prompt: "Do you really want to destroy project \"" + project.Project.Name + "\" and its resources? Only 'yes' will be accepted to approve: ",
@@ -56,12 +58,21 @@ func (c *ProjectDestroyCommand) Run(args []string) int {
 			return 1
 		}
 	}
-	_, err = c.project.DestroyProject(c.Ctx, &pb.Job_DestroyProjectOp{
-		Project:              &pb.Ref_Project{Project: project.Project.Name},
-		SkipDestroyResources: c.skipDestroyResources,
-	})
+
+	// If project has a remote data source, queue destroy operation.
+	// Otherwise, directly call server API to delete from the database.
+	if project.Project.DataSource == nil {
+		_, err = c.project.Client().DestroyProject(c.Ctx, &pb.DestroyProjectRequest{
+			Project: c.project.Ref(),
+		})
+	} else {
+		_, err = c.project.DestroyProject(c.Ctx, &pb.Job_DestroyProjectOp{
+			Project:              &pb.Ref_Project{Project: project.Project.Name},
+			SkipDestroyResources: c.skipDestroyResources,
+		})
+	}
 	if err != nil {
-		c.ui.Output("Error destroying project: %s", err.Error(), terminal.WithErrorStyle())
+		c.ui.Output("Error destroying project %q: %s", project.Project.Name, err.Error(), terminal.WithErrorStyle())
 		return 1
 	}
 	c.ui.Output("Project %q destroyed!", project.Project.Name, terminal.WithSuccessStyle())
@@ -95,12 +106,15 @@ func (c *ProjectDestroyCommand) Synopsis() string {
 
 func (c *ProjectDestroyCommand) Help() string {
 	return formatHelp(`
-Usage: waypoint project destroy [options]
+Usage: waypoint project destroy [options] -p <project>
 
   Delete the project and all resources created for all apps in the project, within
   the platform each app was deployed to.
 
-  You can optionally skip destroying the resources by setting
-  -skip-destroy-resources to true.
+  You must explicitly specify the project to destroy with the -project or -p flag.
+
+  You can skip destroying app resources with the -skip-destroy-resources flag.
+
+  You can skip the manual confirmation prompt with the -auto-approve flag.
 ` + c.Flags().Help())
 }
