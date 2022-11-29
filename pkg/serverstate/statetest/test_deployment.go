@@ -17,6 +17,7 @@ func init() {
 	tests["deployment"] = []testFunc{
 		TestDeployment,
 		TestDeploymentListFilter,
+		TestDeploymentGet,
 	}
 }
 
@@ -238,6 +239,123 @@ func TestDeployment(t *testing.T, factory Factory, restartF RestartFactory) {
 	})
 }
 
+func TestDeploymentGet(t *testing.T, factory Factory, restartF RestartFactory) {
+	ctx := context.Background()
+	require := require.New(t)
+
+	s := factory(t)
+	defer s.Close()
+
+	// Setup projects with apps
+
+	proj1 := &pb.Ref_Project{Project: "p1"}
+	app1 := &pb.Ref_Application{
+		Application: "a1",
+		Project:     proj1.Project,
+	}
+	require.NoError(s.ProjectPut(ctx, serverptypes.TestProject(t, &pb.Project{
+		Name: proj1.Project,
+	})))
+
+	_, err := s.AppPut(ctx, serverptypes.TestApplication(t, &pb.Application{
+		Name:    app1.Application,
+		Project: proj1,
+	}))
+	require.NoError(err)
+
+	proj2 := &pb.Ref_Project{Project: "p2"}
+	app2 := &pb.Ref_Application{
+		Application: "a2",
+		Project:     proj2.Project,
+	}
+	require.NoError(s.ProjectPut(ctx, serverptypes.TestProject(t, &pb.Project{
+		Name: proj2.Project,
+	})))
+
+	_, err = s.AppPut(ctx, serverptypes.TestApplication(t, &pb.Application{
+		Name:    app2.Application,
+		Project: proj2,
+	}))
+	require.NoError(err)
+
+	ws := &pb.Ref_Workspace{
+		Workspace: "default",
+	}
+
+	// Add deployments
+	err = s.DeploymentPut(ctx, false, serverptypes.TestDeployment(t, &pb.Deployment{
+		Id:          "d1",
+		Application: app1,
+		Workspace:   ws,
+		Status: &pb.Status{
+			State:     pb.Status_SUCCESS,
+			StartTime: timestamppb.Now(),
+		},
+	}))
+	require.NoError(err)
+
+	err = s.DeploymentPut(ctx, false, serverptypes.TestDeployment(t, &pb.Deployment{
+		Id:          "d2",
+		Application: app2,
+		Workspace:   ws,
+		Status: &pb.Status{
+			State:     pb.Status_SUCCESS,
+			StartTime: timestamppb.Now(),
+		},
+	}))
+	require.NoError(err)
+
+	// Can read proj1 by id and sequence
+	{
+		idResp, err := s.DeploymentGet(ctx, &pb.Ref_Operation{
+			Target: &pb.Ref_Operation_Id{
+				Id: "d1",
+			},
+		})
+		require.NoError(err)
+		require.NotNil(idResp)
+		require.Equal(idResp.Id, "d1")
+
+		seqResp, err := s.DeploymentGet(ctx, &pb.Ref_Operation{
+			Target: &pb.Ref_Operation_Sequence{
+				Sequence: &pb.Ref_OperationSeq{
+					Application: app1,
+					Number:      idResp.Sequence,
+				},
+			},
+		})
+		require.NoError(err)
+		require.NotNil(seqResp)
+		require.Equal(seqResp.Id, "d1")
+		require.Equal(seqResp.Sequence, idResp.Sequence)
+	}
+
+	// Can read proj2 by id and sequence
+	{
+		idResp, err := s.DeploymentGet(ctx, &pb.Ref_Operation{
+			Target: &pb.Ref_Operation_Id{
+				Id: "d2",
+			},
+		})
+		require.NoError(err)
+		require.NotNil(idResp)
+		require.Equal(idResp.Id, "d2")
+
+		seqResp, err := s.DeploymentGet(ctx, &pb.Ref_Operation{
+			Target: &pb.Ref_Operation_Sequence{
+				Sequence: &pb.Ref_OperationSeq{
+					Application: app2,
+					Number:      idResp.Sequence,
+				},
+			},
+		})
+		require.NoError(err)
+		require.NotNil(seqResp)
+		require.Equal(seqResp.Id, "d2")
+		require.Equal(seqResp.Sequence, idResp.Sequence)
+	}
+
+}
 func TestDeploymentListFilter(t *testing.T, f Factory, rf RestartFactory) {
 	ctx := context.Background()
 	require := require.New(t)
