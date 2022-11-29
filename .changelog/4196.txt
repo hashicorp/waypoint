@@ -1,0 +1,3 @@
+```changelog:feature
+core: Enable configuration sources to be scoped globally, or by a project, app and workspace.
+```

@@ -47,5 +47,6 @@ Configuration for this command is global. The "-app", "-project", and
 - `-type=<string>` - Dynamic source type to configure, such as 'vault'.
 - `-config=<key=value>` - Configuration for the dynamic source type. This may be repeated. The fields available are dependent on the dynamic source type, so please check the documentation for that specific type for more information.
 - `-delete` - Delete the configuration for this source type. If this is set then the -config flag is ignored. The default is false.
+- `-scope=<string>` - The scope for this configuration source. The configuration source will only appear within this scope. This can be one of 'global', 'project', or 'app'. The default is global.
 
 @include "commands/config-source-set_more.mdx"
