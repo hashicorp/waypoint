@@ -13,18 +13,20 @@ on:
 jobs:
   notify-release:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        integration_identifier:
+          - 'waypoint/docker'
     steps:
-      # TODO, this will be moved to a published action
       - name: Checkout integration-release-action
         uses: actions/checkout@v2
         with:
           repository: hashicorp/integration-release-action
           path: ./integration-release-action
-
       - name: Notify Release
         uses: ./integration-release-action
         with:
-          integration_identifier: 'waypoint/docker'
+          integration_identifier: ${{ matrix.integration_identifier }}
           release_version: ${{ github.event.inputs.version }}
           release_sha: ${{ github.event.inputs.branch }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
