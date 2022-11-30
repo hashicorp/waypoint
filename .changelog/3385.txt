@@ -1,0 +1,3 @@
+```release-note:bug
+plugin/aws-ecs: Prevent deployment pruning from removing a load balancer's listener if there is only 1 target group and it is not the deployment's target group,
+```

@@ -1210,8 +1210,9 @@ func (p *Platform) resourceAlbListenerDestroy(
 
 	var tgs []*elbv2.TargetGroupTuple
 
-	// If there is only 1 target group, delete the listener
-	if len(def) == 1 && len(def[0].ForwardConfig.TargetGroups) == 1 {
+	// If there is only 1 target group and if it is this deployment's target group,
+	// delete the listener
+	if len(def) == 1 && len(def[0].ForwardConfig.TargetGroups) == 1 && *def[0].ForwardConfig.TargetGroups[0].TargetGroupArn == state.TargetGroup.Arn {
 		log.Debug("only 1 target group, deleting listener")
 
 		s.Update("Deleting ALB listener (ARN: %q)", state.Arn)
