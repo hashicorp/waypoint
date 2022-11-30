@@ -22,6 +22,7 @@ import (
 type DockerConfig struct {
 	RunnerImage string `hcl:"runner_image,optional"`
 	Network     string `hcl:"network,optional"`
+	SocketPath  string `hcl:"socket_path,optional"`
 }
 
 type DockerRunnerInstaller struct {
@@ -116,7 +117,7 @@ func (i *DockerRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) 
 	}, &container.HostConfig{
 		Privileged: true,
 		CapAdd:     []string{"CAP_DAC_OVERRIDE"},
-		Binds:      []string{"/var/run/docker.sock:/var/run/docker.sock"},
+		Binds:      []string{i.Config.SocketPath + ":/var/run/docker.sock"},
 		// These security options are required for the runner so that
 		// Docker daemonless image building works properly.
 		SecurityOpt: []string{
@@ -151,6 +152,13 @@ func (i *DockerRunnerInstaller) InstallFlags(set *flag.Set) {
 		Name:   "docker-runner-network",
 		Target: &i.Config.Network,
 		Usage:  "The Docker network in which to deploy the Waypoint runner.",
+	})
+
+	set.StringVar(&flag.StringVar{
+		Name:    "docker-socket-path",
+		Target:  &i.Config.SocketPath,
+		Usage:   "The path of the docker socket that will be bound in runner",
+		Default: "/var/run/docker.sock",
 	})
 }
 
