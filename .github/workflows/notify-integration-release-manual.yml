@@ -1,0 +1,30 @@
+name: Notify Integration Release (Manual)
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "A semver"
+        default: 0.0.1
+        required: false
+      branch:
+        description: "A branch or SHA"
+        default: 'main'
+        required: false
+jobs:
+  notify-release:
+    runs-on: ubuntu-latest
+    steps:
+      # TODO, this will be moved to a published action
+      - name: Checkout integration-release-action
+        uses: actions/checkout@v2
+        with:
+          repository: hashicorp/integration-release-action
+          path: ./integration-release-action
+
+      - name: Notify Release
+        uses: ./integration-release-action
+        with:
+          integration_identifier: 'waypoint/docker'
+          release_version: ${{ github.event.inputs.version }}
+          release_sha: ${{ github.event.inputs.branch }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
