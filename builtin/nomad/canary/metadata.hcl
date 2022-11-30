@@ -3,6 +3,7 @@ integration {
   description = "TODO"
   identifier  = "waypoint/nomad-jobspec-canary"
   components  = ["release-manager"]
+  flags       = ["builtin"]
   license {
     type = "MPL-2.0"
     url  = "https://github.com/hashicorp/waypoint/blob/main/LICENSE"
