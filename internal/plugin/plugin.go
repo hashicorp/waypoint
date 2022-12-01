@@ -5,6 +5,7 @@ import (
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	dockerref "github.com/hashicorp/waypoint/builtin/docker/ref"
 	"github.com/hashicorp/waypoint/builtin/nomad/canary"
+	"github.com/hashicorp/waypoint/builtin/packer"
 	"github.com/hashicorp/waypoint/internal/factory"
 
 	"github.com/hashicorp/waypoint/builtin/aws/alb"
@@ -65,6 +66,7 @@ var (
 		"terraform-cloud":          tfc.Options,
 		"null":                     null.Options,
 		"consul":                   consul.Options,
+		"packer":                   packer.Options,
 	}
 
 	// BaseFactories is the set of base plugin factories. This will include any
@@ -101,6 +103,9 @@ var (
 		},
 		"consul": {
 			Component: &consul.ConfigSourcer{},
+		},
+		"packer": {
+			Component: &packer.ConfigSourcer{},
 		},
 	}
 )

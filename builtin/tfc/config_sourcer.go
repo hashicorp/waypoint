@@ -192,7 +192,7 @@ func (cs *ConfigSourcer) read(
 		L := log.With("workspace", tfcReq.Workspace, "organization", tfcReq.Organization)
 
 		// We have to map the organization + workspace  to a workspace-id, so we do that first.
-		// the workspaceIds map is never cleared beacuse the configuration about which
+		// the workspaceIds map is never cleared because the configuration about which
 		// organization + workspace that is in use is static in the context of a config
 		// sourcer.
 		key := tfcReq.Organization + "/" + tfcReq.Workspace
