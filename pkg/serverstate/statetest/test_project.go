@@ -433,43 +433,7 @@ func TestProjectGetSetAllPropertiesSansVariables(t *testing.T, f Factory, rf Res
 	defer s.Close()
 
 	// A project with all the properties set
-	initialProject := &pb.Project{
-		Name: "complex project",
-		Applications: []*pb.Application{{
-			Name:    "complex project",
-			Project: &pb.Ref_Project{Project: "complex project"},
-		}},
-		RemoteEnabled: true,
-		DataSource: &pb.Job_DataSource{
-			Source: &pb.Job_DataSource_Git{
-				Git: &pb.Job_Git{
-					Url:                      "https://github.com/hashicorp/test",
-					Ref:                      "main",
-					Path:                     "/test",
-					IgnoreChangesOutsidePath: true,
-					RecurseSubmodules:        1,
-					Auth: &pb.Job_Git_Ssh{
-						Ssh: &pb.Job_Git_SSH{
-							PrivateKeyPem: []byte("private key"),
-							Password:      "password",
-							User:          "user",
-						},
-					},
-				},
-			},
-		},
-		DataSourcePoll: &pb.Project_Poll{
-			Enabled:  true,
-			Interval: "1h",
-		},
-		WaypointHcl:       []byte("hcl bytes"),
-		WaypointHclFormat: pb.Hcl_JSON,
-		FileChangeSignal:  "HUP",
-		StatusReportPoll: &pb.Project_AppStatusPoll{
-			Enabled:  true,
-			Interval: "1h",
-		},
-	}
+	initialProject := serverptypes.TestProjectAllProperties(t, nil)
 
 	initialJsonBytes, err := jsonpb.Marshal(initialProject)
 	require.NoError(err)

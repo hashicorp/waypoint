@@ -22,6 +22,10 @@ func TestImpl(t *testing.T) {
 	// It should be a priority to fix any test on this list.
 	knownFailingStateTests := []string{
 		"TestProjectPagination", // Failing b/c pagination not implemented in boltdb
+
+		// project templates not implemented in boltdb state
+		"TestRunnerProjectTemplateOp",
+		"TestRunner_replaceTokens",
 	}
 
 	statetest.Test(t, func(t *testing.T) serverstate.Interface {
