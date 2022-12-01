@@ -296,13 +296,13 @@ func (s *State) JobProjectScopedRequest(
 func (s *State) JobList(
 	ctx context.Context,
 	req *pb.ListJobsRequest,
-) ([]*pb.Job, error) {
+) ([]*pb.Job, *pb.PaginationResponse, error) {
 	memTxn := s.inmem.Txn(false)
 	defer memTxn.Abort()
 
 	iter, err := memTxn.Get(jobTableName, jobIdIndexName+"_prefix", "")
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	var result []*pb.Job
@@ -423,7 +423,7 @@ func (s *State) JobList(
 		result = append(result, job)
 	}
 
-	return result, nil
+	return result, nil, nil // TODO (andrew): add pagination for boltdb
 }
 
 // JobById looks up a job by ID. The returned Job will be a deep copy

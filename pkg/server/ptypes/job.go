@@ -120,6 +120,15 @@ func validateJobDataSourceGitRules(v *pb.Job_DataSource_Git) []*validation.Field
 	}
 }
 
+// ValidateListJobsRequest
+func ValidateListJobsRequest(v *pb.ListJobsRequest) error {
+	return validationext.Error(validation.ValidateStruct(v,
+		validationext.StructField(&v.Pagination, func() []*validation.FieldRules {
+			return ValidatePaginationRequestRules(v.Pagination)
+		}),
+	))
+}
+
 func isEmpty(v interface{}) error {
 	if reflect.ValueOf(v).IsZero() {
 		return nil

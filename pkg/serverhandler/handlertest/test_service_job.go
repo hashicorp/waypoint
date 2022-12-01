@@ -71,7 +71,7 @@ func TestServiceJob(t *testing.T, factory Factory) {
 		require.Nil(job)
 	})
 
-	_, err := impl.State(ctx).JobList(ctx, &pb.ListJobsRequest{})
+	_, _, err := impl.State(ctx).JobList(ctx, &pb.ListJobsRequest{})
 	require.NoError(t, err)
 
 }
