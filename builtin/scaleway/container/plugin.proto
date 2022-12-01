@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+package scaleway.container;
+
+option go_package = "waypoint/builtin/scaleway/container";
+
+import "any.proto";
+
+message Container {
+  string id = 1;
+  string name = 2;
+  string image = 3;
+  string url = 4;
+  string region = 5;
+  string deployment_id = 6;
+  opaqueany.Any resource_state = 7;
+}
+
+message Resource {
+  message Container {
+    string id = 1;
+    string region = 2;
+  }
+}
