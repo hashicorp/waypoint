@@ -61,7 +61,7 @@ require (
 	github.com/hashicorp/go-uuid v1.0.2
 	github.com/hashicorp/go-version v1.2.0
 	github.com/hashicorp/hcl/v2 v2.10.1-0.20210621220818-327f3ce2570e
-	github.com/hashicorp/hcp-sdk-go v0.26.0
+	github.com/hashicorp/hcp-sdk-go v0.27.0
 	github.com/hashicorp/horizon v0.0.0-20210317214650-d2053943be04
 	github.com/hashicorp/nomad/api v0.0.0-20220510192829-894c2e61dd03
 	github.com/hashicorp/vault/api v1.8.0
