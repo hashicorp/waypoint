@@ -72,6 +72,8 @@ type WaypointClient interface {
 	UpsertWorkspace(ctx context.Context, in *UpsertWorkspaceRequest, opts ...grpc.CallOption) (*UpsertWorkspaceResponse, error)
 	// UpsertProject upserts the project.
 	UpsertProject(ctx context.Context, in *UpsertProjectRequest, opts ...grpc.CallOption) (*UpsertProjectResponse, error)
+	// UpsertProject upserts the project from a template.
+	UpsertProjectFromTemplate(ctx context.Context, in *UpsertProjectFromTemplateRequest, opts ...grpc.CallOption) (*UpsertProjectFromTemplateResponse, error)
 	// GetProject returns the project.
 	GetProject(ctx context.Context, in *GetProjectRequest, opts ...grpc.CallOption) (*GetProjectResponse, error)
 	// ListProjects returns a list of all the projects. There is no equivalent
@@ -327,6 +329,10 @@ type WaypointClient interface {
 	UI_GetDeployment(ctx context.Context, in *UI_GetDeploymentRequest, opts ...grpc.CallOption) (*UI_GetDeploymentResponse, error)
 	// List releases for a given application.
 	UI_ListReleases(ctx context.Context, in *UI_ListReleasesRequest, opts ...grpc.CallOption) (*UI_ListReleasesResponse, error)
+	UpsertProjectTemplate(ctx context.Context, in *UpsertProjectRequest, opts ...grpc.CallOption) (*UpsertApplicationResponse, error)
+	GetProjectTemplate(ctx context.Context, in *GetProjectTemplateRequest, opts ...grpc.CallOption) (*GetProjectTemplateResponse, error)
+	ListProjectTemplates(ctx context.Context, in *ListProjectTemplatesRequest, opts ...grpc.CallOption) (*ListProjectTemplatesResponse, error)
+	DeleteProjectTemplate(ctx context.Context, in *DeleteProjectTemplateRequest, opts ...grpc.CallOption) (*DeleteProjectTemplateResponse, error)
 }
 
 type waypointClient struct {
@@ -484,6 +490,15 @@ func (c *waypointClient) UpsertWorkspace(ctx context.Context, in *UpsertWorkspac
 func (c *waypointClient) UpsertProject(ctx context.Context, in *UpsertProjectRequest, opts ...grpc.CallOption) (*UpsertProjectResponse, error) {
 	out := new(UpsertProjectResponse)
 	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/UpsertProject", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *waypointClient) UpsertProjectFromTemplate(ctx context.Context, in *UpsertProjectFromTemplateRequest, opts ...grpc.CallOption) (*UpsertProjectFromTemplateResponse, error) {
+	out := new(UpsertProjectFromTemplateResponse)
+	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/UpsertProjectFromTemplate", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1512,6 +1527,42 @@ func (c *waypointClient) UI_ListReleases(ctx context.Context, in *UI_ListRelease
 	return out, nil
 }
 
+func (c *waypointClient) UpsertProjectTemplate(ctx context.Context, in *UpsertProjectRequest, opts ...grpc.CallOption) (*UpsertApplicationResponse, error) {
+	out := new(UpsertApplicationResponse)
+	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/UpsertProjectTemplate", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *waypointClient) GetProjectTemplate(ctx context.Context, in *GetProjectTemplateRequest, opts ...grpc.CallOption) (*GetProjectTemplateResponse, error) {
+	out := new(GetProjectTemplateResponse)
+	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/GetProjectTemplate", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *waypointClient) ListProjectTemplates(ctx context.Context, in *ListProjectTemplatesRequest, opts ...grpc.CallOption) (*ListProjectTemplatesResponse, error) {
+	out := new(ListProjectTemplatesResponse)
+	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/ListProjectTemplates", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *waypointClient) DeleteProjectTemplate(ctx context.Context, in *DeleteProjectTemplateRequest, opts ...grpc.CallOption) (*DeleteProjectTemplateResponse, error) {
+	out := new(DeleteProjectTemplateResponse)
+	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/DeleteProjectTemplate", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // WaypointServer is the server API for Waypoint service.
 // All implementations must embed UnimplementedWaypointServer
 // for forward compatibility
@@ -1565,6 +1616,8 @@ type WaypointServer interface {
 	UpsertWorkspace(context.Context, *UpsertWorkspaceRequest) (*UpsertWorkspaceResponse, error)
 	// UpsertProject upserts the project.
 	UpsertProject(context.Context, *UpsertProjectRequest) (*UpsertProjectResponse, error)
+	// UpsertProject upserts the project from a template.
+	UpsertProjectFromTemplate(context.Context, *UpsertProjectFromTemplateRequest) (*UpsertProjectFromTemplateResponse, error)
 	// GetProject returns the project.
 	GetProject(context.Context, *GetProjectRequest) (*GetProjectResponse, error)
 	// ListProjects returns a list of all the projects. There is no equivalent
@@ -1820,6 +1873,10 @@ type WaypointServer interface {
 	UI_GetDeployment(context.Context, *UI_GetDeploymentRequest) (*UI_GetDeploymentResponse, error)
 	// List releases for a given application.
 	UI_ListReleases(context.Context, *UI_ListReleasesRequest) (*UI_ListReleasesResponse, error)
+	UpsertProjectTemplate(context.Context, *UpsertProjectRequest) (*UpsertApplicationResponse, error)
+	GetProjectTemplate(context.Context, *GetProjectTemplateRequest) (*GetProjectTemplateResponse, error)
+	ListProjectTemplates(context.Context, *ListProjectTemplatesRequest) (*ListProjectTemplatesResponse, error)
+	DeleteProjectTemplate(context.Context, *DeleteProjectTemplateRequest) (*DeleteProjectTemplateResponse, error)
 	mustEmbedUnimplementedWaypointServer()
 }
 
@@ -1877,6 +1934,9 @@ func (UnimplementedWaypointServer) UpsertWorkspace(context.Context, *UpsertWorks
 }
 func (UnimplementedWaypointServer) UpsertProject(context.Context, *UpsertProjectRequest) (*UpsertProjectResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpsertProject not implemented")
+}
+func (UnimplementedWaypointServer) UpsertProjectFromTemplate(context.Context, *UpsertProjectFromTemplateRequest) (*UpsertProjectFromTemplateResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpsertProjectFromTemplate not implemented")
 }
 func (UnimplementedWaypointServer) GetProject(context.Context, *GetProjectRequest) (*GetProjectResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetProject not implemented")
@@ -2141,6 +2201,18 @@ func (UnimplementedWaypointServer) UI_GetDeployment(context.Context, *UI_GetDepl
 }
 func (UnimplementedWaypointServer) UI_ListReleases(context.Context, *UI_ListReleasesRequest) (*UI_ListReleasesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UI_ListReleases not implemented")
+}
+func (UnimplementedWaypointServer) UpsertProjectTemplate(context.Context, *UpsertProjectRequest) (*UpsertApplicationResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpsertProjectTemplate not implemented")
+}
+func (UnimplementedWaypointServer) GetProjectTemplate(context.Context, *GetProjectTemplateRequest) (*GetProjectTemplateResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetProjectTemplate not implemented")
+}
+func (UnimplementedWaypointServer) ListProjectTemplates(context.Context, *ListProjectTemplatesRequest) (*ListProjectTemplatesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListProjectTemplates not implemented")
+}
+func (UnimplementedWaypointServer) DeleteProjectTemplate(context.Context, *DeleteProjectTemplateRequest) (*DeleteProjectTemplateResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteProjectTemplate not implemented")
 }
 func (UnimplementedWaypointServer) mustEmbedUnimplementedWaypointServer() {}
 
@@ -2457,6 +2529,24 @@ func _Waypoint_UpsertProject_Handler(srv interface{}, ctx context.Context, dec f
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(WaypointServer).UpsertProject(ctx, req.(*UpsertProjectRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Waypoint_UpsertProjectFromTemplate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpsertProjectFromTemplateRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(WaypointServer).UpsertProjectFromTemplate(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/hashicorp.waypoint.Waypoint/UpsertProjectFromTemplate",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(WaypointServer).UpsertProjectFromTemplate(ctx, req.(*UpsertProjectFromTemplateRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -4105,6 +4195,78 @@ func _Waypoint_UI_ListReleases_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Waypoint_UpsertProjectTemplate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpsertProjectRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(WaypointServer).UpsertProjectTemplate(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/hashicorp.waypoint.Waypoint/UpsertProjectTemplate",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(WaypointServer).UpsertProjectTemplate(ctx, req.(*UpsertProjectRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Waypoint_GetProjectTemplate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetProjectTemplateRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(WaypointServer).GetProjectTemplate(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/hashicorp.waypoint.Waypoint/GetProjectTemplate",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(WaypointServer).GetProjectTemplate(ctx, req.(*GetProjectTemplateRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Waypoint_ListProjectTemplates_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListProjectTemplatesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(WaypointServer).ListProjectTemplates(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/hashicorp.waypoint.Waypoint/ListProjectTemplates",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(WaypointServer).ListProjectTemplates(ctx, req.(*ListProjectTemplatesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Waypoint_DeleteProjectTemplate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteProjectTemplateRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(WaypointServer).DeleteProjectTemplate(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/hashicorp.waypoint.Waypoint/DeleteProjectTemplate",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(WaypointServer).DeleteProjectTemplate(ctx, req.(*DeleteProjectTemplateRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Waypoint_ServiceDesc is the grpc.ServiceDesc for Waypoint service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -4179,6 +4341,10 @@ var Waypoint_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpsertProject",
 			Handler:    _Waypoint_UpsertProject_Handler,
+		},
+		{
+			MethodName: "UpsertProjectFromTemplate",
+			Handler:    _Waypoint_UpsertProjectFromTemplate_Handler,
 		},
 		{
 			MethodName: "GetProject",
@@ -4491,6 +4657,22 @@ var Waypoint_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UI_ListReleases",
 			Handler:    _Waypoint_UI_ListReleases_Handler,
+		},
+		{
+			MethodName: "UpsertProjectTemplate",
+			Handler:    _Waypoint_UpsertProjectTemplate_Handler,
+		},
+		{
+			MethodName: "GetProjectTemplate",
+			Handler:    _Waypoint_GetProjectTemplate_Handler,
+		},
+		{
+			MethodName: "ListProjectTemplates",
+			Handler:    _Waypoint_ListProjectTemplates_Handler,
+		},
+		{
+			MethodName: "DeleteProjectTemplate",
+			Handler:    _Waypoint_DeleteProjectTemplate_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{

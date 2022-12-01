@@ -306,6 +306,29 @@ func (_m *WaypointServer) DeleteOnDemandRunnerConfig(_a0 context.Context, _a1 *g
 	return r0, r1
 }
 
+// DeleteProjectTemplate provides a mock function with given fields: _a0, _a1
+func (_m *WaypointServer) DeleteProjectTemplate(_a0 context.Context, _a1 *gen.DeleteProjectTemplateRequest) (*gen.DeleteProjectTemplateResponse, error) {
+	ret := _m.Called(_a0, _a1)
+
+	var r0 *gen.DeleteProjectTemplateResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.DeleteProjectTemplateRequest) *gen.DeleteProjectTemplateResponse); ok {
+		r0 = rf(_a0, _a1)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gen.DeleteProjectTemplateResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.DeleteProjectTemplateRequest) error); ok {
+		r1 = rf(_a0, _a1)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // DeleteTrigger provides a mock function with given fields: _a0, _a1
 func (_m *WaypointServer) DeleteTrigger(_a0 context.Context, _a1 *gen.DeleteTriggerRequest) (*emptypb.Empty, error) {
 	ret := _m.Called(_a0, _a1)
@@ -974,6 +997,29 @@ func (_m *WaypointServer) GetProject(_a0 context.Context, _a1 *gen.GetProjectReq
 	return r0, r1
 }
 
+// GetProjectTemplate provides a mock function with given fields: _a0, _a1
+func (_m *WaypointServer) GetProjectTemplate(_a0 context.Context, _a1 *gen.GetProjectTemplateRequest) (*gen.GetProjectTemplateResponse, error) {
+	ret := _m.Called(_a0, _a1)
+
+	var r0 *gen.GetProjectTemplateResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.GetProjectTemplateRequest) *gen.GetProjectTemplateResponse); ok {
+		r0 = rf(_a0, _a1)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gen.GetProjectTemplateResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.GetProjectTemplateRequest) error); ok {
+		r1 = rf(_a0, _a1)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetPushedArtifact provides a mock function with given fields: _a0, _a1
 func (_m *WaypointServer) GetPushedArtifact(_a0 context.Context, _a1 *gen.GetPushedArtifactRequest) (*gen.PushedArtifact, error) {
 	ret := _m.Called(_a0, _a1)
@@ -1426,6 +1472,29 @@ func (_m *WaypointServer) ListPipelines(_a0 context.Context, _a1 *gen.ListPipeli
 
 	var r1 error
 	if rf, ok := ret.Get(1).(func(context.Context, *gen.ListPipelinesRequest) error); ok {
+		r1 = rf(_a0, _a1)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// ListProjectTemplates provides a mock function with given fields: _a0, _a1
+func (_m *WaypointServer) ListProjectTemplates(_a0 context.Context, _a1 *gen.ListProjectTemplatesRequest) (*gen.ListProjectTemplatesResponse, error) {
+	ret := _m.Called(_a0, _a1)
+
+	var r0 *gen.ListProjectTemplatesResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.ListProjectTemplatesRequest) *gen.ListProjectTemplatesResponse); ok {
+		r0 = rf(_a0, _a1)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gen.ListProjectTemplatesResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.ListProjectTemplatesRequest) error); ok {
 		r1 = rf(_a0, _a1)
 	} else {
 		r1 = ret.Error(1)
@@ -2167,6 +2236,52 @@ func (_m *WaypointServer) UpsertProject(_a0 context.Context, _a1 *gen.UpsertProj
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*gen.UpsertProjectResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.UpsertProjectRequest) error); ok {
+		r1 = rf(_a0, _a1)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// UpsertProjectFromTemplate provides a mock function with given fields: _a0, _a1
+func (_m *WaypointServer) UpsertProjectFromTemplate(_a0 context.Context, _a1 *gen.UpsertProjectFromTemplateRequest) (*gen.UpsertProjectFromTemplateResponse, error) {
+	ret := _m.Called(_a0, _a1)
+
+	var r0 *gen.UpsertProjectFromTemplateResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.UpsertProjectFromTemplateRequest) *gen.UpsertProjectFromTemplateResponse); ok {
+		r0 = rf(_a0, _a1)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gen.UpsertProjectFromTemplateResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.UpsertProjectFromTemplateRequest) error); ok {
+		r1 = rf(_a0, _a1)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// UpsertProjectTemplate provides a mock function with given fields: _a0, _a1
+func (_m *WaypointServer) UpsertProjectTemplate(_a0 context.Context, _a1 *gen.UpsertProjectRequest) (*gen.UpsertApplicationResponse, error) {
+	ret := _m.Called(_a0, _a1)
+
+	var r0 *gen.UpsertApplicationResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.UpsertProjectRequest) *gen.UpsertApplicationResponse); ok {
+		r0 = rf(_a0, _a1)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gen.UpsertApplicationResponse)
 		}
 	}
 

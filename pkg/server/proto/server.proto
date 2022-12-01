@@ -90,6 +90,9 @@ service Waypoint {
   // UpsertProject upserts the project.
   rpc UpsertProject(UpsertProjectRequest) returns (UpsertProjectResponse);
 
+  // UpsertProject upserts the project from a template.
+  rpc UpsertProjectFromTemplate(UpsertProjectFromTemplateRequest) returns (UpsertProjectFromTemplateResponse);
+
   // GetProject returns the project.
   rpc GetProject(GetProjectRequest) returns (GetProjectResponse) {}
 
@@ -476,6 +479,113 @@ service Waypoint {
 
   // List releases for a given application.
   rpc UI_ListReleases(UI.ListReleasesRequest) returns (UI.ListReleasesResponse);
+
+  rpc UpsertProjectTemplate(UpsertProjectRequest) returns (UpsertApplicationResponse);
+
+  rpc GetProjectTemplate(GetProjectTemplateRequest) returns (GetProjectTemplateResponse);
+
+  rpc ListProjectTemplates(ListProjectTemplatesRequest) returns (ListProjectTemplatesResponse);
+
+  rpc DeleteProjectTemplate(DeleteProjectTemplateRequest) returns (DeleteProjectTemplateResponse);
+}
+
+message DeleteProjectTemplateRequest {
+  Ref.ProjectTemplate project_template = 1;
+}
+
+message DeleteProjectTemplateResponse {}
+
+message UpsertProjectFromTemplateRequest {
+  string project_name = 1;
+  string description = 2;
+
+  oneof SourceCodePlatformDestinationOptions {
+    ProjectTemplate.SourceCodePlatformGithub.Destination.Options github = 3;
+  }
+
+  Ref.ProjectTemplate template = 4;
+}
+
+message UpsertProjectFromTemplateResponse {
+  // Job responsible for templating the project. Follow along with GetJobStream
+  // Project won't fully exist until this job is complete.
+  string job_id = 2;
+}
+
+message ListProjectTemplatesRequest {
+  PaginationRequest pagination = 1;
+}
+
+message ListProjectTemplatesResponse {
+  repeated ProjectTemplate project_templates = 1;
+
+  PaginationResponse pagination = 2;
+}
+
+message GetProjectTemplateRequest {
+  Ref.ProjectTemplate project_template = 1;
+}
+
+message GetProjectTemplateResponse {
+  ProjectTemplate project_template = 1;
+}
+
+message UpsertProjectTemplateResponse {
+  ProjectTemplate project_template = 1;
+}
+
+message UpsertProjectTemplateRequest {
+  ProjectTemplate project_template = 1;
+}
+
+message ProjectTemplate {
+  string name = 1;
+  string description = 2;
+
+  oneof SourceCodePlatform {
+    SourceCodePlatformGithub github = 3;
+  }
+
+  Tokens tokens = 5;
+
+  message SourceCodePlatformGithub {
+    Source source = 1;
+    Destination destination = 2;
+
+    message Source {
+      string owner = 1;
+      string repo = 2;
+    }
+
+    message Destination {
+      bool private = 1;
+      bool include_all_branches = 2;
+
+      // NOTE(izaak): we can in future allow setting
+      // default options on this message
+      message Options {
+        string owner = 1;
+
+        // Future: assign repo to team.
+      }
+    }
+
+  }
+
+  // Optional customization of replacement tokens
+  message Tokens {
+    // defaults to %%WAYPOINT_PROJECT_NAME%%
+    string project_name_token = 1;
+  }
+
+  // Inheriting all of Project to automatically get any new settings.
+  // Some fields, including name and state, aren't relevant
+  // Most important setting is the data_source
+  Project project_settings = 7;
+
+  // TODO: consider multi-app. Monorepo likely requires a different AppTemplate type
+
+
 }
 
 /********************************************************************
@@ -808,6 +918,8 @@ message Project {
   // poll operations and their success/failure by using the ListJobs API.
   AppStatusPoll status_report_poll = 10;
 
+  // TODO: from_project_template
+
   message Poll {
     // enabled must be set to true to enable polling.
     bool enabled = 1;
@@ -1114,6 +1226,10 @@ message Ref {
 
     // Pipeline run sequence
     uint64 run_sequence = 4;
+  }
+
+  message ProjectTemplate {
+    string name = 2;
   }
 }
 
@@ -1702,7 +1818,7 @@ message ValidateJobResponse {
 
 // A Job is a job that executes on a runner and is queued by QueueOperation.
 message Job {
-  reserved 72 to 99; // future operation range
+  reserved 73 to 99; // future operation range
 
   // id of the job. This is generated on the server side when queued. If
   // you are queueing a job, this must be empty or unset.
@@ -1828,6 +1944,7 @@ message Job {
     WatchTaskOp watch_task = 69;
     PipelineStepOp pipeline_step = 70;
     DestroyProjectOp destroy_project = 71;
+    TemplateProjectOp template_project = 72;
   }
 
   //-----------------------------------------------------------------
@@ -1925,6 +2042,7 @@ message Job {
     PipelineStepResult pipeline_step = 16;
     PipelineConfigSyncResult pipeline_config_sync = 17;
     ProjectDestroyResult project_destroy = 18;
+    TemplateProjectResult template_project_result = 19;
   }
 
   message Config {
@@ -2351,6 +2469,8 @@ message Job {
     string job_id = 1;
   }
 
+  message TemplateProjectResult{}
+
   // PollOp triggers a poll action for a project. The job will fail if there
   // is no data source configured for the project.
   //
@@ -2400,6 +2520,18 @@ message Job {
   message DestroyProjectOp {
     Ref.Project project = 1;
     bool skip_destroy_resources = 2;
+  }
+
+  // TemplateProjectOp creates a project from a template
+  // May include
+  message TemplateProjectOp {
+
+    // TODO(izaak): consider copying all the fields from the request into here
+    // It would be nice if this job could do _just_ the tricky github bits
+    // and leave the rest to the server, but I don't see a way to. As long
+    // as the job is going to be doing everything, we might as well pass
+    // over the whole req for convenience.
+    UpsertProjectFromTemplateRequest req = 1;
   }
 
   // Note that since we run pipeline steps as jobs, the output of the pipeline

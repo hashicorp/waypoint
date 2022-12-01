@@ -6851,6 +6851,9 @@
         }
       }
     },
+    "hashicorp.waypoint.DeleteProjectTemplateResponse": {
+      "type": "object"
+    },
     "hashicorp.waypoint.Deployment": {
       "type": "object",
       "properties": {
@@ -7861,6 +7864,14 @@
         }
       }
     },
+    "hashicorp.waypoint.GetProjectTemplateResponse": {
+      "type": "object",
+      "properties": {
+        "project_template": {
+          "$ref": "#/definitions/hashicorp.waypoint.ProjectTemplate"
+        }
+      }
+    },
     "hashicorp.waypoint.GetServerConfigResponse": {
       "type": "object",
       "properties": {
@@ -8187,6 +8198,9 @@
         },
         "destroy_project": {
           "$ref": "#/definitions/hashicorp.waypoint.Job.DestroyProjectOp"
+        },
+        "template_project": {
+          "$ref": "#/definitions/hashicorp.waypoint.Job.TemplateProjectOp"
         },
         "state": {
           "$ref": "#/definitions/hashicorp.waypoint.Job.State",
@@ -8807,6 +8821,9 @@
         },
         "project_destroy": {
           "$ref": "#/definitions/hashicorp.waypoint.Job.ProjectDestroyResult"
+        },
+        "template_project_result": {
+          "$ref": "#/definitions/hashicorp.waypoint.Job.TemplateProjectResult"
         }
       }
     },
@@ -8913,6 +8930,19 @@
         }
       },
       "title": "TaskPluginParams contains the information about a specific task plugin\nthat is used by both StartTask and StopTask"
+    },
+    "hashicorp.waypoint.Job.TemplateProjectOp": {
+      "type": "object",
+      "properties": {
+        "req": {
+          "$ref": "#/definitions/hashicorp.waypoint.UpsertProjectFromTemplateRequest",
+          "description": "TODO(izaak): consider copying all the fields from the request into here\nIt would be nice if this job could do _just_ the tricky github bits\nand leave the rest to the server, but I don't see a way to. As long\nas the job is going to be doing everything, we might as well pass\nover the whole req for convenience."
+        }
+      },
+      "title": "TemplateProjectOp creates a project from a template\nMay include"
+    },
+    "hashicorp.waypoint.Job.TemplateProjectResult": {
+      "type": "object"
     },
     "hashicorp.waypoint.Job.UpOp": {
       "type": "object",
@@ -9091,6 +9121,20 @@
             "$ref": "#/definitions/hashicorp.waypoint.Pipeline"
           },
           "title": "All of the listed pipelines"
+        }
+      }
+    },
+    "hashicorp.waypoint.ListProjectTemplatesResponse": {
+      "type": "object",
+      "properties": {
+        "project_templates": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/hashicorp.waypoint.ProjectTemplate"
+          }
+        },
+        "pagination": {
+          "$ref": "#/definitions/hashicorp.waypoint.PaginationResponse"
         }
       }
     },
@@ -9696,6 +9740,79 @@
       "default": "ACTIVE",
       "description": "ProjectState is set to active when the project is created and throughout its lifetime.\nWhen a project destroy operation begins, the state is set to destroying."
     },
+    "hashicorp.waypoint.ProjectTemplate": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "github": {
+          "$ref": "#/definitions/hashicorp.waypoint.ProjectTemplate.SourceCodePlatformGithub"
+        },
+        "tokens": {
+          "$ref": "#/definitions/hashicorp.waypoint.ProjectTemplate.Tokens"
+        },
+        "project_settings": {
+          "$ref": "#/definitions/hashicorp.waypoint.Project",
+          "title": "Inheriting all of Project to automatically get any new settings.\nSome fields, including name and state, aren't relevant\nMost important setting is the data_source"
+        }
+      }
+    },
+    "hashicorp.waypoint.ProjectTemplate.SourceCodePlatformGithub": {
+      "type": "object",
+      "properties": {
+        "source": {
+          "$ref": "#/definitions/hashicorp.waypoint.ProjectTemplate.SourceCodePlatformGithub.Source"
+        },
+        "destination": {
+          "$ref": "#/definitions/hashicorp.waypoint.ProjectTemplate.SourceCodePlatformGithub.Destination"
+        }
+      }
+    },
+    "hashicorp.waypoint.ProjectTemplate.SourceCodePlatformGithub.Destination": {
+      "type": "object",
+      "properties": {
+        "private": {
+          "type": "boolean"
+        },
+        "include_all_branches": {
+          "type": "boolean"
+        }
+      }
+    },
+    "hashicorp.waypoint.ProjectTemplate.SourceCodePlatformGithub.Destination.Options": {
+      "type": "object",
+      "properties": {
+        "owner": {
+          "type": "string"
+        }
+      },
+      "title": "NOTE(izaak): we can in future allow setting\ndefault options on this message"
+    },
+    "hashicorp.waypoint.ProjectTemplate.SourceCodePlatformGithub.Source": {
+      "type": "object",
+      "properties": {
+        "owner": {
+          "type": "string"
+        },
+        "repo": {
+          "type": "string"
+        }
+      }
+    },
+    "hashicorp.waypoint.ProjectTemplate.Tokens": {
+      "type": "object",
+      "properties": {
+        "project_name_token": {
+          "type": "string",
+          "title": "defaults to %%WAYPOINT_PROJECT_NAME%%"
+        }
+      },
+      "title": "Optional customization of replacement tokens"
+    },
     "hashicorp.waypoint.PushedArtifact": {
       "type": "object",
       "properties": {
@@ -9950,6 +10067,14 @@
         }
       },
       "description": "Project references a project."
+    },
+    "hashicorp.waypoint.Ref.ProjectTemplate": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        }
+      }
     },
     "hashicorp.waypoint.Ref.Runner": {
       "type": "object",
@@ -11308,6 +11433,32 @@
         "pipeline": {
           "$ref": "#/definitions/hashicorp.waypoint.Pipeline",
           "description": "This is the inserted/updated pipeline. This may not match the\ninput since this will contain fully normalized data."
+        }
+      }
+    },
+    "hashicorp.waypoint.UpsertProjectFromTemplateRequest": {
+      "type": "object",
+      "properties": {
+        "project_name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "github": {
+          "$ref": "#/definitions/hashicorp.waypoint.ProjectTemplate.SourceCodePlatformGithub.Destination.Options"
+        },
+        "template": {
+          "$ref": "#/definitions/hashicorp.waypoint.Ref.ProjectTemplate"
+        }
+      }
+    },
+    "hashicorp.waypoint.UpsertProjectFromTemplateResponse": {
+      "type": "object",
+      "properties": {
+        "job_id": {
+          "type": "string",
+          "description": "Job responsible for templating the project. Follow along with GetJobStream\nProject won't fully exist until this job is complete."
         }
       }
     },

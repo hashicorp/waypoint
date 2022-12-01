@@ -408,6 +408,36 @@ func (_m *WaypointClient) DeleteOnDemandRunnerConfig(ctx context.Context, in *ge
 	return r0, r1
 }
 
+// DeleteProjectTemplate provides a mock function with given fields: ctx, in, opts
+func (_m *WaypointClient) DeleteProjectTemplate(ctx context.Context, in *gen.DeleteProjectTemplateRequest, opts ...grpc.CallOption) (*gen.DeleteProjectTemplateResponse, error) {
+	_va := make([]interface{}, len(opts))
+	for _i := range opts {
+		_va[_i] = opts[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx, in)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
+
+	var r0 *gen.DeleteProjectTemplateResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.DeleteProjectTemplateRequest, ...grpc.CallOption) *gen.DeleteProjectTemplateResponse); ok {
+		r0 = rf(ctx, in, opts...)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gen.DeleteProjectTemplateResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.DeleteProjectTemplateRequest, ...grpc.CallOption) error); ok {
+		r1 = rf(ctx, in, opts...)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // DeleteTrigger provides a mock function with given fields: ctx, in, opts
 func (_m *WaypointClient) DeleteTrigger(ctx context.Context, in *gen.DeleteTriggerRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	_va := make([]interface{}, len(opts))
@@ -1338,6 +1368,36 @@ func (_m *WaypointClient) GetProject(ctx context.Context, in *gen.GetProjectRequ
 	return r0, r1
 }
 
+// GetProjectTemplate provides a mock function with given fields: ctx, in, opts
+func (_m *WaypointClient) GetProjectTemplate(ctx context.Context, in *gen.GetProjectTemplateRequest, opts ...grpc.CallOption) (*gen.GetProjectTemplateResponse, error) {
+	_va := make([]interface{}, len(opts))
+	for _i := range opts {
+		_va[_i] = opts[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx, in)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
+
+	var r0 *gen.GetProjectTemplateResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.GetProjectTemplateRequest, ...grpc.CallOption) *gen.GetProjectTemplateResponse); ok {
+		r0 = rf(ctx, in, opts...)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gen.GetProjectTemplateResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.GetProjectTemplateRequest, ...grpc.CallOption) error); ok {
+		r1 = rf(ctx, in, opts...)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetPushedArtifact provides a mock function with given fields: ctx, in, opts
 func (_m *WaypointClient) GetPushedArtifact(ctx context.Context, in *gen.GetPushedArtifactRequest, opts ...grpc.CallOption) (*gen.PushedArtifact, error) {
 	_va := make([]interface{}, len(opts))
@@ -1930,6 +1990,36 @@ func (_m *WaypointClient) ListPipelines(ctx context.Context, in *gen.ListPipelin
 
 	var r1 error
 	if rf, ok := ret.Get(1).(func(context.Context, *gen.ListPipelinesRequest, ...grpc.CallOption) error); ok {
+		r1 = rf(ctx, in, opts...)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// ListProjectTemplates provides a mock function with given fields: ctx, in, opts
+func (_m *WaypointClient) ListProjectTemplates(ctx context.Context, in *gen.ListProjectTemplatesRequest, opts ...grpc.CallOption) (*gen.ListProjectTemplatesResponse, error) {
+	_va := make([]interface{}, len(opts))
+	for _i := range opts {
+		_va[_i] = opts[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx, in)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
+
+	var r0 *gen.ListProjectTemplatesResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.ListProjectTemplatesRequest, ...grpc.CallOption) *gen.ListProjectTemplatesResponse); ok {
+		r0 = rf(ctx, in, opts...)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gen.ListProjectTemplatesResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.ListProjectTemplatesRequest, ...grpc.CallOption) error); ok {
 		r1 = rf(ctx, in, opts...)
 	} else {
 		r1 = ret.Error(1)
@@ -2945,6 +3035,66 @@ func (_m *WaypointClient) UpsertProject(ctx context.Context, in *gen.UpsertProje
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*gen.UpsertProjectResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.UpsertProjectRequest, ...grpc.CallOption) error); ok {
+		r1 = rf(ctx, in, opts...)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// UpsertProjectFromTemplate provides a mock function with given fields: ctx, in, opts
+func (_m *WaypointClient) UpsertProjectFromTemplate(ctx context.Context, in *gen.UpsertProjectFromTemplateRequest, opts ...grpc.CallOption) (*gen.UpsertProjectFromTemplateResponse, error) {
+	_va := make([]interface{}, len(opts))
+	for _i := range opts {
+		_va[_i] = opts[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx, in)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
+
+	var r0 *gen.UpsertProjectFromTemplateResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.UpsertProjectFromTemplateRequest, ...grpc.CallOption) *gen.UpsertProjectFromTemplateResponse); ok {
+		r0 = rf(ctx, in, opts...)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gen.UpsertProjectFromTemplateResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.UpsertProjectFromTemplateRequest, ...grpc.CallOption) error); ok {
+		r1 = rf(ctx, in, opts...)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// UpsertProjectTemplate provides a mock function with given fields: ctx, in, opts
+func (_m *WaypointClient) UpsertProjectTemplate(ctx context.Context, in *gen.UpsertProjectRequest, opts ...grpc.CallOption) (*gen.UpsertApplicationResponse, error) {
+	_va := make([]interface{}, len(opts))
+	for _i := range opts {
+		_va[_i] = opts[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx, in)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
+
+	var r0 *gen.UpsertApplicationResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.UpsertProjectRequest, ...grpc.CallOption) *gen.UpsertApplicationResponse); ok {
+		r0 = rf(ctx, in, opts...)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gen.UpsertApplicationResponse)
 		}
 	}
 
