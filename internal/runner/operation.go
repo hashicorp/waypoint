@@ -374,6 +374,9 @@ func (r *Runner) executeJob(
 	case *pb.Job_PipelineStep:
 		return r.executePipelineStepOp(ctx, log, job, project)
 
+	case *pb.Job_TemplateProject:
+		return r.executeProjectTemplateOp(ctx, log, job, project)
+
 	default:
 		return nil, status.Errorf(codes.Aborted, "unknown operation %T", job.Operation)
 	}

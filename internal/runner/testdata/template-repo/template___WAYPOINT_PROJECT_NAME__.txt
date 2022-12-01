@@ -1,0 +1,11 @@
+%%WAYPOINT_PROJECT_NAME%% and %%WAYPOINT_PROJECT_NAME%%
+
+
+and %%WAYPOINT_PROJECT_NAME%%
+
+also  %%WAYPOINT_PROJECT_DESCRIPTION%%
+
+and %%WAYPOINT_PROJECT_DESCRIPTION%%
+
+for good measure (should be surrounded in %%) %%%%WAYPOINT_PROJECT_NAME%%%%
+
