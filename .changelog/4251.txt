@@ -1,0 +1,4 @@
+```release-note:feature
+plugin/packer: A "packer" config sourcer plugin to source machine image IDs from
+an HCP Packer channel.
+```
