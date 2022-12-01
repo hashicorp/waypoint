@@ -8,7 +8,7 @@ on:
         required: false
       branch:
         description: "A branch or SHA"
-        default: 'main'
+        default: "main"
         required: false
 jobs:
   notify-release:
@@ -16,7 +16,33 @@ jobs:
     strategy:
       matrix:
         integration_identifier:
-          - 'waypoint/docker'
+          - "waypoint/aws-alb"
+          - "waypoint/aws-ami"
+          - "waypoint/aws-ec2"
+          - "waypoint/aws-ecr-pull"
+          - "waypoint/aws-ecr"
+          - "waypoint/aws-ecs"
+          - "waypoint/aws-lambda"
+          - "waypoint/aws-ssm"
+          - "waypoint/azure-container-instance"
+          - "waypoint/consul"
+          - "waypoint/docker-pull"
+          - "waypoint/docker-ref"
+          - "waypoint/docker"
+          - "waypoint/exec"
+          - "waypoint/files"
+          - "waypoint/google-cloud-run"
+          - "waypoint/helm"
+          - "waypoint/kubernetes-apply"
+          - "waypoint/kubernetes"
+          - "waypoint/lambda-function-url"
+          - "waypoint/nomad-jobspec-canary"
+          - "waypoint/nomad-jobspec"
+          - "waypoint/nomad"
+          - "waypoint/null"
+          - "waypoint/pack"
+          - "waypoint/terraform-cloud"
+          - "waypoint/vault"
     steps:
       - name: Checkout integration-release-action
         uses: actions/checkout@v2
