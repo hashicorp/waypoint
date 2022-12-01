@@ -1243,8 +1243,6 @@ github.com/hashicorp/hcl v1.0.0/go.mod h1:E5yfLk+7swimpb2L/Alb/PJmXilQ/rhwaUYs4T
 github.com/hashicorp/hcl/v2 v2.6.0/go.mod h1:bQTN5mpo+jewjJgh8jr0JUguIi7qPHUF6yIfAEN3jqY=
 github.com/hashicorp/hcl/v2 v2.10.1-0.20210621220818-327f3ce2570e h1:ZloftGcVtVB6MnKQVI7kG4olKQUfUdi0284GOpkJHyc=
 github.com/hashicorp/hcl/v2 v2.10.1-0.20210621220818-327f3ce2570e/go.mod h1:FwWsfWEjyV/CMj8s/gqAuiviY72rJ1/oayI9WftqcKg=
-github.com/hashicorp/hcp-sdk-go v0.26.0 h1:QXS4CpY75xavik+IljWmniNktLvpmWfl3KiccN4FX1I=
-github.com/hashicorp/hcp-sdk-go v0.26.0/go.mod h1:BpHYeoSp6/qccyPk14gkcT/VbzlhNuNamMkLF4RDQQg=
 github.com/hashicorp/hcp-sdk-go v0.27.0 h1:L7fIiZMPD1QnN5iRYH5v/OnWTC05hi29nLoVD7ScZv0=
 github.com/hashicorp/hcp-sdk-go v0.27.0/go.mod h1:BRtYrm9RwAAtnuGU/rwTeAyzKTNH/d4WlHa6eNvcEHQ=
 github.com/hashicorp/horizon v0.0.0-20200717001716-a175a185844b/go.mod h1:l600KU4y9clh+4RHdS3H5VP6+RdMnznXFrL9vg6uDnA=
