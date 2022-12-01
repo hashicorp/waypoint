@@ -187,7 +187,6 @@ COPY nginx/default.conf /etc/nginx/conf.d/
 COPY --from=build /app/build /usr/share/nginx/html
 EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]
-
 `)
 
 	doc.SetRequestField(
@@ -232,5 +231,5 @@ CMD ["nginx", "-g", "daemon off;"]
 		docs.EnvVar("HCP_CLIENT_SECRET"),
 	)
 
-	return nil, nil
+	return doc, nil
 }
