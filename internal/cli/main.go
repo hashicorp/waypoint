@@ -666,6 +666,24 @@ func Commands(
 			}, nil
 		},
 
+		"project template list": func() (cli.Command, error) {
+			return &ProjectTemplateListCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
+
+		"project template set": func() (cli.Command, error) {
+			return &ProjectTemplateSetCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
+
+		"project template render": func() (cli.Command, error) {
+			return &ProjectTemplateRenderCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
+
 		"fmt": func() (cli.Command, error) {
 			return &FmtCommand{
 				baseCommand: baseCommand,
