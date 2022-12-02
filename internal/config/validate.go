@@ -90,8 +90,6 @@ func (v ValidationResults) HasErrors() bool {
 	return false
 }
 
-const AppeningHappening = "[NOTICE] More than one app stanza within a waypoint.hcl file is under consideration for change or removal in a future version.\nTo give feedback, visit https://discuss.hashicorp.com/t/deprecating-projects-or-how-i-learned-to-love-apps/40888"
-
 // Validate the structure of the configuration.
 //
 // This will validate required fields are specified and the types of some fields.
@@ -127,10 +125,6 @@ func (c *Config) Validate() (ValidationResults, error) {
 	for _, block := range apps {
 		appRes := c.validateApp(block)
 		results = append(results, appRes...)
-	}
-
-	if len(apps) > 1 {
-		results = append(results, ValidationResult{Warning: AppeningHappening})
 	}
 
 	// Validate pipelines
