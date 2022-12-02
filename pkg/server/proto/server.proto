@@ -480,7 +480,7 @@ service Waypoint {
   // List releases for a given application.
   rpc UI_ListReleases(UI.ListReleasesRequest) returns (UI.ListReleasesResponse);
 
-  rpc UpsertProjectTemplate(UpsertProjectRequest) returns (UpsertApplicationResponse);
+  rpc UpsertProjectTemplate(UpsertProjectTemplateRequest) returns (UpsertProjectTemplateResponse);
 
   rpc GetProjectTemplate(GetProjectTemplateRequest) returns (GetProjectTemplateResponse);
 
@@ -553,8 +553,8 @@ message ProjectTemplate {
     Destination destination = 2;
 
     message Source {
-      string owner = 1;
       string repo = 2;
+      string owner = 1;
     }
 
     message Destination {

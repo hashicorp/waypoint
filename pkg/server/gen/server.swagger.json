@@ -9795,10 +9795,10 @@
     "hashicorp.waypoint.ProjectTemplate.SourceCodePlatformGithub.Source": {
       "type": "object",
       "properties": {
-        "owner": {
+        "repo": {
           "type": "string"
         },
-        "repo": {
+        "owner": {
           "type": "string"
         }
       }
@@ -11476,6 +11476,14 @@
       "properties": {
         "project": {
           "$ref": "#/definitions/hashicorp.waypoint.Project"
+        }
+      }
+    },
+    "hashicorp.waypoint.UpsertProjectTemplateResponse": {
+      "type": "object",
+      "properties": {
+        "project_template": {
+          "$ref": "#/definitions/hashicorp.waypoint.ProjectTemplate"
         }
       }
     },

@@ -2273,20 +2273,20 @@ func (_m *WaypointServer) UpsertProjectFromTemplate(_a0 context.Context, _a1 *ge
 }
 
 // UpsertProjectTemplate provides a mock function with given fields: _a0, _a1
-func (_m *WaypointServer) UpsertProjectTemplate(_a0 context.Context, _a1 *gen.UpsertProjectRequest) (*gen.UpsertApplicationResponse, error) {
+func (_m *WaypointServer) UpsertProjectTemplate(_a0 context.Context, _a1 *gen.UpsertProjectTemplateRequest) (*gen.UpsertProjectTemplateResponse, error) {
 	ret := _m.Called(_a0, _a1)
 
-	var r0 *gen.UpsertApplicationResponse
-	if rf, ok := ret.Get(0).(func(context.Context, *gen.UpsertProjectRequest) *gen.UpsertApplicationResponse); ok {
+	var r0 *gen.UpsertProjectTemplateResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.UpsertProjectTemplateRequest) *gen.UpsertProjectTemplateResponse); ok {
 		r0 = rf(_a0, _a1)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*gen.UpsertApplicationResponse)
+			r0 = ret.Get(0).(*gen.UpsertProjectTemplateResponse)
 		}
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, *gen.UpsertProjectRequest) error); ok {
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.UpsertProjectTemplateRequest) error); ok {
 		r1 = rf(_a0, _a1)
 	} else {
 		r1 = ret.Error(1)

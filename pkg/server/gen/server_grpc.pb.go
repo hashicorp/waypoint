@@ -329,7 +329,7 @@ type WaypointClient interface {
 	UI_GetDeployment(ctx context.Context, in *UI_GetDeploymentRequest, opts ...grpc.CallOption) (*UI_GetDeploymentResponse, error)
 	// List releases for a given application.
 	UI_ListReleases(ctx context.Context, in *UI_ListReleasesRequest, opts ...grpc.CallOption) (*UI_ListReleasesResponse, error)
-	UpsertProjectTemplate(ctx context.Context, in *UpsertProjectRequest, opts ...grpc.CallOption) (*UpsertApplicationResponse, error)
+	UpsertProjectTemplate(ctx context.Context, in *UpsertProjectTemplateRequest, opts ...grpc.CallOption) (*UpsertProjectTemplateResponse, error)
 	GetProjectTemplate(ctx context.Context, in *GetProjectTemplateRequest, opts ...grpc.CallOption) (*GetProjectTemplateResponse, error)
 	ListProjectTemplates(ctx context.Context, in *ListProjectTemplatesRequest, opts ...grpc.CallOption) (*ListProjectTemplatesResponse, error)
 	DeleteProjectTemplate(ctx context.Context, in *DeleteProjectTemplateRequest, opts ...grpc.CallOption) (*DeleteProjectTemplateResponse, error)
@@ -1527,8 +1527,8 @@ func (c *waypointClient) UI_ListReleases(ctx context.Context, in *UI_ListRelease
 	return out, nil
 }
 
-func (c *waypointClient) UpsertProjectTemplate(ctx context.Context, in *UpsertProjectRequest, opts ...grpc.CallOption) (*UpsertApplicationResponse, error) {
-	out := new(UpsertApplicationResponse)
+func (c *waypointClient) UpsertProjectTemplate(ctx context.Context, in *UpsertProjectTemplateRequest, opts ...grpc.CallOption) (*UpsertProjectTemplateResponse, error) {
+	out := new(UpsertProjectTemplateResponse)
 	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/UpsertProjectTemplate", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -1873,7 +1873,7 @@ type WaypointServer interface {
 	UI_GetDeployment(context.Context, *UI_GetDeploymentRequest) (*UI_GetDeploymentResponse, error)
 	// List releases for a given application.
 	UI_ListReleases(context.Context, *UI_ListReleasesRequest) (*UI_ListReleasesResponse, error)
-	UpsertProjectTemplate(context.Context, *UpsertProjectRequest) (*UpsertApplicationResponse, error)
+	UpsertProjectTemplate(context.Context, *UpsertProjectTemplateRequest) (*UpsertProjectTemplateResponse, error)
 	GetProjectTemplate(context.Context, *GetProjectTemplateRequest) (*GetProjectTemplateResponse, error)
 	ListProjectTemplates(context.Context, *ListProjectTemplatesRequest) (*ListProjectTemplatesResponse, error)
 	DeleteProjectTemplate(context.Context, *DeleteProjectTemplateRequest) (*DeleteProjectTemplateResponse, error)
@@ -2202,7 +2202,7 @@ func (UnimplementedWaypointServer) UI_GetDeployment(context.Context, *UI_GetDepl
 func (UnimplementedWaypointServer) UI_ListReleases(context.Context, *UI_ListReleasesRequest) (*UI_ListReleasesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UI_ListReleases not implemented")
 }
-func (UnimplementedWaypointServer) UpsertProjectTemplate(context.Context, *UpsertProjectRequest) (*UpsertApplicationResponse, error) {
+func (UnimplementedWaypointServer) UpsertProjectTemplate(context.Context, *UpsertProjectTemplateRequest) (*UpsertProjectTemplateResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpsertProjectTemplate not implemented")
 }
 func (UnimplementedWaypointServer) GetProjectTemplate(context.Context, *GetProjectTemplateRequest) (*GetProjectTemplateResponse, error) {
@@ -4196,7 +4196,7 @@ func _Waypoint_UI_ListReleases_Handler(srv interface{}, ctx context.Context, dec
 }
 
 func _Waypoint_UpsertProjectTemplate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(UpsertProjectRequest)
+	in := new(UpsertProjectTemplateRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -4208,7 +4208,7 @@ func _Waypoint_UpsertProjectTemplate_Handler(srv interface{}, ctx context.Contex
 		FullMethod: "/hashicorp.waypoint.Waypoint/UpsertProjectTemplate",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(WaypointServer).UpsertProjectTemplate(ctx, req.(*UpsertProjectRequest))
+		return srv.(WaypointServer).UpsertProjectTemplate(ctx, req.(*UpsertProjectTemplateRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }

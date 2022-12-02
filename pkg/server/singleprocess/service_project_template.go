@@ -19,7 +19,7 @@ func (s *Service) UpsertProjectFromTemplate(
 
 	// TODO: validate request
 
-	// TODO(izaak): The architecture I want here is for the server to set up the project,
+	// TODO(izaak): A better architecture here would be for the server to set up the project,
 	// the runner to JUST create the new git repo, and then the server to finish up by
 	// modifying the project with the new git repo. I don't see a great way to do this though -
 	// we can only send the whole task to the runner and let it handle orchestration from there.
@@ -32,9 +32,14 @@ func (s *Service) UpsertProjectFromTemplate(
 	project := template.ProjectSettings
 	project.Name = req.ProjectName
 
-	// NOTE(izaak): It isn't great that the project exists for a while with the
-	// template as it's datasource, but I think we need _a_ datasource or the remote
-	// job won't execute.
+	// The job won't execute without a valid hcl file
+	project.WaypointHcl = []byte(`project = "tmp"`)
+
+	// Insert a dummy datasource to pacify the job system. It will error submitting the remote job
+	// if we don't have some kind of datasource here.
+
+	// TODO: We need this to use our existing job-queueing logic, which assumes
+	// a project already exists.
 	if err := s.state(ctx).ProjectPut(ctx, project); err != nil {
 		return nil, hcerr.Externalize(
 			hclog.FromContext(ctx),
@@ -58,6 +63,19 @@ func (s *Service) UpsertProjectFromTemplate(
 			TargetRunner: &pb.Ref_Runner{
 				Target: &pb.Ref_Runner_Any{},
 			},
+			Workspace: &pb.Ref_Workspace{
+				Workspace: "default", // TODO: rethink
+			},
+
+			// TODO: We need this to use our existing job-queueing logic, which
+			// assumes a datasource.
+			DataSource: &pb.Job_DataSource{
+				Source: &pb.Job_DataSource_Git{
+					Git: &pb.Job_Git{
+						Url: "https://github.com/izaaklauer/noop.git",
+					},
+				},
+			},
 		},
 	})
 	if err != nil {
@@ -71,9 +89,16 @@ func (s *Service) UpsertProjectFromTemplate(
 
 func (s *Service) UpsertProjectTemplate(
 	ctx context.Context,
-	req *pb.UpsertProjectRequest,
-) (*pb.UpsertApplicationResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "upsert project template unimplemented")
+	req *pb.UpsertProjectTemplateRequest,
+) (*pb.UpsertProjectTemplateResponse, error) {
+	// TODO(izaak): validate
+	log := hclog.FromContext(ctx)
+
+	err := s.state(ctx).ProjectTemplatePut(ctx, req.ProjectTemplate)
+	if err != nil {
+		return nil, hcerr.Externalize(log, err, "failed to put project template", "name", req.ProjectTemplate.Name)
+	}
+	return &pb.UpsertProjectTemplateResponse{}, nil
 }
 
 func (s *Service) GetProjectTemplate(
@@ -94,7 +119,17 @@ func (s *Service) ListProjectTemplates(
 	ctx context.Context,
 	req *pb.ListProjectTemplatesRequest,
 ) (*pb.ListProjectTemplatesResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "list project templates unimplemented")
+	// TODO(izaak): validate
+	log := hclog.FromContext(ctx)
+
+	list, _, err := s.state(ctx).ProjectTemplateList(ctx, nil)
+	if err != nil {
+		return nil, hcerr.Externalize(log, err, "failed to list project templates")
+	}
+	return &pb.ListProjectTemplatesResponse{
+		ProjectTemplates: list,
+		Pagination:       nil,
+	}, nil
 }
 
 func (s *Service) DeleteProjectTemplate(

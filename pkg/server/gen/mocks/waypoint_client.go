@@ -3079,7 +3079,7 @@ func (_m *WaypointClient) UpsertProjectFromTemplate(ctx context.Context, in *gen
 }
 
 // UpsertProjectTemplate provides a mock function with given fields: ctx, in, opts
-func (_m *WaypointClient) UpsertProjectTemplate(ctx context.Context, in *gen.UpsertProjectRequest, opts ...grpc.CallOption) (*gen.UpsertApplicationResponse, error) {
+func (_m *WaypointClient) UpsertProjectTemplate(ctx context.Context, in *gen.UpsertProjectTemplateRequest, opts ...grpc.CallOption) (*gen.UpsertProjectTemplateResponse, error) {
 	_va := make([]interface{}, len(opts))
 	for _i := range opts {
 		_va[_i] = opts[_i]
@@ -3089,17 +3089,17 @@ func (_m *WaypointClient) UpsertProjectTemplate(ctx context.Context, in *gen.Ups
 	_ca = append(_ca, _va...)
 	ret := _m.Called(_ca...)
 
-	var r0 *gen.UpsertApplicationResponse
-	if rf, ok := ret.Get(0).(func(context.Context, *gen.UpsertProjectRequest, ...grpc.CallOption) *gen.UpsertApplicationResponse); ok {
+	var r0 *gen.UpsertProjectTemplateResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.UpsertProjectTemplateRequest, ...grpc.CallOption) *gen.UpsertProjectTemplateResponse); ok {
 		r0 = rf(ctx, in, opts...)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*gen.UpsertApplicationResponse)
+			r0 = ret.Get(0).(*gen.UpsertProjectTemplateResponse)
 		}
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, *gen.UpsertProjectRequest, ...grpc.CallOption) error); ok {
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.UpsertProjectTemplateRequest, ...grpc.CallOption) error); ok {
 		r1 = rf(ctx, in, opts...)
 	} else {
 		r1 = ret.Error(1)
