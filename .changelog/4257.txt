@@ -1,0 +1,3 @@
+```release-note:bug
+cli/context: fix possible error when listing contexts if a non waypoint context file exists in the context directory
+```
