@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 // Storage is the primary struct for interacting with stored CLI contexts.
@@ -50,7 +51,10 @@ func (m *Storage) List() ([]string, error) {
 			continue
 		}
 
-		result = append(result, m.nameFromPath(n))
+		// filter out possible non .hcl files
+		if strings.HasSuffix(n, ".hcl") {
+			result = append(result, m.nameFromPath(n))
+		}
 	}
 
 	return result, nil
