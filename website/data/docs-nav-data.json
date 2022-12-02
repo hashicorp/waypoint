@@ -26,6 +26,15 @@
             "path": "intro/vs/kubernetes"
           }
         ]
+      },
+      {
+        "title": "Use Cases",
+        "routes": [
+          {
+            "title": "Dynamic App Config with Vault Dynamic Secrets",
+            "path": "intro/use-cases/dynamic-config-vault-dynamic-secrets"
+          }
+        ]
       }
     ]
   },
