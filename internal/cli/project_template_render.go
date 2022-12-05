@@ -111,10 +111,22 @@ func (c *ProjectTemplateRenderCommand) Run(args []string) int {
 	// TODO: recommend running `waypoint up`
 
 	s.Update("Project template created! %q", getProjResp.Project.DataSource.Source.(*pb.Job_DataSource_Git).Git.Url)
-
 	s.Done()
 
-	return 0
+	upCommand := &UpCommand{
+		baseCommand: c.baseCommand,
+	}
+
+	upExitCode := upCommand.Run([]string{"-project", c.flagProjectName, "-app", c.flagProjectName})
+
+	c.ui.Output("Your new project %s is deployed!", c.flagProjectName)
+	c.ui.Output("To clone it, run:")
+	c.ui.Output("git clone %s", getProjResp.Project.DataSource.Source.(*pb.Job_DataSource_Git).Git.Url)
+
+	c.ui.Output("Then make your change, commit and push, and run:")
+	c.ui.Output("waypoint up")
+
+	return upExitCode
 }
 
 func (c *ProjectTemplateRenderCommand) Flags() *flag.Sets {

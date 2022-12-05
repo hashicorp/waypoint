@@ -9,6 +9,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"regexp"
+	"strings"
 	"time"
 
 	"github.com/go-git/go-git/v5"
@@ -24,10 +25,13 @@ import (
 )
 
 var (
-	PROJECT_NAME_CONTENTS_REGEX = regexp.MustCompile("%%WAYPOINT_PROJECT_NAME%%")
-	PROJECT_NAME_PATH_REGEX     = regexp.MustCompile("__WAYPOINT_PROJECT_NAME__")
+	PROJECT_NAME_CONTENTS_REGEX       = regexp.MustCompile("%%wp_project%%")
+	PROJECT_NAME_CONTENTS_UPPER_REGEX = regexp.MustCompile("%%Wp_project%%")
 
-	PROJECT_DESCRIPTION_REGEX = regexp.MustCompile("%%WAYPOINT_PROJECT_DESCRIPTION%%")
+	PROJECT_NAME_PATH_REGEX       = regexp.MustCompile("__wp_project__")
+	PROJECT_NAME_PATH_UPPER_REGEX = regexp.MustCompile("__Wp_project__")
+
+	PROJECT_DESCRIPTION_REGEX = regexp.MustCompile("%%wp_project_description%%")
 )
 
 // executeProjectTemplateOp creates a project based on a template
@@ -85,6 +89,7 @@ func (r *Runner) executeProjectTemplateOp(
 	)
 	githubClient := github.NewClient(oauth2.NewClient(ctx, ts))
 
+	project.UI.Output("Creating repo from template...")
 	githubRepo, _, err := githubClient.Repositories.CreateFromTemplate(ctx,
 		githubTemplate.Github.Source.Owner,
 		githubTemplate.Github.Source.Repo,
@@ -122,7 +127,10 @@ func (r *Runner) executeProjectTemplateOp(
 		Password: githubAccessToken,
 	}
 
+	// In practice, we seem to need to give github a moment before cloning.
 	time.Sleep(time.Second * 5)
+
+	project.UI.Output("Creating new repo...")
 	var output bytes.Buffer
 	clonedRepo, err := git.PlainCloneContext(ctx, td, false, &git.CloneOptions{
 		URL:      *githubRepo.CloneURL,
@@ -134,6 +142,7 @@ func (r *Runner) executeProjectTemplateOp(
 	}
 
 	// Render template
+	project.UI.Output("Rendering template...")
 	if err := replaceTokens(td, templateReq.ProjectName, templateReq.Description); err != nil {
 		return nil, errors.Wrapf(err, "failed replacing tokens")
 	}
@@ -167,6 +176,7 @@ func (r *Runner) executeProjectTemplateOp(
 		return nil, errors.Wrapf(err, "failed to commit after replacing tokens")
 	}
 
+	project.UI.Output("Pushing rendering changes...")
 	var pushOutput bytes.Buffer
 	err = clonedRepo.PushContext(ctx, &git.PushOptions{
 		Auth:     githubAuth,
@@ -190,9 +200,16 @@ func (r *Runner) executeProjectTemplateOp(
 		},
 	}
 
+	// Clear out saved hack waypoint.hcl
+	pbProject.WaypointHcl = []byte{}
+
+	project.UI.Output("Upserting final project...")
 	_, err = r.client.UpsertProject(ctx, &pb.UpsertProjectRequest{
 		Project: pbProject,
 	})
+
+	project.UI.Output("Waiting for project init...")
+	time.Sleep(time.Second * 15)
 
 	return &pb.Job_Result{
 		TemplateProjectResult: &pb.Job_TemplateProjectResult{},
@@ -211,7 +228,8 @@ func replaceTokens(path string, projectName string, projectDescription string) e
 			return filepath.SkipDir
 		}
 
-		if PROJECT_NAME_PATH_REGEX.FindString(f.Name()) != "" {
+		if PROJECT_NAME_PATH_REGEX.FindString(f.Name()) != "" ||
+			PROJECT_NAME_PATH_UPPER_REGEX.FindString(f.Name()) != "" {
 			renameFilesAndDirs = append(renameFilesAndDirs, filePath)
 		}
 
@@ -225,7 +243,10 @@ func replaceTokens(path string, projectName string, projectDescription string) e
 		oldPath := renameFilesAndDirs[i]
 
 		name := filepath.Base(oldPath)
+
 		newName := PROJECT_NAME_PATH_REGEX.ReplaceAllString(name, projectName)
+		newName = PROJECT_NAME_PATH_UPPER_REGEX.ReplaceAllString(newName, strings.Title(projectName))
+
 		if newName != name {
 			newPath := filepath.Join(filepath.Dir(oldPath), newName)
 			if err := os.Rename(oldPath, newPath); err != nil {
@@ -255,6 +276,8 @@ func replaceTokens(path string, projectName string, projectDescription string) e
 		}
 
 		contents = PROJECT_NAME_CONTENTS_REGEX.ReplaceAll(contents, []byte(projectName))
+		contents = PROJECT_NAME_CONTENTS_UPPER_REGEX.ReplaceAll(contents, []byte(strings.Title(projectName)))
+
 		contents = PROJECT_DESCRIPTION_REGEX.ReplaceAll(contents, []byte(projectDescription))
 
 		if err := ioutil.WriteFile(filePath, contents, info.Mode()); err != nil {

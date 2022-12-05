@@ -78,7 +78,7 @@ func TestRunner_replaceTokens(t *testing.T) {
 	require.NoError(cmd.Run())
 	defer func() { require.NoError(os.RemoveAll(testDataPath)) }()
 
-	err = replaceTokens(testDataPath, "my_test_project", "description of test project")
+	err = replaceTokens(testDataPath, "hashicups", "description of test project")
 	require.NoError(err)
 
 	// TODO: examine file names and contents for tokens.

@@ -2,6 +2,7 @@ package singleprocess
 
 import (
 	"context"
+	"fmt"
 	"math/rand"
 	"reflect"
 	"time"
@@ -314,7 +315,15 @@ func (s *Service) wrapJobWithRunner(
 	// Get the runner profile we're going to use for this runner.
 	od, err := s.state(ctx).OnDemandRunnerConfigGet(ctx, source.OndemandRunner)
 	if err != nil {
-		return nil, err
+		var msg string
+		if source.OndemandRunner.Id != "" {
+			msg = fmt.Sprintf("failed to find ondemand runner id %q", source.OndemandRunner.Id)
+		} else if source.OndemandRunner.Name != "" {
+			msg = fmt.Sprintf("failed to find ondemand runner name %q", source.OndemandRunner.Name)
+		} else {
+			msg = fmt.Sprintf("failed to find ondemand runner")
+		}
+		return nil, errors.Wrapf(err, msg)
 	}
 	if od == nil {
 		return nil, status.Errorf(codes.FailedPrecondition,

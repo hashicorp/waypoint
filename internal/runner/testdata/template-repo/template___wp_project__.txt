@@ -1,0 +1,15 @@
+%%wp_project%% and %%wp_project%%
+
+
+and %%wp_project%%
+
+title case: %%Wp_project%%
+
+also  %%wp_project_description%%
+
+and %%wp_project_description%%
+
+
+
+for good measure (should be surrounded in %%) %%%%wp_project%%%%
+
