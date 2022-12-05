@@ -22,17 +22,31 @@ type ConfigSourcer struct {
 }
 
 type sourceConfig struct {
-	ClientId       string `hcl:"client_id,optional"`
-	ClientSecret   string `hcl:"client_secret,optional"`
+	// The HCP Client ID to authenticate to HCP
+	ClientId string `hcl:"client_id,optional"`
+
+	// The HCP Client Secret to authenticate to HCP
+	ClientSecret string `hcl:"client_secret,optional"`
+
+	// The HCP Organization ID to authenticate to in HCP
 	OrganizationId string `hcl:"organization_id,attr"`
-	ProjectId      string `hcl:"project_id,attr"`
+
+	// The HCP Project ID within the organization to authenticate to in HCP
+	ProjectId string `hcl:"project_id,attr"`
 }
 
 type reqConfig struct {
-	Bucket  string `hcl:"bucket,attr"`
+	// The name of the HCP Packer registry bucket from which to source an image
+	Bucket string `hcl:"bucket,attr"`
+
+	// The name of the HCP Packer registry bucket channel from which to source an image
 	Channel string `hcl:"channel,attr"`
-	Region  string `hcl:"region,attr"`
-	Cloud   string `hcl:"cloud,attr"`
+
+	// The region of the machine image to be pulled
+	Region string `hcl:"region,attr"`
+
+	// The cloud provider of the machine image to be pulled
+	Cloud string `hcl:"cloud,attr"`
 }
 
 // Config implements component.Configurable
@@ -100,17 +114,21 @@ func (cs *ConfigSourcer) read(
 		if err != nil {
 			return nil, err
 		}
-		log.Debug("Retrieved HCP Packer channel.")
+		log.Debug("retrieved HCP Packer channel", "channel", channel.Payload.Channel.Slug)
 		iteration := channel.Payload.Channel.Iteration
 
 		// An iteration can have multiple builds, so we check for the first build
 		// with the matching cloud provider and region.
 		for _, build := range iteration.Builds {
 			if build.CloudProvider == packerConfig.Cloud {
-				log.Debug("Found build with matching cloud provider.")
+				log.Debug("found build with matching cloud provider",
+					"cloud provider", build.CloudProvider,
+					"build ID", build.ID)
 				for _, image := range build.Images {
 					if image.Region == packerConfig.Region {
-						log.Debug("Found image with matching region.")
+						log.Debug("found image with matching region",
+							"region", image.Region,
+							"image ID", image.ID)
 						result.Result = &pb.ConfigSource_Value_Value{
 							// The ImageID is the Cloud Image ID or URL string
 							// identifying this image for the builder that built it,
@@ -139,7 +157,10 @@ func (cs *ConfigSourcer) Documentation() (*docs.Documentation, error) {
 		return nil, err
 	}
 
-	doc.Description("Read machine image information from HCP Packer.")
+	doc.Description("Retrieve the image ID of an image whose metadata is pushed " +
+		"to an HCP Packer registry. The image ID is that of the HCP Packer bucket" +
+		"iteration assigned to the configured channel, with a matching cloud provider" +
+		"and region.")
 
 	doc.Example(`
 // The waypoint.hcl file
