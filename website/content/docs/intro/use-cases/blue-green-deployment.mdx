@@ -39,8 +39,8 @@ are running to split some percentage of traffic between the resolver for the new
 and old instances of the service.
 
 To achieve this, a series of commands or API calls would need to be run manually,
-or automated through scripts or some other means; but Waypoint pipelines can orchestrate
-this! Waypoint pipelines can execute configured phases of your app's build, deployment,
+or automated through scripts or some other means; but [Waypoint pipelines](https://developer.hashicorp.com/waypoint/docs/pipelines)
+can orchestrate this! Waypoint pipelines can execute configured phases of your app's build, deployment,
 and release lifecycle, and run custom steps such as modifying Consul config
 entries to configure DNS to route traffic to your canary deployment instances.
 
@@ -192,25 +192,25 @@ running the current active version of the Nomad job, and `canary_tags` are appli
 to the canary Nomad allocations rolled out during a deployment.
 
 ```hcl
-    service {
-      name        = "app"
-      port        = "http"
-      tags        = [ "blue" ]
-      canary_tags = [ "green" ]
-    }
+service {
+  name        = "app"
+  port        = "http"
+  tags        = [ "blue" ]
+  canary_tags = [ "green" ]
+}
 ```
 
 The exact number of canary Nomad allocations to be deployed, with the `canary_tags`
 from the `service` stanza, is configured in the `update` stanza's `canary` field:
 
 ```hcl
-    update {
-      max_parallel = 1
-      canary       = 1
-      auto_revert  = true
-      auto_promote = false
-      health_check = "task_states"
-    }
+update {
+  max_parallel = 1
+  canary       = 1
+  auto_revert  = true
+  auto_promote = false
+  health_check = "task_states"
+}
 ```
 
 In summary, this pipeline will perform a canary deployment of the artifact, built
