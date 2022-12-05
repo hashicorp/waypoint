@@ -7,25 +7,25 @@ description: |-
 
 # Blue-Green Deployments with Waypoint, Nomad and Consul
 
-In addition to common methods of deploying applications, Hashicorp Waypoint supports
+In addition to common methods of deploying applications, HashiCorp Waypoint supports
 the orchestration of advanced deployment workflows, such as blue-green deployments.
 A blue-green deployment is where a new version of an application is deployed alongside
-the existing version in an environment. While both versions are running, DNS is
+the existing version in a separate environment. While both versions are running, DNS is
 updated to split traffic flowing to the application between the new and existing
 versions of the app. This enables essentially nil downtime for the application
 during deployments in most cases, but also enables operators to provide the experience
-of the new version of an application to a certain percentage of users, without
+of the new version of an application to a certain percentage of users without
 forcing all users to use the newer version. Depending upon feedback and testing
 while the new version is live and processing a partial amount of traffic, a decision
 is made to either promote or roll back the new version, and DNS is again updated
 to route 100% of traffic to all instances running the application.
 
 In the HashiStack, this is made possible with features from the workload orchestration
-tool, Hashicorp Nomad, and the service networking tool, Hashicorp Consul. Nomad
+tool, HashiCorp Nomad, and the service networking tool, HashiCorp Consul. Nomad
 enables operators to deploy [canary](https://developer.hashicorp.com/nomad/docs/job-specification/update#canary)
-instances of a newer version of an application, without destroying the existing
+instances of a newer version of an application without destroying the existing
 instances. The canary deployment can be auto-promoted when "healthy", or manually
-promoted by operators. Consul plays a role as well, through service configuration
+promoted by operators. Consul plays a role as well through service configuration
 entries. The [service resolver](https://developer.hashicorp.com/consul/docs/connect/config-entries/service-resolver)
 config entry controls which instances of a service should be matched by downstream
 requests made to the service, which can be [filtered](https://developer.hashicorp.com/consul/api-docs/features/filtering)
@@ -41,7 +41,7 @@ and old instances of the service.
 To achieve this, a series of commands or API calls would need to be run manually,
 or automated through scripts or some other means; but Waypoint pipelines can orchestrate
 this! Waypoint pipelines can execute configured phases of your app's build, deployment,
-and release lifecycle, but also run custom steps, such as modifying Consul config
+and release lifecycle, and run custom steps such as modifying Consul config
 entries to configure DNS to route traffic to your canary deployment instances.
 
 An example where this is configured is located [here](https://github.com/paladin-devops/hashitalks-deploy-blue-green).
