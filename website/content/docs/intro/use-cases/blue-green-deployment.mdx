@@ -46,11 +46,32 @@ entries to configure DNS to route traffic to your canary deployment instances.
 
 An example where this is configured is located [here](https://github.com/paladin-devops/hashitalks-deploy-blue-green).
 The Waypoint configuration file contains three pipelines, and each one will be
-described in the next section.
+described in this use case.
 
 ## Waypoint Configuration
 
-### Pipeline 1: build-and-blue-green-deployment
+### Pre-Requisites
+
+If experimenting with this use case, it will be helpful to have some familiarity
+with the tools and concepts listed below.
+
+- [Waypoint CLI](https://developer.hashicorp.com/waypoint/downloads)
+  - [Context created](https://developer.hashicorp.com/waypoint/docs/server/auth#logging-in) and connected to local Waypoint server or HCP Waypoint server
+- Waypoint [runner](https://developer.hashicorp.com/waypoint/docs/runner/run-manual#installing-a-runner)
+  - Must be able to connect to HashiCorp Nomad & HashiCorp Consul clusters
+- Waypoint [runner configuration](https://developer.hashicorp.com/waypoint/docs/runner/config)
+  - Used to connect to HashiCorp Nomad
+- Docker registry
+  - Credentials to push a build to the registry
+- [HashiCorp Consul](https://developer.hashicorp.com/consul) cluster
+- [HashiCorp Nomad](https://developer.hashicorp.com/nomad) cluster
+  - [Integrated with Consul cluster](https://developer.hashicorp.com/nomad/docs/integrations/consul-integration)
+- [Consul DNS](https://developer.hashicorp.com/consul/tutorials/networking/dns-forwarding)
+- `curl`
+
+### Pipelines
+
+#### Pipeline 1: build-and-blue-green-deployment
 
 This pipeline builds the application image, and subsequently executes pipeline #2
 using a nested pipeline.
@@ -96,7 +117,7 @@ build {
 //
 ```
 
-### Pipeline 2: blue-green-deployment
+#### Pipeline 2: blue-green-deployment
 
 This pipeline deploys the build artifact to Nomad, and updates Consul to split
 traffic 50/50 between new and old service instances. This pipeline is configured
@@ -218,7 +239,7 @@ by the build pipeline, to Nomad. After the deployment to Nomad is complete, the
 Consul service's service splitter is updated to split traffic 50/50 between the
 new `green` instances, and the existing `blue` ones.
 
-### Pipeline 3: promotion-and-normalize-traffic
+#### Pipeline 3: promotion-and-normalize-traffic
 
 The third pipeline normalizes traffic to route to the `blue` instances and promotes
 the canary deployment in Nomad. Updating the service splitter is done similarly to
@@ -442,6 +463,5 @@ minimizing downtime and user impact.
 - [Waypoint Plugins](https://developer.hashicorp.com/waypoint/plugins)
 - [Nomad Blue-Green Deployment](https://developer.hashicorp.com/nomad/tutorials/job-updates/job-blue-green-and-canary-deployments)
 - [Terraform Provider for Waypoint](https://registry.terraform.io/providers/hashicorp-dev-advocates/waypoint)
-- [Configure Consul DNS](https://developer.hashicorp.com/consul/tutorials/networking/dns-forwarding)
 - [Consul Service Splitter Config Entries](https://developer.hashicorp.com/consul/docs/connect/config-entries/service-splitter)
 - [Consul Service Resolver Config Entries](https://developer.hashicorp.com/consul/docs/connect/config-entries/service-resolver)
