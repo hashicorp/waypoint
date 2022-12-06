@@ -7,7 +7,7 @@ jobs:
   # checks that a .changelog entry is present for a PR
   failed-backport-check:
     # We only run if it has "Backport" in the title and is a draft PR (as all failed backports will be)
-    if: "!contains(github.event.pull_request.title, 'Backport') && github.event.pull_request.draft"
+    if: "contains(github.event.pull_request.title, 'Backport') && github.event.pull_request.draft"
     runs-on: ubuntu-latest
     steps:
     - name: Notify Slack on failed Backport PRs
