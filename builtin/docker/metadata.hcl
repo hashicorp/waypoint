@@ -1,6 +1,6 @@
 integration {
   name        = "Docker"
-  description = "TODO"
+  description = "Use Waypoint on a Docker instance."
   identifier  = "waypoint/docker"
   components  = ["builder", "platform", "registry", "task"]
   flags       = ["builtin"]
