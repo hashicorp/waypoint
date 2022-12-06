@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/hashicorp/go-hclog"
+
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
@@ -66,5 +67,5 @@ var Platforms = map[string]RunnerInstaller{
 }
 
 const (
-	DefaultRunnerTagName = "waypoint-runner"
+	defaultRunnerTagName = "waypoint-runner"
 )

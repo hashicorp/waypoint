@@ -170,7 +170,7 @@ func (d DockerRunnerInstaller) Uninstall(ctx context.Context, opts *InstallOpts)
 	s.Update("Finding runner container")
 	containerNames := []string{
 		installutil.DefaultRunnerName(opts.Id),
-		DefaultRunnerTagName,
+		defaultRunnerTagName,
 	}
 	var foundContainer types.Container
 	for _, containerName := range containerNames {
