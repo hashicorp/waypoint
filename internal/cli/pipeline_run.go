@@ -200,7 +200,7 @@ func (c *PipelineRunCommand) Run(args []string) int {
 			finalVariableValues map[string]*pb.Variable_FinalValue
 		)
 
-		successful := steps
+		successful := 0
 		for _, jobId := range allRunJobs {
 			job, err := c.project.Client().GetJob(c.Ctx, &pb.GetJobRequest{
 				JobId: jobId,
@@ -230,6 +230,8 @@ func (c *PipelineRunCommand) Run(args []string) int {
 				jobstream.WithClient(c.project.Client()),
 				jobstream.WithUI(app.UI))
 			if err != nil {
+				output := fmt.Sprintf("Pipeline %q (%s) failed to complete. %d/%d steps successfully executed.", pipelineIdent, app.Ref().Project, successful, steps)
+				app.UI.Output("✖ %s", output, terminal.WithErrorStyle())
 				return err
 			}
 
@@ -239,8 +241,8 @@ func (c *PipelineRunCommand) Run(args []string) int {
 			if err != nil {
 				return err
 			}
-			if job.State != pb.Job_SUCCESS {
-				successful--
+			if job.State == pb.Job_SUCCESS {
+				successful++
 			}
 
 			// Grab the deployment or release URL to display at the end of the pipeline run
