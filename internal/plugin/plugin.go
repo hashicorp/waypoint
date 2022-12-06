@@ -30,6 +30,7 @@ import (
 	"github.com/hashicorp/waypoint/builtin/nomad/jobspec"
 	"github.com/hashicorp/waypoint/builtin/null"
 	"github.com/hashicorp/waypoint/builtin/pack"
+	scalewayContainer "github.com/hashicorp/waypoint/builtin/scaleway/container"
 	"github.com/hashicorp/waypoint/builtin/tfc"
 	"github.com/hashicorp/waypoint/builtin/vault"
 )
@@ -65,6 +66,7 @@ var (
 		"terraform-cloud":          tfc.Options,
 		"null":                     null.Options,
 		"consul":                   consul.Options,
+		"scaleway-container":       scalewayContainer.Options,
 	}
 
 	// BaseFactories is the set of base plugin factories. This will include any
