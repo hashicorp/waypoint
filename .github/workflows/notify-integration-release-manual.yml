@@ -44,6 +44,8 @@ jobs:
           #- "waypoint/terraform-cloud"
           #- "waypoint/vault"
     steps:
+      - name: Checkout this repo
+        uses: actions/checkout@v3
       - name: Checkout integration-release-action
         uses: actions/checkout@v2
         with:
