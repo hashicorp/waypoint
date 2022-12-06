@@ -9,29 +9,29 @@ import (
 	"strings"
 	"time"
 
-	pb "github.com/hashicorp/waypoint/pkg/server/gen"
-
-	"github.com/hashicorp/waypoint/internal/clierrors"
-	"github.com/hashicorp/waypoint/internal/installutil"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/ecs"
+	"github.com/aws/aws-sdk-go/service/efs"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/hashicorp/go-hclog"
-	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 
+	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/builtin/aws/utils"
+	"github.com/hashicorp/waypoint/internal/clierrors"
+	"github.com/hashicorp/waypoint/internal/installutil"
 	awsinstallutil "github.com/hashicorp/waypoint/internal/installutil/aws"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
+	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	"github.com/hashicorp/waypoint/pkg/serverconfig"
 )
 
 const (
-	defaultRunnerLogGroup = "waypoint-runner-logs"
-	defaultTaskRuntime    = "FARGATE"
-	defaultRunnerTagValue = "runner-component"
+	defaultRunnerLogGroup  = "waypoint-runner-logs"
+	defaultTaskRuntime     = "FARGATE"
+	defaultRunnerTagValue  = "runner-component"
+	defaultRunnerIdTagName = "runner-id"
 )
 
 // odrRolePolicy represents the minimum policies required for an On-Demand
@@ -160,12 +160,26 @@ func (i *ECSRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) err
 				return err
 			}
 
-			if netInfo, err = awsinstallutil.SetupNetworking(ctx, ui, sess, i.Config.Subnets); err != nil {
+			// TODO: Add a port here if the user specified the -liveness-tcp-addr flag
+			// after `--` on the runner install CLI - currently without this, there
+			// is no way to use that flag effectively, since the SG won't allow traffic
+			// to the port of the -liveness-tcp-addr flag
+			if netInfo, err = awsinstallutil.SetupNetworking(ctx, ui, sess, i.Config.Subnets, []*int64{aws.Int64(int64(2049))}); err != nil {
 				return err
 			}
 			i.netInfo = netInfo
 
-			if efsInfo, err = awsinstallutil.SetupEFS(ctx, ui, sess, netInfo); err != nil {
+			efsTags := []*efs.Tag{
+				{
+					Key:   aws.String(defaultRunnerTagName),
+					Value: aws.String(defaultRunnerTagValue),
+				},
+				{
+					Key:   aws.String(defaultRunnerIdTagName),
+					Value: aws.String(opts.Id),
+				},
+			}
+			if efsInfo, err = awsinstallutil.SetupEFS(ctx, ui, sess, netInfo, efsTags); err != nil {
 				return err
 			}
 
@@ -275,6 +289,9 @@ func (i *ECSRunnerInstaller) InstallFlags(set *flag.Set) {
 	})
 }
 
+// Uninstall deletes the waypoint-runner service from AWS ECS, and its
+// associated volume from EFS. The log group, execution role, subnets,
+// and ECS cluster are not deleted.
 func (i *ECSRunnerInstaller) Uninstall(ctx context.Context, opts *InstallOpts) error {
 	ui := opts.UI
 	log := opts.Log
@@ -297,7 +314,7 @@ func (i *ECSRunnerInstaller) Uninstall(ctx context.Context, opts *InstallOpts) e
 	// We check for the serviceName before v0.9 and v0.9+
 	ecsSvc := ecs.New(sess)
 	serviceNames := []string{
-		DefaultRunnerTagName,
+		defaultRunnerTagName,
 		installutil.DefaultRunnerName(opts.Id),
 	}
 
@@ -330,7 +347,7 @@ func (i *ECSRunnerInstaller) Uninstall(ctx context.Context, opts *InstallOpts) e
 			Services: []*string{service.ServiceArn},
 		})
 		if err != nil {
-			log.Debug("error waint for runner to deactivate: %s", err)
+			log.Debug("error waiting for runner to deactivate: %s", err)
 			ui.Output("Error waiting for Runner service to deactivate: %s", clierrors.Humanize(err), terminal.WithErrorStyle())
 			return err
 		}
@@ -338,7 +355,83 @@ func (i *ECSRunnerInstaller) Uninstall(ctx context.Context, opts *InstallOpts) e
 		s.Update("Runner uninstalled")
 	}
 	s.Done()
-	return nil
+
+	// TODO: Still attempt to delete the EFS volume if the ECS service
+	// uninstall fails
+	efsSvc := efs.New(sess)
+	marker := ""
+	done := false
+	var fileSystems []*efs.FileSystemDescription
+	for !done {
+		fileSystemsResp, err := efsSvc.DescribeFileSystems(&efs.DescribeFileSystemsInput{
+			Marker:   aws.String(marker),
+			MaxItems: aws.Int64(100),
+		})
+		if err != nil {
+			return err
+		}
+		if marker == *fileSystemsResp.Marker {
+			done = true
+		}
+		fileSystems = append(fileSystems, fileSystemsResp.FileSystems...)
+	}
+
+	var fileSystemId *string
+	for _, fileSystem := range fileSystems {
+		// Check if tags match ID, if so then delete things
+		for _, tag := range fileSystem.Tags {
+			if *tag.Key == "runner-id" && *tag.Value == opts.Id {
+				fileSystemId = fileSystem.FileSystemId
+				goto DeleteFileSystem
+			}
+		}
+	}
+
+DeleteFileSystem:
+	describeAccessPointsResp, err := efsSvc.DescribeAccessPoints(&efs.DescribeAccessPointsInput{
+		FileSystemId: fileSystemId,
+	})
+	if err != nil {
+		return err
+	}
+	for _, accessPoint := range describeAccessPointsResp.AccessPoints {
+		_, err = efsSvc.DeleteAccessPoint(&efs.DeleteAccessPointInput{AccessPointId: accessPoint.AccessPointId})
+		if err != nil {
+			return err
+		}
+	}
+
+	describeMountTargetsResp, err := efsSvc.DescribeMountTargets(&efs.DescribeMountTargetsInput{
+		FileSystemId: fileSystemId,
+	})
+	for _, mountTarget := range describeMountTargetsResp.MountTargets {
+		_, err = efsSvc.DeleteMountTarget(&efs.DeleteMountTargetInput{MountTargetId: mountTarget.MountTargetId})
+		if err != nil {
+			return err
+		}
+	}
+
+	for {
+		ctx, cancel := context.WithTimeout(ctx, 5*time.Minute)
+		defer cancel()
+		select {
+		case <-ctx.Done():
+			return errors.New("after 5 minutes, the file system could" +
+				"not be deleted, because the mount targets weren't deleted")
+		default:
+			_, err = efsSvc.DeleteFileSystem(&efs.DeleteFileSystemInput{FileSystemId: fileSystemId})
+			if err != nil {
+				if strings.Contains(err.Error(), "because it has mount targets") {
+					// sleep here for 5 seconds to avoid slamming the API
+					time.Sleep(5 * time.Second)
+					continue
+				}
+				return err
+			}
+			// if we reach this point, we're done
+			return nil
+		}
+	}
 }
 
 func (i *ECSRunnerInstaller) UninstallFlags(set *flag.Set) {
@@ -431,7 +524,7 @@ func launchRunner(
 			{
 				ContainerPath: aws.String("/data/runner"),
 				ReadOnly:      aws.Bool(false),
-				SourceVolume:  aws.String(DefaultRunnerTagName),
+				SourceVolume:  aws.String(defaultRunnerTagName),
 			},
 		},
 	}
@@ -444,13 +537,13 @@ func launchRunner(
 		ExecutionRoleArn:        aws.String(executionRoleArn),
 		Cpu:                     aws.String(cpu),
 		Memory:                  aws.String(memory),
-		Family:                  aws.String(DefaultRunnerTagName),
+		Family:                  aws.String(defaultRunnerTagName),
 		TaskRoleArn:             &taskRoleArn,
 		NetworkMode:             aws.String("awsvpc"),
 		RequiresCompatibilities: []*string{aws.String(defaultTaskRuntime)},
 		Tags: []*ecs.Tag{
 			{
-				Key:   aws.String(DefaultRunnerTagName),
+				Key:   aws.String(defaultRunnerTagName),
 				Value: aws.String(defaultRunnerTagValue),
 			},
 			{
@@ -467,7 +560,7 @@ func launchRunner(
 					FileSystemId:      efsInfo.FileSystemID,
 					TransitEncryption: aws.String(ecs.EFSTransitEncryptionEnabled),
 				},
-				Name: aws.String(DefaultRunnerTagName),
+				Name: aws.String(defaultRunnerTagName),
 			},
 		},
 	}
@@ -545,7 +638,7 @@ func launchRunner(
 		},
 		Tags: []*ecs.Tag{
 			{
-				Key:   aws.String(DefaultRunnerTagName),
+				Key:   aws.String(defaultRunnerTagName),
 				Value: aws.String(defaultRunnerTagValue),
 			},
 			{
@@ -555,7 +648,7 @@ func launchRunner(
 		},
 	}
 
-	s.Update("Creating ECS Service (%s)", DefaultRunnerTagName)
+	s.Update("Creating ECS Service (%s)", defaultRunnerTagName)
 	svc, err := awsinstallutil.CreateService(createServiceInput, ecsSvc)
 	if err != nil {
 		return nil, err
@@ -605,6 +698,7 @@ func buildLoggingOptions(
 	return result
 }
 
+// setupTaskRole creates an IAM task role for launching on-demand runners
 func (i *ECSRunnerInstaller) setupTaskRole(
 	ctx context.Context,
 	ui terminal.UI,
@@ -651,7 +745,7 @@ func (i *ECSRunnerInstaller) setupTaskRole(
 		RoleName:                 aws.String(roleName),
 		Tags: []*iam.Tag{
 			{
-				Key:   aws.String(DefaultRunnerTagName),
+				Key:   aws.String(defaultRunnerTagName),
 				Value: aws.String(defaultRunnerTagValue),
 			},
 			{

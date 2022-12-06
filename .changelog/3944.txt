@@ -1,0 +1,7 @@
+```release-note:improvement
+cli/runnerinstall: Delete EFS file system during ECS runner uninstall
+```
+```release-note:improvement
+cli/runnerinstall: Check if runner is registered to the server before
+attempting to forget it
+```
