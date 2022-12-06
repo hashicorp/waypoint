@@ -52,6 +52,10 @@
     "path": "pack"
   },
   {
+    "title": "packer",
+    "path": "packer"
+  },
+  {
     "title": "terraform-cloud",
     "path": "terraform-cloud"
   },

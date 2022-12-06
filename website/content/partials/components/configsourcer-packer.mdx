@@ -1,0 +1,123 @@
+## packer (configsourcer)
+
+Retrieve the image ID of an image whose metadata is pushed to an HCP Packer registry. The image ID is that of the HCP Packer bucketiteration assigned to the configured channel, with a matching cloud providerand region.
+
+### Examples
+
+```hcl
+// The waypoint.hcl file
+project = "example-reactjs-project"
+
+variable "image" {
+  default = dynamic("packer", {
+    bucket          = "nginx"
+    channel         = "base"
+    region          = "docker"
+    cloud_provider  = "docker"
+  }
+  type = string
+  description = "The name of the base image to use for building app Docker images."
+}
+
+app "example-reactjs" {
+  build {
+    use "docker" {
+      dockerfile = templatefile("${path.app}"/Dockerfile, {
+        base_image = var.image
+      }
+    }
+
+  deploy {
+    use "docker" {}
+  }
+}
+
+
+# Multi-stage Dockerfile example
+FROM node:19.2-alpine as build
+WORKDIR /app
+ENV PATH /app/node_modules/.bin:$PATH
+COPY package.json ./
+COPY package-lock.json ./
+RUN npm ci --silent
+RUN npm install react-scripts@3.4.1 -g --silent
+COPY . ./
+RUN npm run build
+
+# ${base_image} below is the Docker repository and tag, templated to the Dockerfile
+FROM ${base_image}
+COPY nginx/default.conf /etc/nginx/conf.d/
+COPY --from=build /app/build /usr/share/nginx/html
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]
+```
+
+### Required Parameters
+
+These parameters are used in `dynamic` for sourcing [configuration values](/docs/app-config/dynamic) or [input variable values](/docs/waypoint-hcl/variables/dynamic).
+
+#### bucket
+
+The name of the HCP Packer bucket from which to source an image.
+
+- Type: **string**
+
+#### channel
+
+The name of the HCP Packer channel from which to source the latest image.
+
+- Type: **string**
+
+#### cloud
+
+The cloud provider of the machine image to source.
+
+- Type: **string**
+
+#### region
+
+The region set for the machine image's cloud provider.
+
+- Type: **string**
+
+### Optional Parameters
+
+This plugin has no optional parameters.
+
+### Source Parameters
+
+The parameters below are used with `waypoint config source-set` to configure
+the behavior this plugin. These are _not_ used in `dynamic` calls. The
+parameters used for `dynamic` are in the previous section.
+
+#### Required Source Parameters
+
+##### organization_id
+
+The HCP organization ID.
+
+- Type: **string**
+
+##### project_id
+
+The HCP Project ID.
+
+- Type: **string**
+
+#### Optional Source Parameters
+
+##### client_id
+
+The OAuth2 Client ID for HCP API operations.
+
+- Type: **string**
+- **Optional**
+- Environment Variable: **HCP_CLIENT_ID**
+
+##### client_secret
+
+The OAuth2 Client Secret for HCP API operations.
+
+- Type: **string**
+- **Optional**
+- Environment Variable: **HCP_CLIENT_SECRET**
