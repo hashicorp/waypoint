@@ -144,7 +144,7 @@ func (c *PipelineRunCommand) Run(args []string) int {
 				return err
 			}
 
-			step.Update("Pipeline %q has started running. Attempting to read job stream sequentially in order", pipelineIdent)
+			step.Update("Pipeline %q has started running. Attempting to read job stream sequentially in order.", pipelineIdent)
 			step.Done()
 
 			steps = len(resp.JobMap)
@@ -185,8 +185,6 @@ func (c *PipelineRunCommand) Run(args []string) int {
 			}
 			runSeq = respGet.PipelineRun.Sequence
 		}
-		// Receive job ids from running pipeline, use job client to attach to job stream
-		// and stream here. First pass can be linear job streaming
 		step = sg.Add("")
 		defer step.Abort()
 
@@ -200,6 +198,8 @@ func (c *PipelineRunCommand) Run(args []string) int {
 			finalVariableValues map[string]*pb.Variable_FinalValue
 		)
 
+		// Receive job ids from running pipeline, use job client to attach to job stream
+		// and stream here. First pass can be linear job streaming
 		successful := 0
 		for _, jobId := range allRunJobs {
 			job, err := c.project.Client().GetJob(c.Ctx, &pb.GetJobRequest{
@@ -220,7 +220,6 @@ func (c *PipelineRunCommand) Run(args []string) int {
 			if job.Workspace != nil {
 				ws = job.Workspace.Workspace
 			}
-			//app.UI.Output("Executing Step %q in workspace: %q", resp.JobMap[jobId].Step, ws, terminal.WithHeaderStyle())
 			stepName := job.Pipeline.Step
 			app.UI.Output("Executing Step %q in workspace: %q", stepName, ws, terminal.WithHeaderStyle())
 			app.UI.Output("Reading job stream (jobId: %s)...", jobId, terminal.WithInfoStyle())
