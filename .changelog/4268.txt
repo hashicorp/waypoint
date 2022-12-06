@@ -1,0 +1,3 @@
+```release-note:improvement
+cli: pipeline run now shows the number of steps successfully executed for a failed run
+```
