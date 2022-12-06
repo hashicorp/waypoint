@@ -288,7 +288,7 @@ func CreateService(serviceInput *ecs.CreateServiceInput, ecsSvc *ecs.ECS) (*ecs.
 }
 
 // TODO: Add runner ID as tag
-// SetupExecutionRole
+// SetupExecutionRole creates the necessary IAM execution role for Waypoint, if it does not exist
 func SetupExecutionRole(
 	ctx context.Context,
 	ui terminal.UI,
