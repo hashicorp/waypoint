@@ -135,8 +135,9 @@ func (c *PipelineRunCommand) Run(args []string) int {
 
 			err error
 		)
+
 		if !c.flagReattachRun {
-			step.Update("Requesting to queue run of pipeline %q...", pipelineIdent)
+			step.Update("Queuing run of pipeline %q...", pipelineIdent)
 
 			// take pipeline id and queue a RunPipeline with a Job Template.
 			resp, err = c.project.Client().RunPipeline(c.Ctx, runPipelineReq)
@@ -185,9 +186,9 @@ func (c *PipelineRunCommand) Run(args []string) int {
 			}
 			runSeq = respGet.PipelineRun.Sequence
 		}
+
 		step = sg.Add("")
 		defer step.Abort()
-
 		step.Update("%d steps detected, run sequence %d", steps, runSeq)
 		step.Done()
 
