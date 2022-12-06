@@ -1,0 +1,104 @@
+{
+   "description": "Retrieve the image ID of an image whose metadata is pushed to an HCP Packer registry. The image ID is that of the HCP Packer bucketiteration assigned to the configured channel, with a matching cloud providerand region.",
+   "example": "// The waypoint.hcl file\nproject = \"example-reactjs-project\"\n\nvariable \"image\" {\n  default = dynamic(\"packer\", {\n    bucket          = \"nginx\"\n    channel         = \"base\"\n    region          = \"docker\"\n    cloud_provider  = \"docker\"\n  }\n  type = string\n  description = \"The name of the base image to use for building app Docker images.\"\n}\n\napp \"example-reactjs\" {\n  build {\n    use \"docker\" {\n      dockerfile = templatefile(\"${path.app}\"/Dockerfile, {\n        base_image = var.image\n      }\n    }\n\n  deploy {\n    use \"docker\" {}\n  }\n}\n\n\n# Multi-stage Dockerfile example\nFROM node:19.2-alpine as build\nWORKDIR /app\nENV PATH /app/node_modules/.bin:$PATH\nCOPY package.json ./\nCOPY package-lock.json ./\nRUN npm ci --silent\nRUN npm install react-scripts@3.4.1 -g --silent\nCOPY . ./\nRUN npm run build\n\n# ${base_image} below is the Docker repository and tag, templated to the Dockerfile\nFROM ${base_image}\nCOPY nginx/default.conf /etc/nginx/conf.d/\nCOPY --from=build /app/build /usr/share/nginx/html\nEXPOSE 80\nCMD [\"nginx\", \"-g\", \"daemon off;\"]",
+   "mappers": null,
+   "name": "packer",
+   "optionalFields": null,
+   "optionalSourceFields": [
+      {
+         "Field": "client_id",
+         "Type": "string",
+         "Synopsis": "The OAuth2 Client ID for HCP API operations.",
+         "Summary": "",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "HCP_CLIENT_ID",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "client_secret",
+         "Type": "string",
+         "Synopsis": "The OAuth2 Client Secret for HCP API operations.",
+         "Summary": "",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "HCP_CLIENT_SECRET",
+         "Category": false,
+         "SubFields": null
+      }
+   ],
+   "requiredFields": [
+      {
+         "Field": "bucket",
+         "Type": "string",
+         "Synopsis": "The name of the HCP Packer bucket from which to source an image.",
+         "Summary": "",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "channel",
+         "Type": "string",
+         "Synopsis": "The name of the HCP Packer channel from which to source the latest image.",
+         "Summary": "",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "cloud",
+         "Type": "string",
+         "Synopsis": "The cloud provider of the machine image to source",
+         "Summary": "",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "region",
+         "Type": "string",
+         "Synopsis": "The region set for the machine image's cloud provider.",
+         "Summary": "",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      }
+   ],
+   "requiredSourceFields": [
+      {
+         "Field": "organization_id",
+         "Type": "string",
+         "Synopsis": "The HCP organization ID.",
+         "Summary": "",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      },
+      {
+         "Field": "project_id",
+         "Type": "string",
+         "Synopsis": "The HCP Project ID.",
+         "Summary": "",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
+      }
+   ],
+   "sourceFieldsHelp": "Source Parameters\nThe parameters below are used with `waypoint config source-set` to configure\nthe behavior this plugin. These are _not_ used in `dynamic` calls. The\nparameters used for `dynamic` are in the previous section.\n",
+   "type": "configsourcer",
+   "use": "`dynamic` for sourcing [configuration values](/docs/app-config/dynamic) or [input variable values](/docs/waypoint-hcl/variables/dynamic)."
+}
