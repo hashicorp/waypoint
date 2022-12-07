@@ -144,7 +144,7 @@ func (c *JobListCommand) Run(args []string) int {
 				return 1
 			}
 			if resp.Pagination == nil {
-				c.ui.Output("No pagination in resposne to retrieving page %d, cannot continue", page, terminal.WithErrorStyle())
+				c.ui.Output("No pagination in response to retrieving page %d, cannot continue", page, terminal.WithErrorStyle())
 				return 1
 			}
 
