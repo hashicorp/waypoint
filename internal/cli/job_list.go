@@ -39,7 +39,9 @@ func (c *JobListCommand) Run(args []string) int {
 	}
 	ctx := c.Ctx
 
-	req := &pb.ListJobsRequest{}
+	req := &pb.ListJobsRequest{
+		Pagination: &pb.PaginationRequest{}, // Use default page size
+	}
 
 	if c.flagWorkspace != "" {
 		req.Workspace = &pb.Ref_Workspace{
@@ -115,13 +117,38 @@ func (c *JobListCommand) Run(args []string) int {
 		req.Pipeline = pipelineStep
 	}
 
+	// Get first page of jobs
+	var jobs []*pb.Job
 	resp, err := c.project.Client().ListJobs(ctx, req)
 	if err != nil {
 		c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 		return 1
 	}
 
-	jobs := resp.Jobs
+	jobs = append(jobs, resp.Jobs...)
+
+	// Get additional pages if they exist
+	if resp.Pagination != nil && resp.Pagination.NextPageToken != "" {
+		sg := c.ui.StepGroup()
+		step := sg.Add("")
+		defer step.Abort()
+		page := 2
+		for resp.Pagination.NextPageToken != "" {
+			step.Update(fmt.Sprintf("Requesting page %d/x", page))
+
+			req.Pagination.NextPageToken = resp.Pagination.NextPageToken
+			resp, err = c.project.Client().ListJobs(ctx, req)
+
+			if err != nil {
+				c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+				return 1
+			}
+
+			jobs = append(jobs, resp.Jobs...)
+			page++
+		}
+		step.Done()
+	}
 
 	// sort by complete time
 	if c.flagDesc {
