@@ -31,8 +31,8 @@
         "title": "Use Cases",
         "routes": [
           {
-            "title": "Dynamic App Config with Vault Dynamic Secrets",
-            "path": "intro/use-cases/dynamic-config-vault-dynamic-secrets"
+            "title": "Blue-Green Deployments with Waypoint, Nomad and Consul",
+            "path": "intro/use-cases/blue-green-deployment"
           }
         ]
       }
