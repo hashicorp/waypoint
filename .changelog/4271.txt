@@ -1,0 +1,4 @@
+```release-note:feature
+server: Add pagination stubs in ListJobs
+cli: Add pagination in ListProjects
+```
