@@ -230,7 +230,7 @@ func TestProjectPagination(t *testing.T, factory Factory, restartF RestartFactor
 			{
 				resp, _, err := s.ProjectList(ctx, nil)
 				require.NoError(err)
-				require.Len(resp, int(endChar-startChar)+1)
+				require.Len(resp, int(projectCount))
 			}
 		})
 

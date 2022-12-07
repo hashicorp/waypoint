@@ -48,7 +48,11 @@ func (s *Service) ListJobs(
 	ctx context.Context,
 	req *pb.ListJobsRequest,
 ) (*pb.ListJobsResponse, error) {
-	jobs, err := s.state(ctx).JobList(ctx, req)
+	if err := serverptypes.ValidateListJobsRequest(req); err != nil {
+		return nil, err
+	}
+
+	jobs, pagination, err := s.state(ctx).JobList(ctx, req)
 	if err != nil {
 		return nil, hcerr.Externalize(
 			hclog.FromContext(ctx),
@@ -58,7 +62,8 @@ func (s *Service) ListJobs(
 	}
 
 	return &pb.ListJobsResponse{
-		Jobs: jobs,
+		Jobs:       jobs,
+		Pagination: pagination,
 	}, nil
 }
 
@@ -282,21 +287,23 @@ func (s *Service) QueueJob(
 // A diagram of the dependency chain created is shown below. The dashed
 // border is the "source" job.
 //
-//           ┌────────────────┐
-//           │   Start Task   │─────────────┐
-//           └────────────────┘             │
-//                    │                     │
-//          ┌─────────┴─────────┐           │
-//          ▼                   ▼           │
+//	 ┌────────────────┐
+//	 │   Start Task   │─────────────┐
+//	 └────────────────┘             │
+//	          │                     │
+//	┌─────────┴─────────┐           │
+//	▼                   ▼           │
+//
 // ┌────────────────┐   ┌─ ── ── ── ── ──   │
 // │   Watch Task   │   │      Job       │  │
 // └────────────────┘   └ ── ── ── ── ── ┘  │
-//          │                    │          │
-//          └─────────┬──────────┘          │
-//                    ▼                     │
-//           ┌────────────────┐             │
-//           │   Stop Task    │◀────────────┘
-//           └────────────────┘
+//
+//	│                    │          │
+//	└─────────┬──────────┘          │
+//	          ▼                     │
+//	 ┌────────────────┐             │
+//	 │   Stop Task    │◀────────────┘
+//	 └────────────────┘
 //
 // Details:
 //
@@ -306,7 +313,6 @@ func (s *Service) QueueJob(
 //     logs, exit code, etc.
 //   - Finally, stop task is called to clean up the resources associated
 //     with start.
-//
 func (s *Service) wrapJobWithRunner(
 	ctx context.Context,
 	source *pb.Job,
