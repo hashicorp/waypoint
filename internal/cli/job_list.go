@@ -139,9 +139,12 @@ func (c *JobListCommand) Run(args []string) int {
 
 			req.Pagination.NextPageToken = resp.Pagination.NextPageToken
 			resp, err = c.project.Client().ListJobs(ctx, req)
-
 			if err != nil {
 				c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+				return 1
+			}
+			if resp.Pagination == nil {
+				c.ui.Output("No pagination in resposne to retrieving page %d, cannot continue", page, terminal.WithErrorStyle())
 				return 1
 			}
 
