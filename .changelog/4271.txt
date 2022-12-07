@@ -1,4 +1,4 @@
-```release-note:feature
-server: Add pagination stubs in ListJobs
-cli: Add pagination in ListProjects
+```release-note:improvement
+core: `waypoint job list` will now retrieve paginated list of jobs to avoid
+grpc data limits per request
 ```

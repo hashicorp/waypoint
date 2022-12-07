@@ -130,24 +130,37 @@ func (c *JobListCommand) Run(args []string) int {
 	// Get additional pages if they exist
 	if resp.Pagination != nil && resp.Pagination.NextPageToken != "" {
 		sg := c.ui.StepGroup()
-		step := sg.Add("")
-		defer step.Abort()
+		var step terminal.Step
+		if !c.flagJson {
+			step = sg.Add("")
+			defer step.Abort()
+		}
+
 		page := 2
 		for resp.Pagination.NextPageToken != "" {
-			step.Update(fmt.Sprintf("Requesting page %d/x", page))
+			if !c.flagJson {
+				step.Update("Requesting page %d/x", page)
+			}
 
 			req.Pagination.NextPageToken = resp.Pagination.NextPageToken
 			resp, err = c.project.Client().ListJobs(ctx, req)
-
 			if err != nil {
 				c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+				return 1
+			}
+			if resp.Pagination == nil {
+				c.ui.Output("No pagination in response to retrieving page %d, cannot continue", page, terminal.WithErrorStyle())
 				return 1
 			}
 
 			jobs = append(jobs, resp.Jobs...)
 			page++
 		}
-		step.Done()
+
+		if !c.flagJson {
+			step.Update("All pages retrieved!")
+			step.Done()
+		}
 	}
 
 	// sort by complete time
