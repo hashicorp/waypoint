@@ -2,6 +2,7 @@ package statetest
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 	"math/rand"
 	"testing"
@@ -320,6 +321,53 @@ func TestJobListPagination(t *testing.T, factory Factory, rf RestartFactory) {
 		jobs, _, err := s.JobList(ctx, &pb.ListJobsRequest{})
 		require.NoError(err)
 		require.Len(jobs, int(jobCount))
+	})
+
+	t.Run("returns 400 Bad Request if both nextPageToken and prevPageToken are set", func(t *testing.T) {
+		nextPageToken, _ := pagination.EncodeAndSerializePageToken("key", "lol")
+		prevPageToken, _ := pagination.EncodeAndSerializePageToken("key", "lol")
+		_, _, err := s.JobList(
+			ctx,
+			&pb.ListJobsRequest{
+				Pagination: serverptypes.TestPaginationRequest(t, &pb.PaginationRequest{
+					PageSize:          5,
+					NextPageToken:     nextPageToken,
+					PreviousPageToken: prevPageToken,
+				}),
+			},
+		)
+		require.Error(err)
+		require.Equal(codes.InvalidArgument, status.Code(err))
+		require.Contains(err.Error(), "Only one of NextPageToken or PreviousPageToken can be set.")
+	})
+
+	t.Run("returns 400 Bad Request if either pagination token is incorrectly formatted", func(t *testing.T) {
+		_, _, err := s.JobList(
+			ctx,
+			&pb.ListJobsRequest{
+				Pagination: serverptypes.TestPaginationRequest(t, &pb.PaginationRequest{
+					PageSize:      5,
+					NextPageToken: "thisIsNotBase64Encoded",
+				}),
+			},
+		)
+		require.Error(err)
+		require.Equal(codes.InvalidArgument, status.Code(err))
+		require.Contains(err.Error(), "Incorrectly formatted pagination token.")
+
+		encodedPrevPageToken := base64.StdEncoding.EncodeToString([]byte("incorrectlyFormattedToken"))
+		_, _, err = s.JobList(
+			ctx,
+			&pb.ListJobsRequest{
+				Pagination: serverptypes.TestPaginationRequest(t, &pb.PaginationRequest{
+					PageSize:          5,
+					PreviousPageToken: encodedPrevPageToken,
+				}),
+			},
+		)
+		require.Error(err)
+		require.Equal(codes.InvalidArgument, status.Code(err))
+		require.Contains(err.Error(), "Incorrectly formatted pagination token.")
 	})
 
 	t.Run("returns page 1/3 (5 results: a-e) + nextPageToken, without previousPageToken", func(t *testing.T) {
