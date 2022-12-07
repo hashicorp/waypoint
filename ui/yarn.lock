@@ -2889,8 +2889,7 @@ anymatch@~3.1.2:
     picomatch "^2.0.4"
 
 "api-common-protos@link:./lib/api-common-protos":
-  version "0.0.0"
-  uid ""
+  version "1.0.0"
 
 aproba@^1.0.3, aproba@^1.1.1:
   version "1.2.0"
@@ -5801,9 +5800,9 @@ debug@^4.0.0, debug@^4.1.0, debug@^4.1.1, debug@^4.3.1, debug@^4.3.2, debug@^4.3
     ms "2.1.2"
 
 decode-uri-component@^0.2.0:
-  version "0.2.0"
-  resolved "https://registry.yarnpkg.com/decode-uri-component/-/decode-uri-component-0.2.0.tgz#eb3913333458775cb84cd1a1fae062106bb87545"
-  integrity sha1-6zkTMzRYd1y4TNGh+uBiEGu4dUU=
+  version "0.2.2"
+  resolved "https://registry.yarnpkg.com/decode-uri-component/-/decode-uri-component-0.2.2.tgz#e69dbe25d37941171dd540e024c444cd5188e1e9"
+  integrity sha512-FqUYQ+8o158GyGTrMFJms9qh3CqTKvAqgqsTnkLI8sKu0028orqBhxNMFkFen0zGyg6epACD32pjVk58ngIErQ==
 
 decompress-response@^4.2.0:
   version "4.2.1"
@@ -8777,8 +8776,7 @@ growly@^1.3.0:
   integrity sha1-8QdIy+dq+WS3yWyTxrzCivEgwIE=
 
 "grpc-web@link:./lib/grpc-web":
-  version "0.0.0"
-  uid ""
+  version "1.2.1"
 
 gzip-size@^5.0.0:
   version "5.1.1"
@@ -11279,8 +11277,7 @@ onetime@^5.1.0, onetime@^5.1.2:
     mimic-fn "^2.1.0"
 
 "opaqueany@link:./lib/opaqueany":
-  version "0.0.0"
-  uid ""
+  version "1.0.0"
 
 opener@^1.5.1:
   version "1.5.1"
@@ -14330,12 +14327,10 @@ watchpack@^2.4.0:
     graceful-fs "^4.1.2"
 
 "waypoint-client@link:./lib/waypoint-client":
-  version "0.0.0"
-  uid ""
+  version "1.0.0"
 
 "waypoint-pb@link:./lib/waypoint-pb":
-  version "0.0.0"
-  uid ""
+  version "1.0.0"
 
 wcwidth@^1.0.1:
   version "1.0.1"
