@@ -132,9 +132,10 @@ func (c *JobListCommand) Run(args []string) int {
 		sg := c.ui.StepGroup()
 		step := sg.Add("")
 		defer step.Abort()
+
 		page := 2
 		for resp.Pagination.NextPageToken != "" {
-			step.Update(fmt.Sprintf("Requesting page %d/x", page))
+			step.Update("Requesting page %d/x", page)
 
 			req.Pagination.NextPageToken = resp.Pagination.NextPageToken
 			resp, err = c.project.Client().ListJobs(ctx, req)
@@ -147,6 +148,8 @@ func (c *JobListCommand) Run(args []string) int {
 			jobs = append(jobs, resp.Jobs...)
 			page++
 		}
+
+		step.Update("")
 		step.Done()
 	}
 
