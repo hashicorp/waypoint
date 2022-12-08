@@ -6,15 +6,6 @@ IMPROVEMENTS:
 
 BUG FIXES:
 
-
-## 0.10.4 (December 08, 2022)
-
-FEATURES:
-
-IMPROVEMENTS:
-
-BUG FIXES:
-
 ## 0.10.4 (December 08, 2022)
 
 FEATURES:
