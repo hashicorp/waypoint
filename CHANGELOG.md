@@ -7,13 +7,31 @@ IMPROVEMENTS:
 BUG FIXES:
 
 
-## 0.10.3 (November 03, 2022)
+## 0.10.4 (December 08, 2022)
 
 FEATURES:
 
+* plugin/ecs: Accept ALB security group IDs. [[GH-4230](https://github.com/hashicorp/waypoint/issues/4230)]
+* plugin/packer: A Packer config sourcer plugin to source machine image IDs from
+  an HCP Packer channel. [[GH-4251](https://github.com/hashicorp/waypoint/issues/4251)]
+
 IMPROVEMENTS:
 
+* cli/runnerinstall: Check if runner is registered to the server before
+  attempting to forget it. [[GH-3944](https://github.com/hashicorp/waypoint/issues/3944)]
+* cli/runnerinstall: Delete EFS file system during ECS runner uninstall. [[GH-3944](https://github.com/hashicorp/waypoint/issues/3944)]
+* cli: `project destroy` requires the `-project` or `-p` flag regardless of where it's run. [[GH-4212](https://github.com/hashicorp/waypoint/issues/4212)]
+* cli: Pipeline run now shows the number of steps successfully executed for a failed run. [[GH-4268](https://github.com/hashicorp/waypoint/issues/4268)]
+
 BUG FIXES:
+
+* cli/context: Fix possible error when listing contexts if a non-Waypoint context file exists in the context directory. [[GH-4257](https://github.com/hashicorp/waypoint/issues/4257)]
+* cli: Ensure a deploy and release URL has a scheme included if not set. [[GH-4208](https://github.com/hashicorp/waypoint/issues/4208)]
+* cli: `project destroy` now successfully destroys a project created in the UI without a remote source or local waypoint.hcl file. [[GH-4212](https://github.com/hashicorp/waypoint/issues/4212)]
+* plugin/nomad: Update Nomad task launcher plugin to use `entrypoint` config - fixes
+  pipeline exec steps run in Nomad. [[GH-4185](https://github.com/hashicorp/waypoint/issues/4185)]
+* plugin/vault: Fix usage of dynamic secrets from Vault for dynamic Waypoint app
+  config. [[GH-3988](https://github.com/hashicorp/waypoint/issues/3988)]
 
 ## 0.10.3 (November 03, 2022)
 
