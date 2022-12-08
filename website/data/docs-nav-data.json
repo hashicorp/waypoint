@@ -99,6 +99,10 @@
           {
             "title": "Upgrade to 0.9.0",
             "path": "upgrading/version-guides/0.9.0"
+          },
+          {
+            "title": "Upgrade to 0.10.0",
+            "path": "upgrading/version-guides/0.10.0"
           }
         ]
       }
