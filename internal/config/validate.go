@@ -350,10 +350,9 @@ func (c *Pipeline) Validate() error {
 // ValidateLabels validates a set of labels. This ensures that labels are
 // set according to our requirements:
 //
-//   * key and value length can't be greater than 255 characters each
-//   * keys must be in hostname format (RFC 952)
-//   * keys can't be prefixed with "waypoint/" which is reserved for system use
-//
+//   - key and value length can't be greater than 255 characters each
+//   - keys must be in hostname format (RFC 952)
+//   - keys can't be prefixed with "waypoint/" which is reserved for system use
 func ValidateLabels(labels map[string]string) ValidationResults {
 	var results ValidationResults
 

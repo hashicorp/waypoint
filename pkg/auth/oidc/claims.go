@@ -97,11 +97,11 @@ func extractMappings(
 // of claims and claims mappings.  The referenced claims must be strings and
 // the claims mappings must be of the structure:
 //
-//   {
-//       "/some/claim/pointer": "metadata_key1",
-//       "another_claim": "metadata_key2",
-//        ...
-//   }
+//	{
+//	    "/some/claim/pointer": "metadata_key1",
+//	    "another_claim": "metadata_key2",
+//	     ...
+//	}
 func extractListMappings(
 	all map[string]interface{}, mappings map[string]string,
 ) (map[string][]string, error) {

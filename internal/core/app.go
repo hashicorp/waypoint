@@ -209,10 +209,9 @@ func (a *App) startPlugin(
 //
 // This always provides some common values for injection:
 //
-//   * *component.Source
-//   * *datadir.Project
-//   * history.Client
-//
+//   - *component.Source
+//   - *datadir.Project
+//   - history.Client
 func (a *App) callDynamicFunc(
 	ctx context.Context,
 	log hclog.Logger,
