@@ -72,7 +72,18 @@ func (c *JobCancelCommand) Run(args []string) int {
 	}
 
 	if !c.flagForce {
-		s.Update("Marked job %q for cancellation", jobId)
+		job, err := c.project.Client().GetJob(ctx, &pb.GetJobRequest{JobId: jobId})
+		if err != nil {
+			c.ui.Output("Job not found: %s", clierrors.Humanize(err),
+				terminal.WithErrorStyle())
+			return 1
+		}
+		switch job.State {
+		case pb.Job_RUNNING:
+			s.Update("Job %q is still running. To remove Waypoint's knowledge of it, add the -dangerously-force flag.", jobId)
+		default:
+			s.Update("Marked job %q for cancellation", jobId)
+		}
 	} else {
 		s.Update("Forcefully marked job %q for cancellation", jobId)
 		s.Status(terminal.StatusWarn)

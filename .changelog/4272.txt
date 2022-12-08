@@ -1,0 +1,4 @@
+```release-note:improvement
+cli: `waypoint job cancel` now outputs explicitly to add
+the -dangerously-force flag to cancel a running job.
+```
