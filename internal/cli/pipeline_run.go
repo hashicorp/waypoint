@@ -135,8 +135,9 @@ func (c *PipelineRunCommand) Run(args []string) int {
 
 			err error
 		)
+
 		if !c.flagReattachRun {
-			step.Update("Requesting to queue run of pipeline %q...", pipelineIdent)
+			step.Update("Queuing run of pipeline %q...", pipelineIdent)
 
 			// take pipeline id and queue a RunPipeline with a Job Template.
 			resp, err = c.project.Client().RunPipeline(c.Ctx, runPipelineReq)
@@ -144,7 +145,7 @@ func (c *PipelineRunCommand) Run(args []string) int {
 				return err
 			}
 
-			step.Update("Pipeline %q has started running. Attempting to read job stream sequentially in order", pipelineIdent)
+			step.Update("Pipeline %q has started running. Attempting to read job stream sequentially in order.", pipelineIdent)
 			step.Done()
 
 			steps = len(resp.JobMap)
@@ -185,11 +186,9 @@ func (c *PipelineRunCommand) Run(args []string) int {
 			}
 			runSeq = respGet.PipelineRun.Sequence
 		}
-		// Receive job ids from running pipeline, use job client to attach to job stream
-		// and stream here. First pass can be linear job streaming
+
 		step = sg.Add("")
 		defer step.Abort()
-
 		step.Update("%d steps detected, run sequence %d", steps, runSeq)
 		step.Done()
 
@@ -200,7 +199,9 @@ func (c *PipelineRunCommand) Run(args []string) int {
 			finalVariableValues map[string]*pb.Variable_FinalValue
 		)
 
-		successful := steps
+		// Receive job ids from running pipeline, use job client to attach to job stream
+		// and stream here. First pass can be linear job streaming
+		successful := 0
 		for _, jobId := range allRunJobs {
 			job, err := c.project.Client().GetJob(c.Ctx, &pb.GetJobRequest{
 				JobId: jobId,
@@ -220,7 +221,6 @@ func (c *PipelineRunCommand) Run(args []string) int {
 			if job.Workspace != nil {
 				ws = job.Workspace.Workspace
 			}
-			//app.UI.Output("Executing Step %q in workspace: %q", resp.JobMap[jobId].Step, ws, terminal.WithHeaderStyle())
 			stepName := job.Pipeline.Step
 			app.UI.Output("Executing Step %q in workspace: %q", stepName, ws, terminal.WithHeaderStyle())
 			app.UI.Output("Reading job stream (jobId: %s)...", jobId, terminal.WithInfoStyle())
@@ -230,6 +230,8 @@ func (c *PipelineRunCommand) Run(args []string) int {
 				jobstream.WithClient(c.project.Client()),
 				jobstream.WithUI(app.UI))
 			if err != nil {
+				output := fmt.Sprintf("Pipeline %q (%s) failed to complete. %d/%d steps successfully executed.", pipelineIdent, app.Ref().Project, successful, steps)
+				app.UI.Output("✖ %s", output, terminal.WithErrorStyle())
 				return err
 			}
 
@@ -239,8 +241,8 @@ func (c *PipelineRunCommand) Run(args []string) int {
 			if err != nil {
 				return err
 			}
-			if job.State != pb.Job_SUCCESS {
-				successful--
+			if job.State == pb.Job_SUCCESS {
+				successful++
 			}
 
 			// Grab the deployment or release URL to display at the end of the pipeline run
