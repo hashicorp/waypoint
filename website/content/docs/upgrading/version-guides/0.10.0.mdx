@@ -1,16 +1,18 @@
 ---
 layout: docs
-page_title: Version 0.5.0 - Upgrade Guide
+page_title: Version 0.10.0 - Upgrade Guide
 description: |-
-  This upgrade guide describes any considerations for upgrading to Waypoint 0.5.0.
+  This upgrade guide describes any considerations for upgrading to Waypoint 0.10.0.
 ---
 
-# Upgrading to Waypoint 0.5.0 from 0.4.x
+# Upgrading to Waypoint 0.10.0 from 0.9.x
 
-Waypoint 0.4.x can be upgraded to Waypoint 0.5.0 using a [standard upgrade](/docs/upgrading#standard-upgrade).
+Waypoint 0.9.x can be upgraded to Waypoint 0.10.0 using a [standard upgrade](/docs/upgrading#standard-upgrade).
 There are no breaking changes in the protocol or `waypoint.hcl` configuration file. All
 Waypoint components (CLI, entrypoint, and server) are forwards and backwards
 compatible, but we encourage users to have all components on the same version.
+
+# Breaking Changes
 
 ## Other Considerations
 
@@ -27,7 +29,7 @@ Docker may require an explicit `docker pull` and container recreate.
 #### Verifying the Server Version with the UI
 
 You can verify the server version by loading the UI and looking at the footer.
-You should see a version starting with `v0.5`. If you see an earlier version,
+You should see a version starting with `v0.10.0`. If you see an earlier version,
 your platform may be using an old cached image.
 
 #### Verifying the Server Version with the CLI
@@ -36,6 +38,6 @@ You can verify both the CLI version and server version by running:
 
 ```shell-session
 $ waypoint version
-CLI: v0.5.0 (622f37bd1)
-Server: v0.5.0
+CLI: v0.10.0 (bf33e413a)
+Server: v0.10.0
 ```
