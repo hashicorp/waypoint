@@ -254,15 +254,64 @@ Reference the file in `waypoint.hcl`:
         use "docker" {}
           registry {
             use "docker" {
-              image = "registry.example.com/image"
-              tag = "latest"
+              image        = "registry.example.com/image"
+              tag          = "latest"
               encoded_auth = filebase64("/path/to/dockerAuth.json")
+              local        = false
             }
           }
         }
     }
 ...
 ```
+
+#### Authentication with Vault
+
+Waypoint can read [dynamic config variables](docs/intro/use-cases/dynamic-config-vault-dynamic-secrets)
+directly from Vault:
+
+```hcl
+...
+    build {
+        use "docker" {}
+          registry {
+            use "docker" {
+              image    = "registry.example.com/image"
+              tag      = "latest"
+              username = var.registry_username
+              password = var.registry_password
+              local    = false
+            }
+          }
+        }
+    }
+
+...
+
+variable "registry_username" {
+  default = dynamic("vault", {
+    path = "secret/data/registry"
+    key  = "/data/registry_username"
+  })
+  type        = string
+  sensitive   = true # Notice this var is marked as sensitive
+  description = "username for container registry"
+}
+
+variable "registry_password" {
+  default = dynamic("vault", {
+    path = "secret/data/registry"
+    key  = "/data/registry_password"
+  })
+  type        = string
+  sensitive   = true # Notice this var is marked as sensitive
+  description = "password for registry"
+}
+```
+
+This means at runtime, when Waypoint goes to push the built application artifact,
+the registry username and password will be loaded directly from Vault and used
+to authenticate to the remote private repository.
 
 #### Out of Band Authentication
 
