@@ -1,8 +1,8 @@
-# TODO
-#
 # parameter {
 #   key         = "foobar"
-#   description = "Details about the parameter"
+#   description = <<EOT
+# EOT
 #   type        = "string"
 #   required    = false
+#   default_value = ""
 # }
