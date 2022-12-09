@@ -1388,9 +1388,9 @@ func (Hcl_Format) EnumDescriptor() ([]byte, []int) {
 	return file_pkg_server_proto_server_proto_rawDescGZIP(), []int{208, 0}
 }
 
-//*******************************************************************
+// *******************************************************************
 // UI
-//******************************************************************
+// ******************************************************************
 type UI struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -9072,9 +9072,9 @@ func (x *Artifact) GetArtifactJson() string {
 	return ""
 }
 
-//*******************************************************************
+// *******************************************************************
 // OnDemand Runners
-//******************************************************************
+// ******************************************************************
 type OnDemandRunnerConfig struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -13229,17 +13229,16 @@ func (x *LogBatch) GetLines() []*LogBatch_Entry {
 // both the project and app scope), the following rules are applied to determine
 // which variable value is used:
 //
-//   1. If a workspace is set one one but not the other, the variable
-//      with the workspace sorts higher than no workspace.
+//  1. If a workspace is set one one but not the other, the variable
+//     with the workspace sorts higher than no workspace.
 //
-//   2. The most specific "scope" is used: app over project over global.
+//  2. The most specific "scope" is used: app over project over global.
 //
-//   3. If scopes match, the variable with a label selector set is used.
+//  3. If scopes match, the variable with a label selector set is used.
 //
-//   4. If both have label selectors, the config variable with the longer
-//      label selector by string length is used. This is arbitrary but makes
-//      the process deterministic.
-//
+//  4. If both have label selectors, the config variable with the longer
+//     label selector by string length is used. This is arbitrary but makes
+//     the process deterministic.
 type ConfigVar struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache

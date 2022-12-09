@@ -5,15 +5,15 @@ import (
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 )
 
-//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 //
-// Protocol Versions
+// # Protocol Versions
 //
 // These define the protocol versions supported by the server. You must be
 // VERY THOUGHTFUL when modifying these values. Please read and re-read our
 // upgrade policy to understand how these values work.
 //
-//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 const (
 	protocolVersionApiCurrent        uint32 = 1
 	protocolVersionApiMin                   = 1

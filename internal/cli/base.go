@@ -196,14 +196,14 @@ func (c *baseCommand) showValidations(validationResults config.ValidationResults
 // options will affect behavior of other functions that can be called later.
 //
 // In broad strokes, Init populates fields on the baseCommand by doing the following:
-// - Parse flags
-// - Parse input variables
-// - Creates a project client
-// - Triggers creation of the in-memory server (if necessary)
-// - Starts a local runner (if necessary)
-// - Attempts to find a waypoint.hcl config file, and parse it
-// - Determines which project/apps are being targeted, by looking at
-//   the -project and -app flags, the local config, the waypoint server.
+//   - Parse flags
+//   - Parse input variables
+//   - Creates a project client
+//   - Triggers creation of the in-memory server (if necessary)
+//   - Starts a local runner (if necessary)
+//   - Attempts to find a waypoint.hcl config file, and parse it
+//   - Determines which project/apps are being targeted, by looking at
+//     the -project and -app flags, the local config, the waypoint server.
 func (c *baseCommand) Init(opts ...Option) error {
 	baseCfg := baseConfig{}
 
