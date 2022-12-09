@@ -35,7 +35,6 @@ type Config struct {
 //
 // This will search the paths given. You can use DefaultPaths() to get
 // the default set of paths.
-//
 func Discover(cfg *Config, paths []string) (*exec.Cmd, error) {
 	// Expected filename
 	expected := "waypoint-plugin-" + cfg.Name
@@ -79,10 +78,9 @@ func Discover(cfg *Config, paths []string) (*exec.Cmd, error) {
 
 // DefaultPaths returns the default search paths for plugins. These are:
 //
-//   * pwd given
-//   * "$pwd/.waypoint/plugins"
-//   * "$XDG_CONFIG_DIR/waypoint/plugins"
-//
+//   - pwd given
+//   - "$pwd/.waypoint/plugins"
+//   - "$XDG_CONFIG_DIR/waypoint/plugins"
 func DefaultPaths(pwd string) ([]string, error) {
 	xdgPath, err := xdg.ConfigFile("waypoint/plugins/.ignore")
 	if err != nil {
