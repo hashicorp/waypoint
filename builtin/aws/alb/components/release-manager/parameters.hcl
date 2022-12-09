@@ -21,17 +21,6 @@ EOT
 }
 
 parameter {
-  key         = "domain_name"
-  description = <<EOT
-The ARN on an existing ALB to configure.
-
-When this is set, no ALB or Listener is created. Instead the application is configured by manipulating this existing Listener. This allows users to configure their ALB outside waypoint but still have waypoint hook the application to that ALB.
-EOT
-  type        = "string"
-  required    = false
-}
-
-parameter {
   key         = "listener_arn"
   description = <<EOT
 The ARN on an existing ALB to configure.
@@ -43,24 +32,24 @@ EOT
 }
 
 parameter {
-  key         = "name"
-  description = <<EOT
+  key           = "name"
+  description   = <<EOT
 The name to assign the ALB.
 
 Names have to be unique per region.
 EOT
-  type        = "string"
-  required    = false
+  type          = "string"
+  required      = false
   default_value = "derived from application name"
 }
 
 parameter {
-  key         = "port"
-  description = <<EOT
+  key           = "port"
+  description   = <<EOT
 The TCP port to configure the ALB to listen on.
 EOT
-  type        = "int"
-  required    = false
+  type          = "int"
+  required      = false
   default_value = "80 for HTTP, 443 for HTTPS"
 }
 
@@ -76,12 +65,12 @@ EOT
 }
 
 parameter {
-  key         = "subnets"
-  description = <<EOT
+  key           = "subnets"
+  description   = <<EOT
 The subnet ids to allow the ALB to run in.
 EOT
-  type        = "list of string"
-  required    = false
+  type          = "list of string"
+  required      = false
   default_value = "public subnets in the account default VPC"
 }
 
