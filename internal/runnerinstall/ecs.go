@@ -79,6 +79,7 @@ const odrRolePolicy = `{
         "ecs:RegisterTaskDefinition",
         "ecs:DeregisterTaskDefinition",
         "ecs:RunTask",
+        "ecs:StopTask",
         "elasticloadbalancing:CreateListener",
         "elasticloadbalancing:CreateLoadBalancer",
         "elasticloadbalancing:CreateRule",
@@ -100,6 +101,7 @@ const odrRolePolicy = `{
         "logs:CreateLogGroup",
         "logs:DescribeLogGroups",
         "logs:DescribeLogStreams",
+        "logs:GetLogEvents",
         "route53:ChangeResourceRecordSets",
         "route53:ListResourceRecordSets"
       ],
