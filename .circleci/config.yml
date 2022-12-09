@@ -236,7 +236,7 @@ jobs:
           at: .
       - run:
           command: |
-            go get github.com/kevinburke/go-bindata/...
+            go install github.com/kevinburke/go-bindata/...
             PATH=/home/circleci/go/bin:$PATH make bin
             cp waypoint /home/circleci/go/bin
       # save dev build to pass to downstream jobs
@@ -259,7 +259,7 @@ jobs:
           at: .
       - run:
           command: |
-            go get github.com/kevinburke/go-bindata/...
+            go install github.com/kevinburke/go-bindata/...
             PATH=/home/circleci/go/bin:$PATH make bin/windows
       - notify_main_failure
 
@@ -434,7 +434,7 @@ jobs:
       - checkout
       - attach_workspace:
           at: .
-      - run: go get github.com/kevinburke/go-bindata/...
+      - run: go install github.com/kevinburke/go-bindata/...
       - run: make static-assets
       - persist_to_workspace:
           root: .
