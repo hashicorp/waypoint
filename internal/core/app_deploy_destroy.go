@@ -124,6 +124,10 @@ func (a *App) destroyDeploy(
 		Deployment: d,
 	})
 
+	if err != nil {
+		return err
+	}
+
 	destroyProto, ok := destroyment.(*pb.Deployment)
 	if !ok {
 		return errors.New("error converting operation message into a Deployment proto message")
