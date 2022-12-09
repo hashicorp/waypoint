@@ -1,5 +1,5 @@
 output {
   key         = "image"
-  description = null
+  description = ""
   type        = "string"
 }
