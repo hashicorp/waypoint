@@ -2,14 +2,14 @@
 layout: docs
 page_title: 'Configurable'
 description: |-
-  How Waypoint plugins work
+  How to implement the Configurable component for a Waypoint plugin
 ---
 
 # Configurable
 
 https://pkg.go.dev/github.com/hashicorp/waypoint-plugin-sdk/component#Configurable
 
-All plugins can receive the configuration from the Waypoint file by implementing the Configurable interface.
+All plugins can receive the configuration from the `waypoint.hcl` file by implementing the Configurable interface.
 Configurable is always called before the main component methods and is available for any component which has a
 definable config block, build, registry, deploy, and release.
 

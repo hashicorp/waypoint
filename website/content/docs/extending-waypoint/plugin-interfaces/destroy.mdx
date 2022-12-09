@@ -2,7 +2,7 @@
 layout: docs
 page_title: 'Destroy'
 description: |-
-  How Waypoint plugins work
+  How to implement the Destroy component for a Waypoint plugin
 ---
 
 # Destroy
@@ -29,11 +29,15 @@ the details of which you can use to clean up any deployments. As shown in the ex
 a `DestroyFunc` function only has a single output parameter which is an error used to signal if the destroy operation succeeded.
 
 ```go
-func (d *Deploy) DestroyFunc() interface{} {
-  return d.destroy
+type Deploy struct {
+  // Other component fields
 }
 
-func (d *Deploy) destroy(
+func (d *Deploy) DestroyFunc() interface{} {
+  return d.Destroy
+}
+
+func (d *Deploy) Destroy(
   ctx context.Context,
   ui terminal.UI,
   deployment *Deployment,
