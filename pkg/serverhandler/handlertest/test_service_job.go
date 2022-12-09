@@ -486,10 +486,11 @@ func TestServiceGetJobStream_complete(t *testing.T, factory Factory) {
 		require.NotNil(state.State.Job)
 	}
 
-	// We need to give the stream time to initialize the output readers
-	// so our output below doesn't become buffered. This isn't really that
-	// brittle and 100ms should be more than enough.
-	time.Sleep(100 * time.Millisecond)
+	// This sleep must be > than the time it takes to start a reader in
+	// getJobStreamOutputInit, from pkg/server/singleprocess; otherwise, the
+	// output will be buffered. If this test becomes flakey, this time should
+	// be increased.
+	time.Sleep(200 * time.Millisecond)
 
 	// Send some output
 	require.NoError(runnerStream.Send(&pb.RunnerJobStreamRequest{
