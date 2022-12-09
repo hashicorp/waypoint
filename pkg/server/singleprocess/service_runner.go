@@ -564,7 +564,8 @@ func (s *Service) RunnerJobStream(
 	// the preexisting job. Otherwise, we assign a new job.
 	var job *serverstate.Job
 	reattach := false
-	if jobId := reqEvent.Request.ReattachJobId; jobId != "" {
+	var jobId string
+	if jobId = reqEvent.Request.ReattachJobId; jobId != "" {
 		reattach = true
 
 		log.Info("runner reattaching to an existing job", "job_id", jobId)
@@ -743,7 +744,7 @@ func (s *Service) RunnerJobStream(
 			ws := memdb.NewWatchSet()
 			job, err = s.state(ctx).JobById(ctx, job.Id, ws)
 			if err != nil {
-				errCh <- errors.Wrapf(err, "failed getting job by id from state %q", job.Id)
+				errCh <- errors.Wrapf(err, "failed getting job by id from state %q", jobId)
 				return
 			}
 			if job == nil {
@@ -761,7 +762,7 @@ func (s *Service) RunnerJobStream(
 			// Wait for the job to update
 			if err := ws.WatchCtx(ctx); err != nil {
 				if ctx.Err() == nil {
-					errCh <- errors.Wrapf(err, "error on context while waiting for job %q", job.Id)
+					errCh <- errors.Wrapf(err, "error on context while waiting for job %q", jobId)
 				}
 
 				return
@@ -788,7 +789,7 @@ func (s *Service) RunnerJobStream(
 				// For any other error, we send the error along and exit the
 				// read loop. The sent error will be picked up and sent back
 				// as a result to the client.
-				errCh <- errors.Wrapf(err, "failed receiving from runner for job %q", job.Id)
+				errCh <- errors.Wrapf(err, "failed receiving from runner for job %q", jobId)
 				return
 			}
 			log.Trace("event received", "event", req.Event)
