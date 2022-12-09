@@ -743,7 +743,7 @@ func (s *Service) RunnerJobStream(
 			ws := memdb.NewWatchSet()
 			job, err = s.state(ctx).JobById(ctx, job.Id, ws)
 			if err != nil {
-				errCh <- err
+				errCh <- errors.Wrapf(err, "failed getting job by id from state %q", job.Id)
 				return
 			}
 			if job == nil {
@@ -761,7 +761,7 @@ func (s *Service) RunnerJobStream(
 			// Wait for the job to update
 			if err := ws.WatchCtx(ctx); err != nil {
 				if ctx.Err() == nil {
-					errCh <- err
+					errCh <- errors.Wrapf(err, "error on context while waiting for job %q", job.Id)
 				}
 
 				return
@@ -788,7 +788,7 @@ func (s *Service) RunnerJobStream(
 				// For any other error, we send the error along and exit the
 				// read loop. The sent error will be picked up and sent back
 				// as a result to the client.
-				errCh <- err
+				errCh <- errors.Wrapf(err, "failed receiving from runner for job %q", job.Id)
 				return
 			}
 			log.Trace("event received", "event", req.Event)
