@@ -1,0 +1,102 @@
+## exec (platform)
+
+Execute any command to perform a deploy.
+
+This plugin lets you use almost any pre-existing deployment tool for the
+deploy step of Waypoint. This is a great way to take a pre-existing application
+and begin using Waypoint. For example, you can wrap "kubectl" calls if you
+already have Kubernetes configurations, or "helm" if you use Helm, and so on.
+
+The "exec" plugin is meant to be an escape hatch from Waypoint. In working
+this way, you will lose many Waypoint benefits. For example, "waypoint destroy"
+functionality will not work with deploys created with the exec plugin.
+
+### Templates
+
+The exec plugin supports templating to access input information about the
+artifact. There are two mechanisms for templates:
+
+1. Any argument in "command" is processed as a template.
+
+2. You may specify a file or directory to be processed for templating
+   using the "template" stanza. Any argument with the value `<TPL>` in it
+   will be replaced with the path to the template.
+
+Templating follows the format of a Go [text/template](https://golang.org/pkg/text/template/)
+template. The top of the documentation there has details on the format.
+
+#### Common Values
+
+The following template values are always available:
+
+- ".Env" (map<string\>string) - These are environment variables that should
+  be set on the deployed workload. These enable the entrypoint to work so
+  you should set these if able.
+
+- ".Workspace" (string) - The workspace name that the Waypoint deploy is
+  running in. This lets you potentially deploy to different clusters based
+  on this value.
+
+#### Docker Image Input
+
+If the build step creates a Docker image, the following template variables
+are available:
+
+- ".Input.DockerImageFull" (string) - The full Docker image name and tag.
+
+- ".Input.DockerImageName" (string) - The Docker image name, without the tag.
+
+- ".Input.DockerImageTag" (string) - The Docker image tag, such as "latest".
+
+### Interface
+
+- Input: **exec.Input**
+- Output: **exec.Deployment**
+
+### Examples
+
+```hcl
+deploy {
+  use "exec" {
+    command = ["docker", "run", "{{.Input.DockerImageFull}}"]
+  }
+}
+```
+
+### Required Parameters
+
+These parameters are used in the [`use` stanza](/docs/waypoint-hcl/use) for this plugin.
+
+#### template (category)
+
+A stanza that declares that a file or directory should be template-rendered.
+
+##### template.path
+
+The path to the file or directory to render as a template.
+
+Templating uses the following format: https://golang.org/pkg/text/template/ Available template variables depends on the input artifact.
+
+- Type: **string**
+
+### Optional Parameters
+
+These parameters are used in the [`use` stanza](/docs/waypoint-hcl/use) for this plugin.
+
+#### command
+
+The command to execute for the deploy as a list of strings.
+
+Each value in the list will be rendered as a template, so it may contain template directives. Additionally, the special string `<TPL>` will be replaced with the path to the rendered file-based templates. If your template path was to a file, this will be a path a file. Otherwise, it will be a path to a directory.
+
+- Type: **list of string**
+- **Optional**
+
+#### dir
+
+The working directory to use while executing the command.
+
+This will default to the same working directory as the Waypoint execution.
+
+- Type: **string**
+- **Optional**

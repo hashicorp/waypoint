@@ -1,0 +1,75 @@
+## aws-ecr (registry)
+
+Store a docker image within an Elastic Container Registry on AWS.
+
+### Interface
+
+- Input: **docker.Image**
+- Output: **ecr.Image**
+
+### Examples
+
+```hcl
+registry {
+    use "aws-ecr" {
+      region = "us-east-1"
+      tag = "latest"
+    }
+}
+```
+
+### Mappers
+
+#### Allow an ECR Image to be used as a standard docker.Image
+
+- Input: **ecr.Image**
+- Output: **docker.Image**
+
+### Required Parameters
+
+These parameters are used in the [`use` stanza](/docs/waypoint-hcl/use) for this plugin.
+
+#### tag
+
+The docker tag to assign to the new image.
+
+- Type: **string**
+
+### Optional Parameters
+
+These parameters are used in the [`use` stanza](/docs/waypoint-hcl/use) for this plugin.
+
+#### region
+
+The AWS region the ECR repository is in.
+
+If not set uses the environment variable AWS_REGION or AWS_REGION_DEFAULT.
+
+- Type: **string**
+- **Optional**
+- Environment Variable: **AWS_REGION_DEFAULT**
+
+#### repository
+
+The ECR repository to store the image into.
+
+This defaults to waypoint- then the application name. The repository will be automatically created if needed.
+
+- Type: **string**
+- **Optional**
+
+### Output Attributes
+
+Output attributes can be used in your `waypoint.hcl` as [variables](/docs/waypoint-hcl/variables) via [`artifact`](/docs/waypoint-hcl/variables/artifact) or [`deploy`](/docs/waypoint-hcl/variables/deploy).
+
+#### architecture
+
+- Type: **string**
+
+#### image
+
+- Type: **string**
+
+#### tag
+
+- Type: **string**

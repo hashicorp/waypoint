@@ -1,0 +1,150 @@
+## docker-pull (builder)
+
+Use an existing, pre-built Docker image.
+
+This builder will automatically inject the Waypoint entrypoint. You
+can disable this with the "disable_entrypoint" configuration.
+
+If you wish to rename or retag an image, use this along with the
+"docker" registry option which will rename/retag the image and then
+push it to the specified registry.
+
+If Docker isn't available (the Docker daemon isn't running or a DOCKER_HOST
+isn't set), a daemonless solution will be used instead.
+
+If "disable_entrypoint" is set to true and the Waypoint configuration
+has no registry, this builder will not physically pull the image. This enables
+Waypoint to work in environments where the image is built outside of Waypoint
+(such as in a CI pipeline).
+
+### Interface
+
+- Input: **component.Source**
+- Output: **docker.Image**
+
+### Examples
+
+```hcl
+build {
+  use "docker-pull" {
+    image = "gcr.io/my-project/my-image"
+    tag   = "abcd1234"
+  }
+}
+```
+
+### Required Parameters
+
+These parameters are used in the [`use` stanza](/docs/waypoint-hcl/use) for this plugin.
+
+#### image
+
+The image to pull.
+
+This should NOT include the tag (the value following the ':' in a Docker image). Use `tag` to define the image tag.
+
+- Type: **string**
+
+#### tag
+
+The tag of the image to pull.
+
+- Type: **string**
+
+### Optional Parameters
+
+These parameters are used in the [`use` stanza](/docs/waypoint-hcl/use) for this plugin.
+
+#### auth (category)
+
+The authentication information to log into the docker repository.
+
+##### auth.auth
+
+- Type: **string**
+- **Optional**
+
+##### auth.email
+
+- Type: **string**
+- **Optional**
+
+##### auth.hostname
+
+Hostname of Docker registry.
+
+- Type: **string**
+- **Optional**
+
+##### auth.identityToken
+
+Token used to authenticate user.
+
+- Type: **string**
+- **Optional**
+
+##### auth.password
+
+Password of Docker registry account.
+
+- Type: **string**
+- **Optional**
+
+##### auth.registryToken
+
+Bearer tokens to be sent to Docker registry.
+
+- Type: **string**
+- **Optional**
+
+##### auth.serverAddress
+
+Address of Docker registry.
+
+- Type: **string**
+- **Optional**
+
+##### auth.username
+
+Username of Docker registry account.
+
+- Type: **string**
+- **Optional**
+
+#### disable_entrypoint
+
+If set, the entrypoint binary won't be injected into the image.
+
+The entrypoint binary is what provides extended functionality such as logs and exec. If it is not injected at build time the expectation is that the image already contains it.
+
+- Type: **bool**
+- **Optional**
+
+#### encoded_auth
+
+The authentication information to log into the docker repository.
+
+WARNING: be very careful to not leak the authentication information by hardcoding it here. Use a helper function like `file()` to read the information from a file not stored in VCS.
+
+- Type: **string**
+- **Optional**
+
+### Output Attributes
+
+Output attributes can be used in your `waypoint.hcl` as [variables](/docs/waypoint-hcl/variables) via [`artifact`](/docs/waypoint-hcl/variables/artifact) or [`deploy`](/docs/waypoint-hcl/variables/deploy).
+
+#### architecture
+
+- Type: **string**
+
+#### image
+
+- Type: **string**
+
+#### location
+
+- Type: **docker.isImage_Location**
+
+#### tag
+
+- Type: **string**

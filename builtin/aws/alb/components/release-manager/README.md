@@ -1,0 +1,99 @@
+## aws-alb (releasemanager)
+
+Release target groups by attaching them to an ALB.
+
+### Interface
+
+- Input: **alb.TargetGroup**
+- Output: **alb.Release**
+
+### Mappers
+
+#### Allow EC2 Deployments to be hooked up to an ALB
+
+- Input: **ec2.Deployment**
+- Output: **alb.TargetGroup**
+
+#### Allow Lambda Deployments to be hooked up to an ALB
+
+- Input: **lambda.Deployment**
+- Output: **alb.TargetGroup**
+
+### Required Parameters
+
+This plugin has no required parameters.
+
+### Optional Parameters
+
+These parameters are used in the [`use` stanza](/docs/waypoint-hcl/use) for this plugin.
+
+#### certificate
+
+ARN for the certificate to install on the ALB listener.
+
+When this is set, the port automatically changes to 443 unless overriden in this configuration.
+
+- Type: **string**
+- **Optional**
+
+#### domain_name
+
+Fully qualified domain name to set for the ALB.
+
+Set along with zone_id to have DNS automatically setup for the ALB. this value should include the full hostname and domain name, for instance app.example.com.
+
+- Type: **string**
+- **Optional**
+
+#### listener_arn
+
+The ARN on an existing ALB to configure.
+
+When this is set, no ALB or Listener is created. Instead the application is configured by manipulating this existing Listener. This allows users to configure their ALB outside waypoint but still have waypoint hook the application to that ALB.
+
+- Type: **string**
+- **Optional**
+
+#### name
+
+The name to assign the ALB.
+
+Names have to be unique per region.
+
+- Type: **string**
+- **Optional**
+- Default: derived from application name
+
+#### port
+
+The TCP port to configure the ALB to listen on.
+
+- Type: **int**
+- **Optional**
+- Default: 80 for HTTP, 443 for HTTPS
+
+#### security_group_ids
+
+The existing security groups to add to the ALB.
+
+A set of existing security groups to add to the ALB.
+
+- Type: **list of string**
+- **Optional**
+
+#### subnets
+
+The subnet ids to allow the ALB to run in.
+
+- Type: **list of string**
+- **Optional**
+- Default: public subnets in the account default VPC
+
+#### zone_id
+
+Route53 ZoneID to create a DNS record into.
+
+Set along with domain_name to have DNS automatically setup for the ALB.
+
+- Type: **string**
+- **Optional**
