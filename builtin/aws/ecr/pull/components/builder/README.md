@@ -1,0 +1,82 @@
+## aws-ecr-pull (builder)
+
+Use an existing, pre-built AWS ECR image.
+
+This builder attempts to find an image by repository and tag in the
+specified region. If found, it will pass along the image information
+to the next step.
+
+This builder will not modify the image.
+
+If you wish to rename or retag an image, please use the "docker-pull" component
+in conjunction with the "aws-ecr" registry option.
+
+### Interface
+
+- Input: **component.Source**
+- Output: **ecr.Image**
+
+### Examples
+
+```hcl
+build {
+  use "aws-ecr-pull" {
+    region     = "us-east-1"
+    repository = "deno-http"
+    tag        = "latest"
+  }
+}
+```
+
+### Required Parameters
+
+These parameters are used in the [`use` stanza](/docs/waypoint-hcl/use) for this plugin.
+
+#### repository
+
+The AWS ECR repository name.
+
+- Type: **string**
+
+#### tag
+
+The tag of the image to pull.
+
+- Type: **string**
+
+### Optional Parameters
+
+These parameters are used in the [`use` stanza](/docs/waypoint-hcl/use) for this plugin.
+
+#### force_architecture
+
+**Note**: This is a temporary field that enables overriding the `architecture` output attribute. Valid values are: `"x86_64"`, `"arm64"`.
+
+- Type: **string**
+- **Optional**
+- Default: `""`
+
+#### region
+
+The AWS region the ECR repository is in.
+
+If not set uses the environment variable AWS_REGION or AWS_REGION_DEFAULT.
+
+- Type: **string**
+- **Optional**
+
+### Output Attributes
+
+Output attributes can be used in your `waypoint.hcl` as [variables](/docs/waypoint-hcl/variables) via [`artifact`](/docs/waypoint-hcl/variables/artifact) or [`deploy`](/docs/waypoint-hcl/variables/deploy).
+
+#### architecture
+
+- Type: **string**
+
+#### image
+
+- Type: **string**
+
+#### tag
+
+- Type: **string**

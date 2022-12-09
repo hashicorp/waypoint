@@ -1,0 +1,107 @@
+## terraform-cloud (configsourcer)
+
+Read Terraform state outputs from Terraform Cloud.
+
+### Examples
+
+```hcl
+config {
+  env = {
+    "DATABASE_USERNAME" = dynamic("terraform-cloud", {
+			organization = "foocorp"
+			workspace = "databases"
+			output = "db_username"
+    })
+
+    "DATABASE_PASSWORD" = dynamic("vault", {
+			organization = "foocorp"
+			workspace = "databases"
+			output = "db_password"
+    })
+
+    "DATABASE_HOST" = dynamic("vault", {
+			organization = "foocorp"
+			workspace = "databases"
+			output = "db_hostname"
+    })
+  }
+}
+```
+
+### Required Parameters
+
+These parameters are used in `dynamic` for sourcing [configuration values](/docs/app-config/dynamic) or [input variable values](/docs/waypoint-hcl/variables/dynamic).
+
+#### organization
+
+The Terraform Cloud organization to query.
+
+Within a single workspace, multiple dynamic values that use the same organization and workspace will only read the value once. This allows outputs to be extracted into multiple values. The example above shows this functionality by reading the username and password into separate values.
+
+- Type: **string**
+
+#### output
+
+The name of the output to read the value of.
+
+- Type: **string**
+
+#### workspace
+
+The Terraform Cloud workspace associated with the given organization to read the outputs of.
+
+The outputs associtaed with the most recent state version for the given workspace are the ones that are used. These values are refreshed according to refreshInternal, a source field.
+
+- Type: **string**
+
+### Optional Parameters
+
+This plugin has no optional parameters.
+
+### Source Parameters
+
+The parameters below are used with `waypoint config source-set` to configure
+the behavior this plugin. These are _not_ used in `dynamic` calls. The
+parameters used for `dynamic` are in the previous section.
+
+#### Required Source Parameters
+
+##### token
+
+The Terraform Cloud API token.
+
+The token is used to authenticate access to the specific organization and workspace. Tokens are managed at https://app.terraform.io/app/settings/tokens.
+
+- Type: **string**
+
+#### Optional Source Parameters
+
+##### base_url
+
+The scheme, host, and port to calculate the URL to fetch using.
+
+This is provided to allow users to query values from Terraform Enterprise installations.
+
+- Type: **string**
+- **Optional**
+- Default: https://api.terraform.io
+
+##### refresh_interval
+
+How often the outputs should be fetch.
+
+The format of this value is the Go time duration format. Specifically a whole number followed by: s for seconds, m for minutes, h for hours. The minimum value for this setting is 60 seconds, with no specified maximum.
+
+- Type: **string**
+- **Optional**
+- Default: 10m0s
+
+##### skip_verify
+
+Do not validate the TLS cert presented by Terraform Cloud.
+
+This is not recommended unless absolutely necessary.
+
+- Type: **bool**
+- **Optional**
+- Environment Variable: **TFC_SKIP_VERIFY**

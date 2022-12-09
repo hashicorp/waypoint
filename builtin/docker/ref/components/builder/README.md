@@ -1,0 +1,61 @@
+## docker-ref (builder)
+
+Use an existing, pre-built Docker image without modifying it.
+
+### Interface
+
+- Input: **component.Source**
+- Output: **docker.Image**
+
+### Examples
+
+```hcl
+build {
+  use "docker-ref" {
+    image = "gcr.io/my-project/my-image"
+    tag   = "abcd1234"
+  }
+}
+```
+
+### Required Parameters
+
+These parameters are used in the [`use` stanza](/docs/waypoint-hcl/use) for this plugin.
+
+#### image
+
+The image to pull.
+
+This should NOT include the tag (the value following the ':' in a Docker image). Use `tag` to define the image tag.
+
+- Type: **string**
+
+#### tag
+
+The tag of the image to pull.
+
+- Type: **string**
+
+### Optional Parameters
+
+This plugin has no optional parameters.
+
+### Output Attributes
+
+Output attributes can be used in your `waypoint.hcl` as [variables](/docs/waypoint-hcl/variables) via [`artifact`](/docs/waypoint-hcl/variables/artifact) or [`deploy`](/docs/waypoint-hcl/variables/deploy).
+
+#### architecture
+
+- Type: **string**
+
+#### image
+
+- Type: **string**
+
+#### location
+
+- Type: **docker.isImage_Location**
+
+#### tag
+
+- Type: **string**

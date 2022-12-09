@@ -1,0 +1,163 @@
+## pack (builder)
+
+Create a Docker image using CloudNative Buildpacks.
+
+**This plugin must either be run via Docker or inside an ondemand runner**.
+
+### Interface
+
+- Input: **component.Source**
+- Output: **pack.Image**
+
+### Examples
+
+```hcl
+build {
+  use "pack" {
+	builder     = "heroku/buildpacks:20"
+	disable_entrypoint = false
+  }
+}
+```
+
+### Mappers
+
+#### Allow pack images to be used as normal docker images
+
+- Input: **pack.Image**
+- Output: **docker.Image**
+
+### Required Parameters
+
+This plugin has no required parameters.
+
+### Optional Parameters
+
+These parameters are used in the [`use` stanza](/docs/waypoint-hcl/use) for this plugin.
+
+#### builder
+
+The buildpack builder image to use.
+
+- Type: **string**
+- **Optional**
+- Default: heroku/buildpacks:20
+
+#### buildpacks
+
+The exact buildpacks to use.
+
+If set, the builder will run these buildpacks in the specified order. They can be listed using several [URI formats](https://buildpacks.io/docs/app-developer-guide/specific-buildpacks).
+
+- Type: **list of string**
+- **Optional**
+
+#### disable_entrypoint
+
+If set, the entrypoint binary won't be injected into the image.
+
+The entrypoint binary is what provides extended functionality such as logs and exec. If it is not injected at build time the expectation is that the image already contains it.
+
+- Type: **bool**
+- **Optional**
+
+#### ignore
+
+File patterns to match files which will not be included in the build.
+
+Each pattern follows the semantics of .gitignore. This is a summarized version:
+
+1.  A blank line matches no files, so it can serve as a separator
+    for readability.
+
+2.  A line starting with # serves as a comment. Put a backslash ("\")
+    in front of the first hash for patterns that begin with a hash.
+
+3.  Trailing spaces are ignored unless they are quoted with backslash ("\").
+
+4.  An optional prefix "!" which negates the pattern; any matching file
+    excluded by a previous pattern will become included again. It is not
+    possible to re-include a file if a parent directory of that file is
+    excluded. Git doesn’t list excluded directories for performance reasons,
+    so any patterns on contained files have no effect, no matter where they
+    are defined. Put a backslash ("\") in front of the first "!" for
+    patterns that begin with a literal "!", for example, "\!important!.txt".
+
+5.  If the pattern ends with a slash, it is removed for the purpose of the
+    following description, but it would only find a match with a directory.
+    In other words, foo/ will match a directory foo and paths underneath it,
+    but will not match a regular file or a symbolic link foo (this is
+    consistent with the way how pathspec works in general in Git).
+
+6.  If the pattern does not contain a slash /, Git treats it as a shell glob
+    pattern and checks for a match against the pathname relative to the
+    location of the .gitignore file (relative to the top level of the work
+    tree if not from a .gitignore file).
+
+7.  Otherwise, Git treats the pattern as a shell glob suitable for
+    consumption by fnmatch(3) with the FNM_PATHNAME flag: wildcards in the
+    pattern will not match a / in the pathname. For example,
+    "Documentation/\*.html" matches "Documentation/git.html" but not
+    "Documentation/ppc/ppc.html" or "tools/perf/Documentation/perf.html".
+
+8.  A leading slash matches the beginning of the pathname. For example,
+    "/\*.c" matches "cat-file.c" but not "mozilla-sha1/sha1.c".
+
+9.  Two consecutive asterisks ("\*\*") in patterns matched against full
+    pathname may have special meaning:
+
+        i.   A leading "**" followed by a slash means match in all directories.
+        		 For example, "** /foo" matches file or directory "foo" anywhere,
+        		 the same as pattern "foo". "** /foo/bar" matches file or directory
+        		 "bar" anywhere that is directly under directory "foo".
+
+        ii.  A trailing "/**" matches everything inside. For example, "abc/**"
+        		 matches all files inside directory "abc", relative to the location
+        		 of the .gitignore file, with infinite depth.
+
+        iii. A slash followed by two consecutive asterisks then a slash matches
+        		 zero or more directories. For example, "a/** /b" matches "a/b",
+        		 "a/x/b", "a/x/y/b" and so on.
+
+        iv.  Other consecutive asterisks are considered invalid.
+
+- Type: **list of string**
+- **Optional**
+
+#### process_type
+
+The process type to use from your Procfile. if not set, defaults to `web`.
+
+The process type is used to control over all container modes, such as configuring it to start a web app vs a background worker.
+
+- Type: **string**
+- **Optional**
+
+#### static_environment
+
+Environment variables to expose to the buildpack.
+
+These environment variables should not be run of the mill configuration variables, use waypoint config for that. These variables are used to control over all container modes, such as configuring it to start a web app vs a background worker.
+
+- Type: **map of string to string**
+- **Optional**
+
+### Output Attributes
+
+Output attributes can be used in your `waypoint.hcl` as [variables](/docs/waypoint-hcl/variables) via [`artifact`](/docs/waypoint-hcl/variables/artifact) or [`deploy`](/docs/waypoint-hcl/variables/deploy).
+
+#### build_labels
+
+- Type: **map of string to string**
+
+#### image
+
+- Type: **string**
+
+#### remote
+
+- Type: **bool**
+
+#### tag
+
+- Type: **string**
