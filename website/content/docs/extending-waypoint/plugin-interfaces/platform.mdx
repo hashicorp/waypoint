@@ -2,7 +2,7 @@
 layout: docs
 page_title: 'Platform'
 description: |-
-  How Waypoint plugins work
+  How to implement the Platform component for a Waypoint plugin
 ---
 
 # Platform
@@ -32,11 +32,15 @@ from DeployFunc can be defined to accept the Default Mappers, in addition it can
 from the `Registry` component.
 
 ```go
-func (d *Deploy) DeployFunc() interface{} {
-  return d.deploy
+type Platform struct {
+  // Other component fields
 }
 
-func (d *Deploy) deploy(
+func (p *Platform) DeployFunc() interface{} {
+  return d.Deploy
+}
+
+func (p *Platform) Deploy(
   ctx context.Context,
   ji *component.JobInfo,
   artifact *registry.Artifact,
