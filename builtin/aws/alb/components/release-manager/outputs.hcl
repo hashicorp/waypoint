@@ -18,8 +18,3 @@ output {
   description = ""
   type        = "string"
 }
-output {
-  key         = "resource_state"
-  description = ""
-  type        = "any"
-}
