@@ -1,8 +1,9 @@
-# parameter {
-#   key         = "foobar"
-#   description = <<EOT
-# EOT
-#   type        = "string"
-#   required    = false
-#   default_value = ""
-# }
+parameter {
+  key         = "path"
+  description = <<EOT
+The filesystem path to store the files into.
+EOT
+  type        = "string"
+  required    = true
+}
+

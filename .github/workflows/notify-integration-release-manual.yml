@@ -31,7 +31,7 @@ jobs:
           - "waypoint/docker-ref"
           - "waypoint/docker"
           - "waypoint/exec"
-          # - "waypoint/files"
+          - "waypoint/files"
           # - "waypoint/google-cloud-run"
           # - "waypoint/helm"
           # - "waypoint/kubernetes-apply"
