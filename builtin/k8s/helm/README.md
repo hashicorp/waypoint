@@ -1,3 +1,183 @@
-## Getting Started
+## helm (platform)
 
-TODO, Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+Deploy to Kubernetes from a Helm chart. The Helm chart can be a local path
+or a chart in a repository.
+
+### Entrypoint Functionality
+
+Waypoint [entrypoint functionality](/docs/entrypoint#functionality) such
+as logs, exec, app configuration, and more require two properties to be true:
+
+1. The running image must already have the Waypoint entrypoint installed
+   and configured as the entrypoint. This should happen in the build stage.
+
+2. Proper environment variables must be set so the entrypoint knows how
+   to communicate to the Waypoint server. **This step happens in this
+   deployment stage.**
+
+**Step 2 does not happen automatically.** You must manually set the entrypoint
+environment variables using the [templating feature](/docs/waypoint-hcl/functions/template).
+These must be passed in using Helm values (i.e. the chart must make
+environment variables configurable).
+
+This is documented in more detail with a full example in the
+[Kubernetes Helm Deployment documentation](/docs/platforms/kubernetes/helm-deploy).
+
+#### URL Service
+
+If you want your workload to be accessible by the
+[Waypoint URL service](/docs/url), you must set the PORT environment variable
+within the pod with your web service and also be using the Waypoint
+entrypoint (documented in the previous section).
+
+The PORT environment variable should be the port that your web service
+is listening on that the URL service will connect to. See one of the examples
+below for more details.
+
+### Interface
+
+### Examples
+
+```hcl
+// Configuring an image to match the build. This assumes the chart
+// has a value named "deployment.image".
+deploy {
+  use "helm" {
+    chart = "${path.app}/chart"
+
+    set {
+      name  = "deployment.image"
+      value = artifact.name
+    }
+  }
+}
+```
+
+### Required Parameters
+
+These parameters are used in the [`use` stanza](/docs/waypoint-hcl/use) for this plugin.
+
+#### chart
+
+The name or path of the chart to install.
+
+If you're installing a local chart, this is the path to the chart. If you're installing a chart from a repository (have the `repository` configuration set), then this is the name of the chart in the repository.
+
+- Type: **string**
+
+#### name
+
+Name of the Helm release.
+
+This must be globally unique within the context of your Helm installation.
+
+- Type: **string**
+
+#### set
+
+A single value to set. This can be repeated multiple times.
+
+This sets a single value. Separate nested values with a `.`. This is the same as the `--set` flag on `helm install`.
+
+- Type: **list of struct { Name string "hcl:\"name,attr\""; Value string "hcl:\"value,attr\""; Type string "hcl:\"type,optional\"" }**
+
+### Optional Parameters
+
+These parameters are used in the [`use` stanza](/docs/waypoint-hcl/use) for this plugin.
+
+#### context
+
+The kubectl context to use, as defined in the kubeconfig file.
+
+- Type: **string**
+- **Optional**
+
+#### create_namespace
+
+Create Namespace if it doesn't exist.
+
+This option will instruct Helm to create a namespace if it doesn't exist.
+
+- Type: **bool**
+- **Optional**
+
+#### devel
+
+True to considered non-released chart versions for installation.
+
+This is equivalent to the `--devel` flag to `helm install`.
+
+- Type: **bool**
+- **Optional**
+- Default: false
+
+#### driver
+
+The Helm storage driver to use.
+
+This can be one of `configmap`, `secret`, `memory`, or `sql`. The SQL connection string can not be set currently so this must be set on the runners.
+
+- Type: **string**
+- **Optional**
+- Default: secret
+
+#### kubeconfig
+
+Path to the kubeconfig file to use.
+
+If this isn't set, the default lookup used by `kubectl` will be used.
+
+- Type: **string**
+- **Optional**
+- Environment Variable: **KUBECONFIG**
+
+#### namespace
+
+Namespace to deploy the Helm chart.
+
+This will be created if it does not exist (see create_namespace). This defaults to the current namespace of the auth settings.
+
+- Type: **string**
+- **Optional**
+
+#### repository
+
+URL of the Helm repository that contains the chart.
+
+This only needs to be set if you're NOT using a local chart.
+
+- Type: **string**
+- **Optional**
+
+#### skip_crds
+
+Do not create CRDs.
+
+This option will tell Helm to skip the creation of CRDs.
+
+- Type: **bool**
+- **Optional**
+
+#### values
+
+Values in raw YAML to configure the Helm chart.
+
+These values are usually loaded from files using HCL functions such as `file` or templating with `templatefile`. Multiple values will be merged using the same logic as the `-f` flag with Helm.
+
+- Type: **list of string**
+- **Optional**
+
+#### version
+
+The version of the chart to install.
+
+- Type: **string**
+- **Optional**
+
+### Output Attributes
+
+Output attributes can be used in your `waypoint.hcl` as [variables](/docs/waypoint-hcl/variables) via [`artifact`](/docs/waypoint-hcl/variables/artifact) or [`deploy`](/docs/waypoint-hcl/variables/deploy).
+
+#### release
+
+- Type: **string**

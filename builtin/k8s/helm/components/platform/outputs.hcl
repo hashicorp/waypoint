@@ -1,7 +1,5 @@
-# TODO
-#
-# output {
-#   key  = "foobar"
-#   description = "Details about the output"
-#   type = "string"
-# }
+output {
+  key         = "release"
+  description = ""
+  type        = "string"
+}
