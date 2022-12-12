@@ -22,7 +22,7 @@ jobs:
           - "waypoint/aws-ecr-pull"
           - "waypoint/aws-ecr"
           - "waypoint/aws-ecs"
-          # - "waypoint/aws-lambda"
+          - "waypoint/aws-lambda"
           # - "waypoint/aws-ssm"
           # - "waypoint/azure-container-instance"
           # - "waypoint/consul"
