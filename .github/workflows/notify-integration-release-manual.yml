@@ -34,7 +34,7 @@ jobs:
           - "waypoint/files"
           - "waypoint/google-cloud-run"
           - "waypoint/helm"
-          # - "waypoint/kubernetes-apply"
+          - "waypoint/kubernetes-apply"
           # - "waypoint/kubernetes"
           # - "waypoint/nomad-jobspec-canary"
           # - "waypoint/nomad-jobspec"
