@@ -1,5 +1,5 @@
 parameter {
-  key         = "logging (category)"
+  key         = "logging"
   description = <<EOT
 Provides additional configuration for logging flags for ECS.
 
@@ -92,7 +92,7 @@ EOT
 
 }
 parameter {
-  key         = "sidecar (category)"
+  key         = "sidecar"
   description = <<EOT
 Additional container to run as a sidecar.
 
@@ -192,7 +192,7 @@ EOT
 
 }
 parameter {
-  key         = "alb (category)"
+  key         = "alb"
   description = <<EOT
 Provides additional configuration for using an ALB with ECS.
 EOT
