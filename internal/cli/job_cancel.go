@@ -78,11 +78,9 @@ func (c *JobCancelCommand) Run(args []string) int {
 				terminal.WithErrorStyle())
 			return 1
 		}
-		switch job.State {
-		case pb.Job_RUNNING:
-			s.Update("Job %q is still running. To remove Waypoint's knowledge of it, add the -dangerously-force flag.", jobId)
-		default:
-			s.Update("Marked job %q for cancellation", jobId)
+		s.Update("Marked job %q for cancellation", jobId)
+		if job.State == pb.Job_RUNNING {
+			c.ui.Output("Waypoint will gracefully cancel the requested job and wait for any\ndownstream listeners to close the connection. This could take a while.")
 		}
 	} else {
 		s.Update("Forcefully marked job %q for cancellation", jobId)
