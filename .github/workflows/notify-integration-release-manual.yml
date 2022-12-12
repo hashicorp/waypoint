@@ -24,7 +24,7 @@ jobs:
           - "waypoint/aws-ecs"
           - "waypoint/aws-lambda"
           - "waypoint/lambda-function-url"
-          # - "waypoint/aws-ssm"
+          - "waypoint/aws-ssm"
           # - "waypoint/azure-container-instance"
           # - "waypoint/consul"
           # - "waypoint/docker-pull"
