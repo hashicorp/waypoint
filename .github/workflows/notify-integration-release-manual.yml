@@ -30,7 +30,7 @@ jobs:
           - "waypoint/docker-pull"
           - "waypoint/docker-ref"
           - "waypoint/docker"
-          # - "waypoint/exec"
+          - "waypoint/exec"
           # - "waypoint/files"
           # - "waypoint/google-cloud-run"
           # - "waypoint/helm"
