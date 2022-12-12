@@ -32,7 +32,7 @@ jobs:
           - "waypoint/docker"
           - "waypoint/exec"
           - "waypoint/files"
-          # - "waypoint/google-cloud-run"
+          - "waypoint/google-cloud-run"
           # - "waypoint/helm"
           # - "waypoint/kubernetes-apply"
           # - "waypoint/kubernetes"
