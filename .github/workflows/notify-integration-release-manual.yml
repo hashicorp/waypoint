@@ -39,7 +39,7 @@ jobs:
           - "waypoint/nomad-jobspec-canary"
           - "waypoint/nomad-jobspec"
           - "waypoint/nomad"
-          # - "waypoint/null"
+          - "waypoint/null"
           # - "waypoint/pack"
           # - "waypoint/terraform-cloud"
           # - "waypoint/vault"
