@@ -552,11 +552,12 @@ func (s *Service) RunnerJobStream(
 		if err != nil {
 			return hcerr.Externalize(log, err, "failed to get job assignment for runner", "id", runnerId)
 		}
+		jobId = job.Id
 	}
 	if job == nil || job.Job == nil {
 		panic("job is nil, should never be nil at this point")
 	}
-	log = log.With("job_id", job.Id)
+	log = log.With("job_id", jobId)
 
 	// Load config sourcers to send along with the job assignment
 	cfgSrcs, err := s.state(ctx).ConfigSourceGetWatch(&pb.GetConfigSourceRequest{
@@ -650,14 +651,14 @@ func (s *Service) RunnerJobStream(
 		// we cancel the job.
 		if !ack {
 			log.Warn("reattach job was nacked, force cancelling")
-			err = s.state(ctx).JobCancel(job.Id, true)
+			err = s.state(ctx).JobCancel(jobId, true)
 		}
 	}
 
 	// If we have an error, return that. We also return if we didn't ack for
 	// any reason. This error can be set at any point since job assignment.
 	if err != nil {
-		return hcerr.Externalize(log, err, "failed to ack the job or the job was cancelled", "id", runnerId, "job", job.Id)
+		return hcerr.Externalize(log, err, "failed to ack the job or the job was cancelled", "id", runnerId, "job", jobId)
 	}
 	if !ack {
 		// If runners don't ack the job, this means close the stream
