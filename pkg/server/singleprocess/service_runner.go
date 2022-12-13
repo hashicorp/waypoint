@@ -685,13 +685,13 @@ func (s *Service) RunnerJobStream(
 	go func() {
 		for {
 			ws := memdb.NewWatchSet()
-			job, err = s.state(ctx).JobById(job.Id, ws)
+			job, err = s.state(ctx).JobById(jobId, ws)
 			if err != nil {
-				errCh <- err
+				errCh <- errors.Wrapf(err, "error getting job by id from state %q", jobId)
 				return
 			}
 			if job == nil {
-				errCh <- status.Errorf(codes.Internal, "job disappeared")
+				errCh <- status.Errorf(codes.Internal, "failed to find job for id %q", jobId)
 				return
 			}
 
