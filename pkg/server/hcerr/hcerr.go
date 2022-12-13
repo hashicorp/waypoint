@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/go-hclog"
-	"github.com/hashicorp/go-multierror"
 	"github.com/pkg/errors"
 	spb "google.golang.org/genproto/googleapis/rpc/status"
 	"google.golang.org/grpc/codes"
@@ -18,7 +17,7 @@ import (
 // Externalize is intended to be called by top-level grpc handler that's
 // about to return an error to the framework. Details from the err will be logged,
 // but not returned directly to the client, to prevent leaking too much
-// detail. If the err includes a grpc status, that, along with the msg and
+// detail. If the error includes a grpc status, that, along with the msg and
 // args, will be returned to the client.
 //
 // Args follow the same pattern as `hclog`. They are expected to be in order of
@@ -28,6 +27,8 @@ import (
 // struct as an arg, pull out the fields of interest and add them as multiple args.
 // These will be displayed as key/value pairs to the client. If there are an odd number of args,
 // this assumes it's a mistake and adds "EXTRA_VALUE_AT_END" as the label for the final arg.
+//
+// Any UserError errors found in the chain will have their messages added to the final error.
 func Externalize(log hclog.Logger, err error, msg string, args ...interface{}) error {
 
 	if errors.Is(err, context.Canceled) {
@@ -48,22 +49,19 @@ func Externalize(log hclog.Logger, err error, msg string, args ...interface{}) e
 		code = codes.Internal
 	}
 
-	var currentErr error
-	currentErr = err
-	var userErrs []UserError
-	for {
-		fmt.Println("starting loop")
-		if userErr, ok := currentErr.(UserError); ok {
-			userErrs = append(userErrs, userErr)
+	// Extract all user-facing messages from error chain
+	// and add them to the final error message
+	currentError := err
+	for currentError != nil {
+		var userErr UserError
+		if errors.As(currentError, &userErr) {
+			msg = fmt.Sprintf("%s\n%s", msg, userErr.UserMessage)
+			currentError = userErr.Unwrap()
+			// Maybe there are more user errors in the chain under this one
+			continue
 		}
-		nextErr := errors.Unwrap(currentErr)
-		currentErr = nextErr
-		fmt.Println("hello0")
-		if currentErr == nil {
-			fmt.Println("hello1")
-			break
-		}
-		fmt.Println("hello2")
+		// No more user errors in the chain
+		break
 	}
 
 	var details []*anypb.Any
@@ -94,18 +92,4 @@ func Externalize(log hclog.Logger, err error, msg string, args ...interface{}) e
 		Message: msg,
 		Details: details,
 	}).Err()
-}
-
-type UserError struct {
-	Message string
-}
-
-func (m UserError) Error() string {
-	return m.Message
-}
-
-// TODO: string interpolation arguments
-func UserErrorf(err error, message string) error {
-	return multierror.Append(err, UserError{Message: message})
-	//return multierror.Append(err, errors.New(message))
 }
