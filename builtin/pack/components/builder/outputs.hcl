@@ -1,7 +1,20 @@
-# TODO
-#
-# output {
-#   key  = "foobar"
-#   description = "Details about the output"
-#   type = "string"
-# }
+output {
+  key         = "build_labels"
+  description = ""
+  type        = "map of string to string"
+}
+output {
+  key         = "image"
+  description = ""
+  type        = "string"
+}
+output {
+  key         = "remote"
+  description = ""
+  type        = "bool"
+}
+output {
+  key         = "tag"
+  description = ""
+  type        = "string"
+}

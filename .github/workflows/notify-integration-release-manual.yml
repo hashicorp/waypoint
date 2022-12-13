@@ -40,7 +40,7 @@ jobs:
           - "waypoint/nomad-jobspec"
           - "waypoint/nomad"
           - "waypoint/null"
-          # - "waypoint/pack"
+          - "waypoint/pack"
           # - "waypoint/terraform-cloud"
           # - "waypoint/vault"
     steps:
