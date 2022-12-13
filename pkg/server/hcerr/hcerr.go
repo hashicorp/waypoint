@@ -48,11 +48,23 @@ func Externalize(log hclog.Logger, err error, msg string, args ...interface{}) e
 		code = codes.Internal
 	}
 
-	//var userError UserError
-	//if errors.As(err, &userError) {
-	//	// Otherwise use any code already in the error
-	//	msg = msg + " " + userError.Message
-	//}
+	var currentErr error
+	currentErr = err
+	var userErrs []UserError
+	for {
+		fmt.Println("starting loop")
+		if userErr, ok := currentErr.(UserError); ok {
+			userErrs = append(userErrs, userErr)
+		}
+		nextErr := errors.Unwrap(currentErr)
+		currentErr = nextErr
+		fmt.Println("hello0")
+		if currentErr == nil {
+			fmt.Println("hello1")
+			break
+		}
+		fmt.Println("hello2")
+	}
 
 	var details []*anypb.Any
 	if len(args) > 0 {

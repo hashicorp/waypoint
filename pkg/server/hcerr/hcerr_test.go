@@ -60,12 +60,14 @@ func TestExternalize(t *testing.T) {
 func TestUserError(t *testing.T) {
 	log := hclog.New(&hclog.LoggerOptions{Level: hclog.Debug})
 
-	baseError := errors.New("base")
+	t.Run("One level of user errors", func(t *testing.T) {
+		baseError := errors.New("base")
 
-	userError := UserErrorf(baseError, "user facing message")
+		userError := UserErrorf(baseError, "user facing message")
 
-	finalError := Externalize(log, userError, "top-level message")
-	fmt.Println(finalError)
+		finalError := Externalize(log, userError, "top-level message")
+		fmt.Println(finalError)
+	})
 
 	t.Run("Multiple levels of user error", func(t *testing.T) {
 		baseError := errors.New("base")
