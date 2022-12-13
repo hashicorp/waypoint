@@ -103,6 +103,10 @@ func (c *PipelineRunCommand) Run(args []string) int {
 			Variables:    c.variables,
 		}
 
+		if c.flagRemoteSource != nil {
+			runJobTemplate.DataSourceOverrides = c.flagRemoteSource
+		}
+
 		// build the base api request
 		runPipelineReq := &pb.RunPipelineRequest{
 			JobTemplate: runJobTemplate,
