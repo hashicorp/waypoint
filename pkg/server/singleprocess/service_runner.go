@@ -839,7 +839,22 @@ func (s *Service) RunnerJobStream(
 			if job == nil {
 				select {
 				case err := <-errCh:
+					// NOTE(briancain): In this case, it means we've received an event from
+					// the event channel, however `job` was nil, and `err` was not. This
+					// means we received an error trying to retrieve a job by Id and need
+					// to properly handle that.
 					log.Error("Job disappeared and there was an error while processing job event", "error", err, "event", req)
+
+					// Attempt to complete job with original jobId so that the original
+					// job Id isn't left hanging in a Running state. We also send through
+					// the error to give to the job details for why it's Errored.
+					if err := s.state(ctx).JobComplete(ctx, jobId, nil, err); err != nil {
+						return hcerr.Externalize(log, err,
+							"failed to complete job while failing to process job event",
+							"id", jobId,
+							"event_request", req)
+					}
+
 					return hcerr.Externalize(log, err, "failed to process job event", "event_request", req)
 				default:
 				}
