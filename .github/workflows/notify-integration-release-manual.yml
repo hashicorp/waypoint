@@ -38,7 +38,7 @@ jobs:
           - "waypoint/kubernetes"
           - "waypoint/nomad-jobspec-canary"
           - "waypoint/nomad-jobspec"
-          # - "waypoint/nomad"
+          - "waypoint/nomad"
           # - "waypoint/null"
           # - "waypoint/pack"
           # - "waypoint/terraform-cloud"
