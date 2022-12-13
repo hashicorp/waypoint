@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/go-hclog"
+	"github.com/hashicorp/go-multierror"
 	"github.com/pkg/errors"
 	spb "google.golang.org/genproto/googleapis/rpc/status"
 	"google.golang.org/grpc/codes"
@@ -47,6 +48,12 @@ func Externalize(log hclog.Logger, err error, msg string, args ...interface{}) e
 		code = codes.Internal
 	}
 
+	//var userError UserError
+	//if errors.As(err, &userError) {
+	//	// Otherwise use any code already in the error
+	//	msg = msg + " " + userError.Message
+	//}
+
 	var details []*anypb.Any
 	if len(args) > 0 {
 
@@ -75,4 +82,18 @@ func Externalize(log hclog.Logger, err error, msg string, args ...interface{}) e
 		Message: msg,
 		Details: details,
 	}).Err()
+}
+
+type UserError struct {
+	Message string
+}
+
+func (m UserError) Error() string {
+	return m.Message
+}
+
+// TODO: string interpolation arguments
+func UserErrorf(err error, message string) error {
+	return multierror.Append(err, UserError{Message: message})
+	//return multierror.Append(err, errors.New(message))
 }

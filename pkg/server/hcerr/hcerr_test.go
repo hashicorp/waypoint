@@ -1,6 +1,7 @@
 package hcerr
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/hashicorp/go-hclog"
@@ -54,4 +55,25 @@ func TestExternalize(t *testing.T) {
 		details := statusErr.Details()
 		require.Len(details, 2)
 	})
+}
+
+func TestUserError(t *testing.T) {
+	log := hclog.New(&hclog.LoggerOptions{Level: hclog.Debug})
+
+	baseError := errors.New("base")
+
+	userError := UserErrorf(baseError, "user facing message")
+
+	finalError := Externalize(log, userError, "top-level message")
+	fmt.Println(finalError)
+
+	t.Run("Multiple levels of user error", func(t *testing.T) {
+		baseError := errors.New("base")
+		userError1 := UserErrorf(baseError, "user facing message 1")
+		userError2 := UserErrorf(userError1, "user facing message 2")
+
+		finalError := Externalize(log, userError2, "top-level message")
+		fmt.Println(finalError)
+	})
+
 }
