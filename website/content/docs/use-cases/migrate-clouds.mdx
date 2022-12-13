@@ -1,0 +1,185 @@
+---
+layout: docs
+page_title: Seamless Cloud Migration With Waypoint
+description: |-
+  Waypoint enables easy migration of applications among different cloud providers.
+---
+
+# Seamless Cloud Migration With Waypoint
+
+A time may come where you need to get your application from one cloud to another, or
+one data center to another, but doing so can be cumbersome with different deployment
+manifests. With Waypoint, it is as easy as deploying a runner to your new cluster,
+changing kubectl context, and running waypoint up to migrate your application across
+multiple clouds.
+
+This use case starts with an application deployed in AWS EKS and showcases migrating
+that same application to GKE GCP and then Azure AKS.
+
+## Pre-Requisites
+
+If experimenting with this use case, it will be helpful to have some familiarity
+with the tools and concepts listed below.
+
+- [Waypoint CLI](https://developer.hashicorp.com/waypoint/downloads)
+  - [Context created](https://developer.hashicorp.com/waypoint/docs/server/auth#logging-in) and connected to local Waypoint server or HCP Waypoint server
+- Waypoint [runner](https://developer.hashicorp.com/waypoint/docs/runner/run-manual#installing-a-runner)
+  - Must be able to connect to your kubernetes clusters
+- Waypoint [runner configuration](https://developer.hashicorp.com/waypoint/docs/runner/config)
+  - Needs credentials to your registry
+- Docker registry
+  - Credentials to push a build to the registry
+- [AWS EKS](https://docs.aws.amazon.com/eks/latest/userguide/clusters.html) cluster
+- [GCP GKE](https://cloud.google.com/kubernetes-engine) cluster
+- [Azure AKS](https://azure.microsoft.com/en-us/products/kubernetes-service/) cluster
+
+## Waypoint Configuration
+
+### Migrate Existing App from AWS EKS to GCP GKE
+Steps:
+- Start with one existing cluster and application deployed
+- Configure your kubectl context to point to your new cluster you are migrating to
+- Waypoint runner install into your new cluster
+- Write a waypoint.hcl with the following specifications, if you did not already
+
+```shell
+# Use the context of your cluster you would like to migrate to
+$ kubectl config use-context gcp-context
+```
+
+Install a runner into your cluster you are migrating to and configure the runner
+profile with your registry credentials.
+
+```shell
+$ waypoint runner install -platform=kubernetes -server-addr=<server_addr>  -k8s-runner-image=hashicorp/waypoint:latest -id=gcp -- -label=cloud=gcp
+✓ Finished connecting to: <server_addr>
+⠧ Installing runner...
+✓ Finished connecting to: <server_addr>
+✓ Runner "gcp" installed successfully to kubernetes
+✓ Runner profile "kubernetes-gcp" created successfully.
+✓ Waypoint runner installed with Helm!
+✓ Runner "gcp" adopted successfully.
+
+$ waypoint runner profile set -env-var=DOCKER_PWD='pwd' -name=kubernetes-gcp
+```
+
+In the waypoint.hcl, specify the runner profile that was created with the runner
+install command. The `runner` stanza configures a project for remote operations,
+and which runner profile to use.
+
+```hcl
+project = "hashitalk-deploy-gcp"
+
+app "hello-app-gcp" {
+  runner {
+    profile = "kubernetes-gcp"
+  }
+...
+```
+
+The `build` stanza of the "app" is configured later in the Waypoint configuration.
+This build uses the docker plugin to build an image and then pushes it to a Docker
+registry.
+
+```hcl
+...
+  build {
+    use "docker" {}
+    registry {
+      use "docker" {
+        image = var.image
+        // Returns a humanized version of the git hash, taking into account tags and changes
+        tag = gitrefpretty()
+        // Credentials for authentication to push to docker registry
+        auth {
+          username = var.username
+          password = var.password
+        }
+      }
+    }
+  }
+...
+```
+
+The `deploy` stanza of the "app" describes how to deploy your application.
+The deploy takes the previously built artifact and stages it onto the cluster.
+
+```hcl
+...
+  deploy {
+    use "kubernetes" {
+      service_port = 5300
+      namespace = "default"
+    }
+  }
+```
+
+The `release` stanza of the "app" describes how to release your application.
+The release activates the previously staged deployment and opens it to traffic.
+
+```hcl
+...
+  release {
+    use "kubernetes" {
+      port          = 5300
+    }
+  }
+...
+```
+
+Upon completion of the waypoint.hcl, to get your application and project initialized
+and built, deployed, and released to your kubernetes cluster simply run the following.
+Waypoint will deploy your application to the kubernetes cluster that your current
+context is referencing.
+
+```shell
+$ waypoint init
+$ waypoint up
+```
+
+### Migrate Existing App from GCP GKE to Azure AKS
+Follow the same simple steps from above.
+Steps:
+- Start with one existing cluster and application deployed
+- Configure your kubectl context to point to your new cluster you are migrating to
+- Waypoint runner install into your new cluster
+- Use the same waypoint.hcl, but change the following
+  - runner profile specified in the `runner` stanza
+  - project/app name if desired
+
+```shell
+# Use the context of your cluster you would like to migrate to
+$ kubectl config use-context azure-context
+```
+
+Install a runner into your cluster you are migrating to and configure the runner
+profile with your registry credentials.
+
+```shell
+$ waypoint runner install -platform=kubernetes -server-addr=<server_addr>  -k8s-runner-image=hashicorp/waypoint:latest -id=azure -- -label=cloud=azure
+✓ Finished connecting to: <server_addr>
+⠧ Installing runner...
+✓ Finished connecting to: <server_addr>
+✓ Runner "azure" installed successfully to kubernetes
+✓ Runner profile "kubernetes-azure" created successfully.
+✓ Waypoint runner installed with Helm!
+✓ Runner "azure" adopted successfully.
+
+$ waypoint runner profile set -env-var=DOCKER_PWD='pwd' -name=kubernetes-azure
+```
+
+In the waypoint.hcl, specify the runner profile that was created with the runner
+install command. The `runner` stanza configures a project for remote operations,
+and which runner profile to use.
+
+```hcl
+project = "hashitalk-deploy-azure"
+
+app "hello-app-azure" {
+  runner {
+    profile = "kubernetes-azure"
+  }
+...
+```
+
+The rest of the waypoint.hcl will remain the same.
