@@ -839,7 +839,7 @@ func (s *Service) RunnerJobStream(
 				select {
 				case err := <-errCh:
 					log.Error("Job disappeared and there was an error while processing job event", "error", err, "event", req)
-					return hcerr.Externalize(log, err, "failed to process job event")
+					return hcerr.Externalize(log, err, "failed to process job event", "event_request", req)
 				default:
 				}
 			}
