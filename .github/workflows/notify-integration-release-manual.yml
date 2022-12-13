@@ -37,7 +37,7 @@ jobs:
           - "waypoint/kubernetes-apply"
           - "waypoint/kubernetes"
           - "waypoint/nomad-jobspec-canary"
-          # - "waypoint/nomad-jobspec"
+          - "waypoint/nomad-jobspec"
           # - "waypoint/nomad"
           # - "waypoint/null"
           # - "waypoint/pack"
