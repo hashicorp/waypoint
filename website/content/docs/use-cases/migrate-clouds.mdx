@@ -2,7 +2,7 @@
 layout: docs
 page_title: Seamless Cloud Migration With Waypoint
 description: |-
-  Waypoint enables easy migration of applications among different cloud providers.
+  Waypoint enables easy migration of applications between different cloud providers.
 ---
 
 # Seamless Cloud Migration With Waypoint
@@ -47,6 +47,7 @@ $ kubectl config use-context gcp-context
 ```
 
 ##### Step 3. Waypoint runner install into your new cluster
+
 Install a runner into your cluster you are migrating to and configure the runner
 profile with your registry credentials.
 
@@ -82,7 +83,7 @@ $ kubectl get rolebinding
 NAME                                       ROLE               AGE
 waypoint-gcp-runner-odr-rolebinding-edit   ClusterRole/edit   14d
 waypoint-gcp-runner-rolebinding            ClusterRole/edit   14d
-````
+```
 
 ##### Step 4. Write a waypoint.hcl with the following specifications, if you have not already
 
@@ -183,7 +184,7 @@ hello-app-gcp-v1   1/1     1            1           13d
 $ kubectl get rs
 NAME                          DESIRED   CURRENT   READY   AGE
 hello-app-gcp-v1-5bc8b5c944   1         1         1       13d
-````
+```
 
 See the project and application displayed in the HCP UI below.
 
@@ -230,6 +231,7 @@ In the waypoint.hcl, specify the runner profile that was created with the
 `waypoint runner install` command. The `runner` stanza configures a project
 for remote operations, and which runner profile to use.
 Specifically, update the following:
+
 1. Project and/or app name
 2. Runner profile
 
