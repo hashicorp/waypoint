@@ -119,25 +119,3 @@ job "web" {
   }
 }
 ```
-
-### Required Parameters
-
-This plugin has no required parameters.
-
-### Optional Parameters
-
-These parameters are used in the [`use` stanza](/docs/waypoint-hcl/use) for this plugin.
-
-#### fail_deployment
-
-If true, marks the deployment as failed.
-
-- Type: **bool**
-- **Optional**
-
-#### groups
-
-List of task group names which are to be promoted.
-
-- Type: **list of string**
-- **Optional**
