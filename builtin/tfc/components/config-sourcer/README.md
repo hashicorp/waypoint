@@ -28,36 +28,6 @@ config {
 }
 ```
 
-### Required Parameters
-
-These parameters are used in `dynamic` for sourcing [configuration values](/docs/app-config/dynamic) or [input variable values](/docs/waypoint-hcl/variables/dynamic).
-
-#### organization
-
-The Terraform Cloud organization to query.
-
-Within a single workspace, multiple dynamic values that use the same organization and workspace will only read the value once. This allows outputs to be extracted into multiple values. The example above shows this functionality by reading the username and password into separate values.
-
-- Type: **string**
-
-#### output
-
-The name of the output to read the value of.
-
-- Type: **string**
-
-#### workspace
-
-The Terraform Cloud workspace associated with the given organization to read the outputs of.
-
-The outputs associtaed with the most recent state version for the given workspace are the ones that are used. These values are refreshed according to refreshInternal, a source field.
-
-- Type: **string**
-
-### Optional Parameters
-
-This plugin has no optional parameters.
-
 ### Source Parameters
 
 The parameters below are used with `waypoint config source-set` to configure

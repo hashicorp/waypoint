@@ -41,8 +41,8 @@ jobs:
           - "waypoint/nomad"
           - "waypoint/null"
           - "waypoint/pack"
-          # - "waypoint/terraform-cloud"
-          # - "waypoint/vault"
+          - "waypoint/terraform-cloud"
+          - "waypoint/vault"
     steps:
       - name: Checkout this repo
         uses: actions/checkout@v3
