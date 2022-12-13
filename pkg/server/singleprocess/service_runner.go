@@ -519,7 +519,8 @@ func (s *Service) RunnerJobStream(
 	// the preexisting job. Otherwise, we assign a new job.
 	var job *serverstate.Job
 	reattach := false
-	if jobId := reqEvent.Request.ReattachJobId; jobId != "" {
+	var jobId string
+	if jobId = reqEvent.Request.ReattachJobId; jobId != "" {
 		reattach = true
 
 		log.Info("runner reattaching to an existing job", "job_id", jobId)
