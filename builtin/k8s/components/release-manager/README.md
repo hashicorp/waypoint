@@ -1,1 +1,5 @@
-TODO details about the component here.
+## kubernetes (releasemanager)
+
+Manipulates the Kubernetes Service activate Deployments.
+
+### Interface
