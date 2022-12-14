@@ -9,7 +9,7 @@ import (
 )
 
 // UserError is a custom error type designed to package
-// detail that will be displayed to a user, alongside
+// details that will be displayed to a user, alongside
 // some internal error message that may be unsafe to surface.
 //
 // UserError also implements grpcError, allowing it to optionally
