@@ -3600,6 +3600,35 @@
         "tags": [
           "Waypoint"
         ]
+      },
+      "delete": {
+        "summary": "DestroyProject deletes a project from the database as well as (optionally)\ndestroys all resources created within a project",
+        "operationId": "Waypoint_DestroyProject",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "properties": {}
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/grpc.gateway.runtime.Error"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "project.project",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "Waypoint"
+        ]
       }
     },
     "/v1/project/{project.project}/application": {
