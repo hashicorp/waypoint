@@ -3,6 +3,7 @@ package hcerr
 import (
 	"fmt"
 
+	"github.com/pkg/errors"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -17,7 +18,7 @@ import (
 type UserError struct {
 	UserMessage string
 	err         error
-	statusCode  codes.Code
+	statusCode  *codes.Code // Optional - nil represents unset
 }
 
 func (m UserError) Error() string {
@@ -28,9 +29,30 @@ func (m UserError) Unwrap() error {
 	return m.err
 }
 
-// GRPCStatus implements grpcError
+// GRPCStatus implements grpcError. If no code has been set,
+// and no status error exists further up the error stack,
+// will default to Internal with no message.
 func (m UserError) GRPCStatus() *status.Status {
-	return status.New(m.statusCode, "")
+
+	// status.Status does not support errors.As (https://github.com/grpc/grpc-go/issues/2934)
+	var grpcstatus interface{ GRPCStatus() *status.Status }
+
+	// If we don't have a status, return the status of errors further up the chain. Otherwise,
+	// anyone calling GRPCStatus() on us will get code zero.
+	if m.statusCode == nil && errors.As(m.err, &grpcstatus) {
+		// This error has no code, and there's another grpc status
+		// further up the chain, so use that
+		return grpcstatus.GRPCStatus()
+	}
+
+	code := m.statusCode
+	// If no other code is set, default this to an internal type error.
+	if code == nil {
+		i := codes.Internal
+		code = &i
+	}
+
+	return status.New(*code, "")
 }
 
 // NewUserError returns a new error with a message intended to be seen by server callers.
@@ -65,6 +87,6 @@ func UserErrorWithCodef(c codes.Code, err error, format string, a ...interface{}
 	return UserError{
 		UserMessage: fmt.Sprintf(format, a...),
 		err:         err,
-		statusCode:  c,
+		statusCode:  &c,
 	}
 }

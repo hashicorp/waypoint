@@ -87,9 +87,13 @@ func Externalize(log hclog.Logger, err error, msg string, args ...interface{}) e
 		}
 	}
 
-	return status.FromProto(&spb.Status{
+	stat := status.FromProto(&spb.Status{
 		Code:    int32(code),
 		Message: msg,
 		Details: details,
-	}).Err()
+	})
+
+	ret := stat.Err()
+
+	return ret
 }
