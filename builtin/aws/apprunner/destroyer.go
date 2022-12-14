@@ -49,13 +49,12 @@ func (r *Releaser) Destroy(
 
 	arSvc := apprunner.New(sess)
 
-	step.Update("Deleting service: %s", release.ServiceArn)
+	step.Update("Deleting service: %s", release.ServiceName)
 	dso, err := arSvc.DeleteService(&apprunner.DeleteServiceInput{
 		ServiceArn: aws.String(release.ServiceArn),
 	})
 	step.Done()
 
-	step = sg.Add("App Runner::Waiting for Delete Service to succeed...")
 	d := time.Now().Add(DEFAULT_TIMEOUT)
 	ctx, cancel := context.WithDeadline(ctx, d)
 	defer cancel()
@@ -71,6 +70,9 @@ func (r *Releaser) Destroy(
 		})
 
 		// TODO(kevinwang): better error reporting
+		// + handle multiple old deployments competing to delete one single service
+		// App Runner::Waiting for Delete Service to succeed...
+		// ! ResourceNotFoundException: No Services found for the provided arn:
 		if err != nil {
 			if aerr, ok := err.(awserr.Error); ok {
 				return aerr
