@@ -10,8 +10,8 @@ description: |-
 A time may come where you need to move your application from one cloud provider to
 another, or one data center to another, but doing so can be cumbersome. There may be
 no standards between application tools for building, you may have special scripts for
-deploying, and releasing may prove to be difficult since you can't release cross
-platform in the same manner. Waypoint can solve those problems. With Waypoint, it is
+deploying, and releasing may prove to be difficult since you can't release across
+platforms in the same manner. Waypoint can solve those problems. With Waypoint, it is
 as easy as deploying a runner to your new cluster, changing kubectl context, and
 running `waypoint up` to migrate your application across multiple cloud providers.
 
@@ -26,7 +26,7 @@ with the tools and concepts listed below.
 - [Waypoint CLI](https://developer.hashicorp.com/waypoint/downloads)
   - [Context created](https://developer.hashicorp.com/waypoint/docs/server/auth#logging-in) and connected to local Waypoint server or HCP Waypoint server
 - Waypoint [runner](https://developer.hashicorp.com/waypoint/docs/runner/run-manual#installing-a-runner)
-  - Must be able to connect to your kubernetes clusters
+  - Must be able to connect to your Kubernetes clusters
 - Waypoint [runner configuration](https://developer.hashicorp.com/waypoint/docs/runner/config)
   - Needs credentials to your registry
 - Docker registry
@@ -37,7 +37,7 @@ with the tools and concepts listed below.
 
 ## Migrate from AWS EKS to GCP GKE
 
-##### Step 1. Start with an existing cluster and application deployed
+##### Step 1. Start with an existing Kubernetes cluster and application deployed
 
 ##### Step 2. Configure your kubectl context to point to your new cluster you are migrating to
 
@@ -126,8 +126,8 @@ registry.
 ```
 
 The `deploy` stanza of the "app" describes how to deploy your application.
-The deploy takes the previously built artifact and stages it onto the cluster.
-Waypoint will deploy your application to the kubernetes cluster that your
+The deployment takes the previously built artifact and stages it onto the cluster.
+Waypoint will deploy your application to the Kubernetes cluster that your
 current context is referencing.
 
 ```hcl
@@ -156,7 +156,7 @@ The release activates the previously staged deployment and exposes it to traffic
 ##### Step 5. Build, Deploy, and Release Your App
 
 Now the waypoint.hcl is complete. To get your application and project initialized
-and built, deployed, and released to your kubernetes cluster simply run the following:
+and built, deployed, and released to your Kubernetes cluster simply run the following:
 
 ```shell
 $ waypoint init
@@ -198,7 +198,7 @@ See the deployment in the HCP UI with some operation logs below.
 
 Follow the same simple steps from above.
 
-##### Step 1. Start with an existing cluster and application deployed
+##### Step 1. Start with an existing Kubernetes cluster and application deployed
 
 ##### Step 2. Configure your kubectl context to point to your new cluster you are migrating to
 
