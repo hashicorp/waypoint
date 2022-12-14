@@ -138,7 +138,7 @@ func (a *App) destroyDeploy(
 	if !ok {
 		a.UI.Output("Failed to convert operation to a Deployment proto message, "+
 			"cannot detail which resources were destroyed or left around. The deployment "+
-			"message is of type %T"+
+			"message is of type %T. "+
 			"Please report this issue if it persists. Waypoint will continue on...",
 			reflect.TypeOf(destroyment),
 			terminal.WithErrorStyle())
