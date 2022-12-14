@@ -126,7 +126,7 @@ func (p *Platform) Deploy(
 
 	step.Done()
 
-	step = sg.Add("App Runner::%s", src.App)
+	step = sg.Add("Deploying App Runner service %q", p.config.Name)
 	step.Done()
 
 	arSvc := apprunner.New(sess)
@@ -136,7 +136,7 @@ func (p *Platform) Deploy(
 	//
 	// While `DescribeService` only supports a service ARN, our best effort approach
 	// is to list all services and manually match by user-provided name.
-	step = sg.Add("App Runner::ListServices")
+	step = sg.Add("Checking for existing service...")
 	service, err := p.getServiceSummaryByName(sess, log, p.config.Name)
 	if err != nil {
 		return nil, err
@@ -150,7 +150,7 @@ func (p *Platform) Deploy(
 
 	// If we found a previous service, update it.
 	if service != nil {
-		step = sg.Add("App Runner::UpdateService %s", service.Name)
+		step = sg.Add("Found! Updating service %q", service.Name)
 		serviceArn = service.Arn
 		serviceUrl = service.Url
 		serviceStatus = service.Status
@@ -178,7 +178,7 @@ func (p *Platform) Deploy(
 		})
 
 		if err != nil {
-			step.Update("App Runner::UpdateService Failed: %s", err)
+			step.Update("Failed to update service: %s", err)
 			return nil, err
 		}
 
@@ -194,7 +194,7 @@ func (p *Platform) Deploy(
 
 	} else {
 		// If we didn't find a previous service, create it.
-		step = sg.Add("App Runner::CreateService")
+		step = sg.Add("Creating new App Runner service")
 		log.Debug("creating new service...", "name", p.config.Name)
 		log.Debug("using image", "image", img.Name)
 

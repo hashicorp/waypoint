@@ -28,8 +28,10 @@ func (r *Releaser) Status(
 	sg := ui.StepGroup()
 	defer sg.Wait()
 
-	step := sg.Add("Gathering health report for app runner: %q", release.Url)
-	defer step.Abort()
+	step := sg.Add("Gathering health report for App Runner service: %q", release.Url)
+	defer func() {
+		step.Abort()
+	}()
 
 	report := sdk.StatusReport{}
 	report.External = true
@@ -40,7 +42,6 @@ func (r *Releaser) Status(
 	}
 
 	sess, err := utils.GetSession(&utils.SessionConfig{
-		Region: release.Region,
 		Logger: log,
 	})
 	if err != nil {
