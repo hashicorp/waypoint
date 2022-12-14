@@ -265,21 +265,23 @@ func (s *Service) QueueJob(
 // A diagram of the dependency chain created is shown below. The dashed
 // border is the "source" job.
 //
-//           ┌────────────────┐
-//           │   Start Task   │─────────────┐
-//           └────────────────┘             │
-//                    │                     │
-//          ┌─────────┴─────────┐           │
-//          ▼                   ▼           │
+//	 ┌────────────────┐
+//	 │   Start Task   │─────────────┐
+//	 └────────────────┘             │
+//	          │                     │
+//	┌─────────┴─────────┐           │
+//	▼                   ▼           │
+//
 // ┌────────────────┐   ┌─ ── ── ── ── ──   │
 // │   Watch Task   │   │      Job       │  │
 // └────────────────┘   └ ── ── ── ── ── ┘  │
-//          │                    │          │
-//          └─────────┬──────────┘          │
-//                    ▼                     │
-//           ┌────────────────┐             │
-//           │   Stop Task    │◀────────────┘
-//           └────────────────┘
+//
+//	│                    │          │
+//	└─────────┬──────────┘          │
+//	          ▼                     │
+//	 ┌────────────────┐             │
+//	 │   Stop Task    │◀────────────┘
+//	 └────────────────┘
 //
 // Details:
 //
@@ -289,7 +291,6 @@ func (s *Service) QueueJob(
 //     logs, exit code, etc.
 //   - Finally, stop task is called to clean up the resources associated
 //     with start.
-//
 func (s *Service) wrapJobWithRunner(
 	ctx context.Context,
 	source *pb.Job,

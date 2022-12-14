@@ -519,7 +519,8 @@ func (s *Service) RunnerJobStream(
 	// the preexisting job. Otherwise, we assign a new job.
 	var job *serverstate.Job
 	reattach := false
-	if jobId := reqEvent.Request.ReattachJobId; jobId != "" {
+	var jobId string
+	if jobId = reqEvent.Request.ReattachJobId; jobId != "" {
 		reattach = true
 
 		log.Info("runner reattaching to an existing job", "job_id", jobId)
@@ -552,11 +553,12 @@ func (s *Service) RunnerJobStream(
 		if err != nil {
 			return hcerr.Externalize(log, err, "failed to get job assignment for runner", "id", runnerId)
 		}
+		jobId = job.Id
 	}
 	if job == nil || job.Job == nil {
 		panic("job is nil, should never be nil at this point")
 	}
-	log = log.With("job_id", job.Id)
+	log = log.With("job_id", jobId)
 
 	// Load config sourcers to send along with the job assignment
 	cfgSrcs, err := s.state(ctx).ConfigSourceGetWatch(&pb.GetConfigSourceRequest{
@@ -650,14 +652,14 @@ func (s *Service) RunnerJobStream(
 		// we cancel the job.
 		if !ack {
 			log.Warn("reattach job was nacked, force cancelling")
-			err = s.state(ctx).JobCancel(job.Id, true)
+			err = s.state(ctx).JobCancel(jobId, true)
 		}
 	}
 
 	// If we have an error, return that. We also return if we didn't ack for
 	// any reason. This error can be set at any point since job assignment.
 	if err != nil {
-		return hcerr.Externalize(log, err, "failed to ack the job or the job was cancelled", "id", runnerId, "job", job.Id)
+		return hcerr.Externalize(log, err, "failed to ack the job or the job was cancelled", "id", runnerId, "job", jobId)
 	}
 	if !ack {
 		// If runners don't ack the job, this means close the stream
@@ -684,13 +686,13 @@ func (s *Service) RunnerJobStream(
 	go func() {
 		for {
 			ws := memdb.NewWatchSet()
-			job, err = s.state(ctx).JobById(job.Id, ws)
+			job, err = s.state(ctx).JobById(jobId, ws)
 			if err != nil {
-				errCh <- err
+				errCh <- errors.Wrapf(err, "error getting job by id from state %q", jobId)
 				return
 			}
 			if job == nil {
-				errCh <- status.Errorf(codes.Internal, "job disappeared")
+				errCh <- status.Errorf(codes.Internal, "failed to find job for id %q", jobId)
 				return
 			}
 
@@ -779,6 +781,29 @@ func (s *Service) RunnerJobStream(
 			return err
 
 		case req := <-eventCh:
+			if job == nil {
+				select {
+				case err := <-errCh:
+					// NOTE(briancain): In this case, it means we've received an event from
+					// the event channel, however `job` was nil, and `err` was not. This
+					// means we received an error trying to retrieve a job by Id and need
+					// to properly handle that.
+					log.Error("Job disappeared and there was an error while processing job event", "error", err, "event", req)
+
+					// Attempt to complete job with original jobId so that the original
+					// job Id isn't left hanging in a Running state. We also send through
+					// the error to give to the job details for why it's Errored.
+					if err := s.state(ctx).JobComplete(jobId, nil, err); err != nil {
+						return hcerr.Externalize(log, err,
+							"failed to complete job while failing to process job event",
+							"id", jobId,
+							"event_request", req)
+					}
+
+					return hcerr.Externalize(log, err, "failed to process job event", "event_request", req)
+				default:
+				}
+			}
 			if err := s.handleJobStreamRequest(log, job, server, req, logStreamWriter); err != nil {
 				log.Error("error handling job stream request", "err", err, "req", req)
 				return err
