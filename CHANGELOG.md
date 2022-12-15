@@ -6,14 +6,21 @@ IMPROVEMENTS:
 
 BUG FIXES:
 
-
 ## 0.10.5 (December 15, 2022)
 
-FEATURES:
+SECURITY:
+* Waypoint now uses Go 1.19.4 to address security vulnerability (CVE-2022-41717) See the Go announcement for more details.
 
 IMPROVEMENTS:
 
+* cli: Respect `-remote-source` overrides for submitted job template when running
+  `waypoint pipeline run`. [[GH-4319](https://github.com/hashicorp/waypoint/issues/4319)]
+* config: Remove the multi-app deprecation warning.
+  Please see https://discuss.hashicorp.com/t/deprecating-projects-or-how-i-learned-to-love-apps/40888/12 for more information. [[GH-4265](https://github.com/hashicorp/waypoint/issues/4265)]
+
 BUG FIXES:
+
+* plugin/ecs: `runner install` now creates aws policies to facilitate remotely running StopTask and WatchTask jobs [[GH-4296](https://github.com/hashicorp/waypoint/issues/4296)]
 
 ## 0.10.4 (December 08, 2022)
 
