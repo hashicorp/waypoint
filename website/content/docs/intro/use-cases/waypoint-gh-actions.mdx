@@ -88,7 +88,7 @@ https://github.com/briancain/waypoint-tetris/blob/52ecff3493b090f3a3c19d1ccb3ac9
 
 ```yaml
 #.github/workflows/main.yaml
-name: "Runs a Waypoint deployment on merge"
+name: 'Runs a Waypoint deployment on merge'
 on:
   # once a day, at the end of the day
   #schedule:
@@ -157,16 +157,14 @@ To enable this, simply comment out the `scheduled` key of our GitHub Action conf
 on:
   # once a day, at the end of the day
   schedule:
-    - cron: "0 0 * * *"
-...
+    - cron: '0 0 * * *'
 ```
 
 # Next Steps
 
 - Continuously deployments on different branches
-  + https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#schedule
-  + Actions can be configured to only run on certain branches, with certain `ref`s. This is considered an advanced use-case and is not covered for this tutorial.
+  - https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#schedule
+  - Actions can be configured to only run on certain branches, with certain `ref`s. This is considered an advanced use-case and is not covered for this tutorial.
 - GitHub Actions docs: https://docs.github.com/en/actions
-- Try HCP Waypoint: https://developer.hashicorp.com/hcp/docs/waypoint 
-- Waypoint Tetris on GitHub: https://github.com/briancain/waypoint-tetris 
-
+- Try HCP Waypoint: https://developer.hashicorp.com/hcp/docs/waypoint
+- Waypoint Tetris on GitHub: https://github.com/briancain/waypoint-tetris
