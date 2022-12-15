@@ -33,6 +33,14 @@
           {
             "title": "Dynamic App Config with Vault Dynamic Secrets",
             "path": "intro/use-cases/dynamic-config-vault-dynamic-secrets"
+          },
+          {
+            "title": "Blue-Green Deployments with Nomad and Consul",
+            "path": "intro/use-cases/blue-green-deployment"
+          },
+          {
+            "title": "Using GitHub Actions to Unlock GitOps Workflows",
+            "path": "intro/use-cases/waypoint-gh-actions"
           }
         ]
       }
