@@ -1,7 +1,30 @@
-# TODO
-#
-# output {
-#   key  = "foobar"
-#   description = "Details about the output"
-#   type = "string"
-# }
+output {
+  key         = "func_arn"
+  description = ""
+  type        = "string"
+}
+output {
+  key         = "id"
+  description = ""
+  type        = "string"
+}
+output {
+  key         = "region"
+  description = ""
+  type        = "string"
+}
+output {
+  key         = "target_group_arn"
+  description = ""
+  type        = "string"
+}
+output {
+  key         = "ver_arn"
+  description = ""
+  type        = "string"
+}
+output {
+  key         = "version"
+  description = ""
+  type        = "string"
+}

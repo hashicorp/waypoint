@@ -1,1 +1,3 @@
-TODO details about the component here.
+## null (platform)
+
+### Interface

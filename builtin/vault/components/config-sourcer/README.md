@@ -1,0 +1,310 @@
+## vault (configsourcer)
+
+Read configuration values from Vault.
+
+### Examples
+
+```hcl
+# Setting an input variable dynamically with Vault
+variable "my_api_key" {
+  default = dynamic("vault", {
+    path = "secret/data/keys"
+    key  = "/data/my_api_key"
+  })
+  type        = string
+  sensitive   = true
+  description = "my api key from vault"
+}
+
+# Setting a dynamic variable for an environment variable
+config {
+  env = {
+    "DATABASE_USERNAME" = dynamic("vault", {
+      path = "database/creds/my-role"
+      key = "username"
+    })
+
+    "DATABASE_PASSWORD" = dynamic("vault", {
+      path = "database/creds/my-role"
+      key = "password"
+    })
+
+    # KV Version 2
+    "PASSWORD_FOO" = dynamic("vault", {
+      path = "secret/data/my-secret"
+      key = "/data/password"  # key must be prefixed with "/data" (see below)
+    })
+
+    # KV Version 1
+    "PASSWORD_BAR" = dynamic("vault", {
+      path = "kv1/my-secret"
+      key = "password"
+    })
+  }
+}
+```
+
+### Source Parameters
+
+The parameters below are used with `waypoint config source-set` to configure
+the behavior this plugin. These are _not_ used in `dynamic` calls. The
+parameters used for `dynamic` are in the previous section.
+
+#### Required Source Parameters
+
+This plugin has no required source parameters.
+
+#### Optional Source Parameters
+
+##### addr
+
+The address to the Vault server.
+
+If this is not set, the VAULT_ADDR environment variable will be read.
+
+- Type: **string**
+- **Optional**
+- Environment Variable: **VAULT_ADDR**
+
+##### agent_addr
+
+The address to the Vault agent.
+
+If this is not set, Vault agent will not be used. This should only be set if you're deploying to an environment with a Vault agent.
+
+- Type: **string**
+- **Optional**
+- Environment Variable: **VAULT_AGENT_ADDR**
+
+##### approle_role_id
+
+The role ID of the approle auth method to use for Vault.
+
+This is required for the `approle` auth method.
+
+- Type: **string**
+- **Optional**
+
+##### approle_secret_id
+
+The secret ID of the approle auth method to use for Vault.
+
+This is required for the `approle` auth method.
+
+- Type: **string**
+- **Optional**
+
+##### auth_method
+
+The authentication method to use for Vault.
+
+This can be one of: `aws`, `approle`, `kubernetes`, `gcp`. When this is set, configuration fields prefixed with the auth method type should be set, if required. Configuration fields prefixed with non-matching auth method types will be ignored (except for type validation). If no auth method is set, Vault assumes proper environment variables are set for Vault to find and connect to the Vault server. When this is set, `auth_method_mount_path` is required.
+
+- Type: **string**
+- **Optional**
+
+##### auth_method_mount_path
+
+The path where the configured auth method is mounted in Vault.
+
+This is required when `auth_method` is set.
+
+- Type: **string**
+- **Optional**
+
+##### aws_access_key
+
+The access key to use for authentication to the IAM service, if needed.
+
+This usually isn't needed since IAM instance profiles are used.
+
+- Type: **string**
+- **Optional**
+
+##### aws_credential_poll_interval
+
+The interval in seconds to wait before checking for new credentials.
+
+- Type: **int**
+- **Optional**
+- Default: 60
+
+##### aws_header_value
+
+The value to match the [`iam_server_id_header_value`](https://www.vaultproject.io/api/auth/aws#iam_server_id_header_value) if set.
+
+- Type: **string**
+- **Optional**
+
+##### aws_region
+
+The region for the STS endpoint when using that method of auth.
+
+- Type: **string**
+- **Optional**
+- Default: us-east-1
+
+##### aws_role
+
+The role to use for AWS authentication.
+
+This is required for the `aws` auth method. This depends on how you configured the Vault [AWS Auth Method](https://www.vaultproject.io/docs/auth/aws).
+
+- Type: **string**
+- **Optional**
+
+##### aws_secret_key
+
+The secret key to use for authentication to the IAM service, if needed.
+
+This usually isn't needed since IAM instance profiles are used.
+
+- Type: **string**
+- **Optional**
+
+##### aws_type
+
+The type of authentication to use for AWS: either `iam` or `ec2`.
+
+This is required for the `aws` auth method. This depends on how you configured the Vault [AWS Auth Method](https://www.vaultproject.io/docs/auth/aws).
+
+- Type: **string**
+- **Optional**
+
+##### ca_cert
+
+The path to a PEM-encoded CA cert file to use to verify the Vault server SSL certificate.
+
+- Type: **string**
+- **Optional**
+- Environment Variable: **VAULT_CACERT**
+
+##### ca_path
+
+The path to a directory of PEM-encoded CA cert files to verify the Vault server SSL certificate.
+
+- Type: **string**
+- **Optional**
+- Environment Variable: **VAULT_CAPATH**
+
+##### client_cert
+
+The path to a PEM-encoded certificate to present as a client certificate.
+
+This only needs to be set if Vault is configured to expect a client cert.
+
+- Type: **string**
+- **Optional**
+- Environment Variable: **VAULT_CLIENT_CERT**
+
+##### client_key
+
+The path to a private key for the client cert.
+
+This only needs to be set if Vault is configured to expect a client cert.
+
+- Type: **string**
+- **Optional**
+- Environment Variable: **VAULT_CLIENT_KEY**
+
+##### gcp_credentials
+
+When using static credentials, the contents of the JSON credentials file.
+
+- Type: **string**
+- **Optional**
+
+##### gcp_jwt_exp
+
+The number of minutes a generated JWT should be valid for when using the iam method.
+
+- Type: **int**
+- **Optional**
+- Default: 15
+
+##### gcp_project
+
+The project to use, only if it cannot be automatically determined.
+
+- Type: **string**
+- **Optional**
+
+##### gcp_role
+
+The role to use for GCP authentication.
+
+This is required for the `gcp` auth method. This depends on how you configured the Vault [GCP Auth Method](https://www.vaultproject.io/docs/auth/gcp).
+
+- Type: **string**
+- **Optional**
+
+##### gcp_service_account
+
+The service account to use, only if it cannot be automatically determined.
+
+- Type: **string**
+- **Optional**
+
+##### gcp_type
+
+The type of authentication; must be `gce` or `iam`.
+
+This is required for the `gcp` auth method. This depends on how you configured the Vault [GCP Auth Method](https://www.vaultproject.io/docs/auth/gcp).
+
+- Type: **string**
+- **Optional**
+
+##### kubernetes_role
+
+The role to use for Kubernetes authentication.
+
+This is required for the `kubernetes` auth method. This is a role that is setup with the [Kubernetes Auth Method in Vault](https://www.vaultproject.io/docs/auth/kubernetes).
+
+- Type: **string**
+- **Optional**
+
+##### kubernetes_token_path
+
+The path to the Kubernetes service account token.
+
+In standard Kubernetes environments, this doesn't have to be set.
+
+- Type: **string**
+- **Optional**
+- Default: /var/run/secrets/kubernetes.io/serviceaccount/token
+
+##### namespace
+
+Default namespace to operate in if you're using Vault namespaces.
+
+- Type: **string**
+- **Optional**
+- Environment Variable: **VAULT_NAMESPACE**
+
+##### skip_verify
+
+Do not validate the TLS cert presented by the Vault server.
+
+This is not recommended unless absolutely necessary.
+
+- Type: **bool**
+- **Optional**
+- Environment Variable: **VAULT_SKIP_VERIFY**
+
+##### tls_server_name
+
+The TLS server name to verify with the Vault server.
+
+- Type: **string**
+- **Optional**
+- Environment Variable: **VAULT_TLS_SERVER_NAME**
+
+##### token
+
+The token to use for communicating to Vault.
+
+If you're using a Vault Agent or an `auth_method`, this may not be necessary. If you're using an `auth_method`, this may still be necessary as a minimal token with access to the auth method, but usually these are not protected.
+
+- Type: **string**
+- **Optional**
+- Environment Variable: **VAULT_TOKEN**

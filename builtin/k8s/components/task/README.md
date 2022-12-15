@@ -1,1 +1,110 @@
-TODO details about the component here.
+## kubernetes (task)
+
+Launch a Kubernetes pod for on-demand tasks from the Waypoint server.
+
+This will use the standard Kubernetes environment variables to source
+authentication information for Kubernetes. If this is running within Kubernetes
+itself (typical for a Kubernetes-based installation), it will use the pod's
+service account unless other auth is explicitly given. This allows the task
+launcher to work by default.
+
+### Interface
+
+### Examples
+
+```hcl
+task {
+	use "kubernetes" {}
+}
+```
+
+### Required Parameters
+
+These parameters are used in the [`use` stanza](/docs/waypoint-hcl/use) for this plugin.
+
+#### cpu
+
+Cpu resource request to be added to the task container.
+
+- Type: **k8s.ResourceConfig**
+
+#### ephemeral_storage
+
+Ephemeral_storage resource request to be added to the task container.
+
+- Type: **k8s.ResourceConfig**
+
+#### memory
+
+Memory resource request to be added to the task container.
+
+- Type: **k8s.ResourceConfig**
+
+### Optional Parameters
+
+These parameters are used in the [`use` stanza](/docs/waypoint-hcl/use) for this plugin.
+
+#### context
+
+The kubectl context to use, as defined in the kubeconfig file.
+
+- Type: **string**
+- **Optional**
+
+#### image_pull_policy
+
+Pull policy to use for the task container image.
+
+- Type: **string**
+- **Optional**
+
+#### image_secret
+
+Name of the Kubernetes secret to use for the image.
+
+This references an existing secret; Waypoint does not create this secret.
+
+- Type: **string**
+- **Optional**
+
+#### kubeconfig
+
+Path to the kubeconfig file to use.
+
+By default uses from current user's home directory.
+
+- Type: **string**
+- **Optional**
+- Environment Variable: **KUBECONFIG**
+
+#### namespace
+
+Namespace in which to launch task.
+
+- Type: **string**
+- **Optional**
+
+#### service_account
+
+Service account name to be added to the application pod.
+
+Service account is the name of the Kubernetes service account to add to the pod. This is useful to apply Kubernetes RBAC to the application.
+
+- Type: **string**
+- **Optional**
+
+#### watchtask_startup_timeout_seconds
+
+This option configures how long the WatchTask should wait for a task pod to start-up before attempting to stream its logs. If the pod does not start up within the given timeout, WatchTask will exit.
+
+- Type: **int**
+- **Optional**
+- Default: 30
+
+### Output Attributes
+
+Output attributes can be used in your `waypoint.hcl` as [variables](/docs/waypoint-hcl/variables) via [`artifact`](/docs/waypoint-hcl/variables/artifact) or [`deploy`](/docs/waypoint-hcl/variables/deploy).
+
+#### id
+
+- Type: **string**

@@ -1,7 +1,15 @@
-# TODO
-#
-# output {
-#   key  = "foobar"
-#   description = "Details about the output"
-#   type = "string"
-# }
+output {
+  key         = "architecture"
+  description = ""
+  type        = "string"
+}
+output {
+  key         = "image"
+  description = ""
+  type        = "string"
+}
+output {
+  key         = "tag"
+  description = ""
+  type        = "string"
+}
