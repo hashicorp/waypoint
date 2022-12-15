@@ -196,7 +196,7 @@ func (s *Service) queueJobReqToJob(
 		dur, err := time.ParseDuration(req.ExpiresIn)
 		if err != nil {
 			return nil, "", hcerr.UserErrorWithCodef(codes.FailedPrecondition, err,
-				"Invalid expiry duration: %s", err.Error())
+				"Invalid job expiry duration %q: %q", req.ExpiresIn, err.Error())
 		}
 		job.ExpireTime = timestamppb.New(time.Now().Add(dur))
 	}
