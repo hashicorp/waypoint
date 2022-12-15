@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/go-argmapper"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/hcl/v2"
+	"github.com/hashicorp/hcl/v2/hclwrite"
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint-plugin-sdk/docs"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
@@ -41,6 +42,7 @@ type AppDocsCommand struct {
 	flagType     string
 	flagPlugin   string
 	flagMDX      bool
+	flagHCL      bool
 }
 
 func (c *AppDocsCommand) basicFormat(name, ct string, doc *docs.Documentation) {
@@ -419,10 +421,224 @@ func (c *AppDocsCommand) mdxFormat(name, ct string, doc *docs.Documentation) {
 		for i, f := range fields {
 			c.emitField(w, "####", "", f)
 			endingSpace(w, i, len(fields))
+
 		}
 	}
 
 	fmt.Fprintln(w)
+}
+
+func removeEmptyStrings(s []string) []string {
+	var r []string
+	for _, str := range s {
+		if str != "" {
+			r = append(r, str)
+		}
+	}
+	return r
+}
+
+func (c *AppDocsCommand) hclFormat(name, ct string, doc *docs.Documentation) {
+	// example target = builtin/aws/ami/components/builder/outputs.hcl
+
+	// mapping of component names to a slug
+	componentToDirMapping := map[string]string{
+		"builder":        "builder",
+		"configsourcer":  "config-sourcer",
+		"platform":       "platform",
+		"registry":       "registry",
+		"releasemanager": "release-manager",
+		"task":           "task",
+	}
+	// mapping of plugin names to proper /builtin folder paths
+	nameToDirMapping := map[string]string{
+		"aws-alb":                  "aws/alb",
+		"aws-ami":                  "aws/ami",
+		"aws-ec2":                  "aws/ec2",
+		"aws-ecr":                  "aws/ecr",
+		"aws-ecr-pull":             "aws/ecr/pull",
+		"aws-ecs":                  "aws/ecs",
+		"aws-lambda":               "aws/lambda",
+		"aws-ssm":                  "aws/ssm",
+		"azure-container-instance": "azure/aci",
+		"consul":                   "consul",
+		"docker":                   "docker",
+		"docker-pull":              "docker/pull",
+		"docker-ref":               "docker/ref",
+		"exec":                     "exec",
+		"files":                    "files",
+		"google-cloud-run":         "google/cloudrun",
+		"helm":                     "k8s/helm",
+		"lambda-function-url":      "aws/lambda/function_url",
+		"kubernetes":               "k8s",
+		"kubernetes-apply":         "k8s/apply",
+		"nomad":                    "nomad",
+		"nomad-jobspec":            "nomad/jobspec",
+		"nomad-jobspec-canary":     "k8s/canary",
+		"null":                     "null",
+		"pack":                     "pack",
+		"packer":                   "packer",
+		"terraform-cloud":          "tfc",
+		"vault":                    "vault",
+	}
+
+	componentSlug, ok := componentToDirMapping[ct]
+	if !ok {
+		panic(fmt.Sprintf("Component: %s has no mapping. Please manually add this mapping to `componentToDirMapping`.", ct))
+	}
+	pluginPath, ok := nameToDirMapping[name]
+	if !ok {
+		panic(fmt.Sprintf("Plugin: %s has no mapping. Please manually add this mapping to `nameToDirMapping`.", name))
+	}
+
+	dets := doc.Details()
+	// If no description, don't generate docs
+	if c.humanize(dets.Description) != "" {
+		// make component folder
+		os.MkdirAll(fmt.Sprintf("./builtin/%s/components/%s", pluginPath, componentSlug), os.ModePerm)
+
+		// populate README.md
+		readme, err := os.Create(fmt.Sprintf("./builtin/%s/components/%s/readme.md", pluginPath, componentSlug))
+		if err != nil {
+			panic(err)
+		}
+
+		fmt.Fprintf(readme, "## %s (%s)\n\n", name, ct)
+
+		if dets.Description != "" {
+			fmt.Fprintf(readme, "%s\n\n", c.humanize(dets.Description))
+		}
+
+		if dets.Example != "" {
+			fmt.Fprintf(readme, "### Examples\n\n```hcl\n%s\n```\n\n", strings.TrimSpace(dets.Example))
+		}
+
+		mappers := dets.Mappers
+		if len(mappers) > 0 {
+			fmt.Fprintf(readme, "### Mappers\n\n")
+
+			for _, m := range mappers {
+				fmt.Fprintf(readme, "#### %s\n\n", m.Description)
+				fmt.Fprintf(readme, "- Input: **%s**\n", m.Input)
+				fmt.Fprintf(readme, "- Output: **%s**\n", m.Output)
+			}
+
+			fmt.Fprintln(readme)
+		}
+	}
+
+	// Only create parameters.hcl if there are fields
+	if fields := doc.Fields(); len(fields) > 0 {
+		// parameter {
+		//   key = "hi"
+		// 	 description = <<EOT
+		// a description
+		// EOT
+		// 	 type = "string"
+		// 	 required = true
+		// 	 default_value = "something"
+		// }
+		parameters, err := os.Create(fmt.Sprintf("./builtin/%s/components/%s/parameters.hcl", pluginPath, componentSlug))
+		if err != nil {
+			panic(err)
+		}
+
+		// create new empty hcl file object
+		f := hclwrite.NewEmptyFile()
+		rootBody := f.Body()
+
+		// recursive helper for sub fields
+		var generateSubFields func(fields []*docs.FieldDocs, keyPath []string)
+		generateSubFields = func(fields []*docs.FieldDocs, keyPath []string) {
+			for _, param := range fields {
+				parameterBlock := rootBody.AppendNewBlock("parameter", nil)
+				isCategory := param.Category
+				body := parameterBlock.Body()
+
+				keys := append(keyPath, param.Field)
+				key := strings.Join(keys, ".")
+				body.SetAttributeValue("key", cty.StringVal(key))
+
+				description := strings.Join(removeEmptyStrings([]string{param.Synopsis, param.Summary}), "\n")
+				body.SetAttributeValue("description", cty.StringVal(description))
+				if isCategory {
+					body.SetAttributeValue("type", cty.StringVal("category"))
+				} else {
+					body.SetAttributeValue("type", cty.StringVal(param.Type))
+				}
+				body.SetAttributeValue("required", cty.BoolVal(!param.Optional))
+				if param.Default != "" {
+					body.SetAttributeValue("default_value", cty.StringVal(param.Default))
+				}
+				rootBody.AppendNewline()
+
+				if isCategory {
+					generateSubFields(param.SubFields, keys)
+				}
+			}
+		}
+
+		// loop over fields and create parameter blocks
+		for _, param := range fields {
+			parameterBlock := rootBody.AppendNewBlock("parameter", nil)
+			isCategory := param.Category
+			body := parameterBlock.Body()
+			key := param.Field
+			body.SetAttributeValue("key", cty.StringVal(key))
+
+			description := strings.Join(removeEmptyStrings([]string{param.Synopsis, param.Summary}), "\n")
+			body.SetAttributeValue("description", cty.StringVal(description))
+			if isCategory {
+				body.SetAttributeValue("type", cty.StringVal("category"))
+			} else {
+				body.SetAttributeValue("type", cty.StringVal(param.Type))
+			}
+			body.SetAttributeValue("required", cty.BoolVal(!param.Optional))
+			if param.Default != "" {
+				body.SetAttributeValue("default_value", cty.StringVal(param.Default))
+			}
+			rootBody.AppendNewline()
+
+			// recursively handle subfields
+			if isCategory {
+				generateSubFields(param.SubFields, []string{param.Field})
+			}
+		}
+
+		f.WriteTo(parameters)
+	}
+
+	// Only create outputs.hcl if there are output fields
+	if fields := doc.TemplateFields(); len(fields) > 0 {
+		outputs, err := os.Create(fmt.Sprintf("./builtin/%s/components/%s/outputs.hcl", pluginPath, componentSlug))
+		if err != nil {
+			panic(err)
+		}
+
+		// create new empty hcl file object
+		f := hclwrite.NewEmptyFile()
+		rootBody := f.Body()
+
+		// loop over fields and create output blocks
+		for _, param := range fields {
+			// output {
+			// 	key         = "image"
+			// 	description = ""
+			// 	type        = "string"
+			// }
+			parameterBlock := rootBody.AppendNewBlock("output", nil)
+			body := parameterBlock.Body()
+			body.SetAttributeValue("key", cty.StringVal(param.Field))
+
+			description := strings.Join(removeEmptyStrings([]string{param.Synopsis, param.Summary}), "\n")
+			body.SetAttributeValue("description", cty.StringVal(description))
+			body.SetAttributeValue("type", cty.StringVal(param.Type))
+
+			rootBody.AppendNewline()
+		}
+
+		f.WriteTo(outputs)
+	}
 }
 
 func (c *AppDocsCommand) mdxFormatConfigSourcer(name, ct string, doc *docs.Documentation) {
@@ -684,6 +900,29 @@ func (c *AppDocsCommand) builtinJSON() int {
 	return c.funcsMDX()
 }
 
+func (c *AppDocsCommand) builtinHCL() int {
+	var pluginNames []string
+	if c.flagPlugin != "" {
+		pluginNames = append(pluginNames, c.flagPlugin)
+	} else {
+		// Use all plugins
+		for pluginName := range plugin.Builtins {
+			pluginNames = append(pluginNames, pluginName)
+		}
+	}
+
+	pluginDocs, err := getDocs(pluginNames, c.Log)
+	if err != nil {
+		c.ui.Output(fmt.Sprintf("Failed to get plugin docs: %s", err), terminal.StatusError)
+		return 1
+	}
+
+	for _, pluginDoc := range pluginDocs {
+		c.hclFormat(pluginDoc.pluginName, pluginDoc.pluginType, pluginDoc.doc)
+	}
+
+	return 0
+}
 func (c *AppDocsCommand) builtinMDX() int {
 
 	var pluginNames []string
@@ -793,6 +1032,10 @@ func (c *AppDocsCommand) Run(args []string) int {
 			needCfg = false
 		}
 
+		if s == "-hcl" {
+			needCfg = false
+		}
+
 		if s == "-builtin" {
 			needCfg = false
 		}
@@ -821,6 +1064,10 @@ func (c *AppDocsCommand) Run(args []string) int {
 
 	if c.flagMDX {
 		return c.builtinMDX()
+	}
+
+	if c.flagHCL {
+		return c.builtinHCL()
 	}
 
 	if c.flagJson {
@@ -965,6 +1212,13 @@ func (c *AppDocsCommand) Flags() *flag.Sets {
 			Name:   "website-mdx",
 			Target: &c.flagMDX,
 			Usage:  "Write out builtin docs inclusion on the waypoint website",
+			Hidden: true,
+		})
+
+		f.BoolVar(&flag.BoolVar{
+			Name:   "hcl",
+			Target: &c.flagHCL,
+			Usage:  "Output HCL for integrations",
 			Hidden: true,
 		})
 	})
