@@ -3,7 +3,7 @@ on: [deployment_status]
 jobs:
   test-link-rewrites:
     if: github.event.deployment_status.state == 'success'
-    uses: hashicorp/dev-portal/.github/workflows/docs-content-link-rewrites-e2e.yml
+    uses: hashicorp/dev-portal/.github/workflows/docs-content-link-rewrites-e2e.yml@f33b6376e1648fea794d7f4aa74dfe82e7fe48b8
     with:
       repo-owner: "hashicorp"
       repo-name: "waypoint"
