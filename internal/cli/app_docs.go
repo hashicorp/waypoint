@@ -438,6 +438,8 @@ func removeEmptyStrings(s []string) []string {
 	return r
 }
 
+// generates README.md, parameters.hcl, and outputs.hcl for builtin plugins' components
+// TODO: consider treating config-sourcers differently
 func (c *AppDocsCommand) hclFormat(name, ct string, doc *docs.Documentation) {
 	// example target = builtin/aws/ami/components/builder/outputs.hcl
 
@@ -450,7 +452,9 @@ func (c *AppDocsCommand) hclFormat(name, ct string, doc *docs.Documentation) {
 		"releasemanager": "release-manager",
 		"task":           "task",
 	}
+
 	// mapping of plugin names to proper /builtin folder paths
+	// see internal/plugin/plugin.go > Builtins
 	nameToDirMapping := map[string]string{
 		"aws-alb":                  "aws/alb",
 		"aws-ami":                  "aws/ami",
