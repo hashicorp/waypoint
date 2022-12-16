@@ -9,4 +9,6 @@ jobs:
       repo-name: "waypoint"
       commit-sha: ${{ github.sha }}
       main-branch-preview-url: "https://waypoint-git-main-hashicorp.vercel.app/"
+      # Workflow is only intended to run for one single migration PR
+      # This variable does not need to be updated
       pr-branch-preview-url: "https://waypoint-git-docs-ambmigrate-link-formats-hashicorp.vercel.app/"
