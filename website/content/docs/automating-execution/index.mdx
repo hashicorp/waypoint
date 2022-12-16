@@ -12,7 +12,7 @@ build and deployment tool, based on triggers such as a commit to a VCS
 provider, a chat-based workflow, or on-demand in a specific environment.
 
 The best option for automating execution is to use Waypoint's native
-[Git integration](/docs/projects/git). This will watch a Git repository and
+[Git integration](/waypoint/docs/projects/git). This will watch a Git repository and
 run a `waypoint up` whenever a change is detected. This is the recommended
 approach.
 
@@ -24,15 +24,15 @@ in place of that, run Waypoint by invoking it in
 the existing script or system to gradually adopt it.
 
 ~> **The recommended way to run Waypoint remotely** is through the
-Waypoint [Git integration](/docs/projects/git). We recommend trying that
+Waypoint [Git integration](/waypoint/docs/projects/git). We recommend trying that
 approach first and only scripting the `waypoint` CLI if that approach does
 not work for you.
 
 ## Environment Variables
 
 In a remote execution environment, as with a local workstation, the Waypoint
-binary will need access to the [Waypoint server](/docs/server). Locally, it is recommended
-that developers create [contexts](/docs/server#connecting) to store information about the remote
+binary will need access to the [Waypoint server](/waypoint/docs/server). Locally, it is recommended
+that developers create [contexts](/waypoint/docs/server#connecting) to store information about the remote
 Waypoint server. In a remote environment, this may make less sense given the
 environments are often ephemeral. In this scenario, we recommend using environment variables
 to configure the server.
@@ -40,7 +40,7 @@ to configure the server.
 Below is a list of commonly used environment variables for remote execution. These variables
 configure the Waypoint CLI for communication with the Waypoint server.
 
-- `WAYPOINT_SERVER_TOKEN`. Must be set to a Waypoint token, created with [`waypoint user token`](/commands/user-token)
+- `WAYPOINT_SERVER_TOKEN`. Must be set to a Waypoint token, created with [`waypoint user token`](/waypoint/commands/user-token)
 - `WAYPOINT_SERVER_ADDR`. The address to the Waypoint server gRPC address. This must
   be accessible from the network that the client is running on.
 - `WAYPOINT_SERVER_TLS`. Should be set to a truthy value (e.g. "1") to configure the client to use TLS when
@@ -53,7 +53,7 @@ treated as a password and protected accordingly.
 
 ## Init
 
-The [`waypoint init` command](/commands/init) is still required in remote environments, and must be
+The [`waypoint init` command](/waypoint/commands/init) is still required in remote environments, and must be
 run in the environment ahead of other Waypoint commands such as `up`. This
 command can be run multiple times safely.
 
@@ -80,14 +80,14 @@ all commands will use the default workspace unless otherwise specified.
 
 In a scenario where there are multiple developers triggering remote
 execution of Waypoint, it may be important to consider the effect
-this could have while all working out of the [`default` workspace](/docs/workspaces).
+this could have while all working out of the [`default` workspace](/waypoint/docs/workspaces).
 
 For example, if integrating with a VCS system such as GitHub, an additional
 branch may have a new feature that you would not want released in the default
 workspace, but that same developer will want to validate their work in a
 deployment, and possibly a released deployment, depending on the platform.
 
-In this scenario, it is best to use additional [workspaces](/docs/workspaces). These
+In this scenario, it is best to use additional [workspaces](/waypoint/docs/workspaces). These
 can be configured, as they are locally, at invocation time from the CLI. A common
 pattern for this might be to utilize a git branch in a name of a workspace.
 

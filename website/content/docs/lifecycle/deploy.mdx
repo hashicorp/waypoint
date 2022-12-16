@@ -7,13 +7,13 @@ description: |-
 
 # Deploy
 
-A deploy takes a previously [built artifact](/docs/lifecycle/build) and stages it onto the target deployment platform. The [target deployment platform](#target-deployment-platforms) is pluggable and can be Docker, Kubernetes, Nomad, EC2, and more.
+A deploy takes a previously [built artifact](/waypoint/docs/lifecycle/build) and stages it onto the target deployment platform. The [target deployment platform](#target-deployment-platforms) is pluggable and can be Docker, Kubernetes, Nomad, EC2, and more.
 
 "Stage" in this context means that the application should be ready to receive
 traffic, but is not yet open to public traffic. For example, the application
 should not be added to the load balancer, DNS should not be updated, etc.
 While it is staged, the deployment is accessible via the
-[deployment URL](/docs/url#per-deployment-urls) or other internal means.
+[deployment URL](/waypoint/docs/url#per-deployment-urls) or other internal means.
 
 -> **Note:** Not all platforms support the concept of "staging" a deployment or this
 behavior may not be desirable. Waypoint does not enforce this requirement
@@ -39,28 +39,28 @@ app "my-app" {
 To deploy your app with Waypoint, you will need to select which platform to use.
 A deployment platform is a runtime for your app. It could be a container runtime
 capable of running a docker image or it could be a virtual machine platform.
-The deployment platform must be compatible with the app artifact output format from [build](/docs/lifecycle/build).
+The deployment platform must be compatible with the app artifact output format from [build](/waypoint/docs/lifecycle/build).
 
 You can currently use Waypoint to deploy your app to any of these platforms.
 
-- [Kubernetes](/plugins/kubernetes)
-- [HashiCorp Nomad](/plugins/nomad)
-- [AWS EC2](/plugins/aws-ec2)
-- [AWS ECS](/plugins/aws-ecs)
-- [AWS Lambda](/plugins/aws-lambda)
-- [Google Cloud Run](/plugins/google-cloud-run)
-- [Azure Container Instances](/plugins/azure-container-instance)
+- [Kubernetes](/waypoint/plugins/kubernetes)
+- [HashiCorp Nomad](/waypoint/plugins/nomad)
+- [AWS EC2](/waypoint/plugins/aws-ec2)
+- [AWS ECS](/waypoint/plugins/aws-ecs)
+- [AWS Lambda](/waypoint/plugins/aws-lambda)
+- [Google Cloud Run](/waypoint/plugins/google-cloud-run)
+- [Azure Container Instances](/waypoint/plugins/azure-container-instance)
 
 ~> You may use the Kubernetes plugin to target any Kubernetes instance. For example, AWS EKS, Azure AKS, Google GKE, and Kubernetes for Docker Desktop.
 
 #### How to Add a Deployment Platform to Waypoint
 
-You can also create a [plugin](/plugins) to extend Waypoint with your own deployment platform. If you would like to add a plugin for a platform currently not in Waypoint, please file a [GitHub Issue for the project](https://github.com/hashicorp/waypoint/issues).
+You can also create a [plugin](/waypoint/plugins) to extend Waypoint with your own deployment platform. If you would like to add a plugin for a platform currently not in Waypoint, please file a [GitHub Issue for the project](https://github.com/hashicorp/waypoint/issues).
 
 ## Automatic Release
 
 By default, `waypoint deploy` automatically performs a
-[release](/docs/lifecycle/release).
+[release](/waypoint/docs/lifecycle/release).
 
 This is because this is often the most expected behavior of a deploy
 since traditionally deploy and release were inseparable. We consider
@@ -91,7 +91,7 @@ with a kubernetes
 secret](https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/).
 If you named the secret `example-registry-secret`, then you can [reference the
 secret in
-Waypoint](https://www.waypointproject.io/plugins/kubernetes#image_secret) like:
+Waypoint](/waypoint/plugins/kubernetes#image_secret) like:
 
 ```hcl
 ...
@@ -106,13 +106,13 @@ Waypoint](https://www.waypointproject.io/plugins/kubernetes#image_secret) like:
 ### Docker with a Private Registry
 
 When deploying to Docker with a private image, Waypoint will [use authentication
-from the registry stanza](/docs/lifecycle/build#private-registries) or "out
+from the registry stanza](/waypoint/docs/lifecycle/build#private-registries) or "out
 of band" Docker authentication configured directly with Docker.
 
 ### Nomad with a Private Registry
 
 The Waypoint Nomad plugin does not currently support [configuring the `auth`
-stanza](https://www.nomadproject.io/docs/drivers/docker#authentication) in the
+stanza](/nomad/docs/drivers/docker#authentication) in the
 Nomad task configuration.
 
 ### Other Platforms with a Private Registry

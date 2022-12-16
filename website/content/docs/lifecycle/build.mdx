@@ -34,11 +34,11 @@ app "my-app" {
 
 Waypoint includes these builtin plugins to build a Docker image for your app.
 
-- [Docker Build](/plugins/docker#docker-builder)
-- [Docker Pull Build](/plugins/docker#docker-pull-builder)
-- [Cloud Native Buildpacks](/plugins/pack)
+- [Docker Build](/waypoint/plugins/docker#docker-builder)
+- [Docker Pull Build](/waypoint/plugins/docker#docker-pull-builder)
+- [Cloud Native Buildpacks](/waypoint/plugins/pack)
 
-You can also create a [plugin](/plugins) to extend Waypoint with your own builder.
+You can also create a [plugin](/waypoint/plugins) to extend Waypoint with your own builder.
 
 ### Choosing How to Build Your App
 
@@ -59,7 +59,7 @@ image. If you application works with the `docker build`
 [Docker command](https://docs.docker.com/engine/reference/commandline/build/)
 it should work well the Waypoint Docker plugin.
 
-Reference the [Docker plugin](/plugins/docker) for all configuration options.
+Reference the [Docker plugin](/waypoint/plugins/docker) for all configuration options.
 
 #### Docker Pull Build
 
@@ -215,7 +215,7 @@ Example Docker Registry Configuration
 ...
 ```
 
-Reference `aws-ecs` plugin documentation for an [AWS Elastic Container Registry example](/plugins/aws-ecs#examples).
+Reference `aws-ecs` plugin documentation for an [AWS Elastic Container Registry example](/waypoint/plugins/aws-ecs#examples).
 
 ### Scenarios for a Registry
 
@@ -268,7 +268,7 @@ Reference the file in `waypoint.hcl`:
 
 #### Authentication with Vault
 
-Waypoint can read [dynamic config variables](/docs/intro/use-cases/dynamic-config-vault-dynamic-secrets)
+Waypoint can read [dynamic config variables](/waypoint/docs/intro/use-cases/dynamic-config-vault-dynamic-secrets)
 directly from Vault:
 
 ```hcl
@@ -347,5 +347,5 @@ is configured with the private registry credentials. Here is an example
 #### Platforms and Private Registries
 
 Reference [Deploy Private Registry
-documentation](/docs/lifecycle/deploy#private-registries) for details on how to
+documentation](/waypoint/docs/lifecycle/deploy#private-registries) for details on how to
 configure deployment for private registries.

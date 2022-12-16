@@ -1,400 +1,400 @@
 [
   {
     "title": "build",
-    "path": "build"
+    "path": "/waypoint/commands/build"
   },
   {
     "title": "deploy",
-    "path": "deploy"
+    "path": "/waypoint/commands/deploy"
   },
   {
     "title": "destroy",
-    "path": "destroy"
+    "path": "/waypoint/commands/destroy"
   },
   {
     "title": "exec",
-    "path": "exec"
+    "path": "/waypoint/commands/exec"
   },
   {
     "title": "init",
-    "path": "init"
+    "path": "/waypoint/commands/init"
   },
   {
     "title": "install",
-    "path": "install"
+    "path": "/waypoint/commands/install"
   },
   {
     "title": "login",
-    "path": "login"
+    "path": "/waypoint/commands/login"
   },
   {
     "title": "logs",
-    "path": "logs"
+    "path": "/waypoint/commands/logs"
   },
   {
     "title": "release",
-    "path": "release"
+    "path": "/waypoint/commands/release"
   },
   {
     "title": "ui",
-    "path": "ui"
+    "path": "/waypoint/commands/ui"
   },
   {
     "title": "up",
-    "path": "up"
+    "path": "/waypoint/commands/up"
   },
   {
     "divider": true
   },
   {
     "title": "artifact build",
-    "path": "artifact-build"
+    "path": "/waypoint/commands/artifact-build"
   },
   {
     "title": "artifact list-builds",
-    "path": "artifact-list-builds"
+    "path": "/waypoint/commands/artifact-list-builds"
   },
   {
     "title": "artifact list",
-    "path": "artifact-list"
+    "path": "/waypoint/commands/artifact-list"
   },
   {
     "title": "artifact push",
-    "path": "artifact-push"
+    "path": "/waypoint/commands/artifact-push"
   },
   {
     "title": "auth-method list",
-    "path": "auth-method-list"
+    "path": "/waypoint/commands/auth-method-list"
   },
   {
     "title": "auth-method inspect",
-    "path": "auth-method-inspect"
+    "path": "/waypoint/commands/auth-method-inspect"
   },
   {
     "title": "auth-method set oidc",
-    "path": "auth-method-set-oidc"
+    "path": "/waypoint/commands/auth-method-set-oidc"
   },
   {
     "title": "auth-method delete",
-    "path": "auth-method-delete"
+    "path": "/waypoint/commands/auth-method-delete"
   },
   {
     "title": "config get",
-    "path": "config-get"
+    "path": "/waypoint/commands/config-get"
   },
   {
     "title": "config set",
-    "path": "config-set"
+    "path": "/waypoint/commands/config-set"
   },
   {
     "title": "config source-get",
-    "path": "config-source-get"
+    "path": "/waypoint/commands/config-source-get"
   },
   {
     "title": "config source-set",
-    "path": "config-source-set"
+    "path": "/waypoint/commands/config-source-set"
   },
   {
     "title": "config sync",
-    "path": "config-sync"
+    "path": "/waypoint/commands/config-sync"
   },
   {
     "title": "context",
-    "path": "context"
+    "path": "/waypoint/commands/context"
   },
   {
     "title": "context clear",
-    "path": "context-clear"
+    "path": "/waypoint/commands/context-clear"
   },
   {
     "title": "context create",
-    "path": "context-create"
+    "path": "/waypoint/commands/context-create"
   },
   {
     "title": "context delete",
-    "path": "context-delete"
+    "path": "/waypoint/commands/context-delete"
   },
   {
     "title": "context inspect",
-    "path": "context-inspect"
+    "path": "/waypoint/commands/context-inspect"
   },
   {
     "title": "context list",
-    "path": "context-list"
+    "path": "/waypoint/commands/context-list"
   },
   {
     "title": "context rename",
-    "path": "context-rename"
+    "path": "/waypoint/commands/context-rename"
   },
   {
     "title": "context use",
-    "path": "context-use"
+    "path": "/waypoint/commands/context-use"
   },
   {
     "title": "context verify",
-    "path": "context-verify"
+    "path": "/waypoint/commands/context-verify"
   },
   {
     "title": "context set",
-    "path": "context-set"
+    "path": "/waypoint/commands/context-set"
   },
   {
     "title": "deployment deploy",
-    "path": "deployment-deploy"
+    "path": "/waypoint/commands/deployment-deploy"
   },
   {
     "title": "deployment destroy",
-    "path": "deployment-destroy"
+    "path": "/waypoint/commands/deployment-destroy"
   },
   {
     "title": "deployment list",
-    "path": "deployment-list"
+    "path": "/waypoint/commands/deployment-list"
   },
   {
     "title": "docs",
-    "path": "docs"
+    "path": "/waypoint/commands/docs"
   },
   {
     "title": "fmt",
-    "path": "fmt"
+    "path": "/waypoint/commands/fmt"
   },
   {
     "title": "hostname delete",
-    "path": "hostname-delete"
+    "path": "/waypoint/commands/hostname-delete"
   },
   {
     "title": "hostname list",
-    "path": "hostname-list"
+    "path": "/waypoint/commands/hostname-list"
   },
   {
     "title": "hostname register",
-    "path": "hostname-register"
+    "path": "/waypoint/commands/hostname-register"
   },
   {
     "title": "job list",
-    "path": "job-list"
+    "path": "/waypoint/commands/job-list"
   },
   {
     "title": "job inspect",
-    "path": "job-inspect"
+    "path": "/waypoint/commands/job-inspect"
   },
   {
     "title": "job cancel",
-    "path": "job-cancel"
+    "path": "/waypoint/commands/job-cancel"
   },
   {
     "title": "job get-stream",
-    "path": "job-get-stream"
+    "path": "/waypoint/commands/job-get-stream"
   },
   {
     "title": "pipeline inspect",
-    "path": "pipeline-inspect"
+    "path": "/waypoint/commands/pipeline-inspect"
   },
   {
     "title": "pipeline list",
-    "path": "pipeline-list"
+    "path": "/waypoint/commands/pipeline-list"
   },
   {
     "title": "pipeline run",
-    "path": "pipeline-run"
+    "path": "/waypoint/commands/pipeline-run"
   },
   {
     "title": "plugin",
-    "path": "plugin"
+    "path": "/waypoint/commands/plugin"
   },
   {
     "title": "project apply",
-    "path": "project-apply"
+    "path": "/waypoint/commands/project-apply"
   },
   {
     "title": "project destroy",
-    "path": "project-destroy"
+    "path": "/waypoint/commands/project-destroy"
   },
   {
     "title": "project inspect",
-    "path": "project-inspect"
+    "path": "/waypoint/commands/project-inspect"
   },
   {
     "title": "project list",
-    "path": "project-list"
+    "path": "/waypoint/commands/project-list"
   },
   {
     "title": "release list",
-    "path": "release-list"
+    "path": "/waypoint/commands/release-list"
   },
   {
     "title": "runner agent",
-    "path": "runner-agent"
+    "path": "/waypoint/commands/runner-agent"
   },
   {
     "title": "runner list",
-    "path": "runner-list"
+    "path": "/waypoint/commands/runner-list"
   },
   {
     "title": "runner inspect",
-    "path": "runner-inspect"
+    "path": "/waypoint/commands/runner-inspect"
   },
   {
     "title": "runner install",
-    "path": "runner-install"
+    "path": "/waypoint/commands/runner-install"
   },
   {
     "title": "runner uninstall",
-    "path": "runner-uninstall"
+    "path": "/waypoint/commands/runner-uninstall"
   },
   {
     "title": "runner adopt",
-    "path": "runner-adopt"
+    "path": "/waypoint/commands/runner-adopt"
   },
   {
     "title": "runner forget",
-    "path": "runner-forget"
+    "path": "/waypoint/commands/runner-forget"
   },
   {
     "title": "runner reject",
-    "path": "runner-reject"
+    "path": "/waypoint/commands/runner-reject"
   },
   {
     "title": "runner token",
-    "path": "runner-token"
+    "path": "/waypoint/commands/runner-token"
   },
   {
     "title": "runner profile delete",
-    "path": "runner-profile-delete"
+    "path": "/waypoint/commands/runner-profile-delete"
   },
   {
     "title": "runner profile list",
-    "path": "runner-profile-list"
+    "path": "/waypoint/commands/runner-profile-list"
   },
   {
     "title": "runner profile inspect",
-    "path": "runner-profile-inspect"
+    "path": "/waypoint/commands/runner-profile-inspect"
   },
   {
     "title": "runner profile set",
-    "path": "runner-profile-set"
+    "path": "/waypoint/commands/runner-profile-set"
   },
   {
     "title": "server bootstrap",
-    "path": "server-bootstrap"
+    "path": "/waypoint/commands/server-bootstrap"
   },
   {
     "title": "server cookie",
-    "path": "server-cookie"
+    "path": "/waypoint/commands/server-cookie"
   },
   {
     "title": "server config-set",
-    "path": "server-config-set"
+    "path": "/waypoint/commands/server-config-set"
   },
   {
     "title": "server install",
-    "path": "server-install"
+    "path": "/waypoint/commands/server-install"
   },
   {
     "title": "server restore",
-    "path": "server-restore"
+    "path": "/waypoint/commands/server-restore"
   },
   {
     "title": "server run",
-    "path": "server-run"
+    "path": "/waypoint/commands/server-run"
   },
   {
     "title": "server snapshot",
-    "path": "server-snapshot"
+    "path": "/waypoint/commands/server-snapshot"
   },
   {
     "title": "server uninstall",
-    "path": "server-uninstall"
+    "path": "/waypoint/commands/server-uninstall"
   },
   {
     "title": "server upgrade",
-    "path": "server-upgrade"
+    "path": "/waypoint/commands/server-upgrade"
   },
   {
     "title": "status",
-    "path": "status"
+    "path": "/waypoint/commands/status"
   },
   {
     "title": "task list",
-    "path": "task-list"
+    "path": "/waypoint/commands/task-list"
   },
   {
     "title": "task cancel",
-    "path": "task-cancel"
+    "path": "/waypoint/commands/task-cancel"
   },
   {
     "title": "task inspect",
-    "path": "task-inspect"
+    "path": "/waypoint/commands/task-inspect"
   },
   {
     "title": "trigger create",
-    "path": "trigger-create"
+    "path": "/waypoint/commands/trigger-create"
   },
   {
     "title": "trigger update",
-    "path": "trigger-update"
+    "path": "/waypoint/commands/trigger-update"
   },
   {
     "title": "trigger delete",
-    "path": "trigger-delete"
+    "path": "/waypoint/commands/trigger-delete"
   },
   {
     "title": "trigger inspect",
-    "path": "trigger-inspect"
+    "path": "/waypoint/commands/trigger-inspect"
   },
   {
     "title": "trigger list",
-    "path": "trigger-list"
+    "path": "/waypoint/commands/trigger-list"
   },
   {
     "title": "user inspect",
-    "path": "user-inspect"
+    "path": "/waypoint/commands/user-inspect"
   },
   {
     "title": "user invite",
-    "path": "user-invite"
+    "path": "/waypoint/commands/user-invite"
   },
   {
     "title": "user modify",
-    "path": "user-modify"
+    "path": "/waypoint/commands/user-modify"
   },
   {
     "title": "user token",
-    "path": "user-token"
+    "path": "/waypoint/commands/user-token"
   },
   {
     "title": "version",
-    "path": "version"
+    "path": "/waypoint/commands/version"
   },
   {
     "title": "workspace create",
-    "path": "workspace-create"
+    "path": "/waypoint/commands/workspace-create"
   },
   {
     "title": "workspace inspect",
-    "path": "workspace-inspect"
+    "path": "/waypoint/commands/workspace-inspect"
   },
   {
     "title": "workspace list",
-    "path": "workspace-list"
+    "path": "/waypoint/commands/workspace-list"
   },
   {
     "divider": true
   },
   {
     "title": "k8s bootstrap",
-    "path": "k8s-bootstrap"
+    "path": "/waypoint/commands/k8s-bootstrap"
   },
   {
     "title": "token exchange",
-    "path": "token-exchange"
+    "path": "/waypoint/commands/token-exchange"
   },
   {
     "title": "token invite",
-    "path": "token-invite"
+    "path": "/waypoint/commands/token-invite"
   },
   {
     "title": "token new",
-    "path": "token-new"
+    "path": "/waypoint/commands/token-new"
   }
 ]

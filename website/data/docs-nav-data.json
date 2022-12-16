@@ -4,26 +4,26 @@
     "routes": [
       {
         "title": "Overview",
-        "path": "intro"
+        "path": "/waypoint/docs/intro"
       },
       {
         "title": "Waypoint vs. Other Software",
         "routes": [
           {
             "title": "Overview",
-            "path": "intro/vs"
+            "path": "/waypoint/docs/intro/vs"
           },
           {
             "title": "Helm",
-            "path": "intro/vs/helm"
+            "path": "/waypoint/docs/intro/vs/helm"
           },
           {
             "title": "Heroku, Vercel, etc.",
-            "path": "intro/vs/paas"
+            "path": "/waypoint/docs/intro/vs/paas"
           },
           {
             "title": "Kubernetes",
-            "path": "intro/vs/kubernetes"
+            "path": "/waypoint/docs/intro/vs/kubernetes"
           }
         ]
       },
@@ -32,11 +32,11 @@
         "routes": [
           {
             "title": "Dynamic App Config with Vault Dynamic Secrets",
-            "path": "intro/use-cases/dynamic-config-vault-dynamic-secrets"
+            "path": "/waypoint/docs/intro/use-cases/dynamic-config-vault-dynamic-secrets"
           },
           {
             "title": "Blue-Green Deployments with Nomad and Consul",
-            "path": "intro/use-cases/blue-green-deployment"
+            "path": "/waypoint/docs/intro/use-cases/blue-green-deployment"
           }
         ]
       }
@@ -44,69 +44,69 @@
   },
   {
     "title": "Getting Started",
-    "path": "getting-started"
+    "path": "/waypoint/docs/getting-started"
   },
   {
     "title": "Upgrading Waypoint",
     "routes": [
       {
         "title": "Overview",
-        "path": "upgrading"
+        "path": "/waypoint/docs/upgrading"
       },
       {
         "title": "Compatibility Promise",
-        "path": "upgrading/compatibility"
+        "path": "/waypoint/docs/upgrading/compatibility"
       },
       {
         "title": "Protocol Version Table",
-        "path": "upgrading/protocol-table"
+        "path": "/waypoint/docs/upgrading/protocol-table"
       },
       {
         "title": "Release Notifications",
-        "path": "upgrading/release-notifications"
+        "path": "/waypoint/docs/upgrading/release-notifications"
       },
       {
         "title": "Specific Version Guides",
         "routes": [
           {
             "title": "Overview",
-            "path": "upgrading/version-guides"
+            "path": "/waypoint/docs/upgrading/version-guides"
           },
           {
             "title": "Upgrade to 0.2.0",
-            "path": "upgrading/version-guides/0.2.0"
+            "path": "/waypoint/docs/upgrading/version-guides/0.2.0"
           },
           {
             "title": "Upgrade to 0.3.0",
-            "path": "upgrading/version-guides/0.3.0"
+            "path": "/waypoint/docs/upgrading/version-guides/0.3.0"
           },
           {
             "title": "Upgrade to 0.4.0",
-            "path": "upgrading/version-guides/0.4.0"
+            "path": "/waypoint/docs/upgrading/version-guides/0.4.0"
           },
           {
             "title": "Upgrade to 0.5.0",
-            "path": "upgrading/version-guides/0.5.0"
+            "path": "/waypoint/docs/upgrading/version-guides/0.5.0"
           },
           {
             "title": "Upgrade to 0.6.0",
-            "path": "upgrading/version-guides/0.6.0"
+            "path": "/waypoint/docs/upgrading/version-guides/0.6.0"
           },
           {
             "title": "Upgrade to 0.7.0",
-            "path": "upgrading/version-guides/0.7.0"
+            "path": "/waypoint/docs/upgrading/version-guides/0.7.0"
           },
           {
             "title": "Upgrade to 0.8.0",
-            "path": "upgrading/version-guides/0.8.0"
+            "path": "/waypoint/docs/upgrading/version-guides/0.8.0"
           },
           {
             "title": "Upgrade to 0.9.0",
-            "path": "upgrading/version-guides/0.9.0"
+            "path": "/waypoint/docs/upgrading/version-guides/0.9.0"
           },
           {
             "title": "Upgrade to 0.10.0",
-            "path": "upgrading/version-guides/0.10.0"
+            "path": "/waypoint/docs/upgrading/version-guides/0.10.0"
           }
         ]
       }
@@ -123,7 +123,7 @@
         "routes": [
           {
             "title": "Deploy an Application to Nomad",
-            "href": "https://learn.hashicorp.com/tutorials/waypoint/get-started-nomad"
+            "href": "/waypoint/tutorials/get-started-nomad/get-started-nomad"
           }
         ]
       },
@@ -132,43 +132,43 @@
         "routes": [
           {
             "title": "Install",
-            "path": "platforms/kubernetes/install"
+            "path": "/waypoint/docs/platforms/kubernetes/install"
           },
           {
             "title": "Externally Built Images",
-            "path": "platforms/kubernetes/external-build"
+            "path": "/waypoint/docs/platforms/kubernetes/external-build"
           },
           {
             "title": "Building Container Images",
-            "path": "platforms/kubernetes/container-build"
+            "path": "/waypoint/docs/platforms/kubernetes/container-build"
           },
           {
             "title": "Deploy an Application to Kubernetes",
-            "href": "https://learn.hashicorp.com/tutorials/waypoint/get-started-kubernetes"
+            "href": "/waypoint/tutorials/get-started-kubernetes/get-started-kubernetes"
           },
           {
             "title": "Helm Deployment",
-            "path": "platforms/kubernetes/helm-deploy"
+            "path": "/waypoint/docs/platforms/kubernetes/helm-deploy"
           },
           {
             "title": "Helm and GitOps",
-            "href": "https://learn.hashicorp.com/tutorials/waypoint/gitops-helm-deployment"
+            "href": "/waypoint/tutorials/application-deployment/gitops-helm-deployment"
           },
           {
             "title": "YAML-Free Deployment",
-            "path": "platforms/kubernetes/deploy"
+            "path": "/waypoint/docs/platforms/kubernetes/deploy"
           },
           {
             "title": "YAML Directory Deployment",
-            "path": "platforms/kubernetes/kubectl-deploy"
+            "path": "/waypoint/docs/platforms/kubernetes/kubectl-deploy"
           },
           {
             "title": "Resource Status",
-            "path": "platforms/kubernetes/resource-status"
+            "path": "/waypoint/docs/platforms/kubernetes/resource-status"
           },
           {
             "title": "ConfigMaps and Secrets",
-            "path": "platforms/kubernetes/config"
+            "path": "/waypoint/docs/platforms/kubernetes/config"
           }
         ]
       },
@@ -177,11 +177,11 @@
         "routes": [
           {
             "title": "Deploy an Application to AWS Elastic Container Service",
-            "href": "https://learn.hashicorp.com/tutorials/waypoint/aws-ecs"
+            "href": "/waypoint/tutorials/deploy-aws/aws-ecs"
           },
           {
             "title": "Deploy an Application onto AWS Lambda",
-            "href": "https://learn.hashicorp.com/tutorials/waypoint/aws-lambda"
+            "href": "/waypoint/tutorials/deploy-aws/aws-lambda"
           }
         ]
       },
@@ -190,7 +190,7 @@
         "routes": [
           {
             "title": "Deploy an application to Google CLoud Run",
-            "href": "https://learn.hashicorp.com/tutorials/waypoint/google-cloud-run"
+            "href": "/waypoint/tutorials/deploy-google-cloud/google-cloud-run"
           }
         ]
       },
@@ -199,7 +199,7 @@
         "routes": [
           {
             "title": "Deploy an application onto an Azure Container Instance",
-            "href": "https://learn.hashicorp.com/tutorials/waypoint/azure-container-instance"
+            "href": "/waypoint/tutorials/deploy-azure/azure-container-instance"
           }
         ]
       }
@@ -213,16 +213,16 @@
     "routes": [
       {
         "title": "Overview",
-        "path": "projects",
+        "path": "/waypoint/docs/projects",
         "hidden": true
       },
       {
         "title": "Git Integration",
-        "path": "projects/git"
+        "path": "/waypoint/docs/projects/git"
       },
       {
         "title": "Remote Operations",
-        "path": "projects/remote"
+        "path": "/waypoint/docs/projects/remote"
       }
     ]
   },
@@ -231,31 +231,31 @@
     "routes": [
       {
         "title": "Overview",
-        "path": "lifecycle"
+        "path": "/waypoint/docs/lifecycle"
       },
       {
         "title": "Build",
-        "path": "lifecycle/build"
+        "path": "/waypoint/docs/lifecycle/build"
       },
       {
         "title": "Deploy",
-        "path": "lifecycle/deploy"
+        "path": "/waypoint/docs/lifecycle/deploy"
       },
       {
         "title": "Release",
-        "path": "lifecycle/release"
+        "path": "/waypoint/docs/lifecycle/release"
       },
       {
         "title": "Hooks",
-        "path": "lifecycle/hooks"
+        "path": "/waypoint/docs/lifecycle/hooks"
       },
       {
         "title": "Labels",
-        "path": "lifecycle/labels"
+        "path": "/waypoint/docs/lifecycle/labels"
       },
       {
         "title": "Workspace and Label Scoping",
-        "path": "lifecycle/scope"
+        "path": "/waypoint/docs/lifecycle/scope"
       }
     ]
   },
@@ -264,46 +264,46 @@
     "routes": [
       {
         "title": "Overview",
-        "path": "waypoint-hcl"
+        "path": "/waypoint/docs/waypoint-hcl"
       },
       {
         "title": "Variables",
         "routes": [
           {
             "title": "Overview",
-            "path": "waypoint-hcl/variables"
+            "path": "/waypoint/docs/waypoint-hcl/variables"
           },
           {
             "title": "Input Variables",
-            "path": "waypoint-hcl/variables/input"
+            "path": "/waypoint/docs/waypoint-hcl/variables/input"
           },
           {
             "title": "External Data",
-            "path": "waypoint-hcl/variables/dynamic"
+            "path": "/waypoint/docs/waypoint-hcl/variables/dynamic"
           },
           {
             "title": "<code>artifact</code>",
-            "path": "waypoint-hcl/variables/artifact"
+            "path": "/waypoint/docs/waypoint-hcl/variables/artifact"
           },
           {
             "title": "<code>deploy</code>",
-            "path": "waypoint-hcl/variables/deploy"
+            "path": "/waypoint/docs/waypoint-hcl/variables/deploy"
           },
           {
             "title": "<code>entrypoint</code>",
-            "path": "waypoint-hcl/variables/entrypoint"
+            "path": "/waypoint/docs/waypoint-hcl/variables/entrypoint"
           },
           {
             "title": "<code>labels</code>",
-            "path": "waypoint-hcl/variables/labels"
+            "path": "/waypoint/docs/waypoint-hcl/variables/labels"
           },
           {
             "title": "<code>path</code>",
-            "path": "waypoint-hcl/variables/path"
+            "path": "/waypoint/docs/waypoint-hcl/variables/path"
           },
           {
             "title": "<code>workspace</code>",
-            "path": "waypoint-hcl/variables/workspace"
+            "path": "/waypoint/docs/waypoint-hcl/variables/workspace"
           }
         ]
       },
@@ -312,15 +312,15 @@
         "routes": [
           {
             "title": "Overview",
-            "path": "waypoint-hcl/functions"
+            "path": "/waypoint/docs/waypoint-hcl/functions"
           },
           {
             "title": "Full Reference",
-            "path": "waypoint-hcl/functions/all"
+            "path": "/waypoint/docs/waypoint-hcl/functions/all"
           },
           {
             "title": "Templating",
-            "path": "waypoint-hcl/functions/template"
+            "path": "/waypoint/docs/waypoint-hcl/functions/template"
           }
         ]
       },
@@ -329,106 +329,106 @@
         "routes": [
           {
             "title": "Overview",
-            "path": "waypoint-hcl/syntax"
+            "path": "/waypoint/docs/waypoint-hcl/syntax"
           },
           {
             "title": "Expressions",
-            "path": "waypoint-hcl/syntax/expressions"
+            "path": "/waypoint/docs/waypoint-hcl/syntax/expressions"
           },
           {
             "title": "JSON Syntax",
-            "path": "waypoint-hcl/syntax/json"
+            "path": "/waypoint/docs/waypoint-hcl/syntax/json"
           }
         ]
       },
       {
         "title": "<code>app</code>",
-        "path": "waypoint-hcl/app"
+        "path": "/waypoint/docs/waypoint-hcl/app"
       },
       {
         "title": "<code>build</code>",
-        "path": "waypoint-hcl/build"
+        "path": "/waypoint/docs/waypoint-hcl/build"
       },
       {
         "title": "<code>config</code>",
-        "path": "waypoint-hcl/config"
+        "path": "/waypoint/docs/waypoint-hcl/config"
       },
       {
         "title": "<code>deploy</code>",
-        "path": "waypoint-hcl/deploy"
+        "path": "/waypoint/docs/waypoint-hcl/deploy"
       },
       {
         "title": "<code>hook</code>",
-        "path": "waypoint-hcl/hook"
+        "path": "/waypoint/docs/waypoint-hcl/hook"
       },
       {
         "title": "<code>plugin</code>",
-        "path": "waypoint-hcl/plugin"
+        "path": "/waypoint/docs/waypoint-hcl/plugin"
       },
       {
         "title": "<code>registry</code>",
-        "path": "waypoint-hcl/registry"
+        "path": "/waypoint/docs/waypoint-hcl/registry"
       },
       {
         "title": "<code>release</code>",
-        "path": "waypoint-hcl/release"
+        "path": "/waypoint/docs/waypoint-hcl/release"
       },
       {
         "title": "<code>runner</code>",
-        "path": "waypoint-hcl/runner"
+        "path": "/waypoint/docs/waypoint-hcl/runner"
       },
       {
         "title": "<code>url</code>",
-        "path": "waypoint-hcl/url"
+        "path": "/waypoint/docs/waypoint-hcl/url"
       },
       {
         "title": "<code>use</code>",
-        "path": "waypoint-hcl/use"
+        "path": "/waypoint/docs/waypoint-hcl/use"
       },
       {
         "title": "<code>variable</code>",
-        "path": "waypoint-hcl/variable"
+        "path": "/waypoint/docs/waypoint-hcl/variable"
       }
     ]
   },
   {
     "title": "URL Service",
-    "path": "url"
+    "path": "/waypoint/docs/url"
   },
   {
     "title": "Logs",
-    "path": "logs"
+    "path": "/waypoint/docs/logs"
   },
   {
     "title": "Exec",
-    "path": "exec"
+    "path": "/waypoint/docs/exec"
   },
   {
     "title": "App Configuration",
     "routes": [
       {
         "title": "Overview",
-        "path": "app-config"
+        "path": "/waypoint/docs/app-config"
       },
       {
         "title": "Static Values",
-        "href": "https://learn.hashicorp.com/tutorials/waypoint/static-application-configuration"
+        "href": "/waypoint/tutorials/configuration/static-application-configuration"
       },
       {
         "title": "Dynamic Values",
-        "path": "app-config/dynamic"
+        "path": "/waypoint/docs/app-config/dynamic"
       },
       {
         "title": "Files",
-        "path": "app-config/files"
+        "path": "/waypoint/docs/app-config/files"
       },
       {
         "title": "Internal Values",
-        "path": "app-config/internal"
+        "path": "/waypoint/docs/app-config/internal"
       },
       {
         "title": "Workspace and Label Scoping",
-        "path": "app-config/scope"
+        "path": "/waypoint/docs/app-config/scope"
       }
     ]
   },
@@ -437,22 +437,22 @@
     "routes": [
       {
         "title": "Overview",
-        "path": "server"
+        "path": "/waypoint/docs/server"
       },
       {
         "title": "Authentication",
         "routes": [
           {
             "title": "Overview",
-            "path": "server/auth"
+            "path": "/waypoint/docs/server/auth"
           },
           {
             "title": "OIDC",
-            "path": "server/auth/oidc"
+            "path": "/waypoint/docs/server/auth/oidc"
           },
           {
             "title": "Tokens",
-            "path": "server/auth/tokens"
+            "path": "/waypoint/docs/server/auth/tokens"
           }
         ]
       },
@@ -461,25 +461,25 @@
         "routes": [
           {
             "title": "Overview",
-            "path": "server/run"
+            "path": "/waypoint/docs/server/run"
           },
           {
             "title": "Maintenance",
-            "path": "server/run/maintenance"
+            "path": "/waypoint/docs/server/run/maintenance"
           },
           {
             "title": "Production",
-            "path": "server/run/production"
+            "path": "/waypoint/docs/server/run/production"
           },
           {
             "title": "Security",
-            "path": "server/run/security"
+            "path": "/waypoint/docs/server/run/security"
           }
         ]
       },
       {
         "title": "Express Server Install",
-        "path": "server/install"
+        "path": "/waypoint/docs/server/install"
       }
     ]
   },
@@ -488,54 +488,54 @@
     "routes": [
       {
         "title": "Overview",
-        "path": "runner"
+        "path": "/waypoint/docs/runner"
       },
       {
         "title": "Configuration",
-        "path": "runner/config"
+        "path": "/waypoint/docs/runner/config"
       },
       {
         "title": "Profiles",
-        "path": "runner/profiles"
+        "path": "/waypoint/docs/runner/profiles"
       },
       {
         "title": "On-Demand Runner",
-        "path": "runner/on-demand-runner"
+        "path": "/waypoint/docs/runner/on-demand-runner"
       },
       {
         "title": "Additional Runners",
-        "path": "runner/run-manual"
+        "path": "/waypoint/docs/runner/run-manual"
       },
       {
         "title": "Adoption Workflow",
-        "path": "runner/adoption"
+        "path": "/waypoint/docs/runner/adoption"
       }
     ]
   },
   {
     "title": "Workspaces",
-    "path": "workspaces"
+    "path": "/waypoint/docs/workspaces"
   },
   {
     "title": "Plugins",
-    "path": "plugins"
+    "path": "/waypoint/docs/plugins"
   },
   {
     "title": "Pipelines",
     "routes": [
       {
         "title": "Overview",
-        "path": "pipelines"
+        "path": "/waypoint/docs/pipelines"
       },
       {
         "title": "Configuration",
-        "path": "pipelines/config"
+        "path": "/waypoint/docs/pipelines/config"
       }
     ]
   },
   {
     "title": "Triggers",
-    "path": "triggers"
+    "path": "/waypoint/docs/triggers"
   },
   {
     "divider": true
@@ -545,99 +545,99 @@
     "routes": [
       {
         "title": "Overview",
-        "path": "extending-waypoint"
+        "path": "/waypoint/docs/extending-waypoint"
       },
       {
         "title": "Creating a Waypoint Plugin",
         "routes": [
           {
             "title": "Overview",
-            "path": "extending-waypoint/creating-plugins"
+            "path": "/waypoint/docs/extending-waypoint/creating-plugins"
           },
           {
             "title": "Registering Plugin Components",
-            "path": "extending-waypoint/creating-plugins/main"
+            "path": "/waypoint/docs/extending-waypoint/creating-plugins/main"
           },
           {
             "title": "Handling Configuration",
-            "path": "extending-waypoint/creating-plugins/configuration"
+            "path": "/waypoint/docs/extending-waypoint/creating-plugins/configuration"
           },
           {
             "title": "Implementing the Builder Interface",
-            "path": "extending-waypoint/creating-plugins/build-interface"
+            "path": "/waypoint/docs/extending-waypoint/creating-plugins/build-interface"
           },
           {
             "title": "Compiling the Plugin",
-            "path": "extending-waypoint/creating-plugins/compiling"
+            "path": "/waypoint/docs/extending-waypoint/creating-plugins/compiling"
           },
           {
             "title": "Creating an Example Application",
-            "path": "extending-waypoint/creating-plugins/example-application"
+            "path": "/waypoint/docs/extending-waypoint/creating-plugins/example-application"
           },
           {
             "title": "Testing the Plugin",
-            "path": "extending-waypoint/creating-plugins/testing"
+            "path": "/waypoint/docs/extending-waypoint/creating-plugins/testing"
           }
         ]
       },
       {
         "title": "Initializing the SDK",
-        "path": "extending-waypoint/main-func"
+        "path": "/waypoint/docs/extending-waypoint/main-func"
       },
       {
         "title": "Passing Values Between Components",
-        "path": "extending-waypoint/passing-values"
+        "path": "/waypoint/docs/extending-waypoint/passing-values"
       },
       {
         "title": "Plugin Interfaces",
         "routes": [
           {
             "title": "Overview",
-            "path": "extending-waypoint/plugin-interfaces"
+            "path": "/waypoint/docs/extending-waypoint/plugin-interfaces"
           },
           {
             "title": "Authenticator",
-            "path": "extending-waypoint/plugin-interfaces/authenticator"
+            "path": "/waypoint/docs/extending-waypoint/plugin-interfaces/authenticator"
           },
           {
             "title": "ConfigSourcer",
-            "path": "extending-waypoint/plugin-interfaces/configsourcer"
+            "path": "/waypoint/docs/extending-waypoint/plugin-interfaces/configsourcer"
           },
           {
             "title": "Configurable",
-            "path": "extending-waypoint/plugin-interfaces/configurable"
+            "path": "/waypoint/docs/extending-waypoint/plugin-interfaces/configurable"
           },
           {
             "title": "ConfigurableNotify",
-            "path": "extending-waypoint/plugin-interfaces/configurable-notify"
+            "path": "/waypoint/docs/extending-waypoint/plugin-interfaces/configurable-notify"
           },
           {
             "title": "Builder",
-            "path": "extending-waypoint/plugin-interfaces/builder"
+            "path": "/waypoint/docs/extending-waypoint/plugin-interfaces/builder"
           },
           {
             "title": "Registry",
-            "path": "extending-waypoint/plugin-interfaces/registry"
+            "path": "/waypoint/docs/extending-waypoint/plugin-interfaces/registry"
           },
           {
             "title": "Platform",
-            "path": "extending-waypoint/plugin-interfaces/platform"
+            "path": "/waypoint/docs/extending-waypoint/plugin-interfaces/platform"
           },
           {
             "title": "ReleaseManager",
-            "path": "extending-waypoint/plugin-interfaces/release-manager"
+            "path": "/waypoint/docs/extending-waypoint/plugin-interfaces/release-manager"
           },
           {
             "title": "Destroy",
-            "path": "extending-waypoint/plugin-interfaces/destroy"
+            "path": "/waypoint/docs/extending-waypoint/plugin-interfaces/destroy"
           },
           {
             "title": "Status",
-            "path": "extending-waypoint/plugin-interfaces/status"
+            "path": "/waypoint/docs/extending-waypoint/plugin-interfaces/status"
           },
           {
             "title": "Default Parameters",
-            "path": "extending-waypoint/plugin-interfaces/default-parameters"
+            "path": "/waypoint/docs/extending-waypoint/plugin-interfaces/default-parameters"
           }
         ]
       },
@@ -646,7 +646,7 @@
         "routes": [
           {
             "title": "Overview",
-            "path": "extending-waypoint/plugin-frameworks"
+            "path": "/waypoint/docs/extending-waypoint/plugin-frameworks"
           }
         ]
       }
@@ -657,11 +657,11 @@
     "routes": [
       {
         "title": "Overview",
-        "path": "entrypoint"
+        "path": "/waypoint/docs/entrypoint"
       },
       {
         "title": "Disable",
-        "path": "entrypoint/disable"
+        "path": "/waypoint/docs/entrypoint/disable"
       }
     ]
   },
@@ -670,23 +670,23 @@
     "routes": [
       {
         "title": "Overview",
-        "path": "automating-execution"
+        "path": "/waypoint/docs/automating-execution"
       },
       {
         "title": "GitHub Actions",
-        "path": "automating-execution/github-actions"
+        "path": "/waypoint/docs/automating-execution/github-actions"
       },
       {
         "title": "GitLab CI/CD",
-        "path": "automating-execution/gitlab-cicd"
+        "path": "/waypoint/docs/automating-execution/gitlab-cicd"
       },
       {
         "title": "CircleCI",
-        "path": "automating-execution/circle-ci"
+        "path": "/waypoint/docs/automating-execution/circle-ci"
       },
       {
         "title": "Jenkins",
-        "path": "automating-execution/jenkins"
+        "path": "/waypoint/docs/automating-execution/jenkins"
       }
     ]
   },
@@ -701,21 +701,21 @@
         "routes": [
           {
             "title": "Overview",
-            "path": "resources/internals"
+            "path": "/waypoint/docs/resources/internals"
           },
           {
             "title": "Architecture",
-            "path": "resources/internals/architecture"
+            "path": "/waypoint/docs/resources/internals/architecture"
           },
           {
             "title": "Operation Execution",
-            "path": "resources/internals/execution"
+            "path": "/waypoint/docs/resources/internals/execution"
           }
         ]
       },
       {
         "title": "Roadmap",
-        "path": "resources/roadmap"
+        "path": "/waypoint/docs/resources/roadmap"
       },
       {
         "title": "Community forum",
@@ -723,11 +723,11 @@
       },
       {
         "title": "Glossary",
-        "path": "resources/glossary"
+        "path": "/waypoint/docs/resources/glossary"
       },
       {
         "title": "Troubleshooting",
-        "path": "resources/troubleshooting"
+        "path": "/waypoint/docs/resources/troubleshooting"
       },
       {
         "title": "Support",

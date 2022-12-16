@@ -1,66 +1,66 @@
 [
   {
     "title": "aws-ec2",
-    "path": "aws-ec2"
+    "path": "/waypoint/plugins/aws-ec2"
   },
   {
     "title": "aws-ecs",
-    "path": "aws-ecs"
+    "path": "/waypoint/plugins/aws-ecs"
   },
   {
     "title": "aws-lambda",
-    "path": "aws-lambda"
+    "path": "/waypoint/plugins/aws-lambda"
   },
   {
     "title": "aws-ssm",
-    "path": "aws-ssm"
+    "path": "/waypoint/plugins/aws-ssm"
   },
   {
     "title": "azure-container-instance",
-    "path": "azure-container-instance"
+    "path": "/waypoint/plugins/azure-container-instance"
   },
   {
     "title": "consul",
-    "path": "consul"
+    "path": "/waypoint/plugins/consul"
   },
   {
     "title": "docker",
-    "path": "docker"
+    "path": "/waypoint/plugins/docker"
   },
   {
     "title": "exec",
-    "path": "exec"
+    "path": "/waypoint/plugins/exec"
   },
   {
     "title": "google-cloud-run",
-    "path": "google-cloud-run"
+    "path": "/waypoint/plugins/google-cloud-run"
   },
   {
     "title": "helm",
-    "path": "helm"
+    "path": "/waypoint/plugins/helm"
   },
   {
     "title": "kubernetes",
-    "path": "kubernetes"
+    "path": "/waypoint/plugins/kubernetes"
   },
   {
     "title": "nomad",
-    "path": "nomad"
+    "path": "/waypoint/plugins/nomad"
   },
   {
     "title": "pack",
-    "path": "pack"
+    "path": "/waypoint/plugins/pack"
   },
   {
     "title": "packer",
-    "path": "packer"
+    "path": "/waypoint/plugins/packer"
   },
   {
     "title": "terraform-cloud",
-    "path": "terraform-cloud"
+    "path": "/waypoint/plugins/terraform-cloud"
   },
   {
     "title": "vault",
-    "path": "vault"
+    "path": "/waypoint/plugins/vault"
   }
 ]

@@ -54,7 +54,7 @@ $ docker volume prune -f
 To delete the resources created by the Helm chart installation, the commands below will help with
 the cleanup of the server and static runner:
 
-[`waypoint install`]: /commands/install
+[`waypoint install`]: /waypoint/commands/install
 
 ```shell-session
 $ helm uninstall waypoint
@@ -215,7 +215,7 @@ $ exit
 
 In the application's directory, run the `logs` command to observe the running
 logs for your deployment. This will include logs from the
-[entrypoint](/docs/entrypoint) if it is in use.
+[entrypoint](/waypoint/docs/entrypoint) if it is in use.
 
 ```shell-session
 $ waypoint logs
@@ -236,7 +236,7 @@ Press `Ctrl-C` to exit the `logs` command.
 
 You may increase the verbosity of entrypoint logs by setting the
 `WAYPOINT_LOG_LEVEL` environment variable. See the documentation on
-[entrypoint logs](/docs/entrypoint#logging) for more information.
+[entrypoint logs](/waypoint/docs/entrypoint#logging) for more information.
 
 ## Access the Waypoint web UI
 

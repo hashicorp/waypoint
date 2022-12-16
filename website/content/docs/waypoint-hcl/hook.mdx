@@ -16,13 +16,13 @@ description: |-
   ]}
 />
 
-The `hook` stanza configures [hooks](/docs/lifecycle/hooks) that are
+The `hook` stanza configures [hooks](/waypoint/docs/lifecycle/hooks) that are
 executed before or after operations. This can be useful to do things such as
 perform a security scan on an image, run database migrations on a deploy, etc.
 
 Multiple `hook` stanzas can be specified. This will execute multiple
 hooks for an operation. The behavior with multiple hooks is
-[documented on the hooks lifecycle page](/docs/lifecycle/hooks#execution-order).
+[documented on the hooks lifecycle page](/waypoint/docs/lifecycle/hooks#execution-order).
 
 ```hcl
 app "frontend" {
@@ -54,4 +54,4 @@ app "frontend" {
 
 - `on_failure` `(string: "fail")` - Behavior when the hook fails. If this is
   "continue" then failures are ignored. Otherwise, a failure cases the entire
-  operation to fail. See [failure behavior](/docs/lifecycle/hooks#failure-behavior).
+  operation to fail. See [failure behavior](/waypoint/docs/lifecycle/hooks#failure-behavior).

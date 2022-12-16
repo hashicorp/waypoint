@@ -24,7 +24,7 @@ Waypoint workflow.
   platform.
 
 - A **deploy** takes a previously built _artifact_ and stages it onto the target
-  deployment platform and is available via [deployment URLs](/docs/url#per-deployment-urls)
+  deployment platform and is available via [deployment URLs](/waypoint/docs/url#per-deployment-urls)
   or other internal means.
 
 - A **release** activates a previously staged _deployment_ and opens it
@@ -50,12 +50,12 @@ The build process may also include **registry** configuration to push
 the built artifact to a registry so that it is available for the deployment
 platform.
 
-[The Build page](/docs/lifecycle/build) explains more including using Docker and Buildpacks.
+[The Build page](/waypoint/docs/lifecycle/build) explains more including using Docker and Buildpacks.
 
 ## Deploy
 
 A **deploy** takes a previously built _artifact_ and stages it onto the target
-deployment platform and is available via [deployment URLs](/docs/url#per-deployment-urls)
+deployment platform and is available via [deployment URLs](/waypoint/docs/url#per-deployment-urls)
 or other internal means.
 
 "Stage" in this context means that the application should be ready to receive
@@ -66,7 +66,7 @@ Not all platforms support the concept of "staging" a deployment or this
 behavior may not be desirable. Waypoint does not enforce this requirement
 and some deployment plugins may not support it.
 
-[The Deploy page](/docs/lifecycle/deploy) explains more including using Docker, Kubernetes and Nomad.
+[The Deploy page](/waypoint/docs/lifecycle/deploy) explains more including using Docker, Kubernetes and Nomad.
 
 ## Release
 
@@ -76,15 +76,15 @@ to general traffic.
 This step may involve adding a deployment to a load balancer, updating
 DNS, configuring a service mesh, etc.
 
-[The Release page](/docs/lifecycle/release) explains more.
+[The Release page](/waypoint/docs/lifecycle/release) explains more.
 
 ## Hooks
 
 A **hook** is a customizable command that executes before or after the `build`,
 `registry`, `deploy`, or `release` operations.
-Hooks execute on the [Waypoint Runner](/docs/resources/internals/execution),
+Hooks execute on the [Waypoint Runner](/waypoint/docs/resources/internals/execution),
 which is typically an on-demand runner.
 Hooks can be useful to do things such as perform a security scan on an image,
 run database migrations on a deploy, etc.
 
-[The Hooks page](/docs/lifecycle/hooks) explains more.
+[The Hooks page](/waypoint/docs/lifecycle/hooks) explains more.

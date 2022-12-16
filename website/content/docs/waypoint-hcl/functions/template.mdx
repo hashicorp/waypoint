@@ -20,7 +20,7 @@ be provided to the template.
 
 ## Syntax
 
-Template syntax uses HCL [string templates](/docs/waypoint-hcl/syntax/expressions#string-templates).
+Template syntax uses HCL [string templates](/waypoint/docs/waypoint-hcl/syntax/expressions#string-templates).
 This supports conditionals, loops, function calls, etc.
 
 ## `templatefile`
@@ -36,7 +36,7 @@ in a temporary location. This function _does not modify the original file_.
 
 **Reminder:** This function returns a file path, not the rendered contents of the file.
 If you want the contents of the rendered file, you can wrap this function
-with [`file`](/docs/waypoint-hcl/functions/all#file).
+with [`file`](/waypoint/docs/waypoint-hcl/functions/all#file).
 
 This function is useful for parameters that expect file paths. The example
 below shows using this function with Docker to template the Dockerfile:

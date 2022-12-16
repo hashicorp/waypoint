@@ -13,7 +13,7 @@ The `deploy` stanza describes how an application is deployed.
 A deploy takes a previously built artifact and stages it onto the target
 deployment platform. The target deployment platform is pluggable and can be
 Docker, Kubernetes, Nomad, EC2, and more. Read more about the
-[deploy phase of the application lifecycle here](/docs/lifecycle/deploy).
+[deploy phase of the application lifecycle here](/waypoint/docs/lifecycle/deploy).
 
 Exactly one `deploy` stanza is required within an application stanza.
 
@@ -49,8 +49,8 @@ app "frontend" {
 
 ### Optional
 
-- `hook` <code>([hook][hook]: nil)</code> - [Hooks](/docs/lifecycle/hooks)
+- `hook` <code>([hook][hook]: nil)</code> - [Hooks](/waypoint/docs/lifecycle/hooks)
   to execute before and/or after the deploy.
 
-[hook]: /docs/waypoint-hcl/hook 'Hook Stanza'
-[use]: /docs/waypoint-hcl/use 'Use Stanza'
+[hook]: /waypoint/docs/waypoint-hcl/hook 'Hook Stanza'
+[use]: /waypoint/docs/waypoint-hcl/use 'Use Stanza'

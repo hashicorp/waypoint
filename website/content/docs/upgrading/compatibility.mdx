@@ -62,13 +62,13 @@ may communicate with a Waypoint server so long as the current protocol
 versions are within the range advertised.
 
 Finally, Waypoint advertises two types of protocol versions: one for
-the API, and one exclusively for the [entrypoint](/docs/entrypoint) protocol.
+the API, and one exclusively for the [entrypoint](/waypoint/docs/entrypoint) protocol.
 This allows Waypoint to iterate on the API in potentially backwards
 incompatible ways without breaking entrypoints, and vice versa.
 
 ### Current Protocol Version Table
 
-The current protocol version table can be viewed [here](/docs/upgrading/protocol-table).
+The current protocol version table can be viewed [here](/waypoint/docs/upgrading/protocol-table).
 
 ### Example
 
@@ -113,7 +113,7 @@ Going through the list of components, we can see:
   only speaks 3 to 4.
 
 To safely perform the upgrades required, please read the
-[upgrade guide](/docs/upgrading).
+[upgrade guide](/waypoint/docs/upgrading).
 
 ## Frequency of Protocol Version Change
 
@@ -127,9 +127,9 @@ prior experience with other projects, we expect some protocol version changes
 during early releases (0.x) but for the frequency to quickly dissipate as
 the project matures.
 
-We can look to [Consul](https://www.consul.io/) as an example, since they use
+We can look to [Consul](/consul) as an example, since they use
 a similar protocol versioning feature. By
-[looking at their protocol version history](https://www.consul.io/docs/upgrading/compatibility),
+[looking at their protocol version history](/consul/docs/upgrading/compatibility),
 we can see that we introduced a new protocol version in the first 6 months
 of the project but retained compatibility for 2 years (until version 0.7).
 And while we introduced more protocol versions we continue to be compatible
