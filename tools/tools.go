@@ -17,7 +17,7 @@ package tools
 //go:generate go install github.com/evanphx/grpc-gateway/protoc-gen-swagger
 
 //go:generate go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway
-//go:generate go install "-ldflags=-s -w -X github.com/vektra/mockery/cmd/mockery.SemVer=2.12.1" github.com/vektra/mockery/v2@v2.15.0
+//go:generate go install "-ldflags=-s -w -X github.com/vektra/mockery/cmd/mockery.SemVer=2.15.0" github.com/vektra/mockery/v2@v2.15.0
 
 import (
 	_ "github.com/evanphx/grpc-gateway/protoc-gen-swagger"
