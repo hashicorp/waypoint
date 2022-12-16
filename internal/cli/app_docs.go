@@ -507,7 +507,7 @@ func (c *AppDocsCommand) hclFormat(name, ct string, doc *docs.Documentation) {
 			panic(err)
 		}
 
-		fmt.Fprintln(readme, "<!-- This file was generated via `make gen/integrations-hcl -->")
+		fmt.Fprintln(readme, "<!-- This file was generated via `make gen/integrations-hcl` -->")
 
 		fmt.Fprintf(readme, "## %s (%s)\n\n", name, ct)
 
