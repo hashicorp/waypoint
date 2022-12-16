@@ -8,7 +8,7 @@ on:
 
 jobs:
   check-links:
-    uses: hashicorp/dev-portal/.github/workflows/temp-check-legacy-links-format.yml@amb.explore-docs-content-links
+    uses: hashicorp/dev-portal/.github/workflows/docs-content-check-legacy-links-format.yml@amb.explore-docs-content-links
     with:
       repo-owner: "hashicorp"
       repo-name: "waypoint"
