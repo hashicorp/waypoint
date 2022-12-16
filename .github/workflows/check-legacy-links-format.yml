@@ -1,0 +1,15 @@
+name: Legacy Link Format Checker
+
+on:
+  push:
+    paths:
+      - "website/content/**/*.mdx"
+      - "website/data/*-nav-data.json"
+
+jobs:
+  check-links:
+    uses: hashicorp/dev-portal/.github/workflows/temp-check-legacy-links-format.yml@amb.explore-docs-content-links
+    with:
+      repo-owner: "hashicorp"
+      repo-name: "waypoint"
+      commit-sha: ${{ github.sha }}

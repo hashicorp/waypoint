@@ -1,0 +1,45 @@
+on: [deployment_status]
+
+jobs:
+  test-link-rewrites:
+    if: github.event.deployment_status.state == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Determine if the workflow should run
+        id: should-run-for-branch
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const { data } = await github.rest.repos.listPullRequestsAssociatedWithCommit({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              commit_sha: context.sha
+            })
+            return data && data[0].head.ref === "docs/amb.migrate-link-formats"
+
+      - uses: actions/checkout@v3
+        if: ${{ steps.should-run-for-branch.outputs.result == 'true' }}
+        with:
+          repository: hashicorp/dev-portal
+          ref: amb.link-rewrites-e2e-tests
+
+      - name: Install dev-portal deps
+        if: ${{ steps.should-run-for-branch.outputs.result == 'true' }}
+        run: npm ci
+
+      - name: Install Playwright
+        if: ${{ steps.should-run-for-branch.outputs.result == 'true' }}
+        run: npx playwright install --with-deps
+
+      - name: Load data for e2e tests
+        if: ${{ steps.should-run-for-branch.outputs.result == 'true' }}
+        env:
+          REPO_NAME: "waypoint"
+        run: npm run test:e2e:linkRewrites:loadData
+
+      - name: Run e2e tests
+        if: ${{ steps.should-run-for-branch.outputs.result == 'true' }}
+        env:
+          MAIN_BRANCH_PREVIEW_URL: "https://waypoint-git-main-hashicorp.vercel.app/"
+          PR_BRANCH_PREVIEW_URL: "https://waypoint-git-docs-ambmigrate-link-formats-hashicorp.vercel.app/"
+        run: npm run test:e2e:linkRewrites
