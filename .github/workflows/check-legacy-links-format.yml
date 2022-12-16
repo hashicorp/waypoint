@@ -13,3 +13,5 @@ jobs:
       repo-owner: "hashicorp"
       repo-name: "waypoint"
       commit-sha: ${{ github.sha }}
+      mdx-directory: "website/content"
+      nav-data-directory: "website/data"
