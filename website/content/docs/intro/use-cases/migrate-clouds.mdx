@@ -37,7 +37,7 @@ with the tools and concepts listed below.
 
 ## Migrate from AWS EKS to GCP GKE
 
-##### Step 1. Start with an existing Kubernetes cluster and application deployed
+##### Step 1. Start with an existing Kubernetes cluster and a deployed application
 
 ##### Step 2. Configure your kubectl context to point to your new cluster you are migrating to
 
@@ -153,6 +153,26 @@ The release activates the previously staged deployment and exposes it to traffic
 ...
 ```
 
+The variables used in the example are defined below. Note, that the password is an
+environment variable that should be defined.
+
+```hcl
+
+variable "image" {
+  type = string
+  default = "hashicassie/hashitalk-deploy"
+}
+variable "username" {
+  type = string
+  default = "hashicassie"
+}
+variable "password" {
+  type = string
+  env = ["DOCKER_PWD"]
+  sensitive = true
+}
+```
+
 ##### Step 5. Build, Deploy, and Release Your App
 
 Now the waypoint.hcl is complete. To get your application and project initialized
@@ -198,7 +218,7 @@ See the deployment in the HCP UI with some operation logs below.
 
 Follow the same simple steps from above.
 
-##### Step 1. Start with an existing Kubernetes cluster and application deployed
+##### Step 1. Start with an existing Kubernetes cluster and a deployed application
 
 ##### Step 2. Configure your kubectl context to point to your new cluster you are migrating to
 
