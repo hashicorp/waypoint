@@ -323,7 +323,7 @@ func (c *AppDocsCommand) jsonFormat(name, ct string, doc *docs.Documentation) {
 		required, optional := splitFields(doc.RequestFields())
 		jMap["requiredFields"] = required
 		jMap["optionalFields"] = optional
-		use := "`dynamic` for sourcing [configuration values](/docs/app-config/dynamic) or [input variable values](/docs/waypoint-hcl/variables/dynamic)."
+		use := "`dynamic` for sourcing [configuration values](/waypoint/docs/app-config/dynamic) or [input variable values](/waypoint/docs/waypoint-hcl/variables/dynamic)."
 		jMap["use"] = use
 
 		if len(doc.Fields()) > 0 {
@@ -338,13 +338,13 @@ func (c *AppDocsCommand) jsonFormat(name, ct string, doc *docs.Documentation) {
 		}
 	} else {
 		required, optional := splitFields(doc.Fields())
-		use := "the [`use` stanza](/docs/waypoint-hcl/use) for this plugin."
+		use := "the [`use` stanza](/waypoint/docs/waypoint-hcl/use) for this plugin."
 		jMap["use"] = use
 		jMap["requiredFields"] = required
 		jMap["optionalFields"] = optional
 
 		if fields := doc.TemplateFields(); len(fields) > 0 {
-			jMap["outputAttrsHelp"] = "Output attributes can be used in your `waypoint.hcl` as [variables](/docs/waypoint-hcl/variables) via [`artifact`](/docs/waypoint-hcl/variables/artifact) or [`deploy`](/docs/waypoint-hcl/variables/deploy)."
+			jMap["outputAttrsHelp"] = "Output attributes can be used in your `waypoint.hcl` as [variables](/waypoint/docs/waypoint-hcl/variables) via [`artifact`](/waypoint/docs/waypoint-hcl/variables/artifact) or [`deploy`](/waypoint/docs/waypoint-hcl/variables/deploy)."
 			jMap["outputAttrs"] = fields
 		}
 	}
@@ -406,7 +406,7 @@ func (c *AppDocsCommand) mdxFormat(name, ct string, doc *docs.Documentation) {
 
 	required, optional := splitFields(doc.Fields())
 
-	use := "the [`use` stanza](/docs/waypoint-hcl/use) for this plugin."
+	use := "the [`use` stanza](/waypoint/docs/waypoint-hcl/use) for this plugin."
 	c.emitSection(w, "Required", use, "###", required)
 
 	fmt.Fprintf(w, "\n\n")
@@ -415,7 +415,7 @@ func (c *AppDocsCommand) mdxFormat(name, ct string, doc *docs.Documentation) {
 
 	if fields := doc.TemplateFields(); len(fields) > 0 {
 		fmt.Fprintf(w, "\n\n### Output Attributes\n")
-		fmt.Fprintf(w, "\nOutput attributes can be used in your `waypoint.hcl` as [variables](/docs/waypoint-hcl/variables) via [`artifact`](/docs/waypoint-hcl/variables/artifact) or [`deploy`](/docs/waypoint-hcl/variables/deploy).\n\n")
+		fmt.Fprintf(w, "\nOutput attributes can be used in your `waypoint.hcl` as [variables](/waypoint/docs/waypoint-hcl/variables) via [`artifact`](/waypoint/docs/waypoint-hcl/variables/artifact) or [`deploy`](/waypoint/docs/waypoint-hcl/variables/deploy).\n\n")
 		for i, f := range fields {
 			c.emitField(w, "####", "", f)
 			endingSpace(w, i, len(fields))
@@ -458,7 +458,7 @@ func (c *AppDocsCommand) mdxFormatConfigSourcer(name, ct string, doc *docs.Docum
 
 	required, optional := splitFields(doc.RequestFields())
 
-	use := "`dynamic` for sourcing [configuration values](/docs/app-config/dynamic) or [input variable values](/docs/waypoint-hcl/variables/dynamic)."
+	use := "`dynamic` for sourcing [configuration values](/waypoint/docs/app-config/dynamic) or [input variable values](/waypoint/docs/waypoint-hcl/variables/dynamic)."
 	c.emitSection(w, "Required", use, "###", required)
 
 	fmt.Fprintf(w, "\n\n")
