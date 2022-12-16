@@ -98,6 +98,9 @@ http:
   - selector: hashicorp.waypoint.Waypoint.ListProjects
     get: /v1/projects
 
+  - selector: hashicorp.waypoint.Waypoint.DestroyProject
+    delete: /v1/project/{project.project}
+
   # Applications
   - selector: hashicorp.waypoint.Waypoint.GetApplication
     get: /v1/project/{application.project}/application/{application.application}

@@ -2475,10 +2475,12 @@ message ListJobsRequest {
   Ref.Runner targetRunner = 4;
   Ref.PipelineStep pipeline = 5;
   repeated Job.State jobState = 6;
+  PaginationRequest pagination = 7;
 }
 
 message ListJobsResponse {
   repeated Job jobs = 1;
+  PaginationResponse pagination = 2;
 }
 
 message GetJobStreamRequest {

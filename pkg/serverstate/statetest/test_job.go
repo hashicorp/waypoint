@@ -2,7 +2,9 @@ package statetest
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
+	"math/rand"
 	"testing"
 	"time"
 
@@ -13,6 +15,7 @@ import (
 
 	"github.com/hashicorp/go-memdb"
 
+	"github.com/hashicorp/waypoint/pkg/pagination"
 	"github.com/hashicorp/waypoint/pkg/serverstate"
 
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
@@ -22,6 +25,7 @@ import (
 func init() {
 	tests["job"] = []testFunc{
 		TestJobCreate_singleton,
+		TestJobListPagination,
 		TestJobAssign,
 		TestJobAck,
 		TestJobComplete,
@@ -51,7 +55,7 @@ func TestJobCreate_singleton(t *testing.T, factory Factory, rf RestartFactory) {
 		})))
 
 		// Exactly one job should exist
-		jobs, err := s.JobList(ctx, &pb.ListJobsRequest{})
+		jobs, _, err := s.JobList(ctx, &pb.ListJobsRequest{})
 		require.NoError(err)
 		require.Len(jobs, 1)
 	})
@@ -72,7 +76,7 @@ func TestJobCreate_singleton(t *testing.T, factory Factory, rf RestartFactory) {
 		})))
 
 		// Exactly one job should exist
-		jobs, err := s.JobList(ctx, &pb.ListJobsRequest{})
+		jobs, _, err := s.JobList(ctx, &pb.ListJobsRequest{})
 		require.NoError(err)
 		require.Len(jobs, 2)
 	})
@@ -96,7 +100,7 @@ func TestJobCreate_singleton(t *testing.T, factory Factory, rf RestartFactory) {
 		})))
 
 		// Should have both jobs
-		jobs, err := s.JobList(ctx, &pb.ListJobsRequest{})
+		jobs, _, err := s.JobList(ctx, &pb.ListJobsRequest{})
 		require.NoError(err)
 		require.Len(jobs, 2)
 
@@ -155,7 +159,7 @@ func TestJobCreate_singleton(t *testing.T, factory Factory, rf RestartFactory) {
 		})))
 
 		// Should have both jobs
-		jobs, err := s.JobList(ctx, &pb.ListJobsRequest{})
+		jobs, _, err := s.JobList(ctx, &pb.ListJobsRequest{})
 		require.NoError(err)
 		require.Len(jobs, 2)
 
@@ -212,7 +216,7 @@ func TestJobCreate_singleton(t *testing.T, factory Factory, rf RestartFactory) {
 		})))
 
 		// Should have both jobs
-		jobs, err := s.JobList(ctx, &pb.ListJobsRequest{})
+		jobs, _, err := s.JobList(ctx, &pb.ListJobsRequest{})
 		require.NoError(err)
 		require.Len(jobs, 2)
 
@@ -278,6 +282,153 @@ func TestJobCreate_singleton(t *testing.T, factory Factory, rf RestartFactory) {
 			Id: "C",
 		}))
 		require.NoError(err)
+	})
+}
+
+func TestJobListPagination(t *testing.T, factory Factory, rf RestartFactory) {
+	ctx := context.Background()
+	require := require.New(t)
+	s := factory(t)
+	defer s.Close()
+	// a b c d e
+	// f g h i j
+	// k l m n o
+	// p q r s t
+	// u v w x y
+	// z
+	startChar := 'a'
+	endChar := 'm'
+	jobCount := endChar - startChar + 1
+	var pageSize uint32 = 5
+	var chars []string
+
+	// Generate randomized jobs
+	for char := startChar; char <= endChar; char++ {
+		chars = append(chars, fmt.Sprintf("%c", char))
+	}
+	rand.Seed(time.Now().UnixNano())
+	rand.Shuffle(len(chars), func(i, j int) {
+		chars[i], chars[j] = chars[j], chars[i]
+	})
+	for _, char := range chars {
+		err := s.JobCreate(ctx, serverptypes.TestJobNew(t, &pb.Job{
+			Id: char,
+		}))
+		require.NoError(err)
+	}
+
+	t.Run(fmt.Sprintf("works with empty ListJobsRequest for compatibility and returns all %d results", jobCount), func(t *testing.T) {
+		jobs, _, err := s.JobList(ctx, &pb.ListJobsRequest{})
+		require.NoError(err)
+		require.Len(jobs, int(jobCount))
+	})
+
+	t.Run("returns 400 Bad Request if both nextPageToken and prevPageToken are set", func(t *testing.T) {
+		nextPageToken, _ := pagination.EncodeAndSerializePageToken("key", "lol")
+		prevPageToken, _ := pagination.EncodeAndSerializePageToken("key", "lol")
+		_, _, err := s.JobList(
+			ctx,
+			&pb.ListJobsRequest{
+				Pagination: serverptypes.TestPaginationRequest(t, &pb.PaginationRequest{
+					PageSize:          5,
+					NextPageToken:     nextPageToken,
+					PreviousPageToken: prevPageToken,
+				}),
+			},
+		)
+		require.Error(err)
+		require.Equal(codes.InvalidArgument, status.Code(err))
+		require.Contains(err.Error(), "Only one of NextPageToken or PreviousPageToken can be set.")
+	})
+
+	t.Run("returns 400 Bad Request if either pagination token is incorrectly formatted", func(t *testing.T) {
+		_, _, err := s.JobList(
+			ctx,
+			&pb.ListJobsRequest{
+				Pagination: serverptypes.TestPaginationRequest(t, &pb.PaginationRequest{
+					PageSize:      5,
+					NextPageToken: "thisIsNotBase64Encoded",
+				}),
+			},
+		)
+		require.Error(err)
+		require.Equal(codes.InvalidArgument, status.Code(err))
+		require.Contains(err.Error(), "Incorrectly formatted pagination token.")
+
+		encodedPrevPageToken := base64.StdEncoding.EncodeToString([]byte("incorrectlyFormattedToken"))
+		_, _, err = s.JobList(
+			ctx,
+			&pb.ListJobsRequest{
+				Pagination: serverptypes.TestPaginationRequest(t, &pb.PaginationRequest{
+					PageSize:          5,
+					PreviousPageToken: encodedPrevPageToken,
+				}),
+			},
+		)
+		require.Error(err)
+		require.Equal(codes.InvalidArgument, status.Code(err))
+		require.Contains(err.Error(), "Incorrectly formatted pagination token.")
+	})
+
+	t.Run("returns page 1/3 (5 results: a-e) + nextPageToken, without previousPageToken", func(t *testing.T) {
+		jobs, paginationResponse, err := s.JobList(
+			ctx,
+			&pb.ListJobsRequest{
+				Pagination: serverptypes.TestPaginationRequest(t, &pb.PaginationRequest{PageSize: pageSize}),
+			},
+		)
+		require.NoError(err)
+		require.Len(jobs, 5)
+		expectedPageToken, _ := pagination.EncodeAndSerializePageToken("external_id", "e")
+		require.Equal(expectedPageToken, paginationResponse.NextPageToken)
+		require.Empty(paginationResponse.PreviousPageToken)
+	})
+
+	t.Run("returns page 2/3 (5 results: f-j) with correct nextPageToken & previousPageToken", func(t *testing.T) {
+		nextPageToken, _ := pagination.EncodeAndSerializePageToken("external_id", "e")
+		resp, paginationResponse, err := s.JobList(
+			ctx,
+			&pb.ListJobsRequest{
+				Pagination: serverptypes.TestPaginationRequest(t, &pb.PaginationRequest{PageSize: pageSize, NextPageToken: nextPageToken}),
+			},
+		)
+		require.NoError(err)
+		require.Len(resp, 5)
+		expectedPrevPageToken, _ := pagination.EncodeAndSerializePageToken("external_id", "f")
+		require.Equal(expectedPrevPageToken, paginationResponse.PreviousPageToken)
+		expectedNextPageToken, _ := pagination.EncodeAndSerializePageToken("external_id", "j")
+		require.Equal(expectedNextPageToken, paginationResponse.NextPageToken)
+	})
+
+	t.Run("returns page 3/3 (3 results: k-m) + previousPageToken, without nextPageToken", func(t *testing.T) {
+		nextPageToken, _ := pagination.EncodeAndSerializePageToken("external_id", "j")
+		resp, paginationResponse, err := s.JobList(
+			ctx,
+			&pb.ListJobsRequest{
+				Pagination: serverptypes.TestPaginationRequest(t, &pb.PaginationRequest{PageSize: pageSize, NextPageToken: nextPageToken}),
+			},
+		)
+		require.NoError(err)
+		require.Len(resp, 3)
+		expectedPrevPageToken, _ := pagination.EncodeAndSerializePageToken("external_id", "k")
+		require.Equal(expectedPrevPageToken, paginationResponse.PreviousPageToken)
+		require.Empty(paginationResponse.NextPageToken)
+	})
+
+	t.Run("returns page 2/3 (5 results: f-j) with correct previousPageToken & nextPageToken", func(t *testing.T) {
+		prevPageToken, _ := pagination.EncodeAndSerializePageToken("external_id", "k")
+		resp, paginationResponse, err := s.JobList(
+			ctx,
+			&pb.ListJobsRequest{
+				Pagination: serverptypes.TestPaginationRequest(t, &pb.PaginationRequest{PageSize: 5, PreviousPageToken: prevPageToken}),
+			},
+		)
+		require.NoError(err)
+		require.Len(resp, 5)
+		expectedPrevPageToken, _ := pagination.EncodeAndSerializePageToken("external_id", "f")
+		require.Equal(expectedPrevPageToken, paginationResponse.PreviousPageToken)
+		expectedNextPageToken, _ := pagination.EncodeAndSerializePageToken("external_id", "j")
+		require.Equal(expectedNextPageToken, paginationResponse.NextPageToken)
 	})
 }
 

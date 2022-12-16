@@ -3,6 +3,7 @@ package core
 import (
 	"context"
 	"fmt"
+	"reflect"
 
 	"github.com/hashicorp/go-argmapper"
 	"github.com/mitchellh/mapstructure"
@@ -124,9 +125,24 @@ func (a *App) destroyDeploy(
 		Deployment: d,
 	})
 
+	if err != nil {
+		return err
+	}
+	if destroyment == nil {
+		a.UI.Output("The destroy deployment operation returned nothing, cannot "+
+			"determine what old resources were destroyed or left behind", terminal.WithWarningStyle())
+		return nil
+	}
+
 	destroyProto, ok := destroyment.(*pb.Deployment)
 	if !ok {
-		return errors.New("error converting operation message into a Deployment proto message")
+		a.UI.Output("Failed to convert operation to a Deployment proto message, "+
+			"cannot detail which resources were destroyed or left around. The deployment "+
+			"message is of type %T. "+
+			"Please report this issue if it persists. Waypoint will continue on...",
+			reflect.TypeOf(destroyment),
+			terminal.WithErrorStyle())
+		return nil
 	}
 
 	var message string

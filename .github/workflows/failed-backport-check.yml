@@ -1,0 +1,16 @@
+# This workflow notifies slack if a failed backport PR is opened (aka in draft mode)
+on:
+  pull_request_target:
+    types: [opened]
+
+jobs:
+  # checks that a .changelog entry is present for a PR
+  failed-backport-check:
+    # We only run if it has "Backport" in the title and is a draft PR (as all failed backports will be)
+    if: "contains(github.event.pull_request.title, 'Backport') && github.event.pull_request.draft"
+    runs-on: ubuntu-latest
+    steps:
+    - name: Notify Slack on failed Backport PRs
+      uses: slackapi/slack-github-action@v1.23.0
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

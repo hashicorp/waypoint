@@ -2,7 +2,7 @@
 layout: docs
 page_title: 'Plugin Interfaces'
 description: |-
-  How Waypoint plugins work
+  The various component interfaces for a Waypoint plugin
 ---
 
 # Plugin Interfaces and Components
@@ -32,13 +32,15 @@ in the Waypoint SDK are not called directly; instead, they require that you retu
 how the Builder interface could be implemented on a component.
 
 ```go
-type Builder struct {}
-
-func (b *Builder) BuildFunc() interface{} {
-  return b.build
+type Builder struct {
+  // Other component fields
 }
 
-func (b *Builder) build(
+func (b *Builder) BuildFunc() interface{} {
+  return b.Build
+}
+
+func (b *Builder) Build(
   ctx context.Context,
   log hclog.Logger,
   ui terminal.UI,

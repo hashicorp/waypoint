@@ -33,6 +33,10 @@
           {
             "title": "Dynamic App Config with Vault Dynamic Secrets",
             "path": "intro/use-cases/dynamic-config-vault-dynamic-secrets"
+          },
+          {
+            "title": "Blue-Green Deployments with Nomad and Consul",
+            "path": "intro/use-cases/blue-green-deployment"
           }
         ]
       }
@@ -99,6 +103,10 @@
           {
             "title": "Upgrade to 0.9.0",
             "path": "upgrading/version-guides/0.9.0"
+          },
+          {
+            "title": "Upgrade to 0.10.0",
+            "path": "upgrading/version-guides/0.10.0"
           }
         ]
       }

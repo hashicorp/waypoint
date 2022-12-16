@@ -55,3 +55,42 @@ func TestExternalize(t *testing.T) {
 		require.Len(details, 2)
 	})
 }
+
+func TestUserError(t *testing.T) {
+	log := hclog.New(&hclog.LoggerOptions{Level: hclog.Debug})
+	require := require.New(t)
+
+	t.Run("One level of user errors", func(t *testing.T) {
+		baseError := errors.New("failed to connect to db at 10.0.0.sensitive")
+		userError := UserErrorf(baseError, "missing required field 'foo'. Try resubmitting after specifying 'foo'")
+
+		finalError := Externalize(log, userError, "failed to perform action foobarbaz")
+
+		require.NotContainsf(finalError.Error(), "failed to connect to db at 10.0.0.sensitive", "contains base error")
+		require.Contains(finalError.Error(), "missing required field 'foo'. Try resubmitting after specifying 'foo'")
+		require.Contains(finalError.Error(), "failed to perform action foobarbaz")
+	})
+
+	t.Run("Multiple levels of wrapping", func(t *testing.T) {
+		baseError := errors.New("failed to connect to db at 10.0.0.sensitive")
+		userError1 := UserErrorf(baseError, "missing required field 'foo'. Try resubmitting after specifying 'foo'")
+		middleError := errors.Wrapf(userError1, "failed to do specific internal thing")
+		userError2 := UserErrorf(middleError, "invalid value 'baz' for argument 'bar'")
+
+		finalError := Externalize(log, userError2, "failed to perform action foobarbaz")
+
+		require.NotContainsf(finalError.Error(), "failed to connect to db at 10.0.0.sensitive", "contains base error")
+		require.Contains(finalError.Error(), "missing required field 'foo'. Try resubmitting after specifying 'foo'")
+		require.NotContainsf(finalError.Error(), "failed to do specific internal thing", "contains middle internal error")
+		require.Contains(finalError.Error(), "invalid value 'baz' for argument 'bar'")
+		require.Contains(finalError.Error(), "failed to perform action foobarbaz")
+	})
+
+	t.Run("Supports status codes", func(t *testing.T) {
+		internalStatusErr := status.Errorf(codes.Internal, "unknown internal failure")
+		userErr := UserErrorWithCodef(codes.InvalidArgument, internalStatusErr, "it's not an internal error actually, you made a mistake o user")
+
+		finalErr := Externalize(log, userErr, "no new information for the user here")
+		require.Equal(status.Code(finalErr), codes.InvalidArgument)
+	})
+}

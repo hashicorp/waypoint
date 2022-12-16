@@ -425,7 +425,7 @@ func TestServiceStartExecStream_startPlugin(t *testing.T) {
 	// Observe that a job to start the exec plugin has been queued
 	time.Sleep(time.Second)
 
-	jobs, err := testServiceImpl(impl).state(ctx).JobList(ctx, &pb.ListJobsRequest{})
+	jobs, _, err := testServiceImpl(impl).state(ctx).JobList(ctx, &pb.ListJobsRequest{})
 	require.NoError(err)
 
 	require.True(len(jobs) == 1)

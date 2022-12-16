@@ -27,12 +27,11 @@ import (
 //
 // This function will do one of two things:
 //
-//   1. If connection options were given, it'll attempt to connect to
-//      an existing Waypoint server.
+//  1. If connection options were given, it'll attempt to connect to
+//     an existing Waypoint server.
 //
-//   2. If WithLocal was specified and no connection addresses can be
-//      found, this will spin up an in-memory server.
-//
+//  2. If WithLocal was specified and no connection addresses can be
+//     found, this will spin up an in-memory server.
 func (c *Project) initServerClient(ctx context.Context, cfg *config) (*grpc.ClientConn, error) {
 	log := c.logger.Named("server")
 

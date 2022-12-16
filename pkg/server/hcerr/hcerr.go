@@ -17,7 +17,7 @@ import (
 // Externalize is intended to be called by top-level grpc handler that's
 // about to return an error to the framework. Details from the err will be logged,
 // but not returned directly to the client, to prevent leaking too much
-// detail. If the err includes a grpc status, that, along with the msg and
+// detail. If the error includes a grpc status, that, along with the msg and
 // args, will be returned to the client.
 //
 // Args follow the same pattern as `hclog`. They are expected to be in order of
@@ -27,6 +27,8 @@ import (
 // struct as an arg, pull out the fields of interest and add them as multiple args.
 // These will be displayed as key/value pairs to the client. If there are an odd number of args,
 // this assumes it's a mistake and adds "EXTRA_VALUE_AT_END" as the label for the final arg.
+//
+// Any UserError errors found in the chain will have their messages added to the final error.
 func Externalize(log hclog.Logger, err error, msg string, args ...interface{}) error {
 
 	if errors.Is(err, context.Canceled) {
@@ -45,6 +47,21 @@ func Externalize(log hclog.Logger, err error, msg string, args ...interface{}) e
 	} else {
 		// And if all else fails, default to internal error
 		code = codes.Internal
+	}
+
+	// Extract all user-facing messages from error chain
+	// and add them to the final error message
+	currentError := err
+	for currentError != nil {
+		var userErr UserError
+		if errors.As(currentError, &userErr) {
+			msg = fmt.Sprintf("%s\n%s", msg, userErr.UserMessage)
+			currentError = userErr.Unwrap()
+			// Maybe there are more user errors in the chain under this one
+			continue
+		}
+		// No more user errors in the chain
+		break
 	}
 
 	var details []*anypb.Any
@@ -70,9 +87,13 @@ func Externalize(log hclog.Logger, err error, msg string, args ...interface{}) e
 		}
 	}
 
-	return status.FromProto(&spb.Status{
+	stat := status.FromProto(&spb.Status{
 		Code:    int32(code),
 		Message: msg,
 		Details: details,
-	}).Err()
+	})
+
+	ret := stat.Err()
+
+	return ret
 }
