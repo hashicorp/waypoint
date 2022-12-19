@@ -37,6 +37,7 @@ func init() {
 		TestJobHeartbeatOnRestart,
 		TestJobUpdateRef,
 		TestJobUpdateExpiry,
+		TestJobLatestInit,
 	}
 }
 
@@ -2777,5 +2778,73 @@ func TestJobUpdateExpiry(t *testing.T, factory Factory, rf RestartFactory) {
 		job, err = s.JobById(ctx, job.Id, nil)
 		require.NoError(err)
 		require.NotNil(job.ExpireTime)
+	})
+}
+
+func TestJobLatestInit(t *testing.T, factory Factory, rf RestartFactory) {
+	ctx := context.Background()
+
+	t.Run("returns the latest init job for a given project", func(t *testing.T) {
+		require := require.New(t)
+
+		s := factory(t)
+		defer s.Close()
+
+		// Create some projects
+		proj := serverptypes.TestProject(t, &pb.Project{})
+		require.NoError(s.ProjectPut(ctx, proj))
+		otherProj := serverptypes.TestProject(t, &pb.Project{Name: "other"})
+		require.NoError(s.ProjectPut(ctx, otherProj))
+
+		// Create some jobs
+		require.NoError(s.JobCreate(ctx, serverptypes.TestJobNew(t, &pb.Job{
+			Id:          "first_init",
+			Application: &pb.Ref_Application{Project: proj.Name},
+			Operation:   &pb.Job_Init{},
+		})))
+		require.NoError(s.JobCreate(ctx, serverptypes.TestJobNew(t, &pb.Job{
+			Id:          "latest_init",
+			Application: &pb.Ref_Application{Project: proj.Name},
+			Operation:   &pb.Job_Init{},
+		})))
+		require.NoError(s.JobCreate(ctx, serverptypes.TestJobNew(t, &pb.Job{
+			Id:          "other_proj_first_init",
+			Application: &pb.Ref_Application{Project: otherProj.Name},
+			Operation:   &pb.Job_Init{},
+		})))
+		require.NoError(s.JobCreate(ctx, serverptypes.TestJobNew(t, &pb.Job{
+			Id:          "some_other_job",
+			Application: &pb.Ref_Application{Project: proj.Name},
+		})))
+
+		// Call JobLatestInit
+		job, err := s.JobLatestInit(ctx, &pb.Ref_Project{Project: proj.Name})
+
+		require.NoError(err)
+		require.NotNil(job)
+		require.Equal("latest_init", job.Id)
+	})
+
+	t.Run("returns nil if no job matches", func(t *testing.T) {
+		require := require.New(t)
+
+		s := factory(t)
+		defer s.Close()
+
+		// Create a project
+		proj := serverptypes.TestProject(t, &pb.Project{})
+		require.NoError(s.ProjectPut(ctx, proj))
+
+		// Create some jobs
+		require.NoError(s.JobCreate(ctx, serverptypes.TestJobNew(t, &pb.Job{
+			Id:          "some_job",
+			Application: &pb.Ref_Application{Project: proj.Name},
+		})))
+
+		// Call JobLatestInit
+		job, err := s.JobLatestInit(ctx, &pb.Ref_Project{Project: proj.Name})
+
+		require.NoError(err)
+		require.Nil(job)
 	})
 }

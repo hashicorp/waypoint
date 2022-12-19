@@ -1169,6 +1169,57 @@ func (s *State) JobIsAssignable(ctx context.Context, jobpb *pb.Job) (bool, error
 	}
 }
 
+// JobLatestInit looks up the latest init job for the given project. The returned
+// Job will be a deep copy of the job so it is safe to read/write. If the job
+// can't be found, a nil result with no error is returned.
+func (s *State) JobLatestInit(ctx context.Context, proj *pb.Ref_Project) (*pb.Job, error) {
+	memTxn := s.inmem.Txn(false)
+	defer memTxn.Abort()
+
+	iter, err := memTxn.GetReverse(jobTableName, jobQueueTimeIndexName)
+	if err != nil {
+		return nil, err
+	}
+
+	var jobIdx *jobIndex
+	initOpType := reflect.TypeOf((*pb.Job_Init)(nil))
+
+	for {
+		next := iter.Next()
+		if next == nil {
+			break
+		}
+
+		idx, ok := next.(*jobIndex)
+		if !ok {
+			break
+		}
+
+		if idx.OpType != initOpType {
+			continue
+		}
+
+		if idx.Application.Project != proj.Project {
+			continue
+		}
+
+		jobIdx = idx
+		break
+	}
+
+	if jobIdx == nil {
+		return nil, nil
+	}
+
+	var job *pb.Job
+	err = s.db.View(func(dbTxn *bolt.Tx) error {
+		job, err = s.jobById(dbTxn, jobIdx.Id)
+		return err
+	})
+
+	return job, err
+}
+
 // jobIndexInit initializes the config index from persisted data.
 func (s *State) jobIndexInit(dbTxn *bolt.Tx, memTxn *memdb.Txn) error {
 	bucket := dbTxn.Bucket(jobBucket)
