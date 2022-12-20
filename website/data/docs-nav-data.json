@@ -33,6 +33,10 @@
           {
             "title": "Dynamic App Config with Vault Dynamic Secrets",
             "path": "intro/use-cases/dynamic-config-vault-dynamic-secrets"
+          },
+          {
+            "title": "Using GitHub Actions to Unlock GitOps Workflows",
+            "path": "intro/use-cases/waypoint-gh-actions"
           }
         ]
       }
