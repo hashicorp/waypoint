@@ -15,8 +15,8 @@ are expected to write YAML and exactly control their deployments.
 
 -> **There are other deployment options.** Waypoint supports many other mechanisms
 for deploying to Kubernetes. You can use the
-[`kubernetes`](/docs/platforms/kubernetes/deploy) plugin for highly opinionated, no YAML deployments. Or you can use
-[Helm](/docs/platforms/kubernetes/helm-deploy).
+[`kubernetes`](/waypoint/docs/platforms/kubernetes/deploy) plugin for highly opinionated, no YAML deployments. Or you can use
+[Helm](/waypoint/docs/platforms/kubernetes/helm-deploy).
 
 ## A Simple Deployment
 
@@ -56,8 +56,8 @@ spec:
         image: ${artifact.image}:${artifact.tag}
 ```
 
-We use the [`templatedir` function](/docs/waypoint-hcl/functions/template#templatedir)
-so that we can access the [`artifact` variable](/docs/waypoint-hcl/variables/artifact)
+We use the [`templatedir` function](/waypoint/docs/waypoint-hcl/functions/template#templatedir)
+so that we can access the [`artifact` variable](/waypoint/docs/waypoint-hcl/variables/artifact)
 and use this to dynamically set our image for the deployment based on the
 image built in the build step. The ability to access HCL variables and
 functions in our YAML files is one big benefit of using Waypoint.
@@ -70,10 +70,10 @@ the resources created by your YAML files.
 ## Entrypoint Functionality
 
 With this plugin, Waypoint does not automatically inject the necessary
-environment variables for the [Waypoint Entrypoint](/docs/entrypoint). Therefore,
+environment variables for the [Waypoint Entrypoint](/waypoint/docs/entrypoint). Therefore,
 features such as logs, exec, etc. will not be available by default. If you
 wish to use this functionality, you can manually inject the necessary environment
-variables by using the [`entrypoint` variable](/docs/waypoint-hcl/variables/entrypoint)
+variables by using the [`entrypoint` variable](/waypoint/docs/waypoint-hcl/variables/entrypoint)
 paired with templating as shown above.
 
 The YAML file below shows the same deployment resource being created
@@ -83,7 +83,7 @@ to set the proper environment variables so that the entrypoint functions.
 -> **This requires the entrypoint to be in your container image.** If
 you're using the `docker` builder plugin, this happens automatically.
 If you're using externally built images, you may need to
-[manually inject the entrypoint](/docs/platforms/kubernetes/external-build#waypoint-entrypoint-with-external-image-builds).
+[manually inject the entrypoint](/waypoint/docs/platforms/kubernetes/external-build#waypoint-entrypoint-with-external-image-builds).
 
 ```yaml
 // ./k8s/deployment.yaml

@@ -1,0 +1,14 @@
+on: [deployment_status]
+
+jobs:
+  test-link-rewrites:
+    if: github.event.deployment_status.state == 'success'
+    uses: hashicorp/dev-portal/.github/workflows/docs-content-link-rewrites-e2e.yml@f33b6376e1648fea794d7f4aa74dfe82e7fe48b8
+    with:
+      repo-owner: "hashicorp"
+      repo-name: "waypoint"
+      commit-sha: ${{ github.sha }}
+      main-branch-preview-url: "https://waypoint-git-main-hashicorp.vercel.app/"
+      # Workflow is only intended to run for one single migration PR
+      # This variable does not need to be updated
+      pr-branch-preview-url: "https://waypoint-git-docs-ambmigrate-link-formats-hashicorp.vercel.app/"

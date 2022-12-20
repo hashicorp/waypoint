@@ -7,16 +7,16 @@ description: |-
 
 # Internal Values
 
-Internal values are static or [dynamic](/docs/app-config/dynamic)
+Internal values are static or [dynamic](/waypoint/docs/app-config/dynamic)
 configuration values that can be referenced by environment variables,
-[files](/docs/app-config/files), or other internal variables to compose
+[files](/waypoint/docs/app-config/files), or other internal variables to compose
 values. An example common usecase is building a database connection string
 which requires a database host, username, password, etc. that may come from difference sources.
 
 ## Using Internal Values
 
 Internal values are declared in the `waypoint.hcl` file in the
-[`config` stanza](/docs/waypoint-hcl/config). The example below configures
+[`config` stanza](/waypoint/docs/waypoint-hcl/config). The example below configures
 an internal value that reads a database username and host from a Terraform
 output and then combines them in an environment variable:
 

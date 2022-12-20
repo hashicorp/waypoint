@@ -9,7 +9,7 @@ description: |-
 
 <Placement groups={[['runner'], ['app', 'runner']]} />
 
-The `runner` stanza configures a project for [remote operations](/docs/runner),
+The `runner` stanza configures a project for [remote operations](/waypoint/docs/runner),
 including configuring how to source a project's source code from Git and
 configuring polling.
 
@@ -17,7 +17,7 @@ configuring polling.
 is called.**
 
 The `runner` stanza is completely optional. The settings specified in the
-`runner `stanza can also be specified using the [`waypoint project apply`](/commands/project-apply)
+`runner `stanza can also be specified using the [`waypoint project apply`](/waypoint/commands/project-apply)
 command or via the UI by creating or modifying a project.
 
 ```hcl
@@ -31,7 +31,7 @@ runner {
 }
 ```
 
-The above example enables [remote operations](/docs/runner) and configures
+The above example enables [remote operations](/waypoint/docs/runner) and configures
 the project to clone data from a GitHub repository.
 
 -> **Note: these settings are usually configured via the CLI or UI.** We
@@ -43,7 +43,7 @@ as Git auth information in your `waypoint.hcl` file. See
 ## CLI or UI Configuration
 
 All of the settings in the `runner` stanza can be specified via the
-CLI using [`waypoint project apply`](/commands/project-apply) or via
+CLI using [`waypoint project apply`](/waypoint/commands/project-apply) or via
 the UI in the project create or modify screens. This approach is preferable
 since it avoids having to put secrets in your waypoint.hcl file and makes
 your waypoint.hcl more portable since it doesn't specify a repository.
@@ -70,7 +70,7 @@ The `runner` stanza has no required parameters.
 ### Optional
 
 - `enabled` `(boolean: false)` - This must be set to true to enable
-  [remote operations](/docs/runner) from the CLI. This only affects
+  [remote operations](/waypoint/docs/runner) from the CLI. This only affects
   the CLI. Remote operations triggered via Git polling or directly via the
   API are still allowed.
 
@@ -136,11 +136,11 @@ other data source types.
 
 ### Optional Parameters
 
-- `enabled` `(boolean: false)` - True to enable [polling](/docs/projects/git#polling).
+- `enabled` `(boolean: false)` - True to enable [polling](/waypoint/docs/projects/git#polling).
   Polling requires that a valid datasource is configured.
 
 - `interval` `(string: "30s")` - The interval between polling for changes.
   This defaults to 30 seconds.
 
-[data_source]: /docs/waypoint-hcl/config#data_source-parameters 'data_source Stanza'
-[poll]: /docs/waypoint-hcl/config#poll-parameters 'poll Stanza'
+[data_source]: /waypoint/docs/waypoint-hcl/config#data_source-parameters 'data_source Stanza'
+[poll]: /waypoint/docs/waypoint-hcl/config#poll-parameters 'poll Stanza'

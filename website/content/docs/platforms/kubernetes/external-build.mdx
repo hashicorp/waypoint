@@ -8,14 +8,14 @@ description: |-
 # Externally Built Images
 
 The Waypoint workflow includes the ability to perform the
-[build](/docs/lifecycle/build) step directly, but users may also use Waypoint with
+[build](/waypoint/docs/lifecycle/build) step directly, but users may also use Waypoint with
 externally built artifacts such as from CI pipelines. This is particularly
 common if you're adopting Waypoint for existing applications (versus
 net new use cases).
 
 ## Configuring Waypoint to Use an Existing Image
 
-The [docker-pull builder](/plugins/docker#docker-pull-builder) was designed
+The [docker-pull builder](/waypoint/plugins/docker#docker-pull-builder) was designed
 so that Waypoint can use pre-built Docker images. These images can be built
 anyway you want: manually, CI pipelines, 3rd party sources, etc.
 
@@ -36,8 +36,8 @@ build {
 ```
 
 A more realistic example would likely use
-[input variables](/docs/waypoint-hcl/variables/input)
-or [functions](/docs/waypoint-hcl/functions/all) to dynamically specify
+[input variables](/waypoint/docs/waypoint-hcl/variables/input)
+or [functions](/waypoint/docs/waypoint-hcl/functions/all) to dynamically specify
 the correct image.
 
 -> **Why `disable_entrypoint`?** Waypoint doesn't currently support
@@ -47,7 +47,7 @@ section on this page for how you can manually inject the entrypoint.
 
 ### Input Variables to Specify the Image Tag
 
-[Input variables](/docs/waypoint-hcl/variables/input) can be used
+[Input variables](/waypoint/docs/waypoint-hcl/variables/input) can be used
 to specify parameters for configuring the image to use, as shown below.
 This is a more realistic example because this allows a step in a system
 such as a CI to specify to Waypoint what the desired image tag is for deployment.
@@ -68,7 +68,7 @@ app "my-app" {
 }
 ```
 
-This variable can then be used in [many ways](/docs/waypoint-hcl/variables/input#assigning-values-to-custom-input-variables).
+This variable can then be used in [many ways](/waypoint/docs/waypoint-hcl/variables/input#assigning-values-to-custom-input-variables).
 If a CI is executing Waypoint, the most likely way is via a flag:
 
 ```shell-session
@@ -76,14 +76,14 @@ $ waypoint build -var image_tag=$TAG my-project/my-app
 ```
 
 -> **Note:** The `<project>/<app>` syntax with `waypoint` CLI operations forces
-a [remote operation](/docs/projects/remote). This can be invoked anywhere;
+a [remote operation](/waypoint/docs/projects/remote). This can be invoked anywhere;
 `waypoint` does not need the project source to be available in the local filesystem, only credentials to
 access the Waypoint server.
 
 ### Git Functions to Specify the Image Tag
 
 Another approach to specifying the image tag, particularly in a GitOps-oriented
-workflow, would be to use [Git functions](/docs/waypoint-hcl/functions/all#gitrefhash).
+workflow, would be to use [Git functions](/waypoint/docs/waypoint-hcl/functions/all#gitrefhash).
 
 The example below specifies that the tag should always match the current
 Git commit hash. This assumes your external system is building an image for
@@ -110,13 +110,13 @@ system is configured and how (or if) your team uses Git.
 
 ### Invoking from CI
 
-The first approach is to _not use_ [repository polling](/docs/projects/git#polling)
+The first approach is to _not use_ [repository polling](/waypoint/docs/projects/git#polling)
 with Waypoint, because Waypoint may run before your CI system builds the image.
 Instead, the CI system can manually invoke the Waypoint operation once the
 image is built.
 
 To do this, the CI must be configured with
-[connection environment variables](/docs/automating-execution#environment-variables):
+[connection environment variables](/waypoint/docs/automating-execution#environment-variables):
 `WAYPOINT_SERVER_ADDR`, `WAYPOINT_SERVER_TOKEN`, etc. Then, after the
 image is built, trigger a deploy:
 
@@ -125,13 +125,13 @@ $ waypoint up <project>/<app>
 ```
 
 You may specify variables and other flags to the `up` command. The `<project>/<app>`
-syntax will force a [remote operation](/docs/projects/remote) so the up will
+syntax will force a [remote operation](/waypoint/docs/projects/remote) so the up will
 happen remotely. This will block while the operation is happening.
 
 ### Invoking from Git
 
 Another approach is to continue using Git to trigger deploys. In this
-approach, your [project Git settings](/docs/projects/git) should be configured
+approach, your [project Git settings](/waypoint/docs/projects/git) should be configured
 to watch a specific branch that is only merged to when you're ready to deploy.
 
 For example, you can have a `production` branch (or it may just be your main
@@ -142,7 +142,7 @@ This requires a different style of Git discipline and may not fit all teams.
 
 ## Waypoint Entrypoint with External Image Builds
 
-The [Waypoint Entrypoint](/docs/entrypoint) is an optional component that enables
+The [Waypoint Entrypoint](/waypoint/docs/entrypoint) is an optional component that enables
 features such as `waypoint exec`, log streaming, instance tracking, and more.
 When using externally built Docker images, you must also manually inject
 the entrypoint.

@@ -8,18 +8,18 @@ description: |-
 # Waypoint Server Installation
 
 The recommended way to install the server is using the
-[`waypoint install`](/commands/install) command.
+[`waypoint install`](/waypoint/commands/install) command.
 This command will install a server into Docker, Kubernetes, AWS ECS, or Nomad,
 bootstrap the server, and configure your local CLI to access that server.
 It is a single command to get up and running with Waypoint.
 
 You can also run and configure the server manually using the
-[`waypoint server run`](/commands/server-run) command. This is meant for more advanced
+[`waypoint server run`](/waypoint/commands/server-run) command. This is meant for more advanced
 users who want to run Waypoint in a platform that the `install` command doesn't support.
 
 It is possible to fine-tune the configuration of the server when using the `waypoint install` command.
 To further customize the server installation, you may pass advanced flag options
-specified in the documentation for the [`waypoint server run`](/commands/server-run)
+specified in the documentation for the [`waypoint server run`](/waypoint/commands/server-run)
 command. To set these values, include a `--` after the full argument list for
 `install`, followed by these advanced flag options. As an example, to set the
 server log level to trace and disable the UI, you can use the below command.
@@ -32,17 +32,17 @@ server log level to trace and disable the UI, you can use the below command.
 for any group of people using Waypoint together. If you are a day-to-day
 user of Waypoint with a group of people you may not need to install a server.
 In this case, see the documentation on
-[connecting to a server](/docs/server#connecting).
+[connecting to a server](/waypoint/docs/server#connecting).
 
 ## Upgrading
 
 For details on upgrading the server, please see the
-[general Waypoint upgrade documentation](/docs/upgrading).
+[general Waypoint upgrade documentation](/waypoint/docs/upgrading).
 
 ## Easy Installation
 
 We provide an opinionated install method for users who wish to get
-off the ground quickly on certain server platforms with [waypoint install](/docs/server/install).
+off the ground quickly on certain server platforms with [waypoint install](/waypoint/docs/server/install).
 
 For more details on what this command provides, as well as any supported server
 platform caveats, please check out the documentation for `waypoint install`.
@@ -52,7 +52,7 @@ platform caveats, please check out the documentation for `waypoint install`.
 `waypoint install` is built to help you setup a Waypoint server, but
 we understand there are going to be many cases where you'll want to run
 Waypoint manually. To run a Waypoint server manually, you'll use the
-[`waypoint server run` command](/commands/server-run).
+[`waypoint server run` command](/waypoint/commands/server-run).
 
 **The instructions below are only if you're manually running a server
 with `waypoint server run`.**
@@ -115,7 +115,7 @@ $ waypoint server bootstrap -server-addr=127.0.0.1:9701 -server-tls-skip-verify
 ```
 
 This will output the bootstrap token but more importantly this will configure
-a [CLI context](/docs/server/auth#cli) automatically. You can now verify
+a [CLI context](/waypoint/docs/server/auth#cli) automatically. You can now verify
 the connection using `waypoint context verify`.
 
 ### Ready!

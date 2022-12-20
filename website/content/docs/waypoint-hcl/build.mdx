@@ -12,7 +12,7 @@ description: |-
 The `build` stanza describes how an application is built. Waypoint converts
 application source code into an artifact. Waypoint can store the image locally,
 or push it to a remote registry. Read more about the
-[build phase of the application lifecycle here](/docs/lifecycle/build).
+[build phase of the application lifecycle here](/waypoint/docs/lifecycle/build).
 
 Exactly one `build` stanza is required within an `app` stanza.
 
@@ -44,7 +44,7 @@ app "frontend" {
 
 ### Optional
 
-- `hook` <code>([hook][hook]: nil)</code> - [Hooks](/docs/lifecycle/hooks)
+- `hook` <code>([hook][hook]: nil)</code> - [Hooks](/waypoint/docs/lifecycle/hooks)
   to execute before and/or after the build.
 
 - `registry` <code>([registry][registry]: nil)</code> - A registry to
@@ -52,6 +52,6 @@ app "frontend" {
   pushed to any registry and it is assumed that the deployment can access
   the build result.
 
-[hook]: /docs/waypoint-hcl/hook 'Hook Stanza'
-[registry]: /docs/waypoint-hcl/registry 'Registry Stanza'
-[use]: /docs/waypoint-hcl/use 'Use Stanza'
+[hook]: /waypoint/docs/waypoint-hcl/hook 'Hook Stanza'
+[registry]: /waypoint/docs/waypoint-hcl/registry 'Registry Stanza'
+[use]: /waypoint/docs/waypoint-hcl/use 'Use Stanza'

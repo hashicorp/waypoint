@@ -11,16 +11,16 @@ Waypoint can be extended using custom plugins. Waypoint supports
 custom builders, deployment platforms, registries, release managers,
 and more. This allows you to extend the Waypoint workflow and featureset
 anywhere. This page will focus on _using_ plugins. To learn more about
-how to write plugins, see the [Extending Waypoint guide](/docs/extending-waypoint).
+how to write plugins, see the [Extending Waypoint guide](/waypoint/docs/extending-waypoint).
 
 Waypoint ships with dozens of built-in plugins. These plugins are available
 out-of-the-box with Waypoint and are built directly on the same plugin system
 as external plugins. To see a list of supported plugins, see the
-[plugin documentation](/plugins).
+[plugin documentation](/waypoint/plugins).
 
 ## Available Plugins
 
-You can see a list of [all built-in plugins here](/plugins).
+You can see a list of [all built-in plugins here](/waypoint/plugins).
 
 We do not maintain a list of external plugins currently.
 
@@ -29,13 +29,13 @@ We do not maintain a list of external plugins currently.
 External plugins are distributed as executable binaries. To use an external
 plugin, you must download the correct binary for your operating system,
 place it at the correct location, and use it within your
-[waypoint configuration](/docs/waypoint-hcl/use).
+[waypoint configuration](/waypoint/docs/waypoint-hcl/use).
 
 ### Installing an External Plugin - Local Operations
 
 To install an external plugin, the binary must first be named
 `waypoint-plugin-<name>` where `<name>` is the same label that is used
-with the [`use` stanza](/docs/waypoint-hcl/use) in your Waypoint configuration.
+with the [`use` stanza](/waypoint/docs/waypoint-hcl/use) in your Waypoint configuration.
 For the example below, our binary must be named `waypoint-plugin-hashicloud`.
 If you're on Windows, the binary must end in ".exe".
 
@@ -72,7 +72,7 @@ FROM hashicorp/waypoint-odr:latest
 COPY ./waypoint-plugin-myplugin $HOME/.config/waypoint/plugins/waypoint-plugin-myplugin
 ```
 
-How to configure your runner profile to use the new image is detailed [here](/docs/runner/profiles#oci-url).
+How to configure your runner profile to use the new image is detailed [here](/waypoint/docs/runner/profiles#oci-url).
 
 #### Troubleshooting
 
@@ -108,7 +108,7 @@ app {
 
 #### Checksumming
 
-You can also use the explicit [`plugin` stanza](/docs/waypoint-hcl/plugin)
+You can also use the explicit [`plugin` stanza](/waypoint/docs/waypoint-hcl/plugin)
 to define plugins.
 
 This stanza provides additional functionality when loading plugins.
@@ -122,4 +122,4 @@ This will find the plugin, load it, and also validate any configuration.
 
 ## Authoring a Plugin
 
-To write a plugin, see the [Extending Waypoint guide](/docs/extending-waypoint).
+To write a plugin, see the [Extending Waypoint guide](/waypoint/docs/extending-waypoint).

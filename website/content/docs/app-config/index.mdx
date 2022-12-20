@@ -13,18 +13,18 @@ values sourced from external systems such as Kubernetes ConfigMaps,
 HashiCorp Vault, Amazon Parameter Store, etc.
 
 Application configuration can be set two ways. First, it may be set using the
-[`config` stanza](/docs/waypoint-hcl/config) in the `waypoint.hcl` file. You
-may also use the [`waypoint config`](/commands/config-set) CLI command, but this
+[`config` stanza](/waypoint/docs/waypoint-hcl/config) in the `waypoint.hcl` file. You
+may also use the [`waypoint config`](/waypoint/commands/config-set) CLI command, but this
 can only be used for environment variables.
 
 When configuration values change, Waypoint will automatically
 [restart your application](#application-restart-behavior).
 
-This functionality requires the [Waypoint entrypoint](/docs/entrypoint).
+This functionality requires the [Waypoint entrypoint](/waypoint/docs/entrypoint).
 
 ## Setting Configuration via the CLI
 
-Static configuration are values that are set directly using [`waypoint config set`](/commands/config-set).
+Static configuration are values that are set directly using [`waypoint config set`](/waypoint/commands/config-set).
 They are "static" because they are set with a predetermined value directly on the Waypoint
 server.
 
@@ -39,7 +39,7 @@ when configuration changes.
 
 ### Project Scope
 
-[`waypoint config set`](/commands/config-set) will set variables by default scoped to the _project_.
+[`waypoint config set`](/waypoint/commands/config-set) will set variables by default scoped to the _project_.
 This means that all applications within your project will have the environment
 variable set.
 
@@ -56,8 +56,8 @@ $ waypoint config set -app web PORT=8080
 ## Setting Configuration via `waypoint.hcl`
 
 Configuration can also be set directly in the `waypoint.hcl` file using
-the [`config` stanza](/docs/waypoint-hcl/config). The example below achieves
-the same thing as the [`waypoint config set`](/commands/config-set) example in the [section above](/docs/app-config#setting-configuration-via-the-cli).
+the [`config` stanza](/waypoint/docs/waypoint-hcl/config). The example below achieves
+the same thing as the [`waypoint config set`](/waypoint/commands/config-set) example in the [section above](/waypoint/docs/app-config#setting-configuration-via-the-cli).
 
 ```hcl
 config {
@@ -69,25 +69,25 @@ config {
 
 Configuration specified in the `waypoint.hcl` file has a number of benefits:
 
-- The configuration is made available immediately during all lifecycle operations (such as [`waypoint up`](/commands/up), [`waypoint deploy`](/commands/deploy), etc.).
+- The configuration is made available immediately during all lifecycle operations (such as [`waypoint up`](/waypoint/commands/up), [`waypoint deploy`](/waypoint/commands/deploy), etc.).
 
 - The configuration is persisted as code and can be committed to version control.
 
 - The configuration can make use of
-  [functions](/docs/waypoint-hcl/functions) and
-  [variables](/docs/waypoint-hcl/variables) to compute the keys and values.
+  [functions](/waypoint/docs/waypoint-hcl/functions) and
+  [variables](/waypoint/docs/waypoint-hcl/variables) to compute the keys and values.
 
 ### Updating the Configuration of Existing Deployments
 
 Changes to configuration within the `waypoint.hcl` file take effect
-whenever a new deploy occurs (such as via a [`waypoint up`](/commands/up) or [`waypoint deploy`](/commands/deploy)).
+whenever a new deploy occurs (such as via a [`waypoint up`](/waypoint/commands/up) or [`waypoint deploy`](/waypoint/commands/deploy)).
 Existing deployments can be updated without
-a new deploy by using the [`waypoint config sync`](/commands/config-sync) CLI command.
+a new deploy by using the [`waypoint config sync`](/waypoint/commands/config-sync) CLI command.
 
 When configuration changes take effect, any changes will affect
 _all deployments_ of that project or application. Practically, this
 means if you change a configuration value in the `waypoint.hcl` file
-and run [`waypoint up`](/commands/up), the new deployment as well as any previous deployments
+and run [`waypoint up`](/waypoint/commands/up), the new deployment as well as any previous deployments
 that are still running will be updated with the new configuration value.
 
 ### Project vs. Application Scope
@@ -140,7 +140,7 @@ will be fixed in a future version.
 Waypoint can sync application configuration values with external systems
 such as Kubernetes ConfigMaps, HashiCorp Vault, Amazon Parameter Store,
 and more. To learn more about this, see the documentation page on
-[dynamic configuration values](/docs/app-config/dynamic).
+[dynamic configuration values](/waypoint/docs/app-config/dynamic).
 
 ## Application Restart Behavior
 

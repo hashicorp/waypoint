@@ -16,7 +16,7 @@ to certain environments.
 
 ### Via the CLI
 
-You can set environment variables using [`waypoint config`](/commands/config-set)
+You can set environment variables using [`waypoint config`](/waypoint/commands/config-set)
 with the `-runner` flag:
 
 ```shell-session
@@ -38,12 +38,12 @@ $ waypoint config get -runner
 
 ~> **Security note:** HCP Waypoint stores these values encrypted within its backend
 using HashiCorp Vault. If that's unsatisfactory, you can set the environment variables
-manually when [manually running the runner](/docs/runner/run-manual).
+manually when [manually running the runner](/waypoint/docs/runner/run-manual).
 
 ~> **Security note:** On a self hosted Waypoint server, these configuration values are
 stored as plaintext in the Waypoint server data file. If you do not want to store any
 secrets on the Waypoint server, you must set the environment variables manually when
-[manually running the runner](/docs/runner/run-manual).
+[manually running the runner](/waypoint/docs/runner/run-manual).
 
 You can use the `-scope` flag paired with flags such as `-project`,
 `-label-scope`, and `-workspace-scope` to set runner variables that are only
@@ -80,7 +80,7 @@ use the `NOMAD_TOKEN` configured for the corresponding environment automatically
 ### Via the `waypoint.hcl` File
 
 Environment variables for runners can also be set via the `waypoint.hcl`
-file. This uses the same syntax as the [`config` stanza](/docs/waypoint-hcl/config):
+file. This uses the same syntax as the [`config` stanza](/waypoint/docs/waypoint-hcl/config):
 
 ```hcl
 config {
@@ -104,7 +104,7 @@ the `waypoint.hcl` file.
 Using the `waypoint.hcl` file, you can configure data to be stored in files
 that are available to runners when running operations for that project or application.
 You cannot configure files to be available globally to the server. This behaves similarly to
-[application configuration files](/docs/app-config/files).
+[application configuration files](/waypoint/docs/app-config/files).
 
 ```hcl
 config {
@@ -126,9 +126,9 @@ they are the most common production deployment setup.
 ## Dynamic Values
 
 When using the `waypoint.hcl` format, runners may make use of
-[dynamic values](/docs/app-config/dynamic) to source configuration
+[dynamic values](/waypoint/docs/app-config/dynamic) to source configuration
 from external sources. The `runner` stanza also has access to
-[internal values](/docs/app-config/internal) for composing multiple
+[internal values](/waypoint/docs/app-config/internal) for composing multiple
 values together.
 
 Note that runner variables only have access to internal variables
@@ -157,4 +157,4 @@ config {
 
 ## Runner profiles
 
-To modify the way that Waypoint launches on-demand runners, see [runner profiles](/docs/runner/profiles).
+To modify the way that Waypoint launches on-demand runners, see [runner profiles](/waypoint/docs/runner/profiles).
