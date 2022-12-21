@@ -1,0 +1,467 @@
+---
+layout: docs
+page_title: Blue-Green Deployments with Waypoint, Nomad and Consul
+description: |-
+  Waypoint enables advanced deployment workflows like blue-green deployments, orchestrated with Nomad and Consul.
+---
+
+# Blue-Green Deployments with Waypoint, Nomad and Consul
+
+In addition to common methods of deploying applications, HashiCorp Waypoint supports
+the orchestration of advanced deployment workflows, such as blue-green deployments.
+A blue-green deployment is where a new version of an application is deployed alongside
+the existing version in a separate environment. While both versions are running, DNS is
+updated to split traffic flowing to the application between the new and existing
+versions of the app. This enables essentially nil downtime for the application
+during deployments in most cases, but also enables operators to provide the experience
+of the new version of an application to a certain percentage of users without
+forcing all users to use the newer version. Depending upon feedback and testing
+while the new version is live and processing a partial amount of traffic, a decision
+is made to either promote or roll back the new version, and DNS is again updated
+to route 100% of traffic to all instances running the application.
+
+In the HashiStack, this is made possible with features from the workload orchestration
+tool, HashiCorp Nomad, and the service networking tool, HashiCorp Consul. Nomad
+enables operators to deploy [canary](https://developer.hashicorp.com/nomad/docs/job-specification/update#canary)
+instances of a newer version of an application without destroying the existing
+instances. The canary deployment can be auto-promoted when "healthy", or manually
+promoted by operators. Consul plays a role as well through service configuration
+entries. The [service resolver](https://developer.hashicorp.com/consul/docs/connect/config-entries/service-resolver)
+config entry controls which instances of a service should be matched by downstream
+requests made to the service, which can be [filtered](https://developer.hashicorp.com/consul/api-docs/features/filtering)
+by service tags. A [service splitter](https://developer.hashicorp.com/consul/docs/connect/config-entries/service-splitter)
+config entry splits a configured percentage of traffic to resolvers. These features
+of Nomad and Consul work together by the canary instances of a new Nomad job version
+registering new instances of a Consul service with [canary tags](https://developer.hashicorp.com/nomad/docs/job-specification/service#canary_tags).
+The tags applied to the canary instances of the service match a service resolver.
+The service splitter is then updated while both the new and old application instances
+are running to split some percentage of traffic between the resolver for the new
+and old instances of the service.
+
+To achieve this, a series of commands or API calls would need to be run manually,
+or automated through scripts or some other means; but [Waypoint pipelines](https://developer.hashicorp.com/waypoint/docs/pipelines)
+can orchestrate this! Waypoint pipelines can execute configured phases of your app's build, deployment,
+and release lifecycle, and run custom steps such as modifying Consul config
+entries to configure DNS to route traffic to your canary deployment instances.
+
+An example where this is configured is located [here](https://github.com/paladin-devops/hashitalks-deploy-blue-green).
+The Waypoint configuration file contains three pipelines, and each one will be
+described in this use case.
+
+## Waypoint Configuration
+
+### Pre-Requisites
+
+If experimenting with this use case, it will be helpful to have some familiarity
+with the tools and concepts listed below.
+
+- [Waypoint CLI](https://developer.hashicorp.com/waypoint/downloads)
+  - [Context created](https://developer.hashicorp.com/waypoint/docs/server/auth#logging-in) and connected to local Waypoint server or HCP Waypoint server
+- Waypoint [runner](https://developer.hashicorp.com/waypoint/docs/runner/run-manual#installing-a-runner)
+  - Must be able to connect to HashiCorp Nomad & HashiCorp Consul clusters
+- Waypoint [runner configuration](https://developer.hashicorp.com/waypoint/docs/runner/config)
+  - Used to connect to HashiCorp Nomad
+- Docker registry
+  - Credentials to push a build to the registry
+- [HashiCorp Consul](https://developer.hashicorp.com/consul) cluster
+- [HashiCorp Nomad](https://developer.hashicorp.com/nomad) cluster
+  - [Integrated with Consul cluster](https://developer.hashicorp.com/nomad/docs/integrations/consul-integration)
+- [Consul DNS](https://developer.hashicorp.com/consul/tutorials/networking/dns-forwarding)
+- `curl`
+
+### Pipelines
+
+#### Pipeline 1: build-and-blue-green-deployment
+
+This pipeline builds the application image, and subsequently executes pipeline #2
+using a nested pipeline.
+
+```hcl
+pipeline "build-and-blue-green-deployment" {
+  step "build" {
+    use "build" {
+      disable_push = false
+    }
+  }
+
+  step "blue-green-deployment-pipeline" {
+    use "pipeline" {
+      project = "hashitalks-deploy-blue-green"
+      name    = "blue-green-deployment"
+    }
+  }
+}
+```
+
+The `build` step uses the `build` stanza of the "app" that is configured later in
+the Waypoint configuration. This build uses the build pack plugin to build an image
+and then pushes it to a Docker registry.
+
+```hcl
+// omitted other stanzas for brevity
+build {
+    use "pack" {}
+
+    registry {
+      use "docker" {
+        image = "devopspaladin/hashitalks-deploy"
+        tag   = "latest"
+        auth {
+          // Credentials are supplied here for authentication to push to a registry.
+          username = var.username
+          password = var.password
+        }
+      }
+    }
+  }
+//
+```
+
+#### Pipeline 2: blue-green-deployment
+
+This pipeline deploys the build artifact to Nomad, and updates Consul to split
+traffic 50/50 between new and old service instances. This pipeline is configured
+separately, so that in scenarios where the code does not need to be re-built into
+a new Docker image, the pipeline run time will be less, because it will run only
+the deployment, and not a build.
+
+```hcl
+pipeline "blue-green-deployment" {
+  step "deploy" {
+    use "deploy" {}
+  }
+
+  step "split-traffic-to-green" {
+    image_url = "consul"
+
+    use "exec" {
+      command = "sh"
+      args = [
+        "-c",
+        "curl -o green-splitter.consul.hcl https://raw.githubusercontent.com/paladin-devops/hashitalks-deploy-blue-green/main/consul/green-splitter.consul.hcl && consul config write -http-addr=${var.consul_address} green-splitter.consul.hcl",
+      ]
+    }
+  }
+}
+
+// omitted other stanzas for brevity
+  deploy {
+    use "nomad-jobspec" {
+      jobspec = templatefile("${path.app}/nomad/job.nomad.tpl", {
+        // The registry username and password are passed to the Nomad job template
+        // so that the Nomad client can pull the image from the Docker registry.
+        username = var.username
+        password = var.password
+      })
+    }
+  }
+//
+```
+
+The `split-traffic-to-green` step in this pipeline first downloads a file from the
+git repository to the container performing the exec step of this pipeline using `curl`.
+Then, since it is running the official Consul Docker image, the command `consul config write` is executed, which writes the downloaded configuration entry to the Consul
+cluster via the API. The configuration entry looks like the below:
+
+```hcl
+Kind= "service-splitter"
+Name = "app"
+Splits = [
+  {
+    Weight = 50
+    ServiceSubset = "blue"
+  },
+  {
+    Weight = 50
+    ServiceSubset= "green"
+  }
+]
+```
+
+This is a service splitter config entry. The different "subsets" in this configuration,
+`blue`, and `green`, align with a service resolver that has already been configured
+in the Consul cluster. This configuration (as a [Terraform resource](https://github.com/paladin-devops/hashitalks-deploy-blue-green/blob/main/terraform/main.tf#L14-L31)
+using the Consul provider) is depicted below, where instances of the "app" service
+tagged with `blue` are a part of the `blue` subset, and those tagged with `green` are
+a part of the `green` subset:
+
+```terraform
+resource "consul_config_entry" "app_service_resolver" {
+  name = "app"
+  kind = "service-resolver"
+
+  config_json = jsonencode({
+    Kind          = "service-resolver"
+    Name          = "app"
+    DefaultSubset = "blue"
+    Subsets = {
+      blue = {
+        Filter = "blue in Service.Tags"
+      }
+      green = {
+        Filter = "green in Service.Tags"
+      }
+    }
+  })
+}
+```
+
+Since a Nomad job is being deployed in this pipeline, the tags on the service instances
+are derived from the Nomad jobspec template. Specifically, this is configured in the
+`service` stanza of the Nomad job. The `tags` are applied to the Nomad allocations
+running the current active version of the Nomad job, and `canary_tags` are applied
+to the canary Nomad allocations rolled out during a deployment.
+
+```hcl
+service {
+  name        = "app"
+  port        = "http"
+  tags        = [ "blue" ]
+  canary_tags = [ "green" ]
+}
+```
+
+The exact number of canary Nomad allocations to be deployed, with the `canary_tags`
+from the `service` stanza, is configured in the `update` stanza's `canary` field:
+
+```hcl
+update {
+  max_parallel = 1
+  canary       = 1
+  auto_revert  = true
+  auto_promote = false
+  health_check = "task_states"
+}
+```
+
+In summary, this pipeline will perform a canary deployment of the artifact, built
+by the build pipeline, to Nomad. After the deployment to Nomad is complete, the
+Consul service's service splitter is updated to split traffic 50/50 between the
+new `green` instances, and the existing `blue` ones.
+
+#### Pipeline 3: promotion-and-normalize-traffic
+
+The third pipeline normalizes traffic to route to the `blue` instances and promotes
+the canary deployment in Nomad. Updating the service splitter is done similarly to
+how traffic was split in the prior pipeline.
+
+```hcl
+pipeline "promotion-and-normalize-traffic" {
+  step "normalize-traffic" {
+    image_url = "consul"
+
+    use "exec" {
+      command = "sh"
+      args = [
+        "-c",
+        "curl -o normalize.consul.hcl https://raw.githubusercontent.com/paladin-devops/hashitalks-deploy-blue-green/main/consul/normalize.consul.hcl && consul config write -http-addr=${var.consul_address} normalize.consul.hcl",
+      ]
+    }
+  }
+
+  step "promote-deployment" {
+    use "release" {
+      prune = false
+    }
+  }
+}
+
+// omitted other stanzas for brevity
+  release {
+    use "nomad-jobspec-canary" {
+      // The task group containing the app whose canary deployment will be
+      // promoted is named "app", so it is explicitly specified here.
+      groups = ["app"]
+
+      // If something is wrong with the canary deployment, the input var here allows
+      // the operator to fail the deployment so it is rolled back to the previous
+      // version. By default, it will be promoted.
+      fail_deployment = var.fail_deployment
+    }
+  }
+//
+```
+
+The Consul config entry written in the `normalize-traffic"` step of this pipeline
+directs 100% of traffic to `blue` instances once again, as depicted in the configuration
+below:
+
+```hcl
+Name = "app"
+Splits = [
+  {
+    Weight = 100
+    ServiceSubset = "blue"
+  },
+  {
+    Weight = 0
+    ServiceSubset= "green"
+  }
+]
+```
+
+The `promote-deployment` step will promote the Nomad canary deployment, which will
+update the new `green` instances to become the current active version of the Nomad
+job. This will make those instances `blue`, and the instances running the previous
+version of the Nomad job will be destroyed.
+
+## Blue-Green Deployment Pipeline Run
+
+### 1st time deployment - Blue
+
+The first thing to do is deploy the app to Nomad for the very first time. There
+will be no canary deployment, because it is the first one - canary deployments
+will happen on subsequent deployments, as per the `update` stanza of the Nomad
+job. The pipeline will be started using the command below, which assumes that a
+remote runner is already installed, with the correct configurations to connect
+to the Nomad cluster.
+
+```shell
+# NOTE: The Waypoint configuration requires variables to be set - these were set
+# in the environment prior to the pipeline run. Learn more here:
+# http://developer.hashicorp.com/waypoint/docs/waypoint-hcl/variables/input#environment-variables
+$ waypoint pipeline run build-and-blue-green-deployment
+```
+
+At the conclusion of this pipeline run, the job is expected to be up and running
+in Nomad. This can be verified in Nomad directly, or with Waypoint!
+
+```shell
+$ nomad job status -short my-app
+ID            = my-app
+Name          = my-app
+Submit Date   = 2022-12-05T15:58:50-05:00
+Type          = service
+Priority      = 50
+Datacenters   = dc1
+Namespace     = default
+Status        = running
+Periodic      = false
+Parameterized = false
+
+$ waypoint status -refresh
+✓ Finished refreshing app statuses in project "hashitalks-deploy-blue-green"
+
+...
+
+✓ Finished building report for Nomad platform
+✓ Getting job info...
+✓ Job "my-app" is reporting ready!
+
+
+Current status for project "hashitalks-deploy-blue-green" in server context "localhost:9701".
+
+APP   	WORKSPACE	DEPLOYMENT STATUS	DEPLOYMENT CHECKED	RELEASE STATUS	RELEASE CHECKED
+my-app	default  	✔ READY          	now               	N/A
+```
+
+The Nomad UI also shows that the job is up and running with one allocation.
+
+![Blue Deployment in Nomad](/img/use-cases/blue-green-deployment/blue-deployment-nomad-ui.png)
+
+The Waypoint UI indicates that the deployment is running too!
+
+![Blue Deployment in Waypoint](/img/use-cases/blue-green-deployment/blue-deployment-waypoint-ui.png)
+
+And of course, `curl`-ing the application at the address and port will say:
+
+```shell
+# The Nomad job's task group for the application uses dynamic ports, mapping the
+# container port to a random port on the host - in this case, 27283. Consul DNS
+# is configured as well, enabling DNS lookups via the service name.
+$ curl http://app.service.consul:27283
+Hello World!
+```
+
+### Deploy a new version - Green
+
+With a very basic HTTP server reporting "Hello World!" deployed, it's time to
+make some changes to the application, like you might find in [this commit](https://github.com/paladin-devops/hashitalks-deploy-blue-green/commit/ef03803b7ec1feb95c83e8e5fb7c72ed663d3c2e).
+Here, the application is updated to no longer say "Hello World!", but to instead
+inform the user if a successful connection was made to a Postgres database. A few
+environment variables, listed below, will be read by the application to make this
+connection:
+
+- USERNAME
+- PASSWORD
+- HOST
+- PORT
+- DBNAME
+
+The `config` stanza in the Waypoint configuration file will set these variables
+in the application's environment dynamically. You can learn more about this in
+the [Waypoint documentation on config variables](https://developer.hashicorp.com/waypoint/docs/waypoint-hcl/config).
+
+Any change could be made to this application though, not just database connections.
+But with a new change in place, and pushed to the git repository, it's time to
+rebuild the application, start the canary deployment, and split traffic to the
+new version of the application, by starting the pipeline once more:
+
+```shell
+$ waypoint pipeline run build-and-blue-green-deployment
+```
+
+This time around, the Nomad UI indicates that there is indeed a canary allocation,
+waiting to be promoted, but running alongside the allocation from the first deployment.
+
+![Green Deployment Nomad UI](/img/use-cases/blue-green-deployment/green-deployment-nomad-ui.png)
+
+In Consul, the configuration entry for the service splitter has been updated to
+split traffic 50% between the blue and green service resolvers.
+
+![Green Deployment Consul UI](/img/use-cases/blue-green-deployment/green-deployment-consul-ui.png)
+
+Since the new service instance is tagged `green`, Consul DNS enables users to target
+the instance with that tag using the tag name.
+
+```shell
+# As in the previous example use of curl, a dynamic port has been applied to the
+# new Nomad allocation - in this case, 20263; this avoids port collision when running
+# the application in two containers on the same host.
+$ curl http://green.app.service.consul:20263
+Connected to the database! :)
+```
+
+At the same time, the old (blue) version of the application hasn't been taken down,
+so it still remains accessible to users.
+
+```shell
+$ curl http://blue.app.service.consul:27283
+Hello World!
+```
+
+### Promote Deployment
+
+With the canary deployment still idle, running the blue and green instances of
+the application, and after having tested the application to verify that the changes
+are what was expected, the deployment can be promoted. This will kill the allocations
+running the older version of the app, and the update to the service splitter will
+be made, to route all traffic to the remaining instance, tagged blue.
+
+```shell
+$ waypoint pipeline run promotion-and-normalize-traffic
+```
+
+In Nomad, it is evident that there are no more canary allocations, and the app is
+up and running.
+
+![Final Deployment Nomad UI](/img/use-cases/blue-green-deployment/final-deployment-nomad-ui.png)
+
+In Consul, 100% of traffic is routed to the remaining blue instance, with the update
+of the service splitter.
+
+![Final Deployment Consul UI](/img/use-cases/blue-green-deployment/final-deployment-consul-ui.png)
+
+With this deployment completed, all users of the application will be using the
+latest changes. As further changes are made to the application, the same pipelines
+run in this example can be run repeatedly while incrementally expanding its functionality,
+minimizing downtime and user impact.
+
+## Further Reading
+
+- [Waypoint Pipelines](https://developer.hashicorp.com/waypoint/docs/pipelines)
+- [Waypoint Plugins](https://developer.hashicorp.com/waypoint/plugins)
+- [Nomad Blue-Green Deployment](https://developer.hashicorp.com/nomad/tutorials/job-updates/job-blue-green-and-canary-deployments)
+- [Terraform Provider for Waypoint](https://registry.terraform.io/providers/hashicorp-dev-advocates/waypoint)
+- [Consul Service Splitter Config Entries](https://developer.hashicorp.com/consul/docs/connect/config-entries/service-splitter)
+- [Consul Service Resolver Config Entries](https://developer.hashicorp.com/consul/docs/connect/config-entries/service-resolver)
