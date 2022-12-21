@@ -8,7 +8,7 @@ description: |-
 # Remote Operations
 
 Waypoint operations such as `waypoint up`, `build`, `deploy`, etc. can
-be executed _remotely_ using [runners](/docs/runner). This enables
+be executed _remotely_ using [runners](/waypoint/docs/runner). This enables
 a variety of useful functionality and patterns:
 
 - GitOps where builds, deploys, etc. are triggered by Git.
@@ -29,13 +29,13 @@ attempt to perform a remote operation if possible. This can be overridden by pas
 
 Remote operations require:
 
-- At least one [runner is installed and running](/docs/runner). Waypoint
+- At least one [runner is installed and running](/waypoint/docs/runner). Waypoint
   automatically installs a runner with `waypoint install`.
-- Your project is configured with a [data source](/docs/waypoint-hcl/runner)
+- Your project is configured with a [data source](/waypoint/docs/waypoint-hcl/runner)
   so that the runners can clone the project source code.
-- Your project has [remote operations enabled](/docs/waypoint-hcl/runner).
+- Your project has [remote operations enabled](/waypoint/docs/waypoint-hcl/runner).
 
-Waypoint will automatically run your operations remotely if all these conditions are met, and that you have a [runner profile](/docs/runner/profiles) configured.
+Waypoint will automatically run your operations remotely if all these conditions are met, and that you have a [runner profile](/waypoint/docs/runner/profiles) configured.
 
 ## Usage
 

@@ -31,5 +31,5 @@
    "output": "lambda.Release",
    "requiredFields": null,
    "type": "releasemanager",
-   "use": "the [`use` stanza](/docs/waypoint-hcl/use) for this plugin."
+   "use": "the [`use` stanza](/waypoint/docs/waypoint-hcl/use) for this plugin."
 }

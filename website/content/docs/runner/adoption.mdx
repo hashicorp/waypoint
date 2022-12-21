@@ -23,7 +23,7 @@ able to immediately recieve jobs from the Waypoint server when they start.
 They also skip the `Pending` state to directly enter the `Preadopted` state.
 
 Preadopted static runners may be moved into the `Rejected` state like other runners by
-issuing the [`waypoint runner reject`](/commands/runner-reject) command. If a preadopted
+issuing the [`waypoint runner reject`](/waypoint/commands/runner-reject) command. If a preadopted
 static runner is rejected, a new runner token must be created for the runner before it
 is allowed to receive jobs again.
 
@@ -33,17 +33,17 @@ The `Pending` runner state is the default state which newly installed static run
 will be in, as they have yet to receive a runner token from the server. Static runners
 in this state can talk to a Waypoint server but will not receive jobs to run.
 Static runners will also show up in this state if they are forgotten about by the server with
-the [`waypoint runner forget`](/commands/runner-forget) command.
+the [`waypoint runner forget`](/waypoint/commands/runner-forget) command.
 
 When in the `Pending` state, static runners may be moved into the `Adopted` state by
-issuing the [`waypoint runner adopt`](/commands/runner-adopt) command with the
+issuing the [`waypoint runner adopt`](/waypoint/commands/runner-adopt) command with the
 desired Runner ID.
 
 Runners automatically skip this state if they are in the `Preadopted` state.
 
 ## Adopted Static Runners
 
-Static runners adopted with [`waypoint runner adopt`](/commands/runner-adopt) will
+Static runners adopted with [`waypoint runner adopt`](/waypoint/commands/runner-adopt) will
 store a runner token received by the server in their configured state
 directory, which is local to the static runner itself. Once a static runner has been
 adopted, it may start receiving job assignments from the Waypoint server as usual.
@@ -51,7 +51,7 @@ adopted, it may start receiving job assignments from the Waypoint server as usua
 ## Rejected Runners
 
 When a user rejects a Waypoint runner with the
-[`waypoint runner reject`](/commands/runner-reject) command, the rejected runner
+[`waypoint runner reject`](/waypoint/commands/runner-reject) command, the rejected runner
 is no longer able to receive job assignments from the Waypoint server.
 
 Rejected runners will continue to appear in the list of runners that the server
@@ -66,12 +66,12 @@ never rejected in the first place.
 
 Runner tokens are special tokens which can only be used by runners to recieve
 job assignments from the Waypoint server. These tokens cannot be revoked, only
-rejected through the [`waypoint runner reject`](/commands/runner-reject)
+rejected through the [`waypoint runner reject`](/waypoint/commands/runner-reject)
 command. By default runner tokens are valid for 30 days and upon expiring they
-will need to be recreated with [`waypoint runner token`](/commands/runner-token).
+will need to be recreated with [`waypoint runner token`](/waypoint/commands/runner-token).
 Runners must then be restarted with the new token to receive job assignments
 again. Token expirations may be altered when generating a runner token with
-[`waypoint runner token`](/commands/runner-token).
+[`waypoint runner token`](/waypoint/commands/runner-token).
 
 The Waypoint runner will look for the token in two places before requesting a
 new token from the Waypoint server. First, the runner will look in its state
@@ -83,5 +83,5 @@ adoption request is sent to the server for a user to manually adopt. Runners
 adopted store the received token within the `token` file in the runner's state
 directory.
 
-See [Additional Runners](/docs/runner/run-manual) for more information about
+See [Additional Runners](/waypoint/docs/runner/run-manual) for more information about
 Waypoint Runner installation.

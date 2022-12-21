@@ -19,20 +19,20 @@ The diagram below shows a typical single-platform deployment of Waypoint.
 
 -> Note: some of the components are optional by sacrificing functionality.
 It is possible to operate Waypoint without entrypoints, but you'll lose
-all [entrypoint-required functionality](/docs/entrypoint#functionality).
+all [entrypoint-required functionality](/waypoint/docs/entrypoint#functionality).
 
 The primary components of Waypoint are:
 
 - **Server** - The Waypoint server is a long-running, central service that
   serves the Waypoint API. This API is consumed by the CLI, entrypoint, and
   other consumers. This is the only component in Waypoint that stores state.
-  Learn more about [servers here](/docs/server).
+  Learn more about [servers here](/waypoint/docs/server).
 
 - **CLI** - The `waypoint` CLI acts as a client of the server API. It
   does not store any state locally except for connection information to the
   server.
 
-- **Entrypoint** - The [Waypoint Entrypoint](/docs/entrypoint) is built-in to
+- **Entrypoint** - The [Waypoint Entrypoint](/waypoint/docs/entrypoint) is built-in to
   the deployments to enable functionality such as logs, exec, the URL
   service, and more. It creates an outbound connection to the server to
   enable this functionality.
@@ -63,7 +63,7 @@ If the server is down:
 
 - **Restarting deployments with an entrypoint** _may not_ be affected.
   If the entrypoint cannot talk to the server on startup, it will still
-  start the subprocess. If you use [application configuration](/docs/app-config),
+  start the subprocess. If you use [application configuration](/waypoint/docs/app-config),
   this configuration will not be present until the server comes back online.
   This may cause your application to fail to start.
 
@@ -86,7 +86,7 @@ Operations include build, deploy, release, etc.
 If there are no static runners configured in the system or the user has specified
 `-local=true`, then the CLI will spawn a runner itself.
 
-See [CLI acts as a runner](/docs/resources/internals/execution) for more details.
+See [CLI acts as a runner](/waypoint/docs/resources/internals/execution) for more details.
 
 ### CLI
 

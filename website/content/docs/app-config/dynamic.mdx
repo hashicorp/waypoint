@@ -16,11 +16,11 @@ Dynamic values make it easy to utilize external configuration stores
 and the functionality they provide, such as automatic credential rotation
 in systems such as Vault or Amazon Parameter Store.
 
-This functionality requires the [Waypoint entrypoint](/docs/entrypoint).
+This functionality requires the [Waypoint entrypoint](/waypoint/docs/entrypoint).
 
 -> **Basic application configuration knowledge required.** This
 page assumes you know the basics of how to
-[set static application configuration](/docs/app-config). This page will
+[set static application configuration](/waypoint/docs/app-config). This page will
 not thoroughly explain the config setting CLI or `waypoint.hcl` stanzas.
 
 ## Configuration Sources
@@ -28,15 +28,15 @@ not thoroughly explain the config setting CLI or `waypoint.hcl` stanzas.
 The following is a list of currently available configuration sources
 and their associated documentation:
 
-- [Terraform Cloud](/plugins/terraform-cloud#terraform-cloud-configsourcer) -
+- [Terraform Cloud](/waypoint/plugins/terraform-cloud#terraform-cloud-configsourcer) -
   Read Terraform state outputs from Terraform Cloud.
-- [Kubernetes](/plugins/kubernetes#kubernetes-configsourcer) - Read values from
+- [Kubernetes](/waypoint/plugins/kubernetes#kubernetes-configsourcer) - Read values from
   ConfigMaps and Secrets.
-- [Vault](/plugins/vault#vault-configsourcer) - Read values from Vault secrets,
+- [Vault](/waypoint/plugins/vault#vault-configsourcer) - Read values from Vault secrets,
   including dynamic secrets such as database credentials.
-- [AWS SSM](/plugins/aws-ssm#aws-ssm-configsourcer) - Read configuration values
+- [AWS SSM](/waypoint/plugins/aws-ssm#aws-ssm-configsourcer) - Read configuration values
   from AWS SSM Parameter Store.
-- [Consul](/plugins/consul#consul-configsourcer) - Read values from Consul key
+- [Consul](/waypoint/plugins/consul#consul-configsourcer) - Read values from Consul key
   value storage.
 
 -> **Custom configuration source plugins are coming soon.** Currently it's overly
@@ -64,7 +64,7 @@ config {
 The example above syncs the `PORT` environment variable with the "port"
 key in the "my-config-map" Kubernetes ConfigMap. The "sync" actively watches
 the defined source, updates the environment variable whenever the value
-changes, and [restarts your application](/docs/app-config#application-restart-behavior).
+changes, and [restarts your application](/waypoint/docs/app-config#application-restart-behavior).
 
 The `dynamic` function has the following signature:
 
@@ -81,7 +81,7 @@ supported is in the [Configuration Sources section](#configuration-sources).
 
 To unset a dynamic configuration value, delete it from the `waypoint.hcl`
 file and then use the CLI to set it to an empty string as shown below.
-Deleting the key from the Waypoint file and [syncing](/docs/app-config#configuration-syncing)
+Deleting the key from the Waypoint file and [syncing](/waypoint/docs/app-config#configuration-syncing)
 it will not be enough.
 
 ```shell-session
@@ -92,12 +92,12 @@ $ waypoint config set PORT=
 
 Configuration sources sometimes support global settings for their behavior or
 require global settings to be set for them to function at all.
-For example, [Vault](/plugins/vault#vault-configsourcer) has some global
+For example, [Vault](/waypoint/plugins/vault#vault-configsourcer) has some global
 settings around how to authenticate. Without setting these, Vault configurations
 in applications will not work. These _source settings_ are set at the server
 level and used by all `dynamic` calls.
 
-To set configuration source settings, the [`waypoint config source-set`](/commands/config-source-set) CLI command is used:
+To set configuration source settings, the [`waypoint config source-set`](/waypoint/commands/config-source-set) CLI command is used:
 
 ```shell-session
 $ waypoint config source-set -type=vault -config="auth=aws"
@@ -118,10 +118,10 @@ $ waypoint config source-set -type=vault -delete
 
 If a configuration value is not available (the environment variable is not
 set or the value is not what you expect), then the best debugging tool
-is [`waypoint logs`](/commands/logs). The logs command will show entrypoint logs where
+is [`waypoint logs`](/waypoint/commands/logs). The logs command will show entrypoint logs where
 you will see any errors related to configuration syncing.
 
-The [`waypoint logs`](/commands/logs) output below is from an application deployed with
+The [`waypoint logs`](/waypoint/commands/logs) output below is from an application deployed with
 Waypoint using Kubernetes ConfigMaps but deployed within a Nomad cluster. The
 lines have been purposely shortened slightly to improve readability on the
 website.
@@ -150,7 +150,7 @@ doing a full redeploy.
 
 If you don't see any errors in the log, it may be possible the environment
 variables are set correctly. To verify that environment variables are
-set, open a shell with [`waypoint exec`](/commands/exec) and run `env`. This command will
+set, open a shell with [`waypoint exec`](/waypoint/commands/exec) and run `env`. This command will
 list the environment variables that are available to your application.
 
 ```shell-session

@@ -8,7 +8,7 @@ description: |-
 # Workspace and Label Scoping
 
 Waypoint allows you to set different configuration values for specific
-[workspaces](/docs/workspaces) or [labels](/docs/waypoint-hcl/variables/labels).
+[workspaces](/waypoint/docs/workspaces) or [labels](/waypoint/docs/waypoint-hcl/variables/labels).
 For example, you might set a database URL for staging different from production
 using workspaces, or you might use labels to set different addresses for
 different regions or any other metadata.
@@ -21,7 +21,7 @@ situations.
 ## Workspace Scoping
 
 You can use workspace scoping to expose configuration only in specific,
-exact [workspaces](/docs/workspaces):
+exact [workspaces](/waypoint/docs/workspaces):
 
 ```hcl
 config {
@@ -43,7 +43,7 @@ stanza, you can use all available configuration parameters such as `env`,
 `internal`, `files`, etc.
 
 -> **Note:** Values aren't inherited from the global scope. For example, you
-cannot set an [internal variable](/docs/app-config/internal) at the root
+cannot set an [internal variable](/waypoint/docs/app-config/internal) at the root
 and access it within the `workspace` stanza. You must redeclare any internal
 variables used.
 
@@ -53,7 +53,7 @@ The `workspace` stanza does not support non-exact workspace matching. However,
 you can use the `label` stanza documented below to do this. All workspaces
 automatically are exposed via the `waypoint/workspace` label and label
 selectors support
-[Consul style matching operators](https://www.consul.io/api-docs/features/filtering#matching-operators)
+[Consul style matching operators](/consul/api-docs/features/filtering#matching-operators)
 such as `contains`, `matches`, etc. For example, you could match all workspaces
 that contain "dev" this way:
 
@@ -103,7 +103,7 @@ label selector of `waypoint/workspace == <name>`.
 
 Based on the structural syntax of workspace and label selectors, it
 may appear that there is some ability to reference or inherit "parent"
-configuration values, such as [internal values](/docs/app-config/internal).
+configuration values, such as [internal values](/waypoint/docs/app-config/internal).
 **This is not possible.**
 
 For example, given the following configuration:

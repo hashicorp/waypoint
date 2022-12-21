@@ -10,7 +10,7 @@ description: |-
 https://pkg.go.dev/github.com/hashicorp/waypoint-plugin-sdk/component#ConfigSourcer
 
 `ConfigSourcer` can be implemented to dynamically load configs from external
-sources such as [Vault](/plugins/vault#vault-configsourcer) and [Terraform Cloud](/plugins/terraform-cloud#terraform-cloud-configsourcer).
+sources such as [Vault](/waypoint/plugins/vault#vault-configsourcer) and [Terraform Cloud](/waypoint/plugins/terraform-cloud#terraform-cloud-configsourcer).
 Waypoint uses dynamic config sourcers to run alongside the application. The
 plugin interface expects a `ReadFunc()` for reading configuration and a
 `StopFunc()` for stopping configuration sourcing.
@@ -77,7 +77,7 @@ func (cs *ConfigSourcer) read(
 
 ## Getting your plugin into the CEB
 
-To write your own config sourcer, the Waypoint [entrypoint](/docs/entrypoint)
+To write your own config sourcer, the Waypoint [entrypoint](/waypoint/docs/entrypoint)
 needs to be able to load and run your plugin. Unfortunately today there is no
 supported way for the CEB to automatically load your plugin. This means if
 you wish you write your own config sourcer plugin, you'll need to add the

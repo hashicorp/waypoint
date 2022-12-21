@@ -46,13 +46,13 @@ config {
 
 ### Required Parameters
 
-These parameters are used in `dynamic` for sourcing [configuration values](/docs/app-config/dynamic) or [input variable values](/docs/waypoint-hcl/variables/dynamic).
+These parameters are used in `dynamic` for sourcing [configuration values](/waypoint/docs/app-config/dynamic) or [input variable values](/waypoint/docs/waypoint-hcl/variables/dynamic).
 
 #### key
 
 The key name that exists at the specified Vault `path` parameter.
 
-The value can be a direct key such as `password` or it can be a [JSON pointer](https://tools.ietf.org/html/rfc6901) string to retrieve a nested value. When using the Vault KV [Version 2](https://www.vaultproject.io/docs/secrets/kv/kv-v2) secret backend, the key must be prefixed with an additional string of `/data`. For example, `/data/password`. When using the Vault KV [Version 1](https://www.vaultproject.io/docs/secrets/kv/kv-v1) secret backend, the key can be a direct key name such as `password`. This is because the Vault KV API returns different data structures in its response depending on the Vault KV version the key is stored in. Therefore, the `/data` prefix is required for keys stored in the Vault KV `Version 2` secret backend in order to retrieve its nested value using JSON pointer string.
+The value can be a direct key such as `password` or it can be a [JSON pointer](https://tools.ietf.org/html/rfc6901) string to retrieve a nested value. When using the Vault KV [Version 2](/vault/docs/secrets/kv/kv-v2) secret backend, the key must be prefixed with an additional string of `/data`. For example, `/data/password`. When using the Vault KV [Version 1](/vault/docs/secrets/kv/kv-v1) secret backend, the key can be a direct key name such as `password`. This is because the Vault KV API returns different data structures in its response depending on the Vault KV version the key is stored in. Therefore, the `/data` prefix is required for keys stored in the Vault KV `Version 2` secret backend in order to retrieve its nested value using JSON pointer string.
 
 - Type: **string**
 
@@ -155,7 +155,7 @@ The interval in seconds to wait before checking for new credentials.
 
 ##### aws_header_value
 
-The value to match the [`iam_server_id_header_value`](https://www.vaultproject.io/api/auth/aws#iam_server_id_header_value) if set.
+The value to match the [`iam_server_id_header_value`](/vault/api-docs/auth/aws#iam_server_id_header_value) if set.
 
 - Type: **string**
 - **Optional**
@@ -172,7 +172,7 @@ The region for the STS endpoint when using that method of auth.
 
 The role to use for AWS authentication.
 
-This is required for the `aws` auth method. This depends on how you configured the Vault [AWS Auth Method](https://www.vaultproject.io/docs/auth/aws).
+This is required for the `aws` auth method. This depends on how you configured the Vault [AWS Auth Method](/vault/docs/auth/aws).
 
 - Type: **string**
 - **Optional**
@@ -190,7 +190,7 @@ This usually isn't needed since IAM instance profiles are used.
 
 The type of authentication to use for AWS: either `iam` or `ec2`.
 
-This is required for the `aws` auth method. This depends on how you configured the Vault [AWS Auth Method](https://www.vaultproject.io/docs/auth/aws).
+This is required for the `aws` auth method. This depends on how you configured the Vault [AWS Auth Method](/vault/docs/auth/aws).
 
 - Type: **string**
 - **Optional**
@@ -257,7 +257,7 @@ The project to use, only if it cannot be automatically determined.
 
 The role to use for GCP authentication.
 
-This is required for the `gcp` auth method. This depends on how you configured the Vault [GCP Auth Method](https://www.vaultproject.io/docs/auth/gcp).
+This is required for the `gcp` auth method. This depends on how you configured the Vault [GCP Auth Method](/vault/docs/auth/gcp).
 
 - Type: **string**
 - **Optional**
@@ -273,7 +273,7 @@ The service account to use, only if it cannot be automatically determined.
 
 The type of authentication; must be `gce` or `iam`.
 
-This is required for the `gcp` auth method. This depends on how you configured the Vault [GCP Auth Method](https://www.vaultproject.io/docs/auth/gcp).
+This is required for the `gcp` auth method. This depends on how you configured the Vault [GCP Auth Method](/vault/docs/auth/gcp).
 
 - Type: **string**
 - **Optional**
@@ -282,7 +282,7 @@ This is required for the `gcp` auth method. This depends on how you configured t
 
 The role to use for Kubernetes authentication.
 
-This is required for the `kubernetes` auth method. This is a role that is setup with the [Kubernetes Auth Method in Vault](https://www.vaultproject.io/docs/auth/kubernetes).
+This is required for the `kubernetes` auth method. This is a role that is setup with the [Kubernetes Auth Method in Vault](/vault/docs/auth/kubernetes).
 
 - Type: **string**
 - **Optional**

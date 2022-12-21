@@ -8,12 +8,12 @@ description: |-
 # Workspace and Label Scoping
 
 You can specify alternate configurations for lifecycle operations
-based on the current [workspace](/docs/workspaces) or
-[labels](/docs/lifecycle/labels). This can be used to change
+based on the current [workspace](/waypoint/docs/workspaces) or
+[labels](/waypoint/docs/lifecycle/labels). This can be used to change
 configurations between environments such as development, staging,
 production or by specific metadata like region.
 
-This documentation page will use the [deploy](/docs/lifecycle/deploy)
+This documentation page will use the [deploy](/waypoint/docs/lifecycle/deploy)
 operation for examples, but the scoping stanzas may be used by
 all lifecycle stages and is not limited to only the deploy stage.
 The basic example below will deploy to the "default" Kubernetes
@@ -36,7 +36,7 @@ at alternative methods such as conditionals. See
 
 ## Workspace Scoping
 
-We can use [workspaces](/docs/workspaces) as one way to model environments
+We can use [workspaces](/waypoint/docs/workspaces) as one way to model environments
 such as staging, production, etc. And we might use multiple Kubernetes
 namespaces as a way to separate these stages. The example below uses
 the "default" namespace by default, but uses the "production" namespace
@@ -57,7 +57,7 @@ app "my-app" {
 ```
 
 Note that we could go further and completely change the plugin in use as well.
-Perhaps we are testing a migration to [Nomad](https://www.nomadproject.io/)
+Perhaps we are testing a migration to [Nomad](/nomad)
 if we're in the "new-platform" workspace:
 
 ```hcl
@@ -83,7 +83,7 @@ app "my-app" {
 ## Label Scoping
 
 The `label` stanza can be used to configure operations based on
-[label selectors](/docs/lifecycle/labels#label-selector-syntax).
+[label selectors](/waypoint/docs/lifecycle/labels#label-selector-syntax).
 
 ~> **Warning!** This is an advanced use case. Most cases can be satisfied
 using the `workspace` stanza which is much simpler to understand and debug.
@@ -92,7 +92,7 @@ label selector of `waypoint/workspace == <name>`.
 
 For example, perhaps we have a different configuration
 depending on if the `region` label is set for operations. (This label
-must be manually set. See [labels](/docs/lifecycle/labels).)
+must be manually set. See [labels](/waypoint/docs/lifecycle/labels).)
 
 ```hcl
 app "my-app" {
@@ -197,4 +197,4 @@ app "my-app" {
 
 This is admittedly not obvious. To explain: we are creating an HCL map
 with the `{}` syntax and then doing a lookup using `[]` keyed on
-the [`workspace` variable](/docs/waypoint-hcl/variables/workspace).
+the [`workspace` variable](/waypoint/docs/waypoint-hcl/variables/workspace).
