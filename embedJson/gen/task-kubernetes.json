@@ -129,6 +129,17 @@
          "EnvVar": "",
          "Category": false,
          "SubFields": null
+      },
+      {
+         "Field": "security_context",
+         "Type": "k8s.PodSecurityContext",
+         "Synopsis": "",
+         "Summary": "",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "SubFields": null
       }
    ],
    "type": "task",
