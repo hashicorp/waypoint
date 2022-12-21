@@ -633,6 +633,17 @@
                      "SubFields": null
                   },
                   {
+                     "Field": "run_as_group",
+                     "Type": "int64",
+                     "Synopsis": "",
+                     "Summary": "",
+                     "Optional": false,
+                     "Default": "",
+                     "EnvVar": "",
+                     "Category": false,
+                     "SubFields": null
+                  },
+                  {
                      "Field": "run_as_non_root",
                      "Type": "bool",
                      "Synopsis": "indicates that the container must run as a non-root user",
