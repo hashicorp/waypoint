@@ -1,0 +1,433 @@
+{
+  "data": {
+    "id": "sv-oDZZJvWWJk4o9fvQ",
+    "type": "state-versions",
+    "attributes": {
+      "created-at": "2022-11-15T14:09:35.153Z",
+      "size": 3571,
+      "hosted-state-download-url": "https://archivist.terraform.io/v1/object/dmF1bHQ6djI6bGM1VVgxdENHZ0h3WWxXM2J2TVJhNktJNUhDbXZqdmVlN2x3VDB5aXZxeWZ3NGkwNm0rUUMxdk1CeTRSdVlVY1JhVHVkWThScjJnR0NTcytKcFp4UElkYjNGZFJWTmRrUStwTGZZTXN1cVFmcFBtdUx1dXFoYlB1RUVXUlhISXFZWUxuZkNqc2Q5ZzBaSVdRQVdhZWhMUXQxVVJvQjNXMExzUXdBWkxxUUtxVE9DeFUzZ2FmOXI5anV1UlBxSHREVHBUS0psN0JuKzhOWlh5bmowV1RQWkZOS2R4eDFrRkF1VXpwaVUwYlAvZThvNVRoZlJFQVpPQUw2T3l4c0dwOW1LcGo1Y1F2K3JabUx0RUhyYXJhbCtRczNNS0lyWUZLRVo0a1Z2Yi9jcmlkK2F1bkV3S2pyUVJZWlBRaXpTOWt6VU45TStyRG1sSXpEZnhLYUUvcEFpMEZwVWIxY0FNTXVQR2R2dDIyQ2FpQitVaFBXWHpUd2o5ZE5kU1hQY1pkWVAxUW1VdFA2S2ZHdFczWmxSU09JUjQ1cVRIanU3cz0",
+      "hosted-json-state-download-url": "https://archivist.terraform.io/v1/object/dmF1bHQ6djI6RXFZMVU4KzIrS0RzbXJjbW0wU0RSQ3NDcGVVU0l3N0dZMTVkdFNhamtDNFprbWp6SEFKTTcrVzdPakN5c1dZQXhGL2FOKzhUMXI5SXlkR2NhaHBmVm9hUHBROE1lUTlFVzFCWEhUQzc5VEY2SkxsY2RoME5tNW1mN2tpTTFwR242c1dhaTlzR2orOXBMQ0VEeXVFYkVZTlhHbkR0aStCOVQrSER3NDFTTmMxeHM3dzc1YU1ZVE5MSTFMandSYXhwMlV1M1hNK002NzRJSFZLQjBaeHVSQW01NWx5eVVnMnBvMWNMMnlnOGU1NC9ueXhjei9EbXA1ZUQvVjJMUW5NY2pCYUxpSE5zZXNIOVlvQmMrK3ZBQU02REx6ZXkraXNoZ3RrSjE5QlJBVnJBTWtsZ3lHWndGTU5yR3F3S2tlUFFGdkw3S3B5bk5uQzQyamVYeGtDaDdTbGpRMyt5VU04U2JETE1VYkpDekdOaStzK21kcElpaXFGZlU3Y0xmNGc3MnpZQnI0YTJ1bE54NEl5R1ljcW5qc1hUTkF4cUo0ST0",
+      "modules": {
+        "root.ecs-service": {
+          "aws_lb": 1,
+          "aws_iam_role": 2,
+          "aws_lb_listener": 1,
+          "aws_security_group": 2,
+          "aws_lb_target_group": 1,
+          "aws_security_group_rule": 1,
+          "data.terraform_remote_state": 2,
+          "aws_iam_role_policy_attachment": 1
+        }
+      },
+      "providers": {
+        "provider[\"terraform.io/builtin/terraform\"]": {
+          "data.terraform_remote_state": 2
+        },
+        "module.ecs-service.provider[\"registry.terraform.io/hashicorp/aws\"]": {
+          "aws_lb": 1,
+          "aws_iam_role": 2,
+          "aws_lb_listener": 1,
+          "aws_security_group": 2,
+          "aws_lb_target_group": 1,
+          "aws_security_group_rule": 1,
+          "aws_iam_role_policy_attachment": 1
+        }
+      },
+      "resources": [
+        {
+          "name": "microservice-infra-dev-us-east-1",
+          "type": "data.terraform_remote_state",
+          "count": 1,
+          "module": "root.ecs_service",
+          "provider": "provider[\"terraform.io/builtin/terraform\"]",
+          "index-keys": []
+        },
+        {
+          "name": "networking-dev-us-east-1",
+          "type": "data.terraform_remote_state",
+          "count": 1,
+          "module": "root.ecs_service",
+          "provider": "provider[\"terraform.io/builtin/terraform\"]",
+          "index-keys": []
+        },
+        {
+          "name": "execution_role",
+          "type": "aws_iam_role",
+          "count": 1,
+          "module": "root.ecs_service",
+          "provider": "module.ecs_service.provider[\"registry.terraform.io/hashicorp/aws\"]",
+          "index-keys": []
+        },
+        {
+          "name": "task_role",
+          "type": "aws_iam_role",
+          "count": 1,
+          "module": "root.ecs_service",
+          "provider": "module.ecs_service.provider[\"registry.terraform.io/hashicorp/aws\"]",
+          "index-keys": []
+        },
+        {
+          "name": "execution_role",
+          "type": "aws_iam_role_policy_attachment",
+          "count": 1,
+          "module": "root.ecs_service",
+          "provider": "module.ecs_service.provider[\"registry.terraform.io/hashicorp/aws\"]",
+          "index-keys": []
+        },
+        {
+          "name": "alb",
+          "type": "aws_lb",
+          "count": 1,
+          "module": "root.ecs_service",
+          "provider": "module.ecs_service.provider[\"registry.terraform.io/hashicorp/aws\"]",
+          "index-keys": []
+        },
+        {
+          "name": "listener",
+          "type": "aws_lb_listener",
+          "count": 1,
+          "module": "root.ecs_service",
+          "provider": "module.ecs_service.provider[\"registry.terraform.io/hashicorp/aws\"]",
+          "index-keys": []
+        },
+        {
+          "name": "target_group",
+          "type": "aws_lb_target_group",
+          "count": 1,
+          "module": "root.ecs_service",
+          "provider": "module.ecs_service.provider[\"registry.terraform.io/hashicorp/aws\"]",
+          "index-keys": []
+        },
+        {
+          "name": "app",
+          "type": "aws_security_group",
+          "count": 1,
+          "module": "root.ecs_service",
+          "provider": "module.ecs_service.provider[\"registry.terraform.io/hashicorp/aws\"]",
+          "index-keys": []
+        },
+        {
+          "name": "lb",
+          "type": "aws_security_group",
+          "count": 1,
+          "module": "root.ecs_service",
+          "provider": "module.ecs_service.provider[\"registry.terraform.io/hashicorp/aws\"]",
+          "index-keys": []
+        },
+        {
+          "name": "external_egress",
+          "type": "aws_security_group_rule",
+          "count": 1,
+          "module": "root.ecs_service",
+          "provider": "module.ecs_service.provider[\"registry.terraform.io/hashicorp/aws\"]",
+          "index-keys": []
+        }
+      ],
+      "resources-processed": true,
+      "serial": 13,
+      "state-version": 4,
+      "terraform-version": "1.3.4",
+      "vcs-commit-url": null,
+      "vcs-commit-sha": null
+    },
+    "relationships": {
+      "run": {
+        "data": null
+      },
+      "created-by": {
+        "data": {
+          "id": "user-Lf3XXPJs99mjqmif",
+          "type": "users"
+        },
+        "links": {
+          "self": "/api/v2/users/user-Lf3XXPJs99mjqmif"
+        }
+      },
+      "workspace": {
+        "data": {
+          "id": "ws-h3b2vUSe1JLZftbM",
+          "type": "workspaces"
+        }
+      },
+      "outputs": {
+        "data": [
+          {
+            "id": "wsout-ETA6DYjyQrrJ9idV",
+            "type": "state-version-outputs"
+          },
+          {
+            "id": "wsout-pzYUJqy2SSfwb7yp",
+            "type": "state-version-outputs"
+          },
+          {
+            "id": "wsout-FbTERSWUXLT4wFRg",
+            "type": "state-version-outputs"
+          },
+          {
+            "id": "wsout-ZiZP25pWCHQtRWHT",
+            "type": "state-version-outputs"
+          },
+          {
+            "id": "wsout-sxn4UFgQ6epGGjda",
+            "type": "state-version-outputs"
+          },
+          {
+            "id": "wsout-viRjSUoawLm5Lbfs",
+            "type": "state-version-outputs"
+          },
+          {
+            "id": "wsout-vM7pS5xktGmZEiEt",
+            "type": "state-version-outputs"
+          },
+          {
+            "id": "wsout-bfd8NbxS81jxmzBq",
+            "type": "state-version-outputs"
+          },
+          {
+            "id": "wsout-TcKav5GhQoEA7ZbC",
+            "type": "state-version-outputs"
+          },
+          {
+            "id": "wsout-eFFre6YXuQgbfqtw",
+            "type": "state-version-outputs"
+          },
+          {
+            "id": "wsout-9fkebP8rfimDkpz9",
+            "type": "state-version-outputs"
+          },
+          {
+            "id": "wsout-tYn4qKdk82CGD1j8",
+            "type": "state-version-outputs"
+          },
+          {
+            "id": "wsout-7qwrGKLaTngC7jTy",
+            "type": "state-version-outputs"
+          },
+          {
+            "id": "wsout-PNWYQozKbKdzWzoc",
+            "type": "state-version-outputs"
+          }
+        ],
+        "links": {
+          "related": "/api/v2/state-versions/sv-oDZZJvWWJk4o9fvQ/outputs"
+        }
+      }
+    },
+    "links": {
+      "self": "/api/v2/state-versions/sv-oDZZJvWWJk4o9fvQ"
+    }
+  },
+  "included": [
+    {
+      "id": "wsout-ETA6DYjyQrrJ9idV",
+      "type": "state-version-outputs",
+      "attributes": {
+        "name": "alb_listener_arn",
+        "sensitive": false,
+        "type": "string",
+        "value": "arn:aws:elasticloadbalancing:us-east-1:797645259670:listener/app/acmeapp1-dev/0ed92920e20ed1dc/07e51901e3cec498",
+        "detailed-type": "string"
+      },
+      "links": {
+        "self": "/api/v2/state-version-outputs/wsout-ETA6DYjyQrrJ9idV"
+      }
+    },
+    {
+      "id": "wsout-pzYUJqy2SSfwb7yp",
+      "type": "state-version-outputs",
+      "attributes": {
+        "name": "app_security_group_id",
+        "sensitive": false,
+        "type": "string",
+        "value": "us-east-1",
+        "detailed-type": "string"
+      },
+      "links": {
+        "self": "/api/v2/state-version-outputs/wsout-pzYUJqy2SSfwb7yp"
+      }
+    },
+    {
+      "id": "wsout-FbTERSWUXLT4wFRg",
+      "type": "state-version-outputs",
+      "attributes": {
+        "name": "ecs_cluster_name",
+        "sensitive": false,
+        "type": "string",
+        "value": "ecs_cluster_acmecorp_microservices_dev",
+        "detailed-type": "string"
+      },
+      "links": {
+        "self": "/api/v2/state-version-outputs/wsout-FbTERSWUXLT4wFRg"
+      }
+    },
+    {
+      "id": "wsout-ZiZP25pWCHQtRWHT",
+      "type": "state-version-outputs",
+      "attributes": {
+        "name": "ecs_task_subnet_1",
+        "sensitive": false,
+        "type": "string",
+        "value": "subnet-03afefcc38a919083",
+        "detailed-type": "string"
+      },
+      "links": {
+        "self": "/api/v2/state-version-outputs/wsout-ZiZP25pWCHQtRWHT"
+      }
+    },
+    {
+      "id": "wsout-sxn4UFgQ6epGGjda",
+      "type": "state-version-outputs",
+      "attributes": {
+        "name": "ecs_task_subnet_2",
+        "sensitive": false,
+        "type": "string",
+        "value": "subnet-087ea2efd4f009fc5",
+        "detailed-type": "string"
+      },
+      "links": {
+        "self": "/api/v2/state-version-outputs/wsout-sxn4UFgQ6epGGjda"
+      }
+    },
+    {
+      "id": "wsout-viRjSUoawLm5Lbfs",
+      "type": "state-version-outputs",
+      "attributes": {
+        "name": "ecs_task_subnet_3",
+        "sensitive": false,
+        "type": "string",
+        "value": "subnet-09e02553a59746ba1",
+        "detailed-type": "string"
+      },
+      "links": {
+        "self": "/api/v2/state-version-outputs/wsout-viRjSUoawLm5Lbfs"
+      }
+    },
+    {
+      "id": "wsout-vM7pS5xktGmZEiEt",
+      "type": "state-version-outputs",
+      "attributes": {
+        "name": "ecs_task_subnet_4",
+        "sensitive": false,
+        "type": "string",
+        "value": "subnet-05a2d1112fbca071c",
+        "detailed-type": "string"
+      },
+      "links": {
+        "self": "/api/v2/state-version-outputs/wsout-vM7pS5xktGmZEiEt"
+      }
+    },
+    {
+      "id": "wsout-bfd8NbxS81jxmzBq",
+      "type": "state-version-outputs",
+      "attributes": {
+        "name": "ecs_task_subnet_5",
+        "sensitive": false,
+        "type": "string",
+        "value": "subnet-0d5f650b4d0eebc56",
+        "detailed-type": "string"
+      },
+      "links": {
+        "self": "/api/v2/state-version-outputs/wsout-bfd8NbxS81jxmzBq"
+      }
+    },
+    {
+      "id": "wsout-TcKav5GhQoEA7ZbC",
+      "type": "state-version-outputs",
+      "attributes": {
+        "name": "ecs_task_subnets",
+        "sensitive": false,
+        "type": "array",
+        "value": [
+          "subnet-03afefcc38a919083",
+          "subnet-087ea2efd4f009fc5",
+          "subnet-09e02553a59746ba1",
+          "subnet-05a2d1112fbca071c",
+          "subnet-0d5f650b4d0eebc56"
+        ],
+        "detailed-type": [
+          "tuple",
+          [
+            "string",
+            "string",
+            "string",
+            "string",
+            "string"
+          ]
+        ]
+      },
+      "links": {
+        "self": "/api/v2/state-version-outputs/wsout-TcKav5GhQoEA7ZbC"
+      }
+    },
+    {
+      "id": "wsout-eFFre6YXuQgbfqtw",
+      "type": "state-version-outputs",
+      "attributes": {
+        "name": "execution_role_name",
+        "sensitive": false,
+        "type": "string",
+        "value": "acmeapp1_ecs_execution-dev",
+        "detailed-type": "string"
+      },
+      "links": {
+        "self": "/api/v2/state-version-outputs/wsout-eFFre6YXuQgbfqtw"
+      }
+    },
+    {
+      "id": "wsout-9fkebP8rfimDkpz9",
+      "type": "state-version-outputs",
+      "attributes": {
+        "name": "internal_security_group_id",
+        "sensitive": false,
+        "type": "string",
+        "value": "us-east-1",
+        "detailed-type": "string"
+      },
+      "links": {
+        "self": "/api/v2/state-version-outputs/wsout-9fkebP8rfimDkpz9"
+      }
+    },
+    {
+      "id": "wsout-tYn4qKdk82CGD1j8",
+      "type": "state-version-outputs",
+      "attributes": {
+        "name": "log_group_name",
+        "sensitive": false,
+        "type": "string",
+        "value": "ecs_cluster_acmecorp_microservices_dev",
+        "detailed-type": "string"
+      },
+      "links": {
+        "self": "/api/v2/state-version-outputs/wsout-tYn4qKdk82CGD1j8"
+      }
+    },
+    {
+      "id": "wsout-7qwrGKLaTngC7jTy",
+      "type": "state-version-outputs",
+      "attributes": {
+        "name": "region",
+        "sensitive": false,
+        "type": "string",
+        "value": "us-east-1",
+        "detailed-type": "string"
+      },
+      "links": {
+        "self": "/api/v2/state-version-outputs/wsout-7qwrGKLaTngC7jTy"
+      }
+    },
+    {
+      "id": "wsout-PNWYQozKbKdzWzoc",
+      "type": "state-version-outputs",
+      "attributes": {
+        "name": "task_role_name",
+        "sensitive": false,
+        "type": "string",
+        "value": "acmeapp1_ecs_task-dev",
+        "detailed-type": "string"
+      },
+      "links": {
+        "self": "/api/v2/state-version-outputs/wsout-PNWYQozKbKdzWzoc"
+      }
+    }
+  ]
+}
