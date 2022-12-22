@@ -14,6 +14,7 @@
          "Default": "",
          "EnvVar": "",
          "Category": true,
+         "Example": "",
          "SubFields": [
             {
                "Field": "certificate",
@@ -24,6 +25,7 @@
                "Default": "",
                "EnvVar": "",
                "Category": false,
+               "Example": "",
                "SubFields": null
             },
             {
@@ -35,6 +37,7 @@
                "Default": "",
                "EnvVar": "",
                "Category": false,
+               "Example": "",
                "SubFields": null
             },
             {
@@ -46,6 +49,7 @@
                "Default": "",
                "EnvVar": "",
                "Category": false,
+               "Example": "",
                "SubFields": null
             },
             {
@@ -57,6 +61,7 @@
                "Default": "",
                "EnvVar": "",
                "Category": false,
+               "Example": "",
                "SubFields": null
             },
             {
@@ -68,6 +73,7 @@
                "Default": "",
                "EnvVar": "",
                "Category": false,
+               "Example": "",
                "SubFields": null
             },
             {
@@ -79,6 +85,7 @@
                "Default": "",
                "EnvVar": "",
                "Category": false,
+               "Example": "",
                "SubFields": null
             },
             {
@@ -90,6 +97,7 @@
                "Default": "public subnets in the default VPC",
                "EnvVar": "",
                "Category": false,
+               "Example": "",
                "SubFields": null
             },
             {
@@ -101,6 +109,7 @@
                "Default": "",
                "EnvVar": "",
                "Category": false,
+               "Example": "",
                "SubFields": null
             }
          ]
@@ -114,6 +123,7 @@
          "Default": "",
          "EnvVar": "",
          "Category": false,
+         "Example": "",
          "SubFields": null
       },
       {
@@ -125,6 +135,7 @@
          "Default": "true",
          "EnvVar": "",
          "Category": false,
+         "Example": "",
          "SubFields": null
       },
       {
@@ -136,6 +147,7 @@
          "Default": "",
          "EnvVar": "",
          "Category": false,
+         "Example": "",
          "SubFields": null
       },
       {
@@ -147,6 +159,7 @@
          "Default": "",
          "EnvVar": "",
          "Category": false,
+         "Example": "",
          "SubFields": null
       },
       {
@@ -158,6 +171,7 @@
          "Default": "",
          "EnvVar": "",
          "Category": false,
+         "Example": "",
          "SubFields": null
       },
       {
@@ -169,6 +183,7 @@
          "Default": "",
          "EnvVar": "",
          "Category": false,
+         "Example": "",
          "SubFields": null
       },
       {
@@ -180,6 +195,7 @@
          "Default": "",
          "EnvVar": "",
          "Category": false,
+         "Example": "",
          "SubFields": null
       },
       {
@@ -191,6 +207,7 @@
          "Default": "create a new exeuction IAM role based on the application name",
          "EnvVar": "",
          "Category": false,
+         "Example": "",
          "SubFields": null
       },
       {
@@ -202,6 +219,7 @@
          "Default": "derived from the application name",
          "EnvVar": "",
          "Category": false,
+         "Example": "",
          "SubFields": null
       },
       {
@@ -213,6 +231,7 @@
          "Default": "",
          "EnvVar": "",
          "Category": false,
+         "Example": "",
          "SubFields": null
       },
       {
@@ -224,6 +243,7 @@
          "Default": "",
          "EnvVar": "",
          "Category": false,
+         "Example": "",
          "SubFields": null
       },
       {
@@ -235,6 +255,7 @@
          "Default": "",
          "EnvVar": "",
          "Category": false,
+         "Example": "",
          "SubFields": null
       },
       {
@@ -246,6 +267,7 @@
          "Default": "3000",
          "EnvVar": "",
          "Category": false,
+         "Example": "",
          "SubFields": null
       },
       {
@@ -257,6 +279,7 @@
          "Default": "",
          "EnvVar": "",
          "Category": false,
+         "Example": "",
          "SubFields": null
       },
       {
@@ -268,6 +291,7 @@
          "Default": "public subnets in the default VPC",
          "EnvVar": "",
          "Category": false,
+         "Example": "",
          "SubFields": null
       },
       {
@@ -279,6 +303,7 @@
          "Default": "",
          "EnvVar": "",
          "Category": false,
+         "Example": "",
          "SubFields": null
       },
       {
@@ -290,6 +315,7 @@
          "Default": "",
          "EnvVar": "",
          "Category": false,
+         "Example": "",
          "SubFields": null
       }
    ],
@@ -304,6 +330,7 @@
          "Default": "",
          "EnvVar": "",
          "Category": false,
+         "Example": "",
          "SubFields": null
       },
       {
@@ -315,6 +342,7 @@
          "Default": "",
          "EnvVar": "",
          "Category": false,
+         "Example": "",
          "SubFields": null
       },
       {
@@ -326,6 +354,7 @@
          "Default": "",
          "EnvVar": "",
          "Category": false,
+         "Example": "",
          "SubFields": null
       },
       {
@@ -337,6 +366,7 @@
          "Default": "",
          "EnvVar": "",
          "Category": false,
+         "Example": "",
          "SubFields": null
       },
       {
@@ -348,6 +378,7 @@
          "Default": "",
          "EnvVar": "",
          "Category": false,
+         "Example": "",
          "SubFields": null
       },
       {
@@ -359,6 +390,7 @@
          "Default": "",
          "EnvVar": "",
          "Category": false,
+         "Example": "",
          "SubFields": null
       },
       {
@@ -370,6 +402,7 @@
          "Default": "",
          "EnvVar": "",
          "Category": false,
+         "Example": "",
          "SubFields": null
       }
    ],
@@ -384,6 +417,7 @@
          "Default": "",
          "EnvVar": "",
          "Category": true,
+         "Example": "",
          "SubFields": [
             {
                "Field": "create_group",
@@ -394,6 +428,7 @@
                "Default": "",
                "EnvVar": "",
                "Category": false,
+               "Example": "",
                "SubFields": null
             },
             {
@@ -405,6 +440,7 @@
                "Default": "",
                "EnvVar": "",
                "Category": false,
+               "Example": "",
                "SubFields": null
             },
             {
@@ -416,6 +452,7 @@
                "Default": "",
                "EnvVar": "",
                "Category": false,
+               "Example": "",
                "SubFields": null
             },
             {
@@ -427,6 +464,7 @@
                "Default": "",
                "EnvVar": "",
                "Category": false,
+               "Example": "",
                "SubFields": null
             },
             {
@@ -438,6 +476,7 @@
                "Default": "",
                "EnvVar": "",
                "Category": false,
+               "Example": "",
                "SubFields": null
             },
             {
@@ -449,6 +488,7 @@
                "Default": "The same region the task is to be running",
                "EnvVar": "",
                "Category": false,
+               "Example": "",
                "SubFields": null
             },
             {
@@ -460,6 +500,7 @@
                "Default": "Generated based off timestamp",
                "EnvVar": "",
                "Category": false,
+               "Example": "",
                "SubFields": null
             }
          ]
@@ -473,6 +514,7 @@
          "Default": "",
          "EnvVar": "",
          "Category": false,
+         "Example": "",
          "SubFields": null
       },
       {
@@ -484,6 +526,7 @@
          "Default": "",
          "EnvVar": "",
          "Category": false,
+         "Example": "",
          "SubFields": null
       },
       {
@@ -495,6 +538,7 @@
          "Default": "",
          "EnvVar": "",
          "Category": true,
+         "Example": "",
          "SubFields": [
             {
                "Field": "container_port",
@@ -505,6 +549,7 @@
                "Default": "",
                "EnvVar": "",
                "Category": false,
+               "Example": "",
                "SubFields": null
             },
             {
@@ -516,6 +561,7 @@
                "Default": "",
                "EnvVar": "",
                "Category": false,
+               "Example": "",
                "SubFields": null
             },
             {
@@ -527,6 +573,7 @@
                "Default": "",
                "EnvVar": "",
                "Category": false,
+               "Example": "",
                "SubFields": null
             },
             {
@@ -538,6 +585,7 @@
                "Default": "",
                "EnvVar": "",
                "Category": false,
+               "Example": "",
                "SubFields": null
             },
             {
@@ -549,6 +597,7 @@
                "Default": "",
                "EnvVar": "",
                "Category": false,
+               "Example": "",
                "SubFields": null
             },
             {
@@ -560,6 +609,7 @@
                "Default": "",
                "EnvVar": "",
                "Category": false,
+               "Example": "",
                "SubFields": null
             },
             {
@@ -571,6 +621,7 @@
                "Default": "",
                "EnvVar": "",
                "Category": false,
+               "Example": "",
                "SubFields": null
             },
             {
@@ -582,6 +633,7 @@
                "Default": "",
                "EnvVar": "",
                "Category": false,
+               "Example": "",
                "SubFields": null
             },
             {
@@ -593,6 +645,7 @@
                "Default": "",
                "EnvVar": "",
                "Category": false,
+               "Example": "",
                "SubFields": null
             },
             {
@@ -604,6 +657,7 @@
                "Default": "",
                "EnvVar": "",
                "Category": false,
+               "Example": "",
                "SubFields": null
             }
          ]

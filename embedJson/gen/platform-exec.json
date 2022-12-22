@@ -14,6 +14,7 @@
          "Default": "",
          "EnvVar": "",
          "Category": false,
+         "Example": "",
          "SubFields": null
       },
       {
@@ -25,6 +26,7 @@
          "Default": "",
          "EnvVar": "",
          "Category": false,
+         "Example": "",
          "SubFields": null
       }
    ],
@@ -39,6 +41,7 @@
          "Default": "",
          "EnvVar": "",
          "Category": true,
+         "Example": "",
          "SubFields": [
             {
                "Field": "path",
@@ -49,6 +52,7 @@
                "Default": "",
                "EnvVar": "",
                "Category": false,
+               "Example": "",
                "SubFields": null
             }
          ]
