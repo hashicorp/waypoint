@@ -852,6 +852,40 @@ func buildAppConfig(
 					}
 				}
 
+			case *sdkpb.ConfigSource_Value_Json:
+				if req.cv.Internal {
+					// We don't yet support using non-string types as internal vals.
+					// Logging and moving along isn't great though - the user
+					// won't have much indication as to why their variable isn't working.
+					L.Warn("Complex-typed outputs cannot be used as internal values. Skipping.", "var name", req.cv.Name)
+				} else {
+					if req.cv.NameIsPath {
+						// This is the expected case. The variable system always requests its dynamic vars
+						// as files, and the only current use-case for plugins returning json data
+						// is to feed the variable system (not app config or runner config).
+						// Yes, the context that this data is json is lost at this point. It's
+						// up to the caller to figure out from here if the file contents has
+						// json, or just a string. In practice, the variable system is aware
+						// of the type the user specified (i.e. string, map, or any), and can
+						// use that as a hint as to how to treat this data.
+						dynamicFiles = append(dynamicFiles, &FileContent{
+							Path: req.req.Name,
+							Data: r.Json,
+						})
+					} else {
+						// This is a weird case. The plugin has returned structured data,
+						// but it looks like the user wants to put that into an env var.
+						// We usually expect structured data to be used to help craft
+						// other hcl stanzas, and the variables system always requests it's
+						// values as files (by setting NameIsPath=true), so I'm not sure
+						// why this would happen, but given the option of doing nothing,
+						// failing, or putting the json into the env var, the latter seems
+						// the most useful.
+						envVars = append(envVars, req.req.Name+"="+string(r.Json))
+						env[req.req.Name] = cty.StringVal(string(r.Json))
+					}
+				}
+
 			case *sdkpb.ConfigSource_Value_Error:
 				st := status.FromProto(r.Error)
 				L.Warn("error retrieving config value",
