@@ -202,7 +202,13 @@ func TestConfigSourcer_StringValue(t *testing.T) {
 			for k, v := range tt.spotChecks {
 				actualV, ok := jsonResults[k]
 				require.True(ok)
-				require.Equal(v, actualV)
+
+				switch actualV.(type) {
+				case string:
+					require.Equal(v, actualV)
+				case []interface{}:
+					require.ElementsMatch(v, actualV)
+				}
 			}
 		}
 
