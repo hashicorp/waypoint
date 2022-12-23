@@ -128,7 +128,7 @@ func TestConfigSourcer_StringValue(t *testing.T) {
 		require.NoError(json.Unmarshal(resultJson.Json, &resultMarshalled))
 
 		require.True(ok)
-		require.Equal([]string{
+		require.ElementsMatch([]string{
 			"subnet-03afefcc38a919083",
 			"subnet-087ea2efd4f009fc5",
 			"subnet-09e02553a59746ba1",
