@@ -94,8 +94,7 @@ Configuration sources sometimes support global settings for their behavior or
 require global settings to be set for them to function at all.
 For example, [Vault](/waypoint/plugins/vault#vault-configsourcer) has some global
 settings around how to authenticate. Without setting these, Vault configurations
-in applications will not work. These _source settings_ are set at the server
-level and used by all `dynamic` calls.
+in applications will not work.
 
 To set configuration source settings, the [`waypoint config source-set`](/waypoint/commands/config-source-set) CLI command is used:
 
@@ -105,6 +104,79 @@ $ waypoint config source-set -type=vault -config="auth=aws"
 
 The documentation for the source settings available to a configuration source
 are alongside their parameters in the plugin documentation.
+
+### Scoped Source Settings
+
+The `waypoint config source-set` command's `-scope` flag will configure a given
+config source to be used within a specific scope. This can be either `global`,
+(the default), `project`, or `app`-scoped. For a given app or project, the config
+source with the "most specific" scope will be used.
+
+For example, you may have three config sources configured in your Waypoint server,
+one at the `global` scope, one at the `project` scope for project `foo`, and one
+at the `app` scope for app `bar`, in project `foo`. These have been configured
+with the commands below, for the Vault plugin. The Vault token set for each of
+these config sources is tailored to each scope, with only the necessary set of
+permissions for each.
+
+```shell-session
+$ waypoint config source-set -scope=global -type=vault -config=addr=https://vault.service.consul:8200 -config=token=waypoint-global-token
+
+$ waypoint config source-set -scope=project -p=foo -type=vault -config=addr=https://vault.service.consul:8200 -config=token=foo-project-token
+
+$ waypoint config source-set -scope=app -p=foo -a=bar -type=vault -config=addr=https://vault.service.consul:8200 -config=token=bar-app-token
+```
+
+In accordance with the scopes set, `waypoint config source-get` will return the
+config source corresponding with the specified `scope`.
+
+```shell-session
+$ waypoint config source-get -scope=global -type=vault
+  KEY  |           VALUE
+--------+----------------------------
+  addr  | https://vault.service.consul:8200
+  token | waypoint-global-token
+
+$ waypoint config source-get -scope=project -p=foo -type=vault
+  KEY  |           VALUE
+--------+----------------------------
+  addr  | https://vault.service.consul:8200
+  token | foo-project-token
+
+$ waypoint config source-get -scope=app -p=foo -a=bar -type=vault
+  KEY  |           VALUE
+--------+----------------------------
+  addr  | https://vault.service.consul:8200
+  token | bar-app-token
+```
+
+In the third of the series of commands above, were the app-scoped config source
+absent, the project-scoped source would be returned. Were the project-scoped
+config source absent as well, the global-scoped config source would be returned.
+
+The Waypoint Entrypoint will always attempt to retrieve configuration for the
+scope of the deployed app.
+
+In addition to the `global`, `project`, and `app` scopes, when setting a config
+source, it may also be scoped to a specific workspace. This can be achieved by
+using the `-workspace` (or `-w`) flag. The config source set for a given workspace
+will be used only for operations and app instances deployed within that workspace.
+
+```shell-session
+$ waypoint config source-set -scope=app -p=foo -a=bar -w=foobar -type=vault -config=addr=https://vault.service.consul:8200 -config=token=bar-app-foobar-workspace-token
+
+$ waypoint config source-get -scope=app -p=foo -a=bar -w=foobar -type=vault
+  KEY  |           VALUE
+--------+----------------------------
+  addr  | https://vault.service.consul:8200
+  token | bar-app-foobar-workspace-token
+```
+
+Specifying workspace-scoped config sources is especially useful when your
+Waypoint server is used for releasing applications to multiple environments. A
+Vault config source for the `dev` workspace may have a different address or
+less restrictive credentials to be used than deployments in the `prod` workspace,
+for example.
 
 ### Deleting Configuration Source Settings
 
