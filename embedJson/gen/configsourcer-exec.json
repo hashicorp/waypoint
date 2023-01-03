@@ -4,5 +4,5 @@
    "optionalFields": null,
    "requiredFields": null,
    "type": "configsourcer",
-   "use": "`dynamic` for sourcing [configuration values](/docs/app-config/dynamic) or [input variable values](/docs/waypoint-hcl/variables/dynamic)."
+   "use": "`dynamic` for sourcing [configuration values](/waypoint/docs/app-config/dynamic) or [input variable values](/waypoint/docs/waypoint-hcl/variables/dynamic)."
 }

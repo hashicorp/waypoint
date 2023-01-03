@@ -249,7 +249,7 @@ or a chart in a repository.
 
 ### Entrypoint Functionality
 
-Waypoint [entrypoint functionality](/docs/entrypoint#functionality) such
+Waypoint [entrypoint functionality](/waypoint/docs/entrypoint#functionality) such
 as logs, exec, app configuration, and more require two properties to be true:
 
 1. The running image must already have the Waypoint entrypoint installed
@@ -260,17 +260,17 @@ as logs, exec, app configuration, and more require two properties to be true:
   deployment stage.**
 
 **Step 2 does not happen automatically.** You must manually set the entrypoint
-environment variables using the [templating feature](/docs/waypoint-hcl/functions/template).
+environment variables using the [templating feature](/waypoint/docs/waypoint-hcl/functions/template).
 These must be passed in using Helm values (i.e. the chart must make
 environment variables configurable).
 
 This is documented in more detail with a full example in the
-[Kubernetes Helm Deployment documentation](/docs/platforms/kubernetes/helm-deploy).
+[Kubernetes Helm Deployment documentation](/waypoint/docs/platforms/kubernetes/helm-deploy).
 
 #### URL Service
 
 If you want your workload to be accessible by the
-[Waypoint URL service](/docs/url), you must set the PORT environment variable
+[Waypoint URL service](/waypoint/docs/url), you must set the PORT environment variable
 within the pod with your web service and also be using the Waypoint
 entrypoint (documented in the previous section).
 

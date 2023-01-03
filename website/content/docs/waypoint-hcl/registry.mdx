@@ -14,11 +14,11 @@ to a registry such as a Docker Registry, Amazon ECR, Artifactory, etc. A registr
 is used to make the result of a build available to the deployment platform.
 
 A `registry` is required unless using the Docker build plugin via a [CLI
-runner](/docs/runner#cli-runner). This is not the common case, and thusly almost
+runner](/waypoint/docs/runner#cli-runner). This is not the common case, and thusly almost
 always a `registry` stanza should be used.
 
 Please see the documentation on the
-[registry phase of the Waypoint lifecycle](/docs/lifecycle/build#registry)
+[registry phase of the Waypoint lifecycle](/waypoint/docs/lifecycle/build#registry)
 for examples of when a registry is necessary and the behavior of Waypoint without a
 registry specified.
 
@@ -50,8 +50,8 @@ app "frontend" {
 
 ### Optional
 
-- `hook` <code>([hook][hook]: nil)</code> - [Hooks](/docs/lifecycle/hooks)
+- `hook` <code>([hook][hook]: nil)</code> - [Hooks](/waypoint/docs/lifecycle/hooks)
   to execute before and/or after the artifact is pushed to the registry.
 
-[hook]: /docs/waypoint-hcl/hook 'Hook Stanza'
-[use]: /docs/waypoint-hcl/use 'Use Stanza'
+[hook]: /waypoint/docs/waypoint-hcl/hook 'Hook Stanza'
+[use]: /waypoint/docs/waypoint-hcl/use 'Use Stanza'

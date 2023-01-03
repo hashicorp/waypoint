@@ -89,5 +89,5 @@
    ],
    "sourceFieldsHelp": "Source Parameters\nThe parameters below are used with `waypoint config source-set` to configure\nthe behavior this plugin. These are _not_ used in `dynamic` calls. The\nparameters used for `dynamic` are in the previous section.\n",
    "type": "configsourcer",
-   "use": "`dynamic` for sourcing [configuration values](/docs/app-config/dynamic) or [input variable values](/docs/waypoint-hcl/variables/dynamic)."
+   "use": "`dynamic` for sourcing [configuration values](/waypoint/docs/app-config/dynamic) or [input variable values](/waypoint/docs/waypoint-hcl/variables/dynamic)."
 }

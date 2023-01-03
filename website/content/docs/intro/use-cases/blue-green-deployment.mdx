@@ -22,24 +22,24 @@ to route 100% of traffic to all instances running the application.
 
 In the HashiStack, this is made possible with features from the workload orchestration
 tool, HashiCorp Nomad, and the service networking tool, HashiCorp Consul. Nomad
-enables operators to deploy [canary](https://developer.hashicorp.com/nomad/docs/job-specification/update#canary)
+enables operators to deploy [canary](/nomad/docs/job-specification/update#canary)
 instances of a newer version of an application without destroying the existing
 instances. The canary deployment can be auto-promoted when "healthy", or manually
 promoted by operators. Consul plays a role as well through service configuration
-entries. The [service resolver](https://developer.hashicorp.com/consul/docs/connect/config-entries/service-resolver)
+entries. The [service resolver](/consul/docs/connect/config-entries/service-resolver)
 config entry controls which instances of a service should be matched by downstream
-requests made to the service, which can be [filtered](https://developer.hashicorp.com/consul/api-docs/features/filtering)
-by service tags. A [service splitter](https://developer.hashicorp.com/consul/docs/connect/config-entries/service-splitter)
+requests made to the service, which can be [filtered](/consul/api-docs/features/filtering)
+by service tags. A [service splitter](/consul/docs/connect/config-entries/service-splitter)
 config entry splits a configured percentage of traffic to resolvers. These features
 of Nomad and Consul work together by the canary instances of a new Nomad job version
-registering new instances of a Consul service with [canary tags](https://developer.hashicorp.com/nomad/docs/job-specification/service#canary_tags).
+registering new instances of a Consul service with [canary tags](/nomad/docs/job-specification/service#canary_tags).
 The tags applied to the canary instances of the service match a service resolver.
 The service splitter is then updated while both the new and old application instances
 are running to split some percentage of traffic between the resolver for the new
 and old instances of the service.
 
 To achieve this, a series of commands or API calls would need to be run manually,
-or automated through scripts or some other means; but [Waypoint pipelines](https://developer.hashicorp.com/waypoint/docs/pipelines)
+or automated through scripts or some other means; but [Waypoint pipelines](/waypoint/docs/pipelines)
 can orchestrate this! Waypoint pipelines can execute configured phases of your app's build, deployment,
 and release lifecycle, and run custom steps such as modifying Consul config
 entries to configure DNS to route traffic to your canary deployment instances.
@@ -55,18 +55,18 @@ described in this use case.
 If experimenting with this use case, it will be helpful to have some familiarity
 with the tools and concepts listed below.
 
-- [Waypoint CLI](https://developer.hashicorp.com/waypoint/downloads)
-  - [Context created](https://developer.hashicorp.com/waypoint/docs/server/auth#logging-in) and connected to local Waypoint server or HCP Waypoint server
-- Waypoint [runner](https://developer.hashicorp.com/waypoint/docs/runner/run-manual#installing-a-runner)
+- [Waypoint CLI](/waypoint/downloads)
+  - [Context created](/waypoint/docs/server/auth#logging-in) and connected to local Waypoint server or HCP Waypoint server
+- Waypoint [runner](/waypoint/docs/runner/run-manual#installing-a-runner)
   - Must be able to connect to HashiCorp Nomad & HashiCorp Consul clusters
-- Waypoint [runner configuration](https://developer.hashicorp.com/waypoint/docs/runner/config)
+- Waypoint [runner configuration](/waypoint/docs/runner/config)
   - Used to connect to HashiCorp Nomad
 - Docker registry
   - Credentials to push a build to the registry
-- [HashiCorp Consul](https://developer.hashicorp.com/consul) cluster
-- [HashiCorp Nomad](https://developer.hashicorp.com/nomad) cluster
-  - [Integrated with Consul cluster](https://developer.hashicorp.com/nomad/docs/integrations/consul-integration)
-- [Consul DNS](https://developer.hashicorp.com/consul/tutorials/networking/dns-forwarding)
+- [HashiCorp Consul](/consul) cluster
+- [HashiCorp Nomad](/nomad) cluster
+  - [Integrated with Consul cluster](/nomad/docs/integrations/consul-integration)
+- [Consul DNS](/consul/tutorials/networking/dns-forwarding)
 - `curl`
 
 ### Pipelines
@@ -390,7 +390,7 @@ connection:
 
 The `config` stanza in the Waypoint configuration file will set these variables
 in the application's environment dynamically. You can learn more about this in
-the [Waypoint documentation on config variables](https://developer.hashicorp.com/waypoint/docs/waypoint-hcl/config).
+the [Waypoint documentation on config variables](/waypoint/docs/waypoint-hcl/config).
 
 Any change could be made to this application though, not just database connections.
 But with a new change in place, and pushed to the git repository, it's time to
@@ -459,9 +459,9 @@ minimizing downtime and user impact.
 
 ## Further Reading
 
-- [Waypoint Pipelines](https://developer.hashicorp.com/waypoint/docs/pipelines)
-- [Waypoint Plugins](https://developer.hashicorp.com/waypoint/plugins)
-- [Nomad Blue-Green Deployment](https://developer.hashicorp.com/nomad/tutorials/job-updates/job-blue-green-and-canary-deployments)
+- [Waypoint Pipelines](/waypoint/docs/pipelines)
+- [Waypoint Plugins](/waypoint/plugins)
+- [Nomad Blue-Green Deployment](/nomad/tutorials/job-updates/job-blue-green-and-canary-deployments)
 - [Terraform Provider for Waypoint](https://registry.terraform.io/providers/hashicorp-dev-advocates/waypoint)
-- [Consul Service Splitter Config Entries](https://developer.hashicorp.com/consul/docs/connect/config-entries/service-splitter)
-- [Consul Service Resolver Config Entries](https://developer.hashicorp.com/consul/docs/connect/config-entries/service-resolver)
+- [Consul Service Splitter Config Entries](/consul/docs/connect/config-entries/service-splitter)
+- [Consul Service Resolver Config Entries](/consul/docs/connect/config-entries/service-resolver)

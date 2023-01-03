@@ -7,7 +7,7 @@ description: |-
 
 # Building Container Images
 
-Waypoint incorporates a first-class [build](/docs/lifecycle/build) step that
+Waypoint incorporates a first-class [build](/waypoint/docs/lifecycle/build) step that
 can be used to build your container images and other artifacts. This page will
 focus on container (or Docker) images, since these are the primary deployment
 artifact that Kubernetes uses.
@@ -16,11 +16,11 @@ Often one of the first challenges when setting up a new application is answering
 two questions: how do I build my application? and how do I get the result of my
 build plumbed into my deployment configuration? Waypoint solves both of these
 by incorporating configuration for both build and deploys into the
-[waypoint.hcl file](/docs/waypoint-hcl).
+[waypoint.hcl file](/waypoint/docs/waypoint-hcl).
 
 -> **The built-in build functionality is optional.** If you have an external
 process already setup to build your images, you can
-[use externally-built images](/docs/platforms/kubernetes/external-build). Waypoint
+[use externally-built images](/waypoint/docs/platforms/kubernetes/external-build). Waypoint
 just needs to know about some sort of artifact, whether it is responsible
 for building it or not.
 
@@ -28,18 +28,18 @@ This page will focus on Dockerfile-based builds because these are the most
 popular and also take into account applications that you may have written
 prior to Waypoint. However, Waypoint supports many more methods of building
 container images. Documentation on other methods along with examples can be
-found on the [build lifecycle page](/docs/lifecycle/build).
+found on the [build lifecycle page](/waypoint/docs/lifecycle/build).
 
 ## Docker Builder (Dockerfile)
 
 The most popular way to build container images today is using a manually
 written `Dockerfile`. Waypoint can also build images from Dockerfiles
-using the [`docker` builder](/plugins/docker#docker-builder). This also is
+using the [`docker` builder](/waypoint/plugins/docker#docker-builder). This also is
 the easiest way to get started with Waypoint with existing applications, since
 most existing applications for Kubernetes have Dockerfiles.
 
 -> **If you don't know Docker, or don't want to write a Dockerfile,**
-take a look at the [`pack` builder](/docs/lifecycle/build#cloud-native-buildpacks).
+take a look at the [`pack` builder](/waypoint/docs/lifecycle/build#cloud-native-buildpacks).
 This uses buildpacks to autodetect your app language and build a container
 image.
 
@@ -80,7 +80,7 @@ information, whether that be via SSH, some API token, or any other mechanism.
 Because Waypoint image builds happen remotely, they don't have access to your
 local machine's secrets. The recommended approach to ensure secrets can be
 accessed everywhere (locally and remote) is to use Waypoint
-[input variables](/docs/waypoint-hcl/variables/input) paired with
+[input variables](/waypoint/docs/waypoint-hcl/variables/input) paired with
 Docker build arguments.
 
 -> **Why not [Docker Secrets](https://docs.docker.com/engine/swarm/secrets/)?**
@@ -134,7 +134,7 @@ ENTRYPOINT ["/app"]
 ```
 
 To invoke this, you can set the `github_token` input variable
-[many different ways](/docs/waypoint-hcl/variables/input#assigning-values-to-custom-input-variables). For long term use, the recommended location to set the variable
+[many different ways](/waypoint/docs/waypoint-hcl/variables/input#assigning-values-to-custom-input-variables). For long term use, the recommended location to set the variable
 is via the web UI. However, for testing, you can use the CLI:
 
 ```shell-session
@@ -145,7 +145,7 @@ $ waypoint build -var github_token=$MYTOKEN <project>/<app>
 
 After getting builds working, the next step is usually to push that container
 image to a container registry. Waypoint supports a
-[`registry` stanza](/docs/waypoint-hcl/registry) for specifying a
+[`registry` stanza](/waypoint/docs/waypoint-hcl/registry) for specifying a
 container registry for your image. To specify a Docker registry compatiable
 registry, use the `docker` registry:
 
@@ -176,21 +176,21 @@ This should push your image now.
 
 In a real production use-case, you should not put your container registry
 credentials directly in the `waypoint.hcl` file. Instead, you should use
-[input variables](/docs/waypoint-hcl/variables/input) to parameterize them.
+[input variables](/waypoint/docs/waypoint-hcl/variables/input) to parameterize them.
 Input variables can be configured to read from environment variables so you
 can use well known environment variables (such as `AWS_ACCESS_KEY`), too.
 
 Normally, runner configuration should be used to provide these details to a runner
 executing the operation that needs these details.
 
-See [runner configuration](/docs/runner/config) for details.
+See [runner configuration](/waypoint/docs/runner/config) for details.
 
 ## Local vs. Remote Builds
 
 Waypoint can run builds locally where you run the `waypoint` CLI, or
 remotely in your Kubernetes cluster in pods that are launched on demand.
 By default, Waypoint will automatically run your operations remotely when
-[certain conditions](/docs/projects/remote#requirements) are met.
+[certain conditions](/waypoint/docs/projects/remote#requirements) are met.
 Builds triggered by Git polling or the UI also happen remotely.
 
 To build Docker images within Kubernetes, Waypoint uses

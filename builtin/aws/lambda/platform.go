@@ -303,6 +303,10 @@ func (p *Platform) Deploy(
 		envVars[k] = aws.String(v)
 	}
 
+	for k, v := range deployConfig.Env() {
+		envVars[k] = aws.String(v)
+	}
+
 	step.Done()
 
 	step = sg.Add("Reading Lambda function: %s", src.App)

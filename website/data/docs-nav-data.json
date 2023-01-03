@@ -39,6 +39,10 @@
             "path": "intro/use-cases/blue-green-deployment"
           },
           {
+            "title": "Using GitHub Actions to Unlock GitOps Workflows",
+            "path": "intro/use-cases/waypoint-gh-actions"
+          },
+          {
             "title": "Seamless Cloud Migration With Waypoint",
             "path": "intro/use-cases/migrate-clouds"
           }

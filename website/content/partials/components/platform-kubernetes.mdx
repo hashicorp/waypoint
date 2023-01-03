@@ -16,7 +16,7 @@ use "kubernetes" {
 
 ### Required Parameters
 
-These parameters are used in the [`use` stanza](/docs/waypoint-hcl/use) for this plugin.
+These parameters are used in the [`use` stanza](/waypoint/docs/waypoint-hcl/use) for this plugin.
 
 #### pod (category)
 
@@ -201,6 +201,10 @@ Holds pod-level security attributes and container settings.
 ###### pod.security_context.fs_group
 
 A special supplemental group that applies to all containers in a pod.
+
+- Type: **int64**
+
+###### pod.security_context.run_as_group
 
 - Type: **int64**
 
@@ -400,7 +404,7 @@ Image of the sidecar container.
 
 ### Optional Parameters
 
-These parameters are used in the [`use` stanza](/docs/waypoint-hcl/use) for this plugin.
+These parameters are used in the [`use` stanza](/waypoint/docs/waypoint-hcl/use) for this plugin.
 
 #### annotations
 
@@ -618,7 +622,7 @@ Environment variables that are meant to configure the container in a static way.
 
 ### Output Attributes
 
-Output attributes can be used in your `waypoint.hcl` as [variables](/docs/waypoint-hcl/variables) via [`artifact`](/docs/waypoint-hcl/variables/artifact) or [`deploy`](/docs/waypoint-hcl/variables/deploy).
+Output attributes can be used in your `waypoint.hcl` as [variables](/waypoint/docs/waypoint-hcl/variables) via [`artifact`](/waypoint/docs/waypoint-hcl/variables/artifact) or [`deploy`](/waypoint/docs/waypoint-hcl/variables/deploy).
 
 #### id
 

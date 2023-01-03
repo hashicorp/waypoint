@@ -19,7 +19,7 @@ considerations:
   and compatibility promise allows for clients with differing versions from
   a Waypoint server.
 
-- **Entrypoint** - The [entrypoint](/docs/entrypoint) is built and run
+- **Entrypoint** - The [entrypoint](/waypoint/docs/entrypoint) is built and run
   directly on the deployment artifact. Users of Waypoint cannot be expected
   to rebuild and redeploy all applications. The Waypoint upgrade process
   and compatibility promise is designed so that entrypoints retain compatibility
@@ -29,7 +29,7 @@ considerations:
   with all actively used clients and entrypoints. The Waypoint upgrade process
   is designed for you to know when and how to safely upgrade the server.
 
-Please see our [compatibility promise](/docs/upgrading/compatibility)
+Please see our [compatibility promise](/waypoint/docs/upgrading/compatibility)
 for details on how to determine compatibility. This page will focus on
 how to upgrade components in both compatible and incompatible scenarios.
 
@@ -38,7 +38,7 @@ how to upgrade components in both compatible and incompatible scenarios.
 If you're using the [Waypoint Helm chart](https://github.com/hashicorp/waypoint-helm)
 to install Waypoint, you can upgrade using the `helm upgrade` command.
 Please take note of any
-[version-specific upgrade notes](/docs/upgrading/version-guides) prior
+[version-specific upgrade notes](/waypoint/docs/upgrading/version-guides) prior
 to upgrading, which may include minimum Helm chart versions for the upgrade
 or steps you should take prior or following the upgrade.
 
@@ -79,7 +79,7 @@ Standard Upgrade guide using the _Automated Upgrade_ Server Upgrade subsection.
 
 ## Standard Upgrade
 
-A standard upgrade is one where the [protocol version](/docs/upgrading/compatibility)
+A standard upgrade is one where the [protocol version](/waypoint/docs/upgrading/compatibility)
 remains compatible for all components from one upgrade to another. In other
 words, this is an upgrade with no backwards incompatibilities.
 
@@ -93,15 +93,15 @@ client, and entrypoints in any order for a standard, backwards compatible upgrad
 1. Check any upgrade notes for the version you're upgrading to and verify
    there are no issues that will affect your upgrade.
 
-2. [Take a snapshot of the server](https://www.waypointproject.io/commands/server-snapshot)
+2. [Take a snapshot of the server](/waypoint/commands/server-snapshot)
 
 3. Shut down the previous server version A.
 
 4. Start the new server version B.
 
-5. [Restore the server snapshot](https://www.waypointproject.io/commands/server-restore)
+5. [Restore the server snapshot](/waypoint/commands/server-restore)
 
-6. [Verify the connection](https://www.waypointproject.io/commands/context-verify)
+6. [Verify the connection](/waypoint/commands/context-verify)
 
 -> **Note:** There is no way today to avoid a small amount of downtime
 when upgrading from version A to version B. In practice this should be
@@ -153,7 +153,7 @@ If the server was installed with a static runner, Waypoint will uninstall the ex
 ## Backwards Incompatible Upgrade
 
 A backwards incompatible upgrade is one where the
-[protocol version](/docs/upgrading/compatibility)
+[protocol version](/waypoint/docs/upgrading/compatibility)
 becomes incompatible from one version to another.
 
 1. For backwards incompatible upgrades, you must first upgrade the

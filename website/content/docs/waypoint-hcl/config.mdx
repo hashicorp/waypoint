@@ -2,22 +2,22 @@
 layout: docs
 page_title: config - waypoint.hcl
 description: |-
-  The `config` stanza configures [application configuration](/docs/app-config). Application configuration sets environment variables for your application that is either statically set or synced with an external system.
+  The `config` stanza configures [application configuration](/waypoint/docs/app-config). Application configuration sets environment variables for your application that is either statically set or synced with an external system.
 ---
 
 # `config` Stanza
 
 <Placement groups={[['config'], ['app', 'config']]} />
 
-The `config` stanza configures [application configuration](/docs/app-config).
+The `config` stanza configures [application configuration](/waypoint/docs/app-config).
 Application configuration sets environment variables or writes files for
 your application. Application configuration can use static values or by synced
 with an external system.
 Application configuration can be set via the `waypoint.hcl` file using
-the `config` stanza as well as via the [CLI](/commands/config-set).
+the `config` stanza as well as via the [CLI](/waypoint/commands/config-set).
 
 -> **To learn about application configuration more broadly** please also read the
-[application configuration](/docs/app-config) docs. The dedicated application
+[application configuration](/waypoint/docs/app-config) docs. The dedicated application
 configuration section goes into more detail about how application configuration
 works with Waypoint. This page is specifically about the `config` stanza
 in the `waypoint.hcl` file and _does not_ cover the application configuration
@@ -58,7 +58,7 @@ app "frontend" {
 In both the project and app scope, a configuration can be further scoped
 to only exist in a specific workspace or label set for a deployment.
 For more information, see the
-[workspace and label-scoping documentation](/docs/app-config/scope).
+[workspace and label-scoping documentation](/waypoint/docs/app-config/scope).
 
 ## Syncing
 
@@ -91,8 +91,8 @@ changed.
   deployed application. The key is the path to write the file and the value
   is the file contents. If the path is relative, it is relative to the working
   directory of the deployment. The value is usually paired with
-  [templating functions](/docs/waypoint-hcl/functions/template). See
-  the [configuration file documentation](/docs/app-config/files) for more information.
+  [templating functions](/waypoint/docs/waypoint-hcl/functions/template). See
+  the [configuration file documentation](/waypoint/docs/app-config/files) for more information.
 
 - `file_change_signal` `(string: "USR2")` - The signal to send to the deployed
   application when a configuration file changes.
@@ -101,14 +101,14 @@ changed.
   same syntax as `env` but are not exposed directly to the application. Instead,
   these values may be referenced using `config.internal.NAME` within `env`
   values or `file` values. See the
-  [internal values documentation](/docs/app-config/internal) for more information.
+  [internal values documentation](/waypoint/docs/app-config/internal) for more information.
 
 - `workspace` <code>([config](#config-parameters))</code> - Define
-  [workspace-scoped configuration](/docs/app-config/scope#workspace-scoping).
+  [workspace-scoped configuration](/waypoint/docs/app-config/scope#workspace-scoping).
   The label for the stanza is the name of a workspace to exactly match.
 
 - `label` <code>([config](#config-parameters))</code> - Define
-  [label-scoped configuration](/docs/app-config/scope#label-scoping).
+  [label-scoped configuration](/waypoint/docs/app-config/scope#label-scoping).
   The label for the stanza is a label selector.
 
 ## `ConfigValue`
@@ -136,7 +136,7 @@ config {
 A configuration value can be sourced from an external system using the
 `dynamic` function. This function creates a `ConfigValue` and can only be used
 within a `config` stanza or as a
-[default value for an input variable](/docs/waypoint-hcl/variables/dynamic).
+[default value for an input variable](/waypoint/docs/waypoint-hcl/variables/dynamic).
 In the example below, we synchronize a value with a Kubernetes ConfigMap:
 
 ```hcl

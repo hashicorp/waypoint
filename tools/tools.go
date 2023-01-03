@@ -17,14 +17,14 @@ package tools
 //go:generate go install github.com/evanphx/grpc-gateway/protoc-gen-swagger
 
 //go:generate go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway
-//go:generate go install "-ldflags=-s -w -X github.com/vektra/mockery/mockery.SemVer=2.12.1" github.com/vektra/mockery/cmd/mockery
+//go:generate go install "-ldflags=-s -w -X github.com/vektra/mockery/cmd/mockery.SemVer=2.15.0" github.com/vektra/mockery/v2@v2.15.0
 
 import (
 	_ "github.com/evanphx/grpc-gateway/protoc-gen-swagger"
 	_ "github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway"
 	_ "github.com/kevinburke/go-bindata"
 	_ "github.com/mitchellh/protoc-gen-go-json"
-	_ "github.com/vektra/mockery"
+	_ "github.com/vektra/mockery/v2/cmd"
 	_ "google.golang.org/grpc/cmd/protoc-gen-go-grpc"
 	_ "google.golang.org/protobuf/cmd/protoc-gen-go"
 )

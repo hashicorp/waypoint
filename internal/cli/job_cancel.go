@@ -72,7 +72,16 @@ func (c *JobCancelCommand) Run(args []string) int {
 	}
 
 	if !c.flagForce {
+		job, err := c.project.Client().GetJob(ctx, &pb.GetJobRequest{JobId: jobId})
+		if err != nil {
+			c.ui.Output("Job not found: %s", clierrors.Humanize(err),
+				terminal.WithErrorStyle())
+			return 1
+		}
 		s.Update("Marked job %q for cancellation", jobId)
+		if job.State == pb.Job_RUNNING {
+			c.ui.Output("Waypoint will gracefully cancel the requested job and wait for any\ndownstream listeners to close the connection. This could take a while.")
+		}
 	} else {
 		s.Update("Forcefully marked job %q for cancellation", jobId)
 		s.Status(terminal.StatusWarn)

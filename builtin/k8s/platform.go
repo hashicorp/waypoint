@@ -1529,6 +1529,7 @@ type Container struct {
 // PodSecurityContext describes the security config for the Pod
 type PodSecurityContext struct {
 	RunAsUser    *int64 `hcl:"run_as_user"`
+	RunAsGroup   *int64 `hcl:"run_as_group"`
 	RunAsNonRoot *bool  `hcl:"run_as_non_root"`
 	FsGroup      *int64 `hcl:"fs_group"`
 }

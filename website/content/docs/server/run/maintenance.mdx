@@ -42,7 +42,7 @@ The Waypoint server supports both an online and offline backup and restore.
 
 #### Online Backup and Restore
 
-To backup the database, use the [`waypoint server snapshot`](/commands/server-snapshot)
+To backup the database, use the [`waypoint server snapshot`](/waypoint/commands/server-snapshot)
 command. This command will take an online snapshot of the database and
 write it to a local gzip-compressed file. In the example below, we take
 a snapshot and save it as a `backup.snap`:
@@ -55,7 +55,7 @@ $ waypoint server snapshot backup.snap
 (such as auth tokens) _unencrypted_. Snapshots are highly sensitive and should
 be carefully protected.
 
-You can then restore this snapshot using [`waypoint server restore`](/commands/server-restore).
+You can then restore this snapshot using [`waypoint server restore`](/waypoint/commands/server-restore).
 This command _stages_ the restore but _does not_ activate the restore. This means
 that the old data (prior to the restore) will continue to be the live data
 until the restore is activated. To activate the restore, you must restart the server. You may call restore

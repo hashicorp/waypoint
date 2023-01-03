@@ -490,7 +490,7 @@ func TestServiceGetJobStream_complete(t *testing.T, factory Factory) {
 	// getJobStreamOutputInit, from pkg/server/singleprocess; otherwise, the
 	// output will be buffered. If this test becomes flakey, this time should
 	// be increased.
-	time.Sleep(200 * time.Millisecond)
+	time.Sleep(1 * time.Second)
 
 	// Send some output
 	require.NoError(runnerStream.Send(&pb.RunnerJobStreamRequest{

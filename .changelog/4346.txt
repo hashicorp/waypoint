@@ -1,0 +1,3 @@
+```release-note:improvement
+plugins/k8s: Add `security_context` to the TaskLauncherConfig (on-demand runner configuration)
+```

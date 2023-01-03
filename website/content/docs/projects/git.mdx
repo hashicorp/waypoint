@@ -11,7 +11,7 @@ A project can be directly associated with a Git repository to enable many featur
 
 - Track exactly which Git commit is associated with a build, deploy, or release
 - Poll and automatically trigger a `waypoint up` when changes are detected
-- Manual [remote operations](/docs/projects/remote)
+- Manual [remote operations](/waypoint/docs/projects/remote)
 
 This is the most common operational mode, although it is optional. It's currently the
 only way that your project data can flow to the static and on-demand runners.
@@ -23,14 +23,14 @@ access the project data. This is possible by checking out the source code, havin
 ## Configuring the Project
 
 The Git repository associated with a project is configured with the
-`data_source` stanza in the `runner` stanza in the [waypoint.hcl file](/docs/waypoint-hcl/runner).
+`data_source` stanza in the `runner` stanza in the [waypoint.hcl file](/waypoint/docs/waypoint-hcl/runner).
 These settings can also be specified via the CLI or web UI.
 
 **It is recommended that you configure the Git data source using
 the CLI or web UI.** This avoids tying a Waypoint configuration directly
 to a single Git repository and also avoids secrets such as Git authentication
 information to be present in the Waypoint configuration. Learn more about
-[how to configure the Git data source using the CLI or web UI here](/docs/waypoint-hcl/runner#cli-or-ui-configuration).
+[how to configure the Git data source using the CLI or web UI here](/waypoint/docs/waypoint-hcl/runner#cli-or-ui-configuration).
 
 ### Add to an existing Waypoint project
 
@@ -51,7 +51,7 @@ recommended that you configure the Git data source using the CLI or web UI.**
 
 If you wish to enable git with the CLI instead, you'll want to apply your
 git settings per project like you would in the UI with the
-[waypoint project apply](/commands/project-apply#waypoint-project-apply)
+[waypoint project apply](/waypoint/commands/project-apply#waypoint-project-apply)
 command. An example of what you would run is shown below:
 
 ```
@@ -100,7 +100,7 @@ the server (typically around 30 seconds).
 ### Configure via the CLI
 
 You may also enable polling using the `-poll` and `-poll-interval` flags
-on the [`waypoint project apply`](/commands/project-apply#poll) command.
+on the [`waypoint project apply`](/waypoint/commands/project-apply#poll) command.
 **This is an advanced approach. The UI is the recommended way to enable polling.**
 
 An example of the command you would run to apply polling to your project could be:
@@ -154,4 +154,4 @@ kubectl logs pod/waypoint-runner-7744b58c9b-mvrcb
 #### More Information
 
 For more information on debugging and troubleshooting Waypoint, please check out
-the [docs for troubleshooting](/docs/resources/troubleshooting).
+the [docs for troubleshooting](/waypoint/docs/resources/troubleshooting).

@@ -407,9 +407,9 @@ config {
 		docs.Summary(
 			"The value can be a direct key such as `password` or it can be a",
 			"[JSON pointer](https://tools.ietf.org/html/rfc6901) string to retrieve a nested value.",
-			"\n\nWhen using the Vault KV [Version 2](https://www.vaultproject.io/docs/secrets/kv/kv-v2)",
+			"\n\nWhen using the Vault KV [Version 2](/vault/docs/secrets/kv/kv-v2)",
 			"secret backend, the key must be prefixed with an additional string of `/data`. For example, `/data/password`.",
-			"\n\nWhen using the Vault KV [Version 1](https://www.vaultproject.io/docs/secrets/kv/kv-v1)",
+			"\n\nWhen using the Vault KV [Version 1](/vault/docs/secrets/kv/kv-v1)",
 			"secret backend, the key can be a direct key name such as `password`.",
 			"\n\nThis is because the Vault KV API returns different data structures in its response depending on",
 			"the Vault KV version the key is stored in. Therefore, the `/data` prefix is required for keys stored in",
@@ -527,7 +527,7 @@ config {
 		"The role to use for Kubernetes authentication.",
 		docs.Summary(
 			"This is required for the `kubernetes` auth method.\n\n",
-			"This is a role that is setup with the [Kubernetes Auth Method in Vault](https://www.vaultproject.io/docs/auth/kubernetes).",
+			"This is a role that is setup with the [Kubernetes Auth Method in Vault](/vault/docs/auth/kubernetes).",
 		),
 	)
 
@@ -561,7 +561,7 @@ config {
 		"The type of authentication to use for AWS: either `iam` or `ec2`.",
 		docs.Summary(
 			"This is required for the `aws` auth method.\n\n",
-			"This depends on how you configured the Vault [AWS Auth Method](https://www.vaultproject.io/docs/auth/aws).",
+			"This depends on how you configured the Vault [AWS Auth Method](/vault/docs/auth/aws).",
 		),
 	)
 
@@ -570,7 +570,7 @@ config {
 		"The role to use for AWS authentication.",
 		docs.Summary(
 			"This is required for the `aws` auth method.\n\n",
-			"This depends on how you configured the Vault [AWS Auth Method](https://www.vaultproject.io/docs/auth/aws).",
+			"This depends on how you configured the Vault [AWS Auth Method](/vault/docs/auth/aws).",
 		),
 	)
 
@@ -604,7 +604,7 @@ config {
 
 	doc.SetField(
 		"aws_header_value",
-		"The value to match the [`iam_server_id_header_value`](https://www.vaultproject.io/api/auth/aws#iam_server_id_header_value) if set.",
+		"The value to match the [`iam_server_id_header_value`](/vault/api-docs/auth/aws#iam_server_id_header_value) if set.",
 	)
 
 	doc.SetField(
@@ -612,7 +612,7 @@ config {
 		"The type of authentication; must be `gce` or `iam`.",
 		docs.Summary(
 			"This is required for the `gcp` auth method.\n\n",
-			"This depends on how you configured the Vault [GCP Auth Method](https://www.vaultproject.io/docs/auth/gcp).",
+			"This depends on how you configured the Vault [GCP Auth Method](/vault/docs/auth/gcp).",
 		),
 	)
 
@@ -621,7 +621,7 @@ config {
 		"The role to use for GCP authentication.",
 		docs.Summary(
 			"This is required for the `gcp` auth method.\n\n",
-			"This depends on how you configured the Vault [GCP Auth Method](https://www.vaultproject.io/docs/auth/gcp).",
+			"This depends on how you configured the Vault [GCP Auth Method](/vault/docs/auth/gcp).",
 		),
 	)
 
