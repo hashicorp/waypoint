@@ -224,6 +224,7 @@ func (i *K8sRunnerInstaller) InstallFlags(set *flag.Set) {
 		Target: &i.Config.HelmRef,
 		Usage: "The git ref of the Helm chart to use for the Waypoint runner install. " +
 			"The ref may also be a branch name like 'main'. Takes precedent over -k8s-helm-version.",
+Hidden: true,
 	})
 
 	set.StringVar(&flag.StringVar{
