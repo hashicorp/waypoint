@@ -1,0 +1,4 @@
+```release-note:improvement
+cli: Respect `-remote-source` overrides for submitted job template when running
+`waypoint pipeline run`.
+```

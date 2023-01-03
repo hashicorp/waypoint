@@ -9,12 +9,12 @@ description: |-
 
 The `waypoint.hcl` file is used to configure each Waypoint project. It defines
 how Waypoint builds, deploys, and releases a project. The `waypoint.hcl` file is
-written in [HCL](/docs/waypoint-hcl/syntax) or [JSON](/docs/waypoint-hcl/syntax/json),
+written in [HCL](/waypoint/docs/waypoint-hcl/syntax) or [JSON](/waypoint/docs/waypoint-hcl/syntax/json),
 allowing both human and machine friendly formats.
 
 ## `waypoint.hcl` Location
 
-Waypoint expects one `waypoint.hcl` per [project](/docs/projects).
+Waypoint expects one `waypoint.hcl` per [project](/waypoint/docs/projects).
 The `waypoint.hcl` configuration can be a file committed alongside your
 project source, or it can be stored on the Waypoint server without modifying
 your version controlled source at all.
@@ -40,7 +40,7 @@ in the current directory, followed by each subsequent parent directory.
 ### Server
 
 The `waypoint.hcl` configuration may be stored on the Waypoint server
-and associated directly with a [project](/docs/projects).
+and associated directly with a [project](/waypoint/docs/projects).
 
 The benefit of this approach is that no changes to project source repositories
 are required and the team managing the Waypoint configuration and the team
@@ -53,7 +53,7 @@ to touch any existing source code.
 
 To store the `waypoint.hcl` configuration on the Waypoint server, specify
 the `waypoint.hcl` contents in the web UI when prompted or specify the
-`-waypoint-hcl` flag to the [`waypoint project apply`](/commands/project-apply)
+`-waypoint-hcl` flag to the [`waypoint project apply`](/waypoint/commands/project-apply)
 command.
 
 ## Template `waypoint.hcl`
@@ -120,7 +120,7 @@ A stanza is a parameter, but not all parameters are stanzas.
 Waypoint configuration files have access to a number of predefined variables.
 Using variables helps make a Waypoint configuration more robust by more
 explicitly specifying paths, reducing duplication, etc. You can learn more about
-variables in the dedicated [variables section](/docs/waypoint-hcl/variables).
+variables in the dedicated [variables section](/waypoint/docs/waypoint-hcl/variables).
 
 ## Top-level Parameters
 
@@ -132,8 +132,8 @@ variables in the dedicated [variables section](/docs/waypoint-hcl/variables).
 - `project` `(string)` - The name of the project. This should be unique
   for the Waypoint server and must not be changed later. This is used to
   organize information on the server. **This field is optional if you're
-  using [remote operations](/docs/projects/remote), including those
-  triggered via [Git polling](/docs/projects/git).**
+  using [remote operations](/waypoint/docs/projects/remote), including those
+  triggered via [Git polling](/waypoint/docs/projects/git).**
 
 ~> **Warning: the project name can not be changed.** Changing the project
 name is not currently supported. If you change the name, the history,
@@ -144,8 +144,8 @@ A future version of Waypoint will enable renaming projects.
 
 - `plugin` <code>([plugin][plugin])</code> - External plugins that may be
   used in this configuration. Plugins are implicitly defined with
-  [`use`](/docs/waypoint-hcl/use) stanzas so this is only required if you
+  [`use`](/waypoint/docs/waypoint-hcl/use) stanzas so this is only required if you
   need to additionally configure a plugin.
 
-[app]: /docs/waypoint-hcl/app 'App Stanza'
-[plugin]: /docs/waypoint-hcl/plugin 'Plugin Stanza'
+[app]: /waypoint/docs/waypoint-hcl/app 'App Stanza'
+[plugin]: /waypoint/docs/waypoint-hcl/plugin 'Plugin Stanza'

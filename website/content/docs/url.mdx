@@ -33,7 +33,7 @@ app or do not share the URL with others.
 
 When you first deploy an application, the Waypoint server registers it a unique
 URL per-application. Waypoint also registers unique URLs for each
-[workspace](/docs/workspaces).
+[workspace](/waypoint/docs/workspaces).
 
 By default, Waypoint routes an app's URL only to released deployments.
 
@@ -75,7 +75,7 @@ service. If you want to use the URL service for any of your app's deployed with
 Waypoint, you must enable the service on the server.
 
 You must enable the URL service on the Waypoint server and also use the
-[Waypoint entrypoint](/docs/entrypoint) with your app to use Waypoint URLs. You
+[Waypoint entrypoint](/waypoint/docs/entrypoint) with your app to use Waypoint URLs. You
 must also accept the Waypoint Terms of Service and Privacy Policy by specifying
 the "-accept-tos" flag when you install Waypoint. The service is enabled by
 default. To opt-out of the using the hosted URL service, you must manually run
@@ -86,7 +86,7 @@ with the `waypoint server` command.
 
 You can also configure whether the URL service is enabled for each project and
 app. To learn how to configure the URL service for a project or app, see the
-[`waypoint.hcl` URL stanza](/docs/waypoint-hcl/url) for details.
+[`waypoint.hcl` URL stanza](/waypoint/docs/waypoint-hcl/url) for details.
 
 You must have the URL service enabled on the server to use it for a project or
 app.

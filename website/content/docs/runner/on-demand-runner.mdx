@@ -50,7 +50,7 @@ plugin system will launch a `StopJob` operation to clean up the launched platfor
 
 Users can configure Waypoint server to launch on-demand runners with specific
 configurations. These configurations are set through on-demand runner profiles.
-See [runner profiles](/docs/runner/profiles) for more information.
+See [runner profiles](/waypoint/docs/runner/profiles) for more information.
 
 ## OCI/Docker Image
 
@@ -64,12 +64,12 @@ The official on-demand runner container image is built very similarly to the Way
 server, with some additional packages such as `kaniko` for doing in-container
 builds for jobs like the `Build` operation.
 
-See the [runner profile docs on OCI URLs](/docs/runner/profiles#oci-url) for more information.
+See the [runner profile docs on OCI URLs](/waypoint/docs/runner/profiles#oci-url) for more information.
 
 ## Profile Configuration
 
 To customize the environment and other launch configurations of an on-demand runner,
-please consult the [on-demand runner profile documentation](/docs/runner/profiles).
+please consult the [on-demand runner profile documentation](/waypoint/docs/runner/profiles).
 
 Those docs detail how to configure and communicate the various aspects of an on-demand runner launch.
 
@@ -77,10 +77,10 @@ Those docs detail how to configure and communicate the various aspects of an on-
 
 We currently support the following platforms for launching on-demand runner tasks:
 
-- [Kubernetes](/plugins/kubernetes#kubernetes-task)
-- [HashiCorp/Nomad](/plugins/nomad#nomad-task)
-- [AWS/ECS](/plugins/aws-ecs#aws-ecs-task)
-- [Docker](/plugins/docker#docker-task)
+- [Kubernetes](/waypoint/plugins/kubernetes#kubernetes-task)
+- [HashiCorp/Nomad](/waypoint/plugins/nomad#nomad-task)
+- [AWS/ECS](/waypoint/plugins/aws-ecs#aws-ecs-task)
+- [Docker](/waypoint/plugins/docker#docker-task)
 
 -> **Self-managed Waypoint server:** When you use the `waypoint server install` command,
 we automatically set up a default on-demand runner profile for you that matches the
@@ -89,7 +89,7 @@ platform of the server installation.
 ## Adding on-demand runner support for other platforms
 
 On-demand runner support can be implemented for additional platforms
-using the [plugin SDK](/docs/extending-waypoint).
+using the [plugin SDK](/waypoint/docs/extending-waypoint).
 
 Plugins expect to fulfill the SDK interface with the following functions:
 

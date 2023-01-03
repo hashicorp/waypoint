@@ -34,7 +34,6 @@ import (
 	"github.com/hashicorp/waypoint/pkg/serverconfig"
 )
 
-//
 type K8sInstaller struct {
 	Config k8sinstallutil.K8sConfig
 	// Config k8sConfig

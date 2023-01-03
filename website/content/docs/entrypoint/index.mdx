@@ -17,7 +17,7 @@ image.
 
 ~> **Note:** The entrypoint binary injection and usage is **not required** and can be
 disabled. This will also disable features such as logs, exec, etc. for that
-application. See [disabling the entrypoint](/docs/entrypoint/disable) for more information.
+application. See [disabling the entrypoint](/waypoint/docs/entrypoint/disable) for more information.
 
 ## Installation
 
@@ -90,7 +90,7 @@ log level by setting the `WAYPOINT_LOG_LEVEL` environment variable to
 one of: `TRACE`, `DEBUG`, `INFO`, `WARN`, `ERROR` (values further to the
 left are more verbose than those to the right). This environment variable
 may be set at build time, using deployment plugin configuration, or
-via the [waypoint config CLI](/docs/app-config#setting-configuration-via-the-cli).
+via the [waypoint config CLI](/waypoint/docs/app-config#setting-configuration-via-the-cli).
 
 -> **Note:** The `WAYPOINT_LOG_LEVEL` environment variable must be set
 within the runtime environment of your deployment, not on your local machine.
@@ -110,7 +110,7 @@ server in the background.
 
 This behavior allows Waypoint to start the child process no matter what.
 
-If you're using [application configuration](/docs/app-config), the configuration
+If you're using [application configuration](/waypoint/docs/app-config), the configuration
 will not be available to the application in this failure case. This may
 cause the application startup to fail.
 
@@ -150,10 +150,10 @@ specific deployment. It cannot trigger new deploys, list existing deploys,
 etc. Therefore, if the environment the entrypoint is running in is compromised
 in any way, it poses a minimal risk to Waypoint as a whole.
 
-The Waypoint entrypoint can be [completely disabled](/docs/entrypoint/disable)
+The Waypoint entrypoint can be [completely disabled](/waypoint/docs/entrypoint/disable)
 if that is desired. This will disable all entrypoint-related functionality
 including app config, logs, exec, etc. You may also
-[disable specific features](/docs/entrypoint/disable#disabling-specific-features)
+[disable specific features](/waypoint/docs/entrypoint/disable#disabling-specific-features)
 instead of the entire entrypoint.
 
 -> Many improvements are planned to improve the security of the entrypoint.

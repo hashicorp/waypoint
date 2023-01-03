@@ -24,18 +24,18 @@ import (
 //
 // Full example:
 //
-//   s := &Person{
-//     Address: &Address{Number: 0},
-//   }
+//	s := &Person{
+//	  Address: &Address{Number: 0},
+//	}
 //
-//   validation.ValidateStruct(&s,
-//     validation.Field(&s.Address, validation.Required),
-//     StructField(&s.Address, func() []*validation.FieldRules {
-//       return []*validation.FieldRules{
-//         validation.Field(&s.Address.Number, validation.Required),
-//       }
-//     }),
-//   )
+//	validation.ValidateStruct(&s,
+//	  validation.Field(&s.Address, validation.Required),
+//	  StructField(&s.Address, func() []*validation.FieldRules {
+//	    return []*validation.FieldRules{
+//	      validation.Field(&s.Address.Number, validation.Required),
+//	    }
+//	  }),
+//	)
 //
 // In this example, the address number will be required, but will only
 // be checked if the address is non-nil. Without StructField, you either
@@ -69,33 +69,33 @@ func StructInterface(sv, t interface{}, f func() []*validation.FieldRules) *vali
 //
 // Given the protobuf of:
 //
-//   message Employee {
-//     oneof role {
-//       Eng eng = 1;
-//       Sales sales = 2;
-//     }
-//   }
+//	message Employee {
+//	  oneof role {
+//	    Eng eng = 1;
+//	    Sales sales = 2;
+//	  }
+//	}
 //
 // The generated types look something lke this:
 //
-//   type Employee { Role Role }
-//   type Role interface{}
-//   type Role_Eng struct { Eng *Eng }
-//   type Role_Sales struct { Sales *Sales }
-//   type Eng { Language string }
-//   ...
+//	type Employee { Role Role }
+//	type Role interface{}
+//	type Role_Eng struct { Eng *Eng }
+//	type Role_Sales struct { Sales *Sales }
+//	type Eng { Language string }
+//	...
 //
 // To validate this, you can do this:
 //
-//   var e *Employee
-//   validation.ValidateStruct(&e,
-//     StructOneof(&e.Role, (*Eng)(nil), func() []*validation.FieldRules {
-//       v := e.Role.(*Role_Eng)
-//       return []*validation.FieldRules{
-//         validation.Field(&v.Eng.Language, validation.Required),
-//       }
-//     }),
-//   )
+//	var e *Employee
+//	validation.ValidateStruct(&e,
+//	  StructOneof(&e.Role, (*Eng)(nil), func() []*validation.FieldRules {
+//	    v := e.Role.(*Role_Eng)
+//	    return []*validation.FieldRules{
+//	      validation.Field(&v.Eng.Language, validation.Required),
+//	    }
+//	  }),
+//	)
 //
 // Notice how the callback sets validation on the nested `e.Role.Eng` directly.
 // This helper saves a few lines of boilerplate and complicated pointer
@@ -108,12 +108,13 @@ func StructInterface(sv, t interface{}, f func() []*validation.FieldRules) *vali
 // intermediate wrapper struct is set. This results in the following cases:
 //
 // Valid:
-//   Employee{ Role: nil }
-//   Employee{ Role: &Role_Eng{ Eng: &Eng {} } }
+//
+//	Employee{ Role: nil }
+//	Employee{ Role: &Role_Eng{ Eng: &Eng {} } }
 //
 // Invalid (a validation error is produced):
-//   Employee{ Role: &Role_Eng{ Eng: nil } }
 //
+//	Employee{ Role: &Role_Eng{ Eng: nil } }
 func StructOneof(sv, t interface{}, f func() []*validation.FieldRules) *validation.FieldRules {
 	return validation.Field(sv, &structFieldRule{s: sv, rules: f, iface: t, oneof: true})
 }
@@ -131,20 +132,18 @@ func StructOneof(sv, t interface{}, f func() []*validation.FieldRules) *validati
 //
 // Example:
 //
+//	req := struct{
+//	  Employee []byte
+//	}
 //
-//   req := struct{
-//     Employee []byte
-//   }
-//
-//   var e pb.Employee
-//   validation.ValidateStruct(&req,
-//     StructJSONPB(&req.Employee, &e, func() []*validation.FieldRules {
-//       return []*validation.FieldRules{
-//         validation.Field(&e.Name, validation.Required),
-//       }
-//     }),
-//   )
-//
+//	var e pb.Employee
+//	validation.ValidateStruct(&req,
+//	  StructJSONPB(&req.Employee, &e, func() []*validation.FieldRules {
+//	    return []*validation.FieldRules{
+//	      validation.Field(&e.Name, validation.Required),
+//	    }
+//	  }),
+//	)
 func StructJSONPB(sv interface{}, v proto.Message, f func() []*validation.FieldRules) *validation.FieldRules {
 	return validation.Field(sv, &structJSONPBRule{s: sv, v: v, rules: f})
 }

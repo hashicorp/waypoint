@@ -1,0 +1,3 @@
+```release-note:improvement
+config: Remove the multi-app deprecation warning. Please see https://discuss.hashicorp.com/t/deprecating-projects-or-how-i-learned-to-love-apps/40888/12 for more information.
+```

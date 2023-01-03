@@ -194,8 +194,9 @@ func isHTTPSRemote(remote string) bool {
 
 // remoteConvertHTTPStoSSH converts an https-style remote into its corresponding ssh style remote.
 // Based on regex, and may not match every possible style of remote, but tested on github and gitlab.
-//    Example input: https://git.test/testorg/testrepo.git
-//           output: git@git.test:testorg/testrepo.git
+//
+//	Example input: https://git.test/testorg/testrepo.git
+//	       output: git@git.test:testorg/testrepo.git
 func remoteConvertHTTPStoSSH(httpsRemote string) (string, error) {
 	if !isHTTPSRemote(httpsRemote) {
 		return "", fmt.Errorf("%s is not an https remote", httpsRemote)
@@ -210,10 +211,11 @@ func remoteConvertHTTPStoSSH(httpsRemote string) (string, error) {
 
 // remoteConvertSSHtoHTTPS converts an ssh-style remote into its corresponding https style remote.
 // Based on regex, and may not match every possible style of remote, but tested on github and gitlab.
-//    Example input: git@git.test:testorg/testrepo.git
-//           output: https://git.test/testorg/testrepo.git
-//    Example input: git.test:testorg/testrepo.git
-//           output: https://git.test/testorg/testrepo.git
+//
+//	Example input: git@git.test:testorg/testrepo.git
+//	       output: https://git.test/testorg/testrepo.git
+//	Example input: git.test:testorg/testrepo.git
+//	       output: https://git.test/testorg/testrepo.git
 func remoteConvertSSHtoHTTPS(sshRemote string) (string, error) {
 	if !isSSHRemote(sshRemote) {
 		return "", fmt.Errorf("%s is not an ssh remote", sshRemote)

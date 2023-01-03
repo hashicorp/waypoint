@@ -9,13 +9,13 @@ description: |-
 
 Waypoint provides multiple options for accessing ConfigMap and Secret resources
 within your deployed application. This can be used or instead of Waypoint's native
-[application configuration](/docs/app-config) functionality.
+[application configuration](/waypoint/docs/app-config) functionality.
 
 This page will focus on Waypoint-specific mechanisms for injecting
 configuration into your application, and it all requires the
-[Waypoint Entrypoint](/docs/entrypoint) to be injected and configured.
-Please note that **if you're using the [Helm](/docs/platforms/kubernetes/helm-deploy) or
-[`kubernetes-apply`](/docs/platforms/kubernetes/kubectl-deploy) deployment plugins,
+[Waypoint Entrypoint](/waypoint/docs/entrypoint) to be injected and configured.
+Please note that **if you're using the [Helm](/waypoint/docs/platforms/kubernetes/helm-deploy) or
+[`kubernetes-apply`](/waypoint/docs/platforms/kubernetes/kubectl-deploy) deployment plugins,
 you do not need to use the Waypoint entrypoint** and you can access
 ConfigMaps and Secrets using
 [standard Kubernetes practices](https://kubernetes.io/docs/concepts/configuration/configmap/).
@@ -25,9 +25,9 @@ techniques noted below as well.
 ## Environment Variables
 
 You can set environment variables for your application directly
-in the `waypoint.hcl` file using the [`config` stanza](/docs/waypoint-hcl/config).
+in the `waypoint.hcl` file using the [`config` stanza](/waypoint/docs/waypoint-hcl/config).
 Static environment variables like this can also be set using the
-[web UI or CLI](/docs/app-config).
+[web UI or CLI](/waypoint/docs/app-config).
 
 ```hcl
 config {
@@ -44,7 +44,7 @@ app "my-app" {
 But, it's not a good idea to put something like an API key directly
 in your Waypoint configuration. A better idea would be to use a Kubernetes
 Secret and access it from there. Waypoint lets you do this with
-[dynamic configuration](/docs/app-config/dynamic):
+[dynamic configuration](/waypoint/docs/app-config/dynamic):
 
 ```hcl
 config {
@@ -96,9 +96,9 @@ app "my-app" {
 }
 ```
 
-This example shows two new concepts: [internal variables](/docs/app-config/internal)
+This example shows two new concepts: [internal variables](/waypoint/docs/app-config/internal)
 for creating intermediary values that can be used in other configuration
-values and [files](/docs/app-config/files) for creating configuration files.
+values and [files](/waypoint/docs/app-config/files) for creating configuration files.
 
 The file `config/config.json` will be written relative to your application
 deployment path. You could also specify an absolute path if you want the
@@ -120,4 +120,4 @@ running application.
 This is a big improvement over native Kubernetes mechanisms which update the
 file but depend on the running application to watch the filesystem for changes.
 For more information, including how to change the signal Waypoint sends,
-see [the reference documentation](/docs/app-config/files#file-change-signal).
+see [the reference documentation](/waypoint/docs/app-config/files#file-change-signal).

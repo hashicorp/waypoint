@@ -14,7 +14,7 @@ latter can be used to disable the entrypoint in deployments that already
 have it installed.
 
 If the entrypoint is disabled, all
-[functionality that requires the entrypoint](/docs/entrypoint#functionality)
+[functionality that requires the entrypoint](/waypoint/docs/entrypoint#functionality)
 will stop functioning for that deployment. If other deployments, apps, etc.
 use the entrypoint, the entrypoint functionality will work for those
 deployments and apps.
@@ -60,17 +60,17 @@ alter your build scripts to prevent entrypoint installation.
 
 ### Exec
 
-You can disable only the [`waypoint exec`](/docs/exec) functionality by
+You can disable only the [`waypoint exec`](/waypoint/docs/exec) functionality by
 setting the `WAYPOINT_CEB_DISABLE_EXEC` environment variable to a truthy
 value (e.g. "1"). Other entrypoint features such as logs, application config,
 etc. will continue to work.
 
 This environment variable must be set _before_ the entrypoint starts.
-Therefore, it cannot be set with [application configuration](/docs/app-config).
+Therefore, it cannot be set with [application configuration](/waypoint/docs/app-config).
 It must be set at build time or by using functionality of your deployment
 plugin.
 
-The example below shows how to set this using the [Kubernetes plugin](/plugins/kubernetes):
+The example below shows how to set this using the [Kubernetes plugin](/waypoint/plugins/kubernetes):
 
 ```hcl
 deploy {

@@ -20,13 +20,13 @@ Authentication is not optional.
 The Waypoint server doesn't yet support fine-grained authorization. Anyone
 with an authentication token can access any part of the system. Note though
 that the Waypoint server _does not_ execute operations (as noted later). One
-exception to this is the [entrypoint](/docs/entrypoint), which uses a special
+exception to this is the [entrypoint](/waypoint/docs/entrypoint), which uses a special
 authentication token that can only access entrypoint-related APIs.
 
 The state stored by Waypoint in-memory and on-disk is not encrypted. We
 cannot always detect tampering of the data. The state stored is primarily
 metadata that does not impact runtime behavior of Waypoint, with the exception
-of [application configuration](/docs/app-config).
+of [application configuration](/waypoint/docs/app-config).
 
 The Waypoint server _does not_ require access to credentials or platforms
 for builds, deploys, etc. The Waypoint server _does not_ run these operations.
@@ -35,8 +35,8 @@ the CLI. The server does store metadata about operations such as time of
 execution, logs, etc.
 
 The Waypoint server maintains long-running inbound connections from
-any [entrypoints](/docs/entrypoint). These can be used to trigger an
-[exec session](/docs/exec) if exec is enabled.
+any [entrypoints](/waypoint/docs/entrypoint). These can be used to trigger an
+[exec session](/waypoint/docs/exec) if exec is enabled.
 
-The Waypoint server stores any static [application configuration](/docs/app-config).
+The Waypoint server stores any static [application configuration](/waypoint/docs/app-config).
 This may contain secrets.

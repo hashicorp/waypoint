@@ -18,14 +18,14 @@ authenticate and acquire a token.
 ## Configuring OIDC
 
 You can configure OIDC using the
-[waypoint auth-method set oidc](/commands/auth-method-set-oidc) CLI command.
+[waypoint auth-method set oidc](/waypoint/commands/auth-method-set-oidc) CLI command.
 Please see the documentation for that command for all available options.
 
 Before you setup OIDC, you'll need at least the client ID and client secret
 for your identity provider. Please see the documentation for your identity
 provider to determine what these values are. See [Popular OIDC Providers](#popular-oidc-providers)
 for some help and guidance with specific popular providers. Please read the
-documentation on [redirect URLs](/docs/server/auth/oidc#redirect-urls) while
+documentation on [redirect URLs](/waypoint/docs/server/auth/oidc#redirect-urls) while
 configuring your OIDC provider.
 
 Once you have the required information, use the CLI:
@@ -104,7 +104,7 @@ used for all direct values and will be exposed as `value.<name>`.
 The selector `mycompany in list.groups` configures the provider to require
 the user to be in the group "mycompany" to authenticate. This can be used
 to restrict users to your Waypoint server. For full documentation on the
-available syntax, see the [Consul documentation](https://www.consul.io/api-docs/features/filtering#creating-expressions) which uses the same syntax.
+available syntax, see the [Consul documentation](/consul/api-docs/features/filtering#creating-expressions) which uses the same syntax.
 
 ## Account Mapping
 
