@@ -13,13 +13,13 @@ This guide will lead you through setting up GitHub Actions to run a Waypoint pip
 
 ## Prerequisites
 
-This guide assumes that you have already set up some kind of infrastructure to run a [Waypoint Runner](https://developer.hashicorp.com/waypoint/tutorials/runners/hcp-runners-on-your-infra), HCP Waypoint access, or optionally a self-managed [Waypoint server](/docs/server/run). We recommend either Kubernetes or [HashiCorp Nomad](https://www.nomadproject.io/) for your infrastructure.
+This guide assumes that you have already set up some kind of infrastructure to run a [Waypoint Runner](/waypoint/tutorials/runners/hcp-runners-on-your-infra), HCP Waypoint access, or optionally a self-managed [Waypoint server](/waypoint/docs/server/run). We recommend either Kubernetes or [HashiCorp Nomad](/nomad) for your infrastructure.
 
 You will need an account on GitHub, as well as a Waypoint project committed to a Github repo. This is the repository we will use to write a GitHub action. If you don’t have a project yet, there are plenty of example Waypoint projects in the [examples repository](https://github.com/hashicorp/waypoint-examples) to get started with.
 
 ## Setting Up Waypoint
 
-HashiCorp provides a hosted version of Waypoint that runs the server on HCP. This guide supports using both a self-managed Waypoint server as well as HCP Waypoint. The main difference is what Waypoint server address you configure in your GitHub secrets which we will discuss in the next section. Follow the docs for installing your own [self-managed Waypoint server](https://developer.hashicorp.com/waypoint/docs/server/run), this guide will not go over setting it up.
+HashiCorp provides a hosted version of Waypoint that runs the server on HCP. This guide supports using both a self-managed Waypoint server as well as HCP Waypoint. The main difference is what Waypoint server address you configure in your GitHub secrets which we will discuss in the next section. Follow the docs for installing your own [self-managed Waypoint server](/waypoint/docs/server/run), this guide will not go over setting it up.
 
 If you are using [HCP Waypoint](https://cloud.hashicorp.com/products/waypoint), you’ll need to make sure you install a runner on your infrastructure so that Waypoint can run operations. On the platform where you will run your runner on your own infrastructure, you’ll want to configure your CLI context to talk to HCP Waypoint, and then install a runner into your managed infrastructure. Notice that the _waypoint runner install_ commands will change depending on what platform you are installing to.
 
