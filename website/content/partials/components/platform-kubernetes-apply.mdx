@@ -68,6 +68,10 @@ deploy {
     // build/registry, entrypoint env vars, etc.
     path        = templatedir("${path.app}/k8s")
     prune_label = "app=myapp"
+	prune_whitelist = [
+		"apps/v1/Deployment",
+		"apps/v1/ReplicaSet"
+  	]
   }
 }
 
@@ -123,6 +127,10 @@ This is a label selector that is used to search for any resources that are NOT p
 
 - Type: **string**
 
+#### prune_whitelist
+
+- Type: **list of string**
+
 ### Optional Parameters
 
 These parameters are used in the [`use` stanza](/waypoint/docs/waypoint-hcl/use) for this plugin.
@@ -151,3 +159,7 @@ Output attributes can be used in your `waypoint.hcl` as [variables](/waypoint/do
 #### prune_label
 
 - Type: **string**
+
+#### prune_whitelist
+
+- Type: **list of string**
