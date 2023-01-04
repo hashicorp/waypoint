@@ -157,7 +157,7 @@ func (i *DockerRunnerInstaller) InstallFlags(set *flag.Set) {
 	set.StringVar(&flag.StringVar{
 		Name:    "docker-socket-path",
 		Target:  &i.Config.SocketPath,
-		Usage:   "The path of the docker socket that will be bound in runner",
+		Usage:   "The path of the Docker socket that will be bound in runner",
 		Default: "/var/run/docker.sock",
 	})
 }
