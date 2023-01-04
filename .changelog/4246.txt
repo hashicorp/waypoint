@@ -1,0 +1,3 @@
+```release-note:feature
+cli: add socket-path flag to runner install
+```
