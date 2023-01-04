@@ -19,6 +19,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	"github.com/hashicorp/nomad/api"
+
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 
 	"github.com/hashicorp/waypoint/internal/clicontext"
@@ -298,11 +299,11 @@ func (i *NomadInstaller) getWaypointAddress(client *api.Client, allocID string) 
 
 		if i.config.consulServiceHostname == "" {
 			return fmt.Sprintf("%s.service.%s.%s:%d",
-					waypointBackendServiceName, i.config.consulDatacenter, i.config.consulDomain, grpcPort), fmt.Sprintf("%s.service.%s.%s:%d",
-					waypointUIServiceName, i.config.consulDatacenter, i.config.consulDomain, httpPort), nil
+					waypointUIServiceName, i.config.consulDatacenter, i.config.consulDomain, httpPort), fmt.Sprintf("%s.service.%s.%s:%d",
+					waypointBackendServiceName, i.config.consulDatacenter, i.config.consulDomain, grpcPort), nil
 		} else {
-			return fmt.Sprintf("%s:%d", i.config.consulServiceHostname, grpcPort),
-				fmt.Sprintf("%s:%d", i.config.consulServiceHostname, httpPort), nil
+			return fmt.Sprintf("%s:%d", i.config.consulServiceHostname, httpPort),
+				fmt.Sprintf("%s:%d", i.config.consulServiceHostname, grpcPort), nil
 		}
 	} else if i.config.serviceProvider == "nomad" {
 		backendService, _, err := client.Services().Get(waypointBackendServiceName, nil)
