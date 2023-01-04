@@ -303,6 +303,14 @@ func (cs *ConfigSourcer) read(
 
 				continue
 			}
+			if resp.StatusCode != 200 {
+				L.Error("error in sending request for state version for workspace %q, unexpected response code %q", id, resp.Status)
+				result.Result = &pb.ConfigSource_Value_Error{
+					Error: status.New(codes.Aborted, err.Error()).Proto(),
+				}
+
+				continue
+			}
 
 			defer resp.Body.Close()
 
