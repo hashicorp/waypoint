@@ -710,7 +710,7 @@ func (i *DockerInstaller) InstallFlags(set *flag.Set) {
 	set.StringVar(&flag.StringVar{
 		Name:    "docker-runner-socket-path",
 		Target:  &i.config.runnerSocketPath,
-		Usage:   "The path of the docker socket that will be bound in runner",
+		Usage:   "The path of the Docker socket that will be bound in runner",
 		Default: "/var/run/docker.sock",
 	})
 }
@@ -733,7 +733,7 @@ func (i *DockerInstaller) UpgradeFlags(set *flag.Set) {
 	set.StringVar(&flag.StringVar{
 		Name:    "docker-runner-socket-path",
 		Target:  &i.config.runnerSocketPath,
-		Usage:   "The path of the docker socket that will be bound in runner",
+		Usage:   "The path of the Docker socket that will be bound in runner",
 		Default: "/var/run/docker.sock",
 	})
 }
