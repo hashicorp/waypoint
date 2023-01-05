@@ -471,7 +471,7 @@ config {
 		"output",
 		"Optional: The name of the output to read the value of. All outputs if blank.",
 		docs.Summary(
-			"The name of the output from terraform cloud to return.",
+			"The name of the output from Terraform Cloud to return.",
 			"Only strings and objects representable as json (i.e. maps and lists)",
 			"are currently supported.",
 			"If unspecified, all outputs from the workspace will be read",
