@@ -509,10 +509,27 @@ func (c *AppDocsCommand) hclFormat(name, ct string, doc *docs.Documentation) {
 
 		fmt.Fprintln(readme, "<!-- This file was generated via `make gen/integrations-hcl` -->")
 
-		fmt.Fprintf(readme, "## %s (%s)\n\n", name, ct)
+		// fmt.Fprintf(readme, "## %s (%s)\n\n", name, ct)
 
 		if dets.Description != "" {
 			fmt.Fprintf(readme, "%s\n\n", c.humanize(dets.Description))
+		}
+
+		fmt.Fprintf(readme, "### Interface\n\n")
+
+		space := false
+		if dets.Input != "" {
+			fmt.Fprintf(readme, "- Input: **%s**\n", dets.Input)
+			space = true
+		}
+
+		if dets.Output != "" {
+			fmt.Fprintf(readme, "- Output: **%s**\n", dets.Output)
+			space = true
+		}
+
+		if space {
+			fmt.Fprintln(readme)
 		}
 
 		if dets.Example != "" {
@@ -527,9 +544,8 @@ func (c *AppDocsCommand) hclFormat(name, ct string, doc *docs.Documentation) {
 				fmt.Fprintf(readme, "#### %s\n\n", m.Description)
 				fmt.Fprintf(readme, "- Input: **%s**\n", m.Input)
 				fmt.Fprintf(readme, "- Output: **%s**\n", m.Output)
+				fmt.Fprintln(readme)
 			}
-
-			fmt.Fprintln(readme)
 		}
 	}
 

@@ -1,5 +1,4 @@
-## google-cloud-run (platform)
-
+<!-- This file was generated via `make gen/integrations-hcl` -->
 Deploy a container to Google Cloud Run.
 
 ### Interface
@@ -64,3 +63,4 @@ app "wpmini" {
   }
 }
 ```
+

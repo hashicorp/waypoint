@@ -1,5 +1,4 @@
-## azure-container-instance (platform)
-
+<!-- This file was generated via `make gen/integrations-hcl` -->
 Deploy a container to Azure Container Instances.
 
 ### Interface
@@ -34,3 +33,4 @@ deploy {
   }
 }
 ```
+

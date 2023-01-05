@@ -1,10 +1,7 @@
+# This file was generated via `make gen/integrations-hcl`
 parameter {
   key           = "auth_type"
-  description   = <<EOT
-The Lambda function URL auth type.
-
-The AuthType parameter determines how Lambda authenticates or authorizes requests to your function URL. Must be either `AWS_IAM` or `NONE`.
-EOT
+  description   = "the Lambda function URL auth type\nThe AuthType parameter determines how Lambda authenticates or authorizes requests to your function URL. Must be either `AWS_IAM` or `NONE`."
   type          = "string"
   required      = false
   default_value = "NONE"
@@ -12,11 +9,7 @@ EOT
 
 parameter {
   key           = "principal"
-  description   = <<EOT
-The principal to use when auth_type is `AWS_IAM`.
-
-The Principal parameter specifies the principal that is allowed to invoke the function.
-EOT
+  description   = "the principal to use when auth_type is `AWS_IAM`\nThe Principal parameter specifies the principal that is allowed to invoke the function."
   type          = "string"
   required      = false
   default_value = "*"

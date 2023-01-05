@@ -1,44 +1,21 @@
+# This file was generated via `make gen/integrations-hcl`
 parameter {
   key         = "auth"
-  description = <<EOT
-The credentials for docker registry.
-
-EOT
+  description = "The credentials for docker registry."
   type        = "nomad.AuthConfig"
   required    = true
-
 }
 
 parameter {
   key         = "consul_token"
-  description = <<EOT
-The Consul ACL token used to register services with the Nomad job.
-Uses the runner config environment variable CONSUL\_HTTP\_TOKEN.
-
-EOT
-  type        = "string" # WARNING: no type was documented. This will be a best effort choice.
+  description = "The Consul ACL token used to register services with the Nomad job.\nUses the runner config environment variable CONSUL_HTTP_TOKEN."
+  type        = ""
   required    = true
-
-}
-
-parameter {
-  key         = "vault_token"
-  description = <<EOT
-The Vault token used to deploy the Nomad job with a token having specific Vault policies attached.
-Uses the runner config environment variable VAULT\_TOKEN.
-
-EOT
-  type        = "string" # WARNING: no type was documented. This will be a best effort choice.
-  required    = true
-
 }
 
 parameter {
   key           = "datacenter"
-  description   = <<EOT
-The Nomad datacenter to deploy the job to.
-
-EOT
+  description   = "The Nomad datacenter to deploy the job to."
   type          = "string"
   required      = false
   default_value = "dc1"
@@ -46,21 +23,14 @@ EOT
 
 parameter {
   key         = "namespace"
-  description = <<EOT
-The Nomad namespace to deploy the job to.
-
-EOT
+  description = "The Nomad namespace to deploy the job to."
   type        = "string"
   required    = false
-
 }
 
 parameter {
   key           = "region"
-  description   = <<EOT
-The Nomad region to deploy the job to.
-
-EOT
+  description   = "The Nomad region to deploy the job to."
   type          = "string"
   required      = false
   default_value = "global"
@@ -68,10 +38,7 @@ EOT
 
 parameter {
   key           = "replicas"
-  description   = <<EOT
-The replica count for the job.
-
-EOT
+  description   = "The replica count for the job."
   type          = "int"
   required      = false
   default_value = "1"
@@ -79,21 +46,14 @@ EOT
 
 parameter {
   key         = "resources"
-  description = <<EOT
-The amount of resources to allocate to the deployed allocation.
-
-EOT
+  description = "The amount of resources to allocate to the deployed allocation."
   type        = "category"
-  required    = false
-
+  required    = true
 }
 
 parameter {
   key           = "resources.cpu"
-  description   = <<EOT
-Amount of CPU in MHz to allocate to this task.
-
-EOT
+  description   = "Amount of CPU in MHz to allocate to this task"
   type          = "int"
   required      = false
   default_value = "100"
@@ -101,10 +61,7 @@ EOT
 
 parameter {
   key           = "resources.memorymb"
-  description   = <<EOT
-Amount of memory in MB to allocate to this task.
-
-EOT
+  description   = "Amount of memory in MB to allocate to this task."
   type          = "int"
   required      = false
   default_value = "300"
@@ -112,21 +69,14 @@ EOT
 
 parameter {
   key         = "service_port"
-  description = <<EOT
-TCP port the job is listening on.
-
-EOT
+  description = "TCP port the job is listening on."
   type        = "uint"
   required    = false
-
 }
 
 parameter {
   key           = "service_provider"
-  description   = <<EOT
-Specifies the service registration provider to use for registering a service for the job.
-
-EOT
+  description   = "Specifies the service registration provider to use for registering a service for the job"
   type          = "string"
   required      = false
   default_value = "consul"
@@ -134,12 +84,15 @@ EOT
 
 parameter {
   key         = "static_environment"
-  description = <<EOT
-Environment variables to add to the job.
-
-EOT
+  description = "Environment variables to add to the job."
   type        = "map of string to string"
   required    = false
+}
 
+parameter {
+  key         = "vault_token"
+  description = "The Vault token used to deploy the Nomad job with a token having specific Vault policies attached.\nUses the runner config environment variable VAULT_TOKEN."
+  type        = ""
+  required    = true
 }
 

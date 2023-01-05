@@ -1,5 +1,4 @@
-## pack (builder)
-
+<!-- This file was generated via `make gen/integrations-hcl` -->
 Create a Docker image using CloudNative Buildpacks.
 
 **This plugin must either be run via Docker or inside an ondemand runner**.
@@ -26,3 +25,4 @@ build {
 
 - Input: **pack.Image**
 - Output: **docker.Image**
+

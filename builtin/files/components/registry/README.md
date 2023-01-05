@@ -1,5 +1,4 @@
-## files (registry)
-
+<!-- This file was generated via `make gen/integrations-hcl` -->
 Copies files to a specific directory.
 
 ### Interface
@@ -16,3 +15,4 @@ build {
   }
 }
 ```
+

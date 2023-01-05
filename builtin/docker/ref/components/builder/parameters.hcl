@@ -1,19 +1,14 @@
+# This file was generated via `make gen/integrations-hcl`
 parameter {
   key         = "image"
-  description = <<EOT
-The image to pull.
-
-This should NOT include the tag (the value following the ':' in a Docker image). Use `tag` to define the image tag.
-EOT
+  description = "The image to pull.\nThis should NOT include the tag (the value following the ':' in a Docker image). Use `tag` to define the image tag."
   type        = "string"
   required    = true
 }
 
 parameter {
   key         = "tag"
-  description = <<EOT
-The tag of the image to pull.
-EOT
+  description = "The tag of the image to pull."
   type        = "string"
   required    = true
 }

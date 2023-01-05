@@ -1,5 +1,4 @@
-## exec (platform)
-
+<!-- This file was generated via `make gen/integrations-hcl` -->
 Execute any command to perform a deploy.
 
 This plugin lets you use almost any pre-existing deployment tool for the
@@ -19,8 +18,8 @@ artifact. There are two mechanisms for templates:
 1. Any argument in "command" is processed as a template.
 
 2. You may specify a file or directory to be processed for templating
-   using the "template" stanza. Any argument with the value `<TPL>` in it
-   will be replaced with the path to the template.
+using the "template" stanza. Any argument with the value `<TPL>` in it
+will be replaced with the path to the template.
 
 Templating follows the format of a Go [text/template](https://golang.org/pkg/text/template/)
 template. The top of the documentation there has details on the format.
@@ -29,24 +28,25 @@ template. The top of the documentation there has details on the format.
 
 The following template values are always available:
 
-- ".Env" (map<string\>string) - These are environment variables that should
-  be set on the deployed workload. These enable the entrypoint to work so
-  you should set these if able.
+  - ".Env" (map<string\>string) - These are environment variables that should
+    be set on the deployed workload. These enable the entrypoint to work so
+    you should set these if able.
 
-- ".Workspace" (string) - The workspace name that the Waypoint deploy is
-  running in. This lets you potentially deploy to different clusters based
-  on this value.
+
+  - ".Workspace" (string) - The workspace name that the Waypoint deploy is
+    running in. This lets you potentially deploy to different clusters based
+    on this value.
 
 #### Docker Image Input
 
 If the build step creates a Docker image, the following template variables
 are available:
 
-- ".Input.DockerImageFull" (string) - The full Docker image name and tag.
+  - ".Input.DockerImageFull" (string) - The full Docker image name and tag.
 
-- ".Input.DockerImageName" (string) - The Docker image name, without the tag.
+  - ".Input.DockerImageName" (string) - The Docker image name, without the tag.
 
-- ".Input.DockerImageTag" (string) - The Docker image tag, such as "latest".
+  - ".Input.DockerImageTag" (string) - The Docker image tag, such as "latest".
 
 ### Interface
 
@@ -62,3 +62,4 @@ deploy {
   }
 }
 ```
+

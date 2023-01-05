@@ -1,5 +1,4 @@
-## aws-ecs (platform)
-
+<!-- This file was generated via `make gen/integrations-hcl` -->
 Deploy the application into an ECS cluster on AWS.
 
 ### Interface
@@ -17,3 +16,4 @@ deploy {
   }
 }
 ```
+

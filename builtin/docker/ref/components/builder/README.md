@@ -1,5 +1,4 @@
-## docker-ref (builder)
-
+<!-- This file was generated via `make gen/integrations-hcl` -->
 Use an existing, pre-built Docker image without modifying it.
 
 ### Interface
@@ -17,3 +16,4 @@ build {
   }
 }
 ```
+

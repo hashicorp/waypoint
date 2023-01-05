@@ -1,5 +1,4 @@
-## kubernetes (platform)
-
+<!-- This file was generated via `make gen/integrations-hcl` -->
 Deploy the application into a Kubernetes cluster using Deployment objects.
 
 ### Interface
@@ -13,3 +12,4 @@ use "kubernetes" {
 	probe_path = "/_healthz"
 }
 ```
+

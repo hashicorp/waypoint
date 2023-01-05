@@ -1,19 +1,25 @@
+# This file was generated via `make gen/integrations-hcl`
 output {
-  key  = "architecture"
-  type = "string"
+  key         = "architecture"
+  description = ""
+  type        = "string"
 }
 
 output {
-  key  = "image"
-  type = "string"
+  key         = "image"
+  description = ""
+  type        = "string"
 }
 
 output {
-  key  = "location"
-  type = "docker.isImage_Location"
+  key         = "location"
+  description = ""
+  type        = "docker.isImage_Location"
 }
 
 output {
-  key  = "tag"
-  type = "string"
+  key         = "tag"
+  description = ""
+  type        = "string"
 }
+

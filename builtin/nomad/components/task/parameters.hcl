@@ -1,9 +1,7 @@
+# This file was generated via `make gen/integrations-hcl`
 parameter {
   key           = "datacenter"
-  description   = <<EOT
-The Nomad datacenter to deploy the on-demand runner task to.
-
-EOT
+  description   = "The Nomad datacenter to deploy the on-demand runner task to."
   type          = "string"
   required      = false
   default_value = "dc1"
@@ -11,10 +9,7 @@ EOT
 
 parameter {
   key           = "namespace"
-  description   = <<EOT
-The Nomad namespace to deploy the on-demand runner task to.
-
-EOT
+  description   = "The Nomad namespace to deploy the on-demand runner task to."
   type          = "string"
   required      = false
   default_value = "default"
@@ -22,10 +17,7 @@ EOT
 
 parameter {
   key           = "nomad_host"
-  description   = <<EOT
-Hostname of the Nomad server to use for launching on-demand tasks.
-
-EOT
+  description   = "Hostname of the Nomad server to use for launching on-demand tasks."
   type          = "string"
   required      = false
   default_value = "http://localhost:4646"
@@ -33,10 +25,7 @@ EOT
 
 parameter {
   key           = "region"
-  description   = <<EOT
-The Nomad region to deploy the on-demand runner task to.
-
-EOT
+  description   = "The Nomad region to deploy the on-demand runner task to."
   type          = "string"
   required      = false
   default_value = "global"
@@ -44,10 +33,7 @@ EOT
 
 parameter {
   key           = "resources_cpu"
-  description   = <<EOT
-Amount of CPU in MHz to allocate to this task. This can be overriden with the '-nomad-runner-cpu' flag on server install.
-
-EOT
+  description   = "Amount of CPU in MHz to allocate to this task. This can be overriden with the '-nomad-runner-cpu' flag on server install."
   type          = "int"
   required      = false
   default_value = "200"
@@ -55,10 +41,7 @@ EOT
 
 parameter {
   key           = "resources_memory"
-  description   = <<EOT
-Amount of memory in MB to allocate to this task. This can be overriden with the '-nomad-runner-memory' flag on server install.
-
-EOT
+  description   = "Amount of memory in MB to allocate to this task. This can be overriden with the '-nomad-runner-memory' flag on server install."
   type          = "int"
   required      = false
   default_value = "2000"

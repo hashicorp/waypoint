@@ -1,5 +1,4 @@
-## aws-alb (releasemanager)
-
+<!-- This file was generated via `make gen/integrations-hcl` -->
 Release target groups by attaching them to an ALB.
 
 ### Interface
@@ -18,3 +17,4 @@ Release target groups by attaching them to an ALB.
 
 - Input: **lambda.Deployment**
 - Output: **alb.TargetGroup**
+

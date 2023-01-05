@@ -1,11 +1,10 @@
-## kubernetes-apply (platform)
-
+<!-- This file was generated via `make gen/integrations-hcl` -->
 Deploy Kubernetes resources directly from a single file or a directory of YAML
 or JSON files.
 
 This plugin lets you use any pre-existing set of Kubernetes resource files
 to deploy to Kubernetes. This plugin supports all the features of Waypoint.
-You may use Waypoint's [templating features](/docs/waypoint-hcl/functions/template)
+You may use Waypoint's [templating features](/waypoint/docs/waypoint-hcl/functions/template)
 to template the resources with information such as the artifact from
 a previous build step, entrypoint environment variables, etc.
 
@@ -22,7 +21,7 @@ used.
 
 ### Artifact Access
 
-You may use Waypoint's [templating features](/docs/waypoint-hcl/functions/template)
+You may use Waypoint's [templating features](/waypoint/docs/waypoint-hcl/functions/template)
 to access information such as the artifact from the build or push stages.
 An example below shows this by using `templatedir` mixed with
 variables such as `artifact.image` to dynamically configure the
@@ -30,25 +29,25 @@ Docker image within a Kubernetes Deployment.
 
 ### Entrypoint Functionality
 
-Waypoint [entrypoint functionality](/docs/entrypoint#functionality) such
+Waypoint [entrypoint functionality](/waypoint/docs/entrypoint#functionality) such
 as logs, exec, app configuration, and more require two properties to be true:
 
 1. The running image must already have the Waypoint entrypoint installed
-   and configured as the entrypoint. This should happen in the build stage.
+  and configured as the entrypoint. This should happen in the build stage.
 
 2. Proper environment variables must be set so the entrypoint knows how
-   to communicate to the Waypoint server. **This step happens in this
-   deployment stage.**
+  to communicate to the Waypoint server. **This step happens in this
+  deployment stage.**
 
 **Step 2 does not happen automatically.** You must manually set the entrypoint
-environment variables using the [templating feature](/docs/waypoint-hcl/functions/template).
+environment variables using the [templating feature](/waypoint/docs/waypoint-hcl/functions/template).
 One of the examples below shows the entrypoint environment variables being
 injected.
 
 ### URL Service
 
 If you want your workload to be accessible by the
-[Waypoint URL service](/docs/url), you must set the PORT environment variable
+[Waypoint URL service](/waypoint/docs/url), you must set the PORT environment variable
 within the pod with your web service and also be using the Waypoint
 entrypoint (documented in the previous section).
 
@@ -68,6 +67,10 @@ deploy {
     // build/registry, entrypoint env vars, etc.
     path        = templatedir("${path.app}/k8s")
     prune_label = "app=myapp"
+	prune_whitelist = [
+		"apps/v1/Deployment",
+		"apps/v1/ReplicaSet"
+  	]
   }
 }
 
@@ -103,51 +106,3 @@ spec:
             value: "3000"
 ```
 
-### Required Parameters
-
-These parameters are used in the [`use` stanza](/docs/waypoint-hcl/use) for this plugin.
-
-#### path
-
-Path to a file or directory of YAML or JSON files.
-
-This will be used for `kubectl apply` to create a set of Kubernetes resources. Pair this with `templatefile` or `templatedir` [templating functions](/docs/waypoint-hcl/functions/template) to inject dynamic elements into your Kubernetes resources. Subdirectories are included recursively.
-
-- Type: **string**
-
-#### prune_label
-
-Label selector to prune resources that aren't present in the `path`.
-
-This is a label selector that is used to search for any resources that are NOT present in the configured `path` and delete them.
-
-- Type: **string**
-
-### Optional Parameters
-
-These parameters are used in the [`use` stanza](/docs/waypoint-hcl/use) for this plugin.
-
-#### context
-
-The kubectl context to use, as defined in the kubeconfig file.
-
-- Type: **string**
-- **Optional**
-
-#### kubeconfig
-
-Path to the kubeconfig file to use.
-
-If this isn't set, the default lookup used by `kubectl` will be used.
-
-- Type: **string**
-- **Optional**
-- Environment Variable: **KUBECONFIG**
-
-### Output Attributes
-
-Output attributes can be used in your `waypoint.hcl` as [variables](/docs/waypoint-hcl/variables) via [`artifact`](/docs/waypoint-hcl/variables/artifact) or [`deploy`](/docs/waypoint-hcl/variables/deploy).
-
-#### prune_label
-
-- Type: **string**
