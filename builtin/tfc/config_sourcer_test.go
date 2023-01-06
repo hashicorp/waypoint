@@ -213,8 +213,4 @@ func TestConfigSourcer_StringValue(t *testing.T) {
 		}
 
 	})
-
-	t.Run("Can read a single var with a complex type", func(t *testing.T) {
-
-	})
 }
