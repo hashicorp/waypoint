@@ -1,6 +1,6 @@
 [
   {
-    "title": "Introduction",
+    "title": "What is Waypoint?",
     "routes": [
       {
         "title": "Overview",
@@ -26,23 +26,31 @@
             "path": "intro/vs/kubernetes"
           }
         ]
+      }
+    ]
+  },
+  {
+    "title": "Use Cases",
+    "routes": [
+      {
+        "title": "Dynamic App Config with Vault Dynamic Secrets",
+        "path": "use-cases/dynamic-config-vault-dynamic-secrets"
       },
       {
-        "title": "Use Cases",
-        "routes": [
-          {
-            "title": "Blue-Green Deployments with Waypoint, Nomad and Consul",
-            "path": "intro/use-cases/blue-green-deployment"
-          },
-          {
-            "title": "Dynamic App Config with Vault Dynamic Secrets",
-            "path": "intro/use-cases/dynamic-config-vault-dynamic-secrets"
-          },
-          {
-            "title": "Using GitHub Actions to Unlock GitOps Workflows",
-            "path": "intro/use-cases/waypoint-gh-actions"
-          }
-        ]
+        "title": "Blue-Green Deployments with Nomad and Consul",
+        "path": "use-cases/blue-green-deployment"
+      },
+      {
+        "title": "Using GitHub Actions to Unlock GitOps Workflows",
+        "path": "use-cases/waypoint-gh-actions"
+      },
+      {
+        "title": "Service Mesh Microservice Deployment",
+        "path": "use-cases/service-mesh-microservice-deployment"
+      },
+      {
+        "title": "Seamless Cloud Migration With Waypoint",
+        "path": "use-cases/migrate-clouds"
       }
     ]
   },
@@ -51,7 +59,7 @@
     "path": "getting-started"
   },
   {
-    "title": "Upgrading",
+    "title": "Upgrading Waypoint",
     "routes": [
       {
         "title": "Overview",
@@ -120,39 +128,92 @@
     "divider": true
   },
   {
-    "title": "Kubernetes",
+    "title": "Platforms",
     "routes": [
       {
-        "title": "Install",
-        "path": "kubernetes/install"
+        "title": "Nomad",
+        "routes": [
+          {
+            "title": "Deploy an Application to Nomad",
+            "href": "https://learn.hashicorp.com/tutorials/waypoint/get-started-nomad"
+          }
+        ]
       },
       {
-        "title": "Externally Built Images",
-        "path": "kubernetes/external-build"
+        "title": "Kubernetes",
+        "routes": [
+          {
+            "title": "Install",
+            "path": "platforms/kubernetes/install"
+          },
+          {
+            "title": "Externally Built Images",
+            "path": "platforms/kubernetes/external-build"
+          },
+          {
+            "title": "Building Container Images",
+            "path": "platforms/kubernetes/container-build"
+          },
+          {
+            "title": "Deploy an Application to Kubernetes",
+            "href": "https://learn.hashicorp.com/tutorials/waypoint/get-started-kubernetes"
+          },
+          {
+            "title": "Helm Deployment",
+            "path": "platforms/kubernetes/helm-deploy"
+          },
+          {
+            "title": "Helm and GitOps",
+            "href": "https://learn.hashicorp.com/tutorials/waypoint/gitops-helm-deployment"
+          },
+          {
+            "title": "YAML-Free Deployment",
+            "path": "platforms/kubernetes/deploy"
+          },
+          {
+            "title": "YAML Directory Deployment",
+            "path": "platforms/kubernetes/kubectl-deploy"
+          },
+          {
+            "title": "Resource Status",
+            "path": "platforms/kubernetes/resource-status"
+          },
+          {
+            "title": "ConfigMaps and Secrets",
+            "path": "platforms/kubernetes/config"
+          }
+        ]
       },
       {
-        "title": "Building Container Images",
-        "path": "kubernetes/container-build"
+        "title": "Amazon Web Services",
+        "routes": [
+          {
+            "title": "Deploy an Application to AWS Elastic Container Service",
+            "href": "https://learn.hashicorp.com/tutorials/waypoint/aws-ecs"
+          },
+          {
+            "title": "Deploy an Application onto AWS Lambda",
+            "href": "https://learn.hashicorp.com/tutorials/waypoint/aws-lambda"
+          }
+        ]
       },
       {
-        "title": "Helm Deployment",
-        "path": "kubernetes/helm-deploy"
+        "title": "Google Cloud Platform",
+        "routes": [
+          {
+            "title": "Deploy an application to Google CLoud Run",
+            "href": "https://learn.hashicorp.com/tutorials/waypoint/google-cloud-run"
+          }
+        ]
       },
       {
-        "title": "YAML-Free Deployment",
-        "path": "kubernetes/deploy"
-      },
-      {
-        "title": "YAML Directory Deployment",
-        "path": "kubernetes/kubectl-deploy"
-      },
-      {
-        "title": "Resource Status",
-        "path": "kubernetes/resource-status"
-      },
-      {
-        "title": "ConfigMaps and Secrets",
-        "path": "kubernetes/config"
+        "title": "Microsoft Azure",
+        "routes": [
+          {
+            "title": "Deploy an application onto an Azure Container Instance",
+            "href": "https://learn.hashicorp.com/tutorials/waypoint/azure-container-instance"
+          }
+        ]
       }
     ]
   },
@@ -164,7 +225,8 @@
     "routes": [
       {
         "title": "Overview",
-        "path": "projects"
+        "path": "projects",
+        "hidden": true
       },
       {
         "title": "Git Integration",
@@ -359,6 +421,10 @@
       {
         "title": "Overview",
         "path": "app-config"
+      },
+      {
+        "title": "Static Values",
+        "href": "https://learn.hashicorp.com/tutorials/waypoint/static-application-configuration"
       },
       {
         "title": "Dynamic Values",
@@ -637,35 +703,52 @@
     ]
   },
   {
-    "title": "Troubleshooting",
-    "path": "troubleshooting"
-  },
-  {
-    "title": "Glossary",
-    "path": "glossary"
-  },
-  {
     "divider": true
   },
   {
-    "title": "Internals",
+    "title": "Waypoint Resources",
     "routes": [
       {
-        "title": "Overview",
-        "path": "internals"
+        "title": "Internals",
+        "routes": [
+          {
+            "title": "Overview",
+            "path": "resources/internals"
+          },
+          {
+            "title": "Architecture",
+            "path": "resources/internals/architecture"
+          },
+          {
+            "title": "Operation Execution",
+            "path": "resources/internals/execution"
+          }
+        ]
       },
       {
-        "title": "Architecture",
-        "path": "internals/architecture"
+        "title": "Roadmap",
+        "path": "resources/roadmap"
       },
       {
-        "title": "Operation Execution",
-        "path": "internals/execution"
+        "title": "Community forum",
+        "href": "https://discuss.hashicorp.com/c/waypoint/"
+      },
+      {
+        "title": "Glossary",
+        "path": "resources/glossary"
+      },
+      {
+        "title": "Troubleshooting",
+        "path": "resources/troubleshooting"
+      },
+      {
+        "title": "Support",
+        "href": "https://support.hashicorp.com/"
+      },
+      {
+        "title": "GitHub",
+        "href": "https://github.com/hashicorp/waypoint"
       }
     ]
-  },
-  {
-    "title": "Roadmap",
-    "path": "roadmap"
   }
 ]
