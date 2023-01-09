@@ -45,6 +45,10 @@
         "path": "use-cases/waypoint-gh-actions"
       },
       {
+        "title": "Service Mesh Microservice Deployment",
+        "path": "use-cases/service-mesh-microservice-deployment"
+      },
+      {
         "title": "Seamless Cloud Migration With Waypoint",
         "path": "use-cases/migrate-clouds"
       }
