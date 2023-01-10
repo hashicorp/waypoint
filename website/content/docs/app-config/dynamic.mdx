@@ -94,7 +94,8 @@ Configuration sources sometimes support global settings for their behavior or
 require global settings to be set for them to function at all.
 For example, [Vault](/waypoint/plugins/vault#vault-configsourcer) has some global
 settings around how to authenticate. Without setting these, Vault configurations
-in applications will not work.
+in applications will not work. These _source settings_ are set at the server
+level and used by all `dynamic` calls.
 
 To set configuration source settings, the [`waypoint config source-set`](/waypoint/commands/config-source-set) CLI command is used:
 
@@ -108,9 +109,13 @@ are alongside their parameters in the plugin documentation.
 ### Scoped Source Settings
 
 The `waypoint config source-set` command's `-scope` flag will configure a given
-config source to be used within a specific scope. This can be either `global`,
-(the default), `project`, or `app`-scoped. For a given app or project, the config
-source with the "most specific" scope will be used.
+config source to be used within a specific scope. The supported values are below.
+For a given app or project, the config source with the "most specific" scope
+will be used.
+
+- **global**: Source setting applied to all projects and their applications
+- **project**: Applies source setting only to _this_ project
+- **app**: Applies source setting only to _this_ application
 
 For example, you may have three config sources configured in your Waypoint server,
 one at the `global` scope, one at the `project` scope for project `foo`, and one
