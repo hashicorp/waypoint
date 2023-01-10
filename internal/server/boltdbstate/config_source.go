@@ -3,6 +3,7 @@ package boltdbstate
 import (
 	"context"
 	"encoding/binary"
+	"regexp"
 	"sort"
 	"strings"
 
@@ -304,10 +305,28 @@ func (s *State) configSourceIndexInit(dbTxn *bolt.Tx, memTxn *memdb.Txn) error {
 		if err := proto.Unmarshal(v, &value); err != nil {
 			return err
 		}
-		if err := s.configSourceIndexSet(memTxn, k, &value); err != nil {
-			return err
-		}
 
+		// If there are any records whose ID is the name of a plugin, pre-v0.10.4
+		// behavior, then we delete that record from the database, since it is
+		// about to be saved with a hashed ID. This is not very elegant, but
+		// is the simplest way for users to upgrade since custom config sourcer
+		// plugins aren't yet supported, as of 1/10/2023.
+		key := string(k)
+		re := regexp.MustCompile(`aws-ssm|consul|kubernetes|null|packer|terraform-cloud|vault`)
+		if re.MatchString(key) {
+			if err := bucket.Delete(k); err != nil {
+				return err
+			}
+			// configSourceSet will create a new record in Bolt DB, AND update
+			// Mem DB, with the ID value hashed as per the v0.10.4 hashing logic.
+			if err := s.configSourceSet(dbTxn, memTxn, &value); err != nil {
+				return err
+			}
+		} else {
+			if err := s.configSourceIndexSet(memTxn, k, &value); err != nil {
+				return err
+			}
+		}
 		return nil
 	})
 }
