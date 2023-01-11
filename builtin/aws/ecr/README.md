@@ -1,3 +1,13 @@
-## Getting Started
+## AWS ECR
 
-TODO, Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+The AWS ECR plugin pushes a Docker image to an [Elastic Container Registry](https://aws.amazon.com/ecr/getting-started/)
+on AWS.
+
+### Components
+
+1. [Registry](./components/registry/README.md)
+
+### Related Plugins
+
+1. [AWS ECR Pull](./pull/README.md)
+2. [AWS ECS](../ecs/README.md)
