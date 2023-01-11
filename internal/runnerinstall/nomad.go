@@ -43,6 +43,7 @@ type NomadConfig struct {
 	CsiVolumeCapacityMin int64             `hcl:"csi_volume_capacity_min,optional"`
 	CsiVolumeCapacityMax int64             `hcl:"csi_volume_capacity_max,optional"`
 	CsiFS                string            `hcl:"csi_fs,optional"`
+	CsiMountFlags        []string          `hcl:"csi_mount_flags,optional"`
 	CsiTopologies        map[string]string `hcl:"nomad_csi_topologies,optional"`
 	CsiExternalId        string            `hcl:"nomad_csi_external_id,optional"`
 	CsiParams            map[string]string `hcl:"nomad_csi_params,optional"`
@@ -104,6 +105,7 @@ func (i *NomadRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) e
 			i.Config.CsiTopologies,
 			i.Config.CsiSecrets,
 			i.Config.CsiParams,
+			i.Config.CsiMountFlags,
 		)
 		if err != nil {
 			return fmt.Errorf("error creating Nomad persistent volume: %s", clierrors.Humanize(err))
@@ -281,6 +283,13 @@ func (i *NomadRunnerInstaller) InstallFlags(set *flag.Set) {
 		Target:  &i.Config.CsiFS,
 		Usage:   "Nomad CSI volume mount option file system.",
 		Default: nomadutil.DefaultCSIVolumeMountFS,
+	})
+
+	set.StringSliceVar(&flag.StringSliceVar{
+		Name:    "nomad-csi-mount-flags",
+		Target:  &i.Config.CsiMountFlags,
+		Usage:   "Nomad CSI volume mount option flags. The default is noatime.",
+		Default: []string{"noatime"},
 	})
 
 	set.StringMapVar(&flag.StringMapVar{
