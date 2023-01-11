@@ -1,6 +1,6 @@
 integration {
   name        = "AWS SSM"
-  description = "TODO"
+  description = "The AWS SSM plugin reads configuration values from the AWS SSM Parameter Store."
   identifier  = "waypoint/aws-ssm"
   components  = ["config-sourcer"]
   flags       = ["builtin"]

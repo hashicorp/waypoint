@@ -1,6 +1,6 @@
 integration {
   name        = "AWS ECR"
-  description = "TODO"
+  description = "The AWS ECR plugin pushes a Docker image to an Elastic Container Registry on AWS."
   identifier  = "waypoint/aws-ecr"
   components  = ["registry"]
   flags       = ["builtin"]
