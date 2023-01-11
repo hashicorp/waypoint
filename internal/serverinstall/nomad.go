@@ -1345,7 +1345,7 @@ func (i *NomadInstaller) InstallFlags(set *flag.Set) {
 	set.StringSliceVar(&flag.StringSliceVar{
 		Name:    "nomad-csi-mount-flags",
 		Target:  &i.config.csiMountFlags,
-		Usage:   "Nomad CSI volume mount option flags. The default is noatime.",
+		Usage:   "Nomad CSI volume mount option flags.",
 		Default: []string{"noatime"},
 	})
 
