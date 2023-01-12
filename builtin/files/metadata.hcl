@@ -1,6 +1,6 @@
 integration {
   name        = "Files"
-  description = "TODO"
+  description = "The Files plugin generates a value representing a path on disk, and can copy them to a specific directory."
   identifier  = "waypoint/files"
   components  = ["builder", "registry"]
   flags       = ["builtin"]

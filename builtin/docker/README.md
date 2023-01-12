@@ -12,17 +12,17 @@ It also launches on-demand runners to do operations remotely.
 
 ### Related Plugins
 
-1. [AWS ECS](/waypoint/integrations/aws/ecs)
-2. [AWS Lambda](/waypoint/integrations/aws/lambda)
+1. [AWS ECS](/waypoint/integrations/aws-ecs)
+2. [AWS Lambda](/waypoint/integrations/aws-lambda)
 3. [Azure ACI](/waypoint/integrations/azure)
-4. [Docker Pull](/waypoint/integrations/docker/pull)
-5. [Docker Ref](/waypoint/integrations/docker/ref)
-6. [Google Cloud Run](/waypoint/integrations/google)
-7. [Helm](/waypoint/integrations/k8s/helm)
-8. [Kubernetes](/waypoint/integrations/k8s)
-9. [Kubernetes Apply](/waypoint/integrations/k8s/apply)
+4. [Docker Pull](/waypoint/integrations/docker-pull)
+5. [Docker Ref](/waypoint/integrations/docker-ref)
+6. [Google Cloud Run](/waypoint/integrations/google-cloud-run)
+7. [Helm](/waypoint/integrations/helm)
+8. [Kubernetes](/waypoint/integrations/kubernetes)
+9. [Kubernetes Apply](/waypoint/integrations/kubernetes-apply)
 10. [Nomad](/waypoint/integrations/nomad)
-11. [Nomad Jobspec](/waypoint/integrations/nomad/jobspec)
+11. [Nomad Jobspec](/waypoint/integrations/nomad-jobspec)
 12. [Pack](/waypoint/integrations/pack)
 
 ### Resources
