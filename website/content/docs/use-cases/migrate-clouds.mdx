@@ -39,6 +39,8 @@ with the tools and concepts listed below.
 
 ##### Step 1. Start with an existing Kubernetes cluster and a deployed application
 
+If you don't already have an application deployed by Waypoint, follow our [Kubernetes Getting Started Guide](/waypoint/tutorials/get-started-kubernetes).
+
 ##### Step 2. Configure your kubectl context to point to your new cluster you are migrating to
 
 ```shell
@@ -60,13 +62,13 @@ $ waypoint runner install -platform=kubernetes -server-addr=<server_addr>  -k8s-
 ✓ Runner profile "kubernetes-gcp" created successfully.
 ✓ Waypoint runner installed with Helm!
 ✓ Runner "gcp" adopted successfully.
-
-$ waypoint runner profile set -env-var=DOCKER_PWD='pwd' -name=kubernetes-gcp
 ```
 
 After a successful `waypoint runner install` to your cluster you will see the
 following resources. Now, the runner and any on-demand runners have cluster
-edit permissions within your cluster.
+edit permissions within your cluster. Note, the `waypoint runner install` has
+installed a runner profile named `kuberenetes-gcp`, and did not change the
+`default` runner profile if you already one.
 
 ```shell
 $ kubectl get po
@@ -153,8 +155,15 @@ The release activates the previously staged deployment and exposes it to traffic
 ...
 ```
 
-The variables used in the example are defined below. Note, that the password is an
-environment variable that should be defined.
+The variables used in the example are defined below.
+
+Note, that the variable `password` is populated from an environment variable
+`DOCKER_PASSWORD` that should be defined locally. Specifically, the runners have
+access to this environment variable from the `waypoint config set -runner` command.
+In a production use case, a better approach would be using a dynamic config
+variable sourced directly from Vault. To view various ways to authenticate for
+pushing and pulling from private registries, follow our documentation on
+[Scenarios for a Registry](/waypoint/docs/lifecycle/build#scenarios-for-a-registry).
 
 ```hcl
 
@@ -168,7 +177,7 @@ variable "username" {
 }
 variable "password" {
   type = string
-  env = ["DOCKER_PWD"]
+  env = ["DOCKER_PASSWORD"]
   sensitive = true
 }
 ```
@@ -181,13 +190,20 @@ and built, deployed, and released to your Kubernetes cluster simply run the foll
 ```shell
 $ waypoint init
 $ waypoint project apply -data-source="git" -git-url="https://github.com/cicoyle/hashitalk-deploy" -git-ref=main -waypoint-hcl=waypoint.hcl hashitalk-deploy-gcp
+$ waypoint config set -runner -scope=project DOCKER_PASSWORD=$DOCKER_PASSWORD
+$ waypoint config get -runner
 $ waypoint up
 ```
 
 `waypoint init` is used to initialize and validate a project. `waypoint project apply`
 is to update the project to include the remote `-git-url` and `-git-ref` such that it
-will reference the latest code changes pushed to main branch in the repo provided.
-You will see that `waypoint up` encapsulates the build, deploy, release logic.
+will reference the latest code changes pushed to the main branch in the repo provided.
+The `waypoint config set -runner` exposes the environment variables to the runner,
+plus all the on demand runners. The scope can be `global`, `project`, or `app`. For this
+use case, the configuration is project scoped meaning that this will apply only to
+runners operating on jobs for the specific project. Use the `waypoint config get -runner`
+to view and confirm the config is set for your runners. You will see that `waypoint up`
+encapsulates the build, deploy, release logic.
 
 See the application in your cluster.
 
@@ -220,6 +236,8 @@ Follow the same simple steps from above.
 
 ##### Step 1. Start with an existing Kubernetes cluster and a deployed application
 
+If you don't already have an application deployed by Waypoint, follow our [Kubernetes Getting Started Guide](/waypoint/tutorials/get-started-kubernetes).
+
 ##### Step 2. Configure your kubectl context to point to your new cluster you are migrating to
 
 ```shell
@@ -241,8 +259,6 @@ $ waypoint runner install -platform=kubernetes -server-addr=<server_addr>  -k8s-
 ✓ Runner profile "kubernetes-azure" created successfully.
 ✓ Waypoint runner installed with Helm!
 ✓ Runner "azure" adopted successfully.
-
-$ waypoint runner profile set -env-var=DOCKER_PWD='pwd' -name=kubernetes-azure
 ```
 
 ##### Step 4. Update the waypoint.hcl

@@ -245,6 +245,10 @@ func queueInitOps(s *Service, ctx context.Context, project *pb.Project) error {
 }
 
 func projectNeedsRemoteInit(project *pb.Project) bool {
+	if project.State != pb.Project_ACTIVE {
+		return false
+	}
+
 	if project.DataSource == nil {
 		return false
 	}

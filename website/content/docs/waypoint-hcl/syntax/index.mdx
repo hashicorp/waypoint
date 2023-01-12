@@ -46,7 +46,7 @@ A _stanza_ is a container for other configuration content:
 ```hcl
 app "web" {
   build {
-    use "docker {
+    use "docker" {
       dockerfile = "${path.app}/Dockerfile"
     }
   }
