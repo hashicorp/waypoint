@@ -1,6 +1,6 @@
 integration {
   name        = "AWS EC2"
-  description = "TODO"
+  description = "The AWS EC2 plugin deploys an AWS AMI as a virtual machine, running on AWS EC2."
   identifier  = "waypoint/aws-ec2"
   components  = ["platform"]
   flags       = ["builtin"]

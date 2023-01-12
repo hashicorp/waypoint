@@ -1,6 +1,6 @@
 integration {
   name        = "AWS AMI"
-  description = "TODO"
+  description = "The AWS AMI plugin searches for an returns an existing AMI, to be deployed as an EC2."
   identifier  = "waypoint/aws-ami"
   components  = ["builder"]
   flags       = ["builtin"]

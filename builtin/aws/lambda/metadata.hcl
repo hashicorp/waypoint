@@ -1,6 +1,6 @@
 integration {
   name        = "AWS Lambda"
-  description = "TODO"
+  description = "The AWS Lambda plugin deploys OCI images as functions to AWS Lambda."
   identifier  = "waypoint/aws-lambda"
   components  = ["platform"]
   flags       = ["builtin"]

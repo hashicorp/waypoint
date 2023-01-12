@@ -1,6 +1,6 @@
 integration {
   name        = "AWS ECR Pull"
-  description = "TODO"
+  description = "The AWS ECR Pull plugin references an existing image, if found, in an AWS Elastic Container Registry. The image information can be used to push an image to a new registry, or be deployed to AWS ECS."
   identifier  = "waypoint/aws-ecr-pull"
   components  = ["builder"]
   flags       = ["builtin"]

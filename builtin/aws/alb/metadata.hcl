@@ -1,6 +1,6 @@
 integration {
   name        = "AWS Application Load Balancer"
-  description = "TODO"
+  description = "The AWS ALB plugin releases applications deployed to AWS by attaching target groups to an ALB."
   identifier  = "waypoint/aws-alb"
   components  = ["release-manager"]
   flags       = ["builtin"]

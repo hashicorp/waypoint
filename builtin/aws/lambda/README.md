@@ -1,3 +1,16 @@
-## Getting Started
+## AWS Lambda
 
-TODO, Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+The AWS Lambda plugin deploys OCI images as functions to [AWS Lambda](https://aws.amazon.com/lambda/getting-started/).
+
+### Components
+
+1. [Platform](/waypoint/integrations/aws-lambda/latest/components/platform)
+
+### Related Plugins
+
+1. [Docker](/waypoint/integrations/docker)
+2. [AWS ECR](/waypoint/integrations/aws-ecr)
+3. [AWS Lambda Function URL](/waypoint/integrations/lambda-function-url)
+
+<!--This plugin does not implement the resource manager framework, so the 
+"Resources" section is omitted-->
