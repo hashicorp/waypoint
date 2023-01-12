@@ -1,3 +1,12 @@
-## Getting Started
+## Docker Ref
 
-TODO, Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+The Docker Ref plugin refers to an existing Docker image, passing its image 
+information, the image name and tag, to the Waypoint lifecycle.
+
+### Components
+
+1. [Builder](/waypoint/integrations/docker/latest/components/builder)
+
+### Related Plugins
+
+1. [Docker](/waypoint/integrations/docker)

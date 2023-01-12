@@ -1,6 +1,6 @@
 integration {
   name        = "Consul"
-  description = "TODO"
+  description = "The Consul plugin reads configuration values from the Consul KV store."
   identifier  = "waypoint/consul"
   components  = ["config-sourcer"]
   flags       = ["builtin"]

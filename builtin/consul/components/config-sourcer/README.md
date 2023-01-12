@@ -3,3 +3,4 @@ Read configuration values from the Consul KV store.
 
 ### Interface
 
+<!-- The empty interface section needs to be updated -->
