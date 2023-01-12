@@ -1,4 +1,4 @@
-## Getting Started
+## Vault
 
 The Vault plugin reads configuration values from [Vault](https://www.vaultproject.io/).
 
