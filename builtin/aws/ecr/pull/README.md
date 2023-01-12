@@ -7,10 +7,10 @@ deployed to [AWS ECS](https://aws.amazon.com/ecs/getting-started/).
 
 ### Components
 
-1. [Builder](./components/builder/README.md)
+1. [Builder](/waypoint/integrations/aws-ecr-pull/latest/components/builder)
 
 ### Related Plugins
 
-1. [AWS ECR](../README.md)
-2. [AWS Lambda](../../lambda/README.md)
-2. [Docker](../../../docker/README.md)
+1. [AWS ECR](/waypoint/integrations/aws-ecr)
+1. [AWS Lambda](/waypoint/integrations/aws-lambda)
+1. [Docker](/waypoint/integrations/docker)
