@@ -300,6 +300,10 @@ func (s *State) configSourceIndexSet(txn *memdb.Txn, id []byte, value *pb.Config
 // configSourceIndexInit initializes the config index from persisted data.
 func (s *State) configSourceIndexInit(dbTxn *bolt.Tx, memTxn *memdb.Txn) error {
 	bucket := dbTxn.Bucket(configSourceBucket)
+
+	// Regex to match for the names of any config sourcer plugins v0.10.5 and earlier
+	re := regexp.MustCompile(`aws-ssm|consul|kubernetes|null|packer|terraform-cloud|vault`)
+
 	return bucket.ForEach(func(k, v []byte) error {
 		var value pb.ConfigSource
 		if err := proto.Unmarshal(v, &value); err != nil {
@@ -312,7 +316,6 @@ func (s *State) configSourceIndexInit(dbTxn *bolt.Tx, memTxn *memdb.Txn) error {
 		// is the simplest way for users to upgrade since custom config sourcer
 		// plugins aren't yet supported, as of 1/10/2023.
 		key := string(k)
-		re := regexp.MustCompile(`aws-ssm|consul|kubernetes|null|packer|terraform-cloud|vault`)
 		if re.MatchString(key) {
 			if err := bucket.Delete(k); err != nil {
 				return err
