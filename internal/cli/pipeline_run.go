@@ -3,7 +3,6 @@ package cli
 import (
 	"context"
 	"fmt"
-	"net/url"
 	"strings"
 
 	"github.com/posener/complete"
@@ -304,19 +303,13 @@ func (c *PipelineRunCommand) Run(args []string) int {
 		}
 
 		// Ensure deploy and release Urls have a scheme
-		du, err := url.Parse(deployUrl)
-		if err != nil && du.Scheme != "" {
+		deployUrl, err = addUrlScheme(deployUrl, httpsScheme)
+		if err != nil {
 			return err
 		}
-		if du.Scheme == "" && deployUrl != "" {
-			deployUrl = fmt.Sprintf("https://%s", deployUrl)
-		}
-		ru, err := url.Parse(releaseUrl)
-		if err != nil && ru.Scheme != "" {
+		releaseUrl, err = addUrlScheme(releaseUrl, httpsScheme)
+		if err != nil {
 			return err
-		}
-		if ru.Scheme == "" && releaseUrl != "" {
-			releaseUrl = fmt.Sprintf("https://%s", releaseUrl)
 		}
 
 		// Output app URL
