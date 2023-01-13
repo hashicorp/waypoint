@@ -1,0 +1,4 @@
+```release-note:bug
+upgrade: Fixes a bug where pre-v0.10.4 config sources could not be updated or
+deleted.
+```
