@@ -94,7 +94,7 @@ $ waypoint runner list
 There will also be two runner profiles configured. When the time comes to build,
 deploy and release the apps, the "target runner" indicated for each will be used
 to filter the runners on which a Waypoint job will be executed. To read more about
-remote operations and how they work, check out [the documentation](https://developer.hashicorp.com/waypoint/docs/projects/remote).
+remote operations and how they work, check out [the documentation](/waypoint/docs/projects/remote).
 
 ```shell
 $ waypoint runner profile list
@@ -221,7 +221,7 @@ app "counter-ui" {
 ```
 
 Waypoint will use the Docker Pull plugin to pull the UI image from DockerHub,
-and push it to a new registry after adding the [Waypoint Entrypoint](https://developer.hashicorp.com/waypoint/docs/entrypoint).
+and push it to a new registry after adding the [Waypoint Entrypoint](/waypoint/docs/entrypoint).
 Following that, the image will be deployed to Kubernetes using the Kubernetes
 plugin. `counter-ui` uses the environment variable `COUNTING_SERVICE_URL` to
 determine where to reach the API service. Soon, we will see how Consul cluster
@@ -242,7 +242,7 @@ Finally, the `probe_path` config is set, so that an HTTP health check is registe
 to Kubernetes, and also registered to Consul by the service mesh's transparent proxy.
 Consul will therefore automatically expose the health check endpoint to be accessible
 by Kubernetes from outside the service mesh. There is more information about
-this in the [Consul documentation](https://developer.hashicorp.com/consul/docs/k8s/connect/health).
+this in the [Consul documentation](/consul/docs/k8s/connect/health).
 
 With these configurations set, the runner profile must be updated once more so
 that Waypoint launches a runner in the Kubernetes cluster when building and
