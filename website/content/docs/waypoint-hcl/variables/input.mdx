@@ -11,7 +11,7 @@ description: |-
 
 Input variables let you customize aspects of Waypoint configuration with values
 that may change, or that need to be set per Waypoint run. Input variables can
-also be used to [fetch values from remote sources](/docs/waypoint-hcl/variables/dynamic).
+also be used to [fetch values from remote sources](/waypoint/docs/waypoint-hcl/variables/dynamic).
 
 You can parameterize your configuration by declaring variables in the
 waypoint.hcl file, and setting their values using CLI options, environment variables,
@@ -20,13 +20,13 @@ waypoint.hcl file, and setting their values using CLI options, environment varia
 Values used during a `build`, `deploy`, `release`, or `up` operation will output
 to the CLI.
 
-> **Hands-on:** Try the [Input Variables](https://learn.hashicorp.com/tutorials/waypoint/input-variables)
-> tutorial on HashiCorp Learn.
+> **Hands-on:** Try the [Input Variables](/waypoint/tutorials/configuration/input-variables)
+> tutorial.
 
 ## Declaring an Input Variable
 
 Each input variable referenced in the waypoint.hcl file must be declared using a
-[`variable` block](/docs/waypoint-hcl/variable). Example variable declaration
+[`variable` block](/waypoint/docs/waypoint-hcl/variable). Example variable declaration
 blocks include:
 
 ```hcl
@@ -58,7 +58,7 @@ be unique among all variables in the same waypoint.hcl file. This name is used
 to assign a value to the variable and to reference the variable's value when
 evaluating the configuration.
 
-The name of a variable can be any valid [identifier](/docs/waypoint-hcl/syntax#identifiers).
+The name of a variable can be any valid [identifier](/waypoint/docs/waypoint-hcl/syntax#identifiers).
 
 ### Arguments
 
@@ -119,7 +119,7 @@ variable "port" {
 [inpage-type]: #type-constraints
 
 The `type` argument in a `variable` block allows you to restrict the
-[type of value](/docs/waypoint-hcl/syntax/expressions#types-and-values) that
+[type of value](/waypoint/docs/waypoint-hcl/syntax/expressions#types-and-values) that
 will be accepted as the value for a variable.
 
 While type constraints are optional, we recommend specifying them; they
@@ -208,14 +208,14 @@ The resulting output value displayed:
 
 Retrieve the server cookie using the command `waypoint server cookie`:
 
-```
+```shell-session
 $ waypoint server cookie
 WPC01FZ1FB3FQ1BYABXVN67FAPXJE
 ```
 
 Then verify by combining the cookie with the value you expected Waypoint to use:
 
-```
+```shell-session
 $ echo -n "WPC01FZ1FB3FQ1BYABXVN67FAPXJEmyemail@mycorp.com" | sha256sum
 63fc1b8d861dd448c9ae7eaae3102e8a6dd14b838c8bbf1c0ed2f4eceb967d0c
 ```
@@ -223,7 +223,7 @@ $ echo -n "WPC01FZ1FB3FQ1BYABXVN67FAPXJEmyemail@mycorp.com" | sha256sum
 ## Using Input Variable Values
 
 Within the waypoint.hcl file that declared a variable, its value can be accessed
-from within [expressions](/docs/waypoint-hcl/syntax/expressions) as
+from within [expressions](/waypoint/docs/waypoint-hcl/syntax/expressions) as
 `var.<NAME>`, where `<NAME>` matches the label given in the declaration block:
 
 -> **Note:** Input variables are _created_ by a `variable` block, but you
@@ -238,7 +238,7 @@ _reference_ them as attributes on an object named `var`.
 ```
 
 The value assigned to a variable can only be accessed within the `app` stanza.
-[Top-level parameters](/docs/waypoint-hcl#top-level-parameters), such as the
+[Top-level parameters](/waypoint/docs/waypoint-hcl#top-level-parameters), such as the
 project or app names, cannot reference variable values.
 
 ## Assigning Values to Custom Input Variables
@@ -247,7 +247,7 @@ When variables are declared in your configuration, they can be set in a
 number of ways. Waypoint loads variables in the following order, with
 later sources taking precedence over earlier ones:
 
-- In the project settings via [the Waypoint server's UI](https://www.waypointproject.io/docs/server#waypoint-server).
+- In the project settings via [the Waypoint server's UI](/waypoint/docs/server#waypoint-server).
 - Automatically loaded variable definition files, named with the pattern
   `*.auto.wpvars`.
 - As environment variables.
@@ -264,10 +264,16 @@ when running the `waypoint up` or specific stage commands (e.g. `waypoint build`
 You can use the `-var` option multiple times in a single command to set several
 different variables.
 
+```shell-session
+$ waypoint up -var="port=8080"
 ```
-waypoint up -var="port=8080"
-waypoint up -var='networks=["internal","dev-test"]' -var="port=8080"
-waypoint up -var='network_map={"internal":8080,"dev-test":9701}'
+
+```shell-session
+$ waypoint up -var='networks=["internal","dev-test"]' -var="port=8080"
+```
+
+```shell-session
+$ waypoint up -var='network_map={"internal":8080,"dev-test":9701}'
 ```
 
 The above examples show appropriate syntax for Unix-style shells, such as on
@@ -276,15 +282,15 @@ If you're on Windows, we recommend using the Windows Command Prompt (cmd.exe).
 When you pass a variable value to Waypoint from the Windows Command Prompt,
 use double quotes " around the argument:
 
-```
-waypoint up -var "name=value"
+```shell-session
+$ waypoint up -var "name=value"
 ```
 
 If your intended value includes literal double quotes then you'll need to
 escape those with a backslash:
 
-```
-waypoint up -var "name=va\"lue"
+```shell-session
+$ waypoint up -var "name=va\"lue"
 ```
 
 ### Variable Definitions (`.wpvars`) Files
@@ -294,8 +300,8 @@ a _variable definitions file_ (with a filename ending in either `.wpvars`
 or `.wpvars.json`) and then specify that file on the command line with
 `-var-file`:
 
-```
-waypoint up -var-file="testing.wpvars"
+```shell-session
+$ waypoint up -var-file="testing.wpvars"
 ```
 
 A variable definitions file uses the same basic syntax as Waypoint language
@@ -349,9 +355,8 @@ This can be useful when running Waypoint in automation, or when running a
 sequence of Waypoint commands in succession with the same variables.
 For example, at a `bash` prompt on a Unix system:
 
-```
-$ export WP_VAR_port=8080
-$ waypoint up
+```shell-session
+$ export WP_VAR_port=8080 && waypoint up
 ...
 ```
 
@@ -361,9 +366,19 @@ so the required environment variable name will usually have a mix of upper
 and lower case letters as in the above example.
 
 -> **Note:** Environment variables specified with `env` are only loaded
-as default values on the Waypoint [runner](/docs/runner). For local operations
-this is the same machine as the CLI but for production use cases this might
-be a remote machine.
+as default values on the Waypoint [runner](/waypoint/docs/runner) and not the
+on demand runners. For local operations this is the same machine as the CLI
+but for production use cases this might be a remote machine.
+
+If the environment variables are desired to be used by runners and on demand
+runners, then use `waypoint config set -runner key=val` where you can specify a
+`-scope` of `global`, `project`, or `app`. See more details in our
+[config set documentation](/waypoint/commands/config-set).
+Alternatively, if you are targeting a specific runner profile, you can use the
+`waypoint runner profile set -env-var=key=val -name=runner-profile` command where
+the on demand runner will be exposed to the environment variables. For more
+information on creating and updating a runner profile page visit our
+[runner profile set documentation](/waypoint/commands/runner-profile-set).
 
 ### Variables in the UI
 
@@ -390,7 +405,7 @@ implicit type of the `default` value), you will receive an error.
 
 When variable values are provided in a variable definitions file, you can use
 Waypoint's usual syntax for
-[literal expressions](/docs/waypoint-hcl/syntax/expressions#literal-expressions)
+[literal expressions](/waypoint/docs/waypoint-hcl/syntax/expressions#literal-expressions)
 to assign complex-typed values, like lists and maps.
 
 Some special rules apply to the `-var` command line option and to environment
@@ -398,7 +413,7 @@ variables. For convenience, Waypoint defaults to interpreting `-var` and
 environment variable values as literal strings, which need only shell quoting,
 and no special quoting for Waypoint. For example, in a Unix-style shell:
 
-```
+```shell-session
 $ export WP_VAR_port=8080
 ```
 
@@ -408,7 +423,7 @@ instead attempt to parse its value using the same syntax used within variable
 definitions files, which requires careful attention to the string escaping rules
 in your shell:
 
-```
+```shell-session
 $ export WP_VAR_networks='["internal","dev-test"]'
 ```
 
@@ -434,7 +449,7 @@ will result in an error.
 Waypoint loads variables in the following order, with later sources taking
 precedence over earlier ones:
 
-- In the project settings via [the Waypoint server's UI](https://www.waypointproject.io/docs/server#waypoint-server).
+- In the project settings via [the Waypoint server's UI](/waypoint/docs/server).
 - Automatically loaded variable definition files, named with the pattern
   `*.auto.wpvars`.
 - From environment variables prefixed with `WP_VAR_`.
