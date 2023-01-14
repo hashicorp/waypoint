@@ -164,7 +164,7 @@ func (i *K8sInstaller) Install(
 	client.GenerateName = false
 	client.NameTemplate = ""
 	client.OutputDir = ""
-	client.Atomic = false
+	client.Atomic = true
 	client.SkipCRDs = false
 	client.SubNotes = true
 	client.DisableOpenAPIValidation = false
@@ -470,7 +470,7 @@ func (i *K8sInstaller) Upgrade(
 	client.DependencyUpdate = false
 	client.Timeout = 300 * time.Second
 	client.Namespace = i.Config.Namespace
-	client.Atomic = false
+	client.Atomic = true
 	client.SkipCRDs = false
 	client.SubNotes = true
 	client.DisableOpenAPIValidation = false
