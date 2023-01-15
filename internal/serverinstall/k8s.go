@@ -150,6 +150,10 @@ func (i *K8sInstaller) Install(
 		i.Config.Namespace = "default"
 	}
 
+	if i.Config.Timeout == 0 {
+		i.Config.Timeout = 300
+	}
+
 	client := action.NewInstall(actionConfig)
 	client.ClientOnly = false
 	client.DryRun = false
@@ -158,7 +162,7 @@ func (i *K8sInstaller) Install(
 	client.WaitForJobs = false
 	client.Devel = true
 	client.DependencyUpdate = false
-	client.Timeout = 300 * time.Second
+	client.Timeout = time.Duration(i.Config.Timeout) * time.Second
 	client.Namespace = i.Config.Namespace
 	client.ReleaseName = "waypoint"
 	client.GenerateName = false
@@ -461,6 +465,10 @@ func (i *K8sInstaller) Upgrade(
 		i.Config.Namespace = "default"
 	}
 
+	if i.Config.Timeout == 0 {
+		i.Config.Timeout = 300
+	}
+
 	client := action.NewUpgrade(actionConfig)
 	client.DryRun = false
 	client.DisableHooks = false
@@ -468,7 +476,7 @@ func (i *K8sInstaller) Upgrade(
 	client.WaitForJobs = false
 	client.Devel = true
 	client.DependencyUpdate = false
-	client.Timeout = 300 * time.Second
+	client.Timeout = time.Duration(i.Config.Timeout) * time.Second
 	client.Namespace = i.Config.Namespace
 	client.Atomic = true
 	client.SkipCRDs = false
@@ -956,6 +964,13 @@ func (i *K8sInstaller) InstallFlags(set *flag.Set) {
 			"The required version number format is: 'vX.Y.Z'.",
 	})
 
+	set.IntVar(&flag.IntVar{
+		Name:   "k8s-helm-timeout",
+		Target: &i.Config.Timeout,
+		Usage: "Time to wait for the Helm operation. It must be in seconds. " +
+			"The default is 5 minutes.",
+	})
+
 	set.StringVar(&flag.StringVar{
 		Name:    "k8s-cpu-request",
 		Target:  &i.Config.CpuRequest,
@@ -1053,6 +1068,13 @@ func (i *K8sInstaller) InstallFlags(set *flag.Set) {
 }
 
 func (i *K8sInstaller) UpgradeFlags(set *flag.Set) {
+	set.IntVar(&flag.IntVar{
+		Name:   "k8s-helm-timeout",
+		Target: &i.Config.Timeout,
+		Usage: "Time to wait for the Helm operation. It must be in seconds. " +
+			"The default is 5 minutes.",
+	})
+
 	set.BoolVar(&flag.BoolVar{
 		Name:   "k8s-advertise-internal",
 		Target: &i.Config.AdvertiseInternal,

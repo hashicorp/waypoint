@@ -19,6 +19,7 @@ type K8sConfig struct {
 	KubeconfigPath       string `hcl:"kubeconfig,optional"`
 	K8sContext           string `hcl:"context,optional"`
 	Version              string `hcl:"version,optional"`
+	Timeout              int    `hcl:"timeout,optional"`
 	Namespace            string `hcl:"namespace,optional"`
 	RunnerImage          string `hcl:"runner_image,optional"`
 	CpuRequest           string `hcl:"runner_cpu_request,optional"`
