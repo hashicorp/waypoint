@@ -245,7 +245,7 @@ func decodeVariableBlock(
 			// primitive type is string, and users can use explicit
 			// type conversion such as `tonumber` to achieve other primitive types.
 
-			// This is intended to help catch users catch invalid types early. If
+			// This is intended to help users catch invalid types early. If
 			// the type they specified doesn't match the actual type at runtime,
 			// they'll get another error and that's OK.
 			switch v.Type {
