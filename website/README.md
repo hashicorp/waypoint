@@ -109,7 +109,7 @@ There are several custom markdown plugins that are available by default that enh
   - `this` is a list item that begins with inline code
   ```
 
-  Its worth noting that _only the inline code at the beginning of the list item_ will cause problems if changed. So if you changed the above markup to...
+  It's worth noting that _only the inline code at the beginning of the list item_ will cause problems if changed. So if you changed the above markup to...
 
   ```markdown
   - lsdhfhksdjf
