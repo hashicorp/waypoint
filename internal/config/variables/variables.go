@@ -562,7 +562,7 @@ func LoadDynamicDefaults(
 								Severity: hcl.DiagError,
 								Summary:  "Plugin output <> hcl type mismatch",
 								Detail: fmt.Sprintf(
-									"Variable %s is declared as non-string type %s, \n"+
+									"Variable %q is declared as non-string type %q, \n"+
 										"but the configsourcer plugin did not return\n"+
 										"structured data that can be json-marshalled:\n%s",
 									matchingVar.Name,
