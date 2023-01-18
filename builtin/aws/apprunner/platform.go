@@ -389,6 +389,7 @@ from ` + "`waypoint.hcl`.")
 deploy {
 	use "aws-apprunner" {
 		name = "go-gin"
+		region = var.region
 		port = 8080
 		static_environment = {
 			"PORT" = "8080"
