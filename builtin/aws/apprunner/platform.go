@@ -2,6 +2,7 @@ package apprunner
 
 import (
 	"context"
+	"fmt"
 	"strconv"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -365,6 +366,38 @@ func (p *Platform) Documentation() (*docs.Documentation, error) {
 	doc.Description(`
 Creates an App Runner service, with the specified configuration 
 from ` + "`waypoint.hcl`.")
+
+	doc.Input("ecr.Image")
+	doc.Output("apprunner.Deployment")
+
+	doc.SetField(
+		"name",
+		"the name of the service. This is required.",
+	)
+
+	doc.SetField(
+		"port",
+		"the port to listen on",
+		docs.Default("8080 — This is AppRunner's default port"),
+	)
+
+	doc.SetField(
+		"cpu",
+		"the number of vCPU units to reserve for the service. Example: 1024 = 1 vCPU",
+		docs.Default(fmt.Sprintf("%d", defaultCpu)),
+	)
+
+	doc.SetField(
+		"memory",
+		"the amount of memory to reserve for the service. Example: 2048 = 2 GB",
+		docs.Default(fmt.Sprintf("%d", defaultMemory)),
+	)
+
+	doc.SetField(
+		"role_name",
+		"the name of the IAM role to use for the service",
+		docs.Default(defaultRoleName),
+	)
 
 	return doc, nil
 }
