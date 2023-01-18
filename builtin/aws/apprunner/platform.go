@@ -399,6 +399,11 @@ from ` + "`waypoint.hcl`.")
 		docs.Default(defaultRoleName),
 	)
 
+	doc.SetField(
+		"static_environment",
+		"environment variables to set for the service. A key-value map or string to string",
+	)
+
 	return doc, nil
 }
 
