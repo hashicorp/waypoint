@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -180,6 +181,23 @@ func (p *Platform) Deploy(
 
 		if err != nil {
 			step.Update("Failed to update service: %s", err)
+			if aerr, ok := err.(awserr.Error); ok {
+				if aerr.Code() == apprunner.ErrCodeInvalidStateException {
+					// If state is CREATE_FAILED, the service likely should be manually deleted,
+					// and then re-created.
+
+					// A substring check for "CREATE_FAILED" is our best effort to detect this
+					if strings.Contains(aerr.Message(), "CREATE_FAILED") {
+						// for visibility, here are examples for the  error fields:
+						// aerr.Code() "InvalidStateException"
+						// aerr.Error() "InvalidStateException: Service cannot be updated in the current state: CREATE_FAILED."
+						// aerr.Message() "Service cannot be updated in the current state: CREATE_FAILED."
+						step.Update("Service %q is in a failed state. Please delete the service and try running `waypoint up` again.", service.Name)
+						step.Abort()
+					}
+				}
+			}
+
 			return nil, err
 		}
 
@@ -366,6 +384,18 @@ func (p *Platform) Documentation() (*docs.Documentation, error) {
 	doc.Description(`
 Creates an App Runner service, with the specified configuration 
 from ` + "`waypoint.hcl`.")
+
+	doc.Example(`
+deploy {
+	use "aws-apprunner" {
+		name = "go-gin"
+		port = 8080
+		static_environment = {
+			"PORT" = "8080"
+		}
+	}
+}
+`)
 
 	doc.Input("ecr.Image")
 	doc.Output("apprunner.Deployment")
