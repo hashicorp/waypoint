@@ -255,7 +255,7 @@ func decodeVariableBlock(
 					Summary:  fmt.Sprintf("type for variable %q must be string for dynamic values", name),
 					Detail: "When using dynamically sourced configuration values, " +
 						"can either be strings, or complex types. If you're unsure of " +
-						"which, consult your configsourcer documentation. If you want " +
+						"which, consult your configsourcer plugin documentation. If you want " +
 						"to represent a string as another kind of value, use type " +
 						"conversion functions such as `tonumber` when using the variable.",
 					Subject: attr.Expr.Range().Ptr(),
