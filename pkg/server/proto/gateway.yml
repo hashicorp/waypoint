@@ -433,6 +433,47 @@ http:
     put: /v1/trigger/{ref.id}
     body: "*"
 
+    # Pipelines
+
+  - selector: hashicorp.waypoint.Waypoint.ListPipelines
+    get: /v1/project/{project.project}/pipelines
+
+  - selector: hashicorp.waypoint.Waypoint.GetPipeline
+    get: /v1/project/{pipeline.owner.project.project}/pipeline/{pipeline.owner.pipeline_name}
+
+  - selector: hashicorp.waypoint.Waypoint.GetPipeline
+    get: /v1/pipeline/{pipeline.id}
+
+  - selector: hashicorp.waypoint.Waypoint.RunPipeline
+    post: /v1/project/{pipeline.owner.project.project}/pipeline/{pipeline.owner.pipeline_name}/run
+    body: "*"
+
+  - selector: hashicorp.waypoint.Waypoint.RunPipeline
+    post: /v1/pipeline/{pipeline.id}/run
+    body: "*"
+
+  - selector: hashicorp.waypoint.Waypoint.GetPipelineRun
+    get: /v1/project/{pipeline.owner.project.project}/pipeline/{pipeline.owner.pipeline_name}/run/{sequence}
+
+  - selector: hashicorp.waypoint.Waypoint.GetPipelineRun
+    get: /v1/pipeline/{pipeline.id}/run/{sequence}
+
+  - selector: hashicorp.waypoint.Waypoint.GetLatestPipelineRun
+    get: /v1/project/{pipeline.owner.project.project}/pipeline/{pipeline.owner.pipeline_name}/latest-run
+
+  - selector: hashicorp.waypoint.Waypoint.GetLatestPipelineRun
+    get: /v1/pipeline/{pipeline.id}/latest-run
+
+  - selector: hashicorp.waypoint.Waypoint.ListPipelineRuns
+    get: /v1/project/{pipeline.owner.project.project}/pipeline/{pipeline.owner.pipeline_name}/runs
+
+  - selector: hashicorp.waypoint.Waypoint.ListPipelineRuns
+    get: /v1/pipeline/{pipeline.id}/runs
+
+  - selector: hashicorp.waypoint.Waypoint.ConfigSyncPipeline
+    post: /v1/project/{project.project}/config-sync-pipeline
+    body: "*"
+
     #############################################################################
     # UI Endpoints
     #############################################################################

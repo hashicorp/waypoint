@@ -1628,6 +1628,233 @@
         ]
       }
     },
+    "/v1/pipeline/{pipeline.id}": {
+      "get": {
+        "summary": "GetPipeline returns a pipeline proto by pipeline ref id",
+        "operationId": "Waypoint_GetPipeline2",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/hashicorp.waypoint.GetPipelineResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/grpc.gateway.runtime.Error"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "pipeline.id",
+            "description": "Reference a single pipeline by ID.",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "pipeline.owner.project.project",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "pipeline.owner.pipeline_name",
+            "description": "the name of the defined pipeline config.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "Waypoint"
+        ]
+      }
+    },
+    "/v1/pipeline/{pipeline.id}/latest-run": {
+      "get": {
+        "summary": "GetLatestPipelineRun returns a pipeline run proto by pipeline ref id and sequence",
+        "operationId": "Waypoint_GetLatestPipelineRun2",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/hashicorp.waypoint.GetPipelineRunResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/grpc.gateway.runtime.Error"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "pipeline.id",
+            "description": "Reference a single pipeline by ID.",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "pipeline.owner.project.project",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "pipeline.owner.pipeline_name",
+            "description": "the name of the defined pipeline config.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "Waypoint"
+        ]
+      }
+    },
+    "/v1/pipeline/{pipeline.id}/run": {
+      "post": {
+        "summary": "RunPipeline queues a pipeline execution.",
+        "operationId": "Waypoint_RunPipeline2",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/hashicorp.waypoint.RunPipelineResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/grpc.gateway.runtime.Error"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "pipeline.id",
+            "description": "Reference a single pipeline by ID.",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/hashicorp.waypoint.RunPipelineRequest"
+            }
+          }
+        ],
+        "tags": [
+          "Waypoint"
+        ]
+      }
+    },
+    "/v1/pipeline/{pipeline.id}/run/{sequence}": {
+      "get": {
+        "summary": "GetPipelineRun returns a pipeline run proto by pipeline ref id and sequence",
+        "operationId": "Waypoint_GetPipelineRun2",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/hashicorp.waypoint.GetPipelineRunResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/grpc.gateway.runtime.Error"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "pipeline.id",
+            "description": "Reference a single pipeline by ID.",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "sequence",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "uint64"
+          },
+          {
+            "name": "pipeline.owner.project.project",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "pipeline.owner.pipeline_name",
+            "description": "the name of the defined pipeline config.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "Waypoint"
+        ]
+      }
+    },
+    "/v1/pipeline/{pipeline.id}/runs": {
+      "get": {
+        "summary": "ListPipelineRuns takes a pipeline ref and returns a list of runs of that pipeline.\nIt will return an error if the requested pipeline does not exist, or an empty response\nif there are no runs for the pipeline.",
+        "operationId": "Waypoint_ListPipelineRuns2",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/hashicorp.waypoint.ListPipelineRunsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/grpc.gateway.runtime.Error"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "pipeline.id",
+            "description": "Reference a single pipeline by ID.",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "pipeline.owner.project.project",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "pipeline.owner.pipeline_name",
+            "description": "the name of the defined pipeline config.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "Waypoint"
+        ]
+      }
+    },
     "/v1/project": {
       "post": {
         "summary": "UpsertProject upserts the project.",
@@ -3571,6 +3798,239 @@
         ]
       }
     },
+    "/v1/project/{pipeline.owner.project.project}/pipeline/{pipeline.owner.pipeline_name}": {
+      "get": {
+        "summary": "GetPipeline returns a pipeline proto by pipeline ref id",
+        "operationId": "Waypoint_GetPipeline",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/hashicorp.waypoint.GetPipelineResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/grpc.gateway.runtime.Error"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "pipeline.owner.project.project",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "pipeline.owner.pipeline_name",
+            "description": "the name of the defined pipeline config",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "pipeline.id",
+            "description": "Reference a single pipeline by ID.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "Waypoint"
+        ]
+      }
+    },
+    "/v1/project/{pipeline.owner.project.project}/pipeline/{pipeline.owner.pipeline_name}/latest-run": {
+      "get": {
+        "summary": "GetLatestPipelineRun returns a pipeline run proto by pipeline ref id and sequence",
+        "operationId": "Waypoint_GetLatestPipelineRun",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/hashicorp.waypoint.GetPipelineRunResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/grpc.gateway.runtime.Error"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "pipeline.owner.project.project",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "pipeline.owner.pipeline_name",
+            "description": "the name of the defined pipeline config",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "pipeline.id",
+            "description": "Reference a single pipeline by ID.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "Waypoint"
+        ]
+      }
+    },
+    "/v1/project/{pipeline.owner.project.project}/pipeline/{pipeline.owner.pipeline_name}/run": {
+      "post": {
+        "summary": "RunPipeline queues a pipeline execution.",
+        "operationId": "Waypoint_RunPipeline",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/hashicorp.waypoint.RunPipelineResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/grpc.gateway.runtime.Error"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "pipeline.owner.project.project",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "pipeline.owner.pipeline_name",
+            "description": "the name of the defined pipeline config",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/hashicorp.waypoint.RunPipelineRequest"
+            }
+          }
+        ],
+        "tags": [
+          "Waypoint"
+        ]
+      }
+    },
+    "/v1/project/{pipeline.owner.project.project}/pipeline/{pipeline.owner.pipeline_name}/run/{sequence}": {
+      "get": {
+        "summary": "GetPipelineRun returns a pipeline run proto by pipeline ref id and sequence",
+        "operationId": "Waypoint_GetPipelineRun",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/hashicorp.waypoint.GetPipelineRunResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/grpc.gateway.runtime.Error"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "pipeline.owner.project.project",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "pipeline.owner.pipeline_name",
+            "description": "the name of the defined pipeline config",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "sequence",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "uint64"
+          },
+          {
+            "name": "pipeline.id",
+            "description": "Reference a single pipeline by ID.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "Waypoint"
+        ]
+      }
+    },
+    "/v1/project/{pipeline.owner.project.project}/pipeline/{pipeline.owner.pipeline_name}/runs": {
+      "get": {
+        "summary": "ListPipelineRuns takes a pipeline ref and returns a list of runs of that pipeline.\nIt will return an error if the requested pipeline does not exist, or an empty response\nif there are no runs for the pipeline.",
+        "operationId": "Waypoint_ListPipelineRuns",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/hashicorp.waypoint.ListPipelineRunsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/grpc.gateway.runtime.Error"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "pipeline.owner.project.project",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "pipeline.owner.pipeline_name",
+            "description": "the name of the defined pipeline config",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "pipeline.id",
+            "description": "Reference a single pipeline by ID.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "Waypoint"
+        ]
+      }
+    },
     "/v1/project/{project.project}": {
       "get": {
         "summary": "GetProject returns the project.",
@@ -3724,6 +4184,76 @@
             "description": "Get all configuration entries under the given prefix. When empty,\nreturns all config variables.",
             "in": "query",
             "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "Waypoint"
+        ]
+      }
+    },
+    "/v1/project/{project.project}/config-sync-pipeline": {
+      "post": {
+        "summary": "ConfigSyncPipeline takes a request for a given project and syncs the current\nproject config to the Waypoint database.",
+        "operationId": "Waypoint_ConfigSyncPipeline",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/hashicorp.waypoint.ConfigSyncPipelineResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/grpc.gateway.runtime.Error"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "project.project",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/hashicorp.waypoint.ConfigSyncPipelineRequest"
+            }
+          }
+        ],
+        "tags": [
+          "Waypoint"
+        ]
+      }
+    },
+    "/v1/project/{project.project}/pipelines": {
+      "get": {
+        "summary": "ListPipelines takes a project and evaluates the projects config to get\na list of Pipeline protos to return in the response. These pipelines\nare scoped to a single project from the request. It will return an\nerror if the requested project does not exist, or an empty response\nif no pipelines are defined for the project.",
+        "operationId": "Waypoint_ListPipelines",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/hashicorp.waypoint.ListPipelinesResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/grpc.gateway.runtime.Error"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "project.project",
+            "in": "path",
+            "required": true,
             "type": "string"
           }
         ],
@@ -6777,6 +7307,15 @@
           "type": "string",
           "format": "uint64",
           "description": "hash is set automatically on write and available on read and is a\ncontent hash of the configuration. This can be used to determine\nuniqueness or changes in the configuration. Setting this value with\nSetConfigSource has no effect and will be overwritten. Note that this\nhash may take more into account than just \"config\" as other fields\nare introduced to this message type."
+        }
+      }
+    },
+    "hashicorp.waypoint.ConfigSyncPipelineRequest": {
+      "type": "object",
+      "properties": {
+        "project": {
+          "$ref": "#/definitions/hashicorp.waypoint.Ref.Project",
+          "title": "The project to sync all pipeline configs on"
         }
       }
     },
@@ -10335,6 +10874,19 @@
         "exit": {
           "type": "boolean",
           "description": "If true, the server will exit after the restore is staged. This will\nSHUT DOWN the server and some external process you created is expected\nto bring it back. The Waypoint server on its own WILL NOT automatically\nrestart. You should only set this if you have some operation to\nautomate restart such as running in Nomad or Kubernetes."
+        }
+      }
+    },
+    "hashicorp.waypoint.RunPipelineRequest": {
+      "type": "object",
+      "properties": {
+        "pipeline": {
+          "$ref": "#/definitions/hashicorp.waypoint.Ref.Pipeline",
+          "description": "The pipeline to execute."
+        },
+        "job_template": {
+          "$ref": "#/definitions/hashicorp.waypoint.Job",
+          "description": "This is the job template to use for all the queued steps. This should\nset all the required fields of a job except for \"operation\"."
         }
       }
     },
