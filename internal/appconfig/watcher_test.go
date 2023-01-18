@@ -536,7 +536,7 @@ func TestWatcher_sourcerJson(t *testing.T) {
 	// and the caller can decide to use it for files, env vars, or some other purpose.
 	//
 	// For now, we're doubling down on the existing hack wherein the variable system
-	// requests it's for its dynamic config vars to be treated as "files", and it
+	// requests its dynamic config vars to be treated as "files", and it
 	// can figure out on its own whether to treat it as json or a string based
 	// on the variable type the user specified in the HCL.
 	require.Equal(cfg.Files, []*FileContent{{
