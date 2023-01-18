@@ -130,6 +130,7 @@ func (r *Releaser) Release(
 		Url:         "https://" + dep.ServiceUrl,
 		ServiceArn:  dep.ServiceArn,
 		ServiceName: dep.ServiceName,
+		Region:      dep.Region,
 	}, nil
 }
 
