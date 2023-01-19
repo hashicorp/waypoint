@@ -166,12 +166,12 @@ func (c *PipelineInspectCommand) Run(args []string) int {
 		}
 
 		pipelineRun = runResp.PipelineRun
-	} else {
+	} else if len(runs.PipelineRuns) > 0 {
 		pipelineRun = runs.PipelineRuns[len(runs.PipelineRuns)-1]
 	}
 
 	// Determine start and end job times for requested or latest sequence
-	if len(pipelineRun.Jobs) > 0 {
+	if pipelineRun != nil && len(pipelineRun.Jobs) > 0 {
 		startJob, err := c.project.Client().GetJob(c.Ctx, &pb.GetJobRequest{
 			JobId: pipelineRun.Jobs[0].Id,
 		})
@@ -196,53 +196,55 @@ func (c *PipelineInspectCommand) Run(args []string) int {
 		}
 	}
 
-	if seq > 0 {
-		output = append(output, []terminal.NamedValue{
-			{
-				Name: "Run Sequence", Value: pipelineRun.Sequence,
-			},
-			{
-				Name: "Jobs Queued", Value: pipelineRun.Jobs,
-			},
-			{
-				Name: "Run Started", Value: startJobTime,
-			},
-			{
-				Name: "Run Completed", Value: endJobTime,
-			},
-			{
-				Name: "State", Value: pipelineRun.State,
-			},
-			{
-				Name: "Git Commit SHA", Value: sha,
-			},
-			{
-				Name: "Git Commit Message", Value: msg,
-			},
-		}...)
-	} else {
-		lastRun := runs.PipelineRuns[len(runs.PipelineRuns)-1]
-		totalRuns := int(lastRun.Sequence)
-		output = append(output, []terminal.NamedValue{
-			{
-				Name: "Total Runs", Value: totalRuns,
-			},
-			{
-				Name: "Last Run Started", Value: startJobTime,
-			},
-			{
-				Name: "Last Run Completed", Value: endJobTime,
-			},
-			{
-				Name: "Last Run State", Value: lastRun.State,
-			},
-			{
-				Name: "Last Run Git Commit SHA", Value: sha,
-			},
-			{
-				Name: "Last Run Git Commit Message", Value: msg,
-			},
-		}...)
+	if pipelineRun != nil {
+		if seq > 0 {
+			output = append(output, []terminal.NamedValue{
+				{
+					Name: "Run Sequence", Value: pipelineRun.Sequence,
+				},
+				{
+					Name: "Jobs Queued", Value: pipelineRun.Jobs,
+				},
+				{
+					Name: "Run Started", Value: startJobTime,
+				},
+				{
+					Name: "Run Completed", Value: endJobTime,
+				},
+				{
+					Name: "State", Value: pipelineRun.State,
+				},
+				{
+					Name: "Git Commit SHA", Value: sha,
+				},
+				{
+					Name: "Git Commit Message", Value: msg,
+				},
+			}...)
+		} else {
+			lastRun := runs.PipelineRuns[len(runs.PipelineRuns)-1]
+			totalRuns := int(lastRun.Sequence)
+			output = append(output, []terminal.NamedValue{
+				{
+					Name: "Total Runs", Value: totalRuns,
+				},
+				{
+					Name: "Last Run Started", Value: startJobTime,
+				},
+				{
+					Name: "Last Run Completed", Value: endJobTime,
+				},
+				{
+					Name: "Last Run State", Value: lastRun.State,
+				},
+				{
+					Name: "Last Run Git Commit SHA", Value: sha,
+				},
+				{
+					Name: "Last Run Git Commit Message", Value: msg,
+				},
+			}...)
+		}
 	}
 
 	c.ui.NamedValues(output, terminal.WithInfoStyle())
