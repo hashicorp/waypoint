@@ -304,7 +304,7 @@ func (cs *ConfigSourcer) read(
 				continue
 			}
 			if resp.StatusCode != 200 {
-				L.Error("error in sending request for state version for workspace %q, unexpected response code %q", id, resp.Status)
+				L.Error("error in sending request for state version for workspace, unexpected response code", "workspace_id", id, "code", resp.Status)
 				result.Result = &pb.ConfigSource_Value_Error{
 					Error: status.New(codes.Aborted, err.Error()).Proto(),
 				}
@@ -368,7 +368,7 @@ func (cs *ConfigSourcer) read(
 			case "string":
 				stringVal, ok := value.Value.(string)
 				if !ok {
-					return nil, fmt.Errorf("variable %s is a string according to TFC, but is not actually a string type", value.Name)
+					return nil, fmt.Errorf("variable %q is a string according to TFC, but is not actually %T, not a string type", value.Name, value.Value)
 				}
 
 				result.Result = &pb.ConfigSource_Value_Value{
@@ -484,7 +484,8 @@ config {
 			"are currently supported.",
 			"If unspecified, all outputs from the workspace will be read",
 			"and returned as a map[string]object, and can be referenced as such",
-			"in the waypoint.hcl. See <docs> for more details.",
+			"in the waypoint.hcl. ",
+			"See https://github.com/hashicorp/waypoint-examples/tree/main/terraform/variables for examples.",
 		),
 	)
 

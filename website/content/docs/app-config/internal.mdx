@@ -49,3 +49,9 @@ to the application. Instead, only the combined value created in the
 If the dynamic value of the database host or user changes, the environment
 variable will subsequently be updated and the application will be restarted
 using standard application restart behavior.
+
+## Caveats
+
+Configsourcer plugins must return string type values to be used as internal values.
+With the terraform-cloud configsourcer, always specify an output, and only use outputs
+that of the type string.
