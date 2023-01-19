@@ -100,10 +100,12 @@ func (c *PipelineListCommand) Run(args []string) int {
 			return 1
 		}
 
-		var totalRuns string
-		var lastRunStart string
-		var lastRunEnd string
-		var state string
+		var (
+			totalRuns    string
+			lastRunStart string
+			lastRunEnd   string
+			state        string
+		)
 
 		runs := pipelineRunsResp.PipelineRuns
 		if len(runs) > 0 {
@@ -113,28 +115,30 @@ func (c *PipelineListCommand) Run(args []string) int {
 			lastRun := runs[len(runs)-1]
 			totalRuns = strconv.FormatUint(lastRun.Sequence, 10)
 
-			jobs := lastRun.Jobs
-			j, err := c.project.Client().GetJob(c.Ctx, &pb.GetJobRequest{
-				JobId: jobs[0].Id,
-			})
-			if err != nil {
-				c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
-				return 1
-			}
-			lastRunStart = humanize.Time(j.QueueTime.AsTime())
+			if len(lastRun.Jobs) > 0 {
+				jobs := lastRun.Jobs
+				j, err := c.project.Client().GetJob(c.Ctx, &pb.GetJobRequest{
+					JobId: jobs[0].Id,
+				})
+				if err != nil {
+					c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+					return 1
+				}
+				lastRunStart = humanize.Time(j.QueueTime.AsTime())
 
-			j, err = c.project.Client().GetJob(c.Ctx, &pb.GetJobRequest{
-				JobId: jobs[len(jobs)-1].Id,
-			})
-			if err != nil {
-				c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
-				return 1
-			}
+				j, err = c.project.Client().GetJob(c.Ctx, &pb.GetJobRequest{
+					JobId: jobs[len(jobs)-1].Id,
+				})
+				if err != nil {
+					c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+					return 1
+				}
 
-			if j.CompleteTime != nil {
-				lastRunEnd = humanize.Time(j.CompleteTime.AsTime())
+				if j.CompleteTime != nil {
+					lastRunEnd = humanize.Time(j.CompleteTime.AsTime())
+				}
+				state = strings.ToLower(lastRun.State.String())
 			}
-			state = strings.ToLower(lastRun.State.String())
 		}
 
 		tblColumn := []string{
