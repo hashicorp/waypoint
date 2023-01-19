@@ -468,6 +468,9 @@ service Waypoint {
   // Get a given project with useful related records.
   rpc UI_GetProject(UI.GetProjectRequest) returns (UI.GetProjectResponse);
 
+  // Get a given project with useful related records.
+  rpc UI_ListProjects(UI.ListProjectsRequest) returns (UI.ListProjectsResponse);
+
   // List deployments for a given application.
   rpc UI_ListDeployments(UI.ListDeploymentsRequest) returns (UI.ListDeploymentsResponse);
 
@@ -489,6 +492,16 @@ message UI {
   message GetProjectResponse {
     Project project = 1;
     Job latest_init_job = 2;
+  }
+
+  message ListProjectsRequest {
+    PaginationRequest pagination = 1;
+  }
+
+  message ListProjectsResponse {
+    repeated Project projects = 1;
+    PaginationResponse pagination = 2;
+    uint64 total_count = 3;
   }
 
   message ListDeploymentsRequest {
