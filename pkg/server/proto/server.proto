@@ -948,6 +948,7 @@ message Ref {
   // Project references a project.
   message Project {
     string project = 1;
+    hashicorp.waypoint.Project.ProjectState state = 2;
   }
 
   // Workspace references a workspace.
