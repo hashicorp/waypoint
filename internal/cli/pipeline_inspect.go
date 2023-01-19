@@ -142,108 +142,111 @@ func (c *PipelineInspectCommand) Run(args []string) int {
 		},
 	}
 
-	s := uint64(c.flagRunSequence)
-	if s > 0 {
-		run, err := c.project.Client().GetPipelineRun(c.Ctx, &pb.GetPipelineRunRequest{
+	var (
+		sha          string
+		msg          string
+		startJobTime string
+		endJobTime   string
+		pipelineRun  *pb.PipelineRun
+	)
+
+	seq := uint64(c.flagRunSequence)
+	if seq > 0 {
+		runResp, err := c.project.Client().GetPipelineRun(c.Ctx, &pb.GetPipelineRunRequest{
 			Pipeline: &pb.Ref_Pipeline{
 				Ref: &pb.Ref_Pipeline_Id{
 					Id: resp.Pipeline.Id,
 				},
 			},
-			Sequence: s,
+			Sequence: seq,
 		})
 		if err != nil {
 			c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 			return 1
 		}
+
+		pipelineRun = runResp.PipelineRun
+	} else if len(runs.PipelineRuns) > 0 {
+		pipelineRun = runs.PipelineRuns[len(runs.PipelineRuns)-1]
+	}
+
+	// Determine start and end job times for requested or latest sequence
+	if pipelineRun != nil && len(pipelineRun.Jobs) > 0 {
 		startJob, err := c.project.Client().GetJob(c.Ctx, &pb.GetJobRequest{
-			JobId: run.PipelineRun.Jobs[0].Id,
+			JobId: pipelineRun.Jobs[0].Id,
 		})
+		if err != nil {
+			c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+			return 1
+		}
 		endJob, err := c.project.Client().GetJob(c.Ctx, &pb.GetJobRequest{
-			JobId: run.PipelineRun.Jobs[len(run.PipelineRun.Jobs)-1].Id,
+			JobId: pipelineRun.Jobs[len(pipelineRun.Jobs)-1].Id,
 		})
-		var sha string
-		var msg string
+		if err != nil {
+			c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+			return 1
+		}
+
+		startJobTime = humanize.Time(startJob.QueueTime.AsTime())
+		endJobTime = humanize.Time(endJob.QueueTime.AsTime())
+
 		if startJob.DataSourceRef != nil {
 			sha = startJob.DataSourceRef.Ref.(*pb.Job_DataSource_Ref_Git).Git.Commit
 			msg = startJob.DataSourceRef.Ref.(*pb.Job_DataSource_Ref_Git).Git.CommitMessage
 		}
-		output = append(output, []terminal.NamedValue{
-			{
-				Name: "Run Sequence", Value: run.PipelineRun.Sequence,
-			},
-			{
-				Name: "Jobs Queued", Value: run.PipelineRun.Jobs,
-			},
-			{
-				Name: "Run Started", Value: humanize.Time(startJob.QueueTime.AsTime()),
-			},
-			{
-				Name: "Run Completed", Value: humanize.Time(endJob.CompleteTime.AsTime()),
-			},
-			{
-				Name: "State", Value: run.PipelineRun.State,
-			},
-			{
-				Name: "Git Commit SHA", Value: sha,
-			},
-			{
-				Name: "Git Commit Message", Value: msg,
-			},
-		}...)
-	} else {
-		var totalRuns int
-		if len(runs.PipelineRuns) > 0 {
-			lastRun := runs.PipelineRuns[len(runs.PipelineRuns)-1]
-			startJob, err := c.project.Client().GetJob(c.Ctx, &pb.GetJobRequest{
-				JobId: lastRun.Jobs[0].Id,
-			})
-			if err != nil {
-				c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
-				return 1
-			}
-			endJob, err := c.project.Client().GetJob(c.Ctx, &pb.GetJobRequest{
-				JobId: lastRun.Jobs[len(lastRun.Jobs)-1].Id,
-			})
-			if err != nil {
-				c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
-				return 1
-			}
+	}
 
-			var sha string
-			var msg string
-			if startJob.DataSourceRef != nil {
-				sha = startJob.DataSourceRef.Ref.(*pb.Job_DataSource_Ref_Git).Git.Commit
-				msg = startJob.DataSourceRef.Ref.(*pb.Job_DataSource_Ref_Git).Git.CommitMessage
-			}
-
-			totalRuns = int(lastRun.Sequence)
-
+	if pipelineRun != nil {
+		if seq > 0 {
 			output = append(output, []terminal.NamedValue{
 				{
-					Name: "Last Run Started", Value: humanize.Time(startJob.QueueTime.AsTime()),
+					Name: "Run Sequence", Value: pipelineRun.Sequence,
 				},
 				{
-					Name: "Last Run Completed", Value: humanize.Time(endJob.CompleteTime.AsTime()),
+					Name: "Jobs Queued", Value: pipelineRun.Jobs,
 				},
 				{
-					Name: "Last Run Status", Value: lastRun.State,
+					Name: "Run Started", Value: startJobTime,
 				},
 				{
-					Name: "Last Run Commit SHA", Value: sha,
+					Name: "Run Completed", Value: endJobTime,
 				},
 				{
-					Name: "Last Run Commit Message", Value: msg,
+					Name: "State", Value: pipelineRun.State,
+				},
+				{
+					Name: "Git Commit SHA", Value: sha,
+				},
+				{
+					Name: "Git Commit Message", Value: msg,
+				},
+			}...)
+		} else {
+			lastRun := runs.PipelineRuns[len(runs.PipelineRuns)-1]
+			totalRuns := int(lastRun.Sequence)
+			output = append(output, []terminal.NamedValue{
+				{
+					Name: "Total Runs", Value: totalRuns,
+				},
+				{
+					Name: "Last Run Started", Value: startJobTime,
+				},
+				{
+					Name: "Last Run Completed", Value: endJobTime,
+				},
+				{
+					Name: "Last Run State", Value: lastRun.State,
+				},
+				{
+					Name: "Last Run Git Commit SHA", Value: sha,
+				},
+				{
+					Name: "Last Run Git Commit Message", Value: msg,
 				},
 			}...)
 		}
-
-		output = append(output, []terminal.NamedValue{
-			{
-				Name: "Total Runs", Value: totalRuns,
-			},
-		}...)
 	}
+
 	c.ui.NamedValues(output, terminal.WithInfoStyle())
 
 	// TODO(briancain): Use graphviz to build a pipeline graph and display in the terminal?
