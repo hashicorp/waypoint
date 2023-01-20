@@ -150,10 +150,6 @@ func (i *K8sInstaller) Install(
 		i.Config.Namespace = "default"
 	}
 
-	if i.Config.Timeout == 0 {
-		i.Config.Timeout = 300
-	}
-
 	client := action.NewInstall(actionConfig)
 	client.ClientOnly = false
 	client.DryRun = false
@@ -463,10 +459,6 @@ func (i *K8sInstaller) Upgrade(
 	if i.Config.Namespace == "" {
 		// If all else fails, default the namespace to "default"
 		i.Config.Namespace = "default"
-	}
-
-	if i.Config.Timeout == 0 {
-		i.Config.Timeout = 300
 	}
 
 	client := action.NewUpgrade(actionConfig)
@@ -965,10 +957,10 @@ func (i *K8sInstaller) InstallFlags(set *flag.Set) {
 	})
 
 	set.IntVar(&flag.IntVar{
-		Name:   "k8s-helm-timeout",
-		Target: &i.Config.Timeout,
+		Name:    "k8s-helm-timeout",
+		Target:  &i.Config.Timeout,
 		Default: 300,
-		Usage: "Time to wait in seconds for the Helm operation.",
+		Usage:   "Time to wait in seconds for the Helm operation.",
 	})
 
 	set.StringVar(&flag.StringVar{
@@ -1069,10 +1061,10 @@ func (i *K8sInstaller) InstallFlags(set *flag.Set) {
 
 func (i *K8sInstaller) UpgradeFlags(set *flag.Set) {
 	set.IntVar(&flag.IntVar{
-		Name:   "k8s-helm-timeout",
-		Target: &i.Config.Timeout,
-		Usage: "Time to wait for the Helm operation. It must be in seconds. " +
-			"The default is 5 minutes.",
+		Name:    "k8s-helm-timeout",
+		Target:  &i.Config.Timeout,
+		Default: 300,
+		Usage:   "Time to wait in seconds for the Helm operation.",
 	})
 
 	set.BoolVar(&flag.BoolVar{
