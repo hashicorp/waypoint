@@ -31,6 +31,6 @@ func addUrlScheme(urlString string, scheme UrlScheme) (string, error) {
 	}
 
 	parsedUrl.Scheme = string(scheme)
-	urlWithScheme := fmt.Sprintf("%s", parsedUrl)
+	urlWithScheme := parsedUrl.String()
 	return urlWithScheme, nil
 }
