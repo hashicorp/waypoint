@@ -117,13 +117,14 @@ different Kubernetes service account run `waypoint runner profile inspect` and c
 the `Additional Plugin Configuration` to a new file.
 
 #### Json
+
 If the `Additional Plugin Configuration` output is json,
 create a json file with your new plugin config, at location
 `./k8s-runner-profile-plugin-config.json`:
 
 ```json
 {
-	"service_account": "my-custom-service-account"
+  "service_account": "my-custom-service-account"
 }
 ```
 
@@ -134,6 +135,7 @@ $ waypoint runner profile set -name=kubernetes -plugin-type=kubernetes -plugin-c
 ```
 
 #### Hcl
+
 If the `Additional Plugin Configuration` output is hcl,
 create an hcl file with your new plugin config, at location
 `./k8s-runner-profile-plugin-config.hcl`:
