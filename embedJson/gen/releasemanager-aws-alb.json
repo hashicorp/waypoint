@@ -24,6 +24,7 @@
          "Default": "",
          "EnvVar": "",
          "Category": false,
+         "Example": "",
          "SubFields": null
       },
       {
@@ -35,6 +36,7 @@
          "Default": "",
          "EnvVar": "",
          "Category": false,
+         "Example": "",
          "SubFields": null
       },
       {
@@ -46,6 +48,7 @@
          "Default": "",
          "EnvVar": "",
          "Category": false,
+         "Example": "",
          "SubFields": null
       },
       {
@@ -57,6 +60,7 @@
          "Default": "derived from application name",
          "EnvVar": "",
          "Category": false,
+         "Example": "",
          "SubFields": null
       },
       {
@@ -68,6 +72,7 @@
          "Default": "80 for HTTP, 443 for HTTPS",
          "EnvVar": "",
          "Category": false,
+         "Example": "",
          "SubFields": null
       },
       {
@@ -79,6 +84,7 @@
          "Default": "",
          "EnvVar": "",
          "Category": false,
+         "Example": "",
          "SubFields": null
       },
       {
@@ -90,6 +96,7 @@
          "Default": "public subnets in the account default VPC",
          "EnvVar": "",
          "Category": false,
+         "Example": "",
          "SubFields": null
       },
       {
@@ -101,6 +108,7 @@
          "Default": "",
          "EnvVar": "",
          "Category": false,
+         "Example": "",
          "SubFields": null
       }
    ],

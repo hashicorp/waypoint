@@ -1,0 +1,6 @@
+```release-note:improvement
+plugin/tfc: Allow non-string tfc outputs to be used as waypoint.hcl dynamic default variables
+```
+```release-note:improvement
+plugin/tfc: Allow reading all outputs from a tfc workspace with a single variable stanza
+```

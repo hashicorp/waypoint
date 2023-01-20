@@ -14,6 +14,7 @@
          "Default": "",
          "EnvVar": "HCP_CLIENT_ID",
          "Category": false,
+         "Example": "",
          "SubFields": null
       },
       {
@@ -25,6 +26,7 @@
          "Default": "",
          "EnvVar": "HCP_CLIENT_SECRET",
          "Category": false,
+         "Example": "",
          "SubFields": null
       }
    ],
@@ -38,6 +40,7 @@
          "Default": "",
          "EnvVar": "",
          "Category": false,
+         "Example": "",
          "SubFields": null
       },
       {
@@ -49,6 +52,7 @@
          "Default": "",
          "EnvVar": "",
          "Category": false,
+         "Example": "",
          "SubFields": null
       },
       {
@@ -60,6 +64,7 @@
          "Default": "",
          "EnvVar": "",
          "Category": false,
+         "Example": "",
          "SubFields": null
       },
       {
@@ -71,6 +76,7 @@
          "Default": "",
          "EnvVar": "",
          "Category": false,
+         "Example": "",
          "SubFields": null
       }
    ],
@@ -84,6 +90,7 @@
          "Default": "",
          "EnvVar": "",
          "Category": false,
+         "Example": "",
          "SubFields": null
       },
       {
@@ -95,6 +102,7 @@
          "Default": "",
          "EnvVar": "",
          "Category": false,
+         "Example": "",
          "SubFields": null
       }
    ],

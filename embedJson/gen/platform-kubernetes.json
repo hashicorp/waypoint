@@ -13,6 +13,7 @@
          "Default": "",
          "EnvVar": "",
          "Category": false,
+         "Example": "",
          "SubFields": null
       },
       {
@@ -24,6 +25,7 @@
          "Default": "",
          "EnvVar": "",
          "Category": true,
+         "Example": "",
          "SubFields": [
             {
                "Field": "cpu_percent",
@@ -34,6 +36,7 @@
                "Default": "",
                "EnvVar": "",
                "Category": false,
+               "Example": "",
                "SubFields": null
             },
             {
@@ -45,6 +48,7 @@
                "Default": "",
                "EnvVar": "",
                "Category": false,
+               "Example": "",
                "SubFields": null
             },
             {
@@ -56,6 +60,7 @@
                "Default": "",
                "EnvVar": "",
                "Category": false,
+               "Example": "",
                "SubFields": null
             }
          ]
@@ -69,6 +74,7 @@
          "Default": "",
          "EnvVar": "",
          "Category": false,
+         "Example": "",
          "SubFields": null
       },
       {
@@ -80,6 +86,7 @@
          "Default": "",
          "EnvVar": "",
          "Category": true,
+         "Example": "",
          "SubFields": [
             {
                "Field": "limit",
@@ -90,6 +97,7 @@
                "Default": "",
                "EnvVar": "",
                "Category": false,
+               "Example": "",
                "SubFields": null
             },
             {
@@ -101,6 +109,7 @@
                "Default": "",
                "EnvVar": "",
                "Category": false,
+               "Example": "",
                "SubFields": null
             }
          ]
@@ -114,6 +123,7 @@
          "Default": "",
          "EnvVar": "",
          "Category": false,
+         "Example": "",
          "SubFields": null
       },
       {
@@ -125,6 +135,7 @@
          "Default": "",
          "EnvVar": "KUBECONFIG",
          "Category": false,
+         "Example": "",
          "SubFields": null
       },
       {
@@ -136,6 +147,7 @@
          "Default": "",
          "EnvVar": "",
          "Category": false,
+         "Example": "",
          "SubFields": null
       },
       {
@@ -147,6 +159,7 @@
          "Default": "",
          "EnvVar": "",
          "Category": true,
+         "Example": "",
          "SubFields": [
             {
                "Field": "limit",
@@ -157,6 +170,7 @@
                "Default": "",
                "EnvVar": "",
                "Category": false,
+               "Example": "",
                "SubFields": null
             },
             {
@@ -168,6 +182,7 @@
                "Default": "",
                "EnvVar": "",
                "Category": false,
+               "Example": "",
                "SubFields": null
             }
          ]
@@ -181,6 +196,7 @@
          "Default": "",
          "EnvVar": "",
          "Category": false,
+         "Example": "",
          "SubFields": null
       },
       {
@@ -192,6 +208,7 @@
          "Default": "",
          "EnvVar": "",
          "Category": true,
+         "Example": "",
          "SubFields": [
             {
                "Field": "failure_threshold",
@@ -202,6 +219,7 @@
                "Default": "30",
                "EnvVar": "",
                "Category": false,
+               "Example": "",
                "SubFields": null
             },
             {
@@ -213,6 +231,7 @@
                "Default": "5",
                "EnvVar": "",
                "Category": false,
+               "Example": "",
                "SubFields": null
             },
             {
@@ -224,6 +243,7 @@
                "Default": "5",
                "EnvVar": "",
                "Category": false,
+               "Example": "",
                "SubFields": null
             }
          ]
@@ -237,6 +257,7 @@
          "Default": "",
          "EnvVar": "",
          "Category": false,
+         "Example": "",
          "SubFields": null
       },
       {
@@ -248,6 +269,7 @@
          "Default": "",
          "EnvVar": "",
          "Category": false,
+         "Example": "",
          "SubFields": null
       },
       {
@@ -259,6 +281,7 @@
          "Default": "",
          "EnvVar": "",
          "Category": false,
+         "Example": "",
          "SubFields": null
       },
       {
@@ -270,6 +293,7 @@
          "Default": "",
          "EnvVar": "",
          "Category": false,
+         "Example": "",
          "SubFields": null
       },
       {
@@ -281,6 +305,7 @@
          "Default": "",
          "EnvVar": "",
          "Category": false,
+         "Example": "",
          "SubFields": null
       },
       {
@@ -292,6 +317,7 @@
          "Default": "3000",
          "EnvVar": "",
          "Category": false,
+         "Example": "",
          "SubFields": null
       },
       {
@@ -303,6 +329,7 @@
          "Default": "",
          "EnvVar": "",
          "Category": false,
+         "Example": "",
          "SubFields": null
       }
    ],
@@ -316,6 +343,7 @@
          "Default": "",
          "EnvVar": "",
          "Category": false,
+         "Example": "",
          "SubFields": null
       },
       {
@@ -327,6 +355,7 @@
          "Default": "",
          "EnvVar": "",
          "Category": false,
+         "Example": "",
          "SubFields": null
       },
       {
@@ -338,6 +367,7 @@
          "Default": "",
          "EnvVar": "",
          "Category": false,
+         "Example": "",
          "SubFields": null
       }
    ],
@@ -352,6 +382,7 @@
          "Default": "",
          "EnvVar": "",
          "Category": true,
+         "Example": "",
          "SubFields": [
             {
                "Field": "container",
@@ -362,6 +393,7 @@
                "Default": "",
                "EnvVar": "",
                "Category": true,
+               "Example": "",
                "SubFields": [
                   {
                      "Field": "args",
@@ -372,6 +404,7 @@
                      "Default": "",
                      "EnvVar": "",
                      "Category": false,
+                     "Example": "",
                      "SubFields": null
                   },
                   {
@@ -383,6 +416,7 @@
                      "Default": "",
                      "EnvVar": "",
                      "Category": false,
+                     "Example": "",
                      "SubFields": null
                   },
                   {
@@ -394,6 +428,7 @@
                      "Default": "",
                      "EnvVar": "",
                      "Category": true,
+                     "Example": "",
                      "SubFields": [
                         {
                            "Field": "limit",
@@ -404,6 +439,7 @@
                            "Default": "",
                            "EnvVar": "",
                            "Category": false,
+                           "Example": "",
                            "SubFields": null
                         },
                         {
@@ -415,6 +451,7 @@
                            "Default": "",
                            "EnvVar": "",
                            "Category": false,
+                           "Example": "",
                            "SubFields": null
                         }
                      ]
@@ -428,6 +465,7 @@
                      "Default": "",
                      "EnvVar": "",
                      "Category": true,
+                     "Example": "",
                      "SubFields": [
                         {
                            "Field": "limit",
@@ -438,6 +476,7 @@
                            "Default": "",
                            "EnvVar": "",
                            "Category": false,
+                           "Example": "",
                            "SubFields": null
                         },
                         {
@@ -449,6 +488,7 @@
                            "Default": "",
                            "EnvVar": "",
                            "Category": false,
+                           "Example": "",
                            "SubFields": null
                         }
                      ]
@@ -462,6 +502,7 @@
                      "Default": "",
                      "EnvVar": "",
                      "Category": false,
+                     "Example": "",
                      "SubFields": null
                   },
                   {
@@ -473,6 +514,7 @@
                      "Default": "",
                      "EnvVar": "",
                      "Category": true,
+                     "Example": "",
                      "SubFields": [
                         {
                            "Field": "host_ip",
@@ -483,6 +525,7 @@
                            "Default": "",
                            "EnvVar": "",
                            "Category": false,
+                           "Example": "",
                            "SubFields": null
                         },
                         {
@@ -494,6 +537,7 @@
                            "Default": "",
                            "EnvVar": "",
                            "Category": false,
+                           "Example": "",
                            "SubFields": null
                         },
                         {
@@ -505,6 +549,7 @@
                            "Default": "",
                            "EnvVar": "",
                            "Category": false,
+                           "Example": "",
                            "SubFields": null
                         },
                         {
@@ -516,6 +561,7 @@
                            "Default": "",
                            "EnvVar": "",
                            "Category": false,
+                           "Example": "",
                            "SubFields": null
                         },
                         {
@@ -527,6 +573,7 @@
                            "Default": "TCP",
                            "EnvVar": "",
                            "Category": false,
+                           "Example": "",
                            "SubFields": null
                         }
                      ]
@@ -540,6 +587,7 @@
                      "Default": "",
                      "EnvVar": "",
                      "Category": true,
+                     "Example": "",
                      "SubFields": [
                         {
                            "Field": "failure_threshold",
@@ -550,6 +598,7 @@
                            "Default": "5",
                            "EnvVar": "",
                            "Category": false,
+                           "Example": "",
                            "SubFields": null
                         },
                         {
@@ -561,6 +610,7 @@
                            "Default": "5",
                            "EnvVar": "",
                            "Category": false,
+                           "Example": "",
                            "SubFields": null
                         },
                         {
@@ -572,6 +622,7 @@
                            "Default": "5",
                            "EnvVar": "",
                            "Category": false,
+                           "Example": "",
                            "SubFields": null
                         }
                      ]
@@ -585,6 +636,7 @@
                      "Default": "",
                      "EnvVar": "",
                      "Category": false,
+                     "Example": "",
                      "SubFields": null
                   },
                   {
@@ -596,6 +648,7 @@
                      "Default": "",
                      "EnvVar": "",
                      "Category": false,
+                     "Example": "",
                      "SubFields": null
                   },
                   {
@@ -607,6 +660,7 @@
                      "Default": "",
                      "EnvVar": "",
                      "Category": false,
+                     "Example": "",
                      "SubFields": null
                   }
                ]
@@ -620,6 +674,7 @@
                "Default": "",
                "EnvVar": "",
                "Category": true,
+               "Example": "",
                "SubFields": [
                   {
                      "Field": "fs_group",
@@ -630,6 +685,7 @@
                      "Default": "",
                      "EnvVar": "",
                      "Category": false,
+                     "Example": "",
                      "SubFields": null
                   },
                   {
@@ -641,6 +697,7 @@
                      "Default": "",
                      "EnvVar": "",
                      "Category": false,
+                     "Example": "",
                      "SubFields": null
                   },
                   {
@@ -652,6 +709,7 @@
                      "Default": "",
                      "EnvVar": "",
                      "Category": false,
+                     "Example": "",
                      "SubFields": null
                   },
                   {
@@ -663,6 +721,7 @@
                      "Default": "",
                      "EnvVar": "",
                      "Category": false,
+                     "Example": "",
                      "SubFields": null
                   }
                ]
@@ -676,6 +735,7 @@
                "Default": "",
                "EnvVar": "",
                "Category": true,
+               "Example": "",
                "SubFields": [
                   {
                      "Field": "container",
@@ -686,6 +746,7 @@
                      "Default": "",
                      "EnvVar": "",
                      "Category": true,
+                     "Example": "",
                      "SubFields": [
                         {
                            "Field": "args",
@@ -696,6 +757,7 @@
                            "Default": "",
                            "EnvVar": "",
                            "Category": false,
+                           "Example": "",
                            "SubFields": null
                         },
                         {
@@ -707,6 +769,7 @@
                            "Default": "",
                            "EnvVar": "",
                            "Category": false,
+                           "Example": "",
                            "SubFields": null
                         },
                         {
@@ -718,6 +781,7 @@
                            "Default": "",
                            "EnvVar": "",
                            "Category": true,
+                           "Example": "",
                            "SubFields": [
                               {
                                  "Field": "limit",
@@ -728,6 +792,7 @@
                                  "Default": "",
                                  "EnvVar": "",
                                  "Category": false,
+                                 "Example": "",
                                  "SubFields": null
                               },
                               {
@@ -739,6 +804,7 @@
                                  "Default": "",
                                  "EnvVar": "",
                                  "Category": false,
+                                 "Example": "",
                                  "SubFields": null
                               }
                            ]
@@ -752,6 +818,7 @@
                            "Default": "",
                            "EnvVar": "",
                            "Category": true,
+                           "Example": "",
                            "SubFields": [
                               {
                                  "Field": "limit",
@@ -762,6 +829,7 @@
                                  "Default": "",
                                  "EnvVar": "",
                                  "Category": false,
+                                 "Example": "",
                                  "SubFields": null
                               },
                               {
@@ -773,6 +841,7 @@
                                  "Default": "",
                                  "EnvVar": "",
                                  "Category": false,
+                                 "Example": "",
                                  "SubFields": null
                               }
                            ]
@@ -786,6 +855,7 @@
                            "Default": "",
                            "EnvVar": "",
                            "Category": false,
+                           "Example": "",
                            "SubFields": null
                         },
                         {
@@ -797,6 +867,7 @@
                            "Default": "",
                            "EnvVar": "",
                            "Category": true,
+                           "Example": "",
                            "SubFields": [
                               {
                                  "Field": "host_ip",
@@ -807,6 +878,7 @@
                                  "Default": "",
                                  "EnvVar": "",
                                  "Category": false,
+                                 "Example": "",
                                  "SubFields": null
                               },
                               {
@@ -818,6 +890,7 @@
                                  "Default": "",
                                  "EnvVar": "",
                                  "Category": false,
+                                 "Example": "",
                                  "SubFields": null
                               },
                               {
@@ -829,6 +902,7 @@
                                  "Default": "",
                                  "EnvVar": "",
                                  "Category": false,
+                                 "Example": "",
                                  "SubFields": null
                               },
                               {
@@ -840,6 +914,7 @@
                                  "Default": "",
                                  "EnvVar": "",
                                  "Category": false,
+                                 "Example": "",
                                  "SubFields": null
                               },
                               {
@@ -851,6 +926,7 @@
                                  "Default": "TCP",
                                  "EnvVar": "",
                                  "Category": false,
+                                 "Example": "",
                                  "SubFields": null
                               }
                            ]
@@ -864,6 +940,7 @@
                            "Default": "",
                            "EnvVar": "",
                            "Category": true,
+                           "Example": "",
                            "SubFields": [
                               {
                                  "Field": "failure_threshold",
@@ -874,6 +951,7 @@
                                  "Default": "5",
                                  "EnvVar": "",
                                  "Category": false,
+                                 "Example": "",
                                  "SubFields": null
                               },
                               {
@@ -885,6 +963,7 @@
                                  "Default": "5",
                                  "EnvVar": "",
                                  "Category": false,
+                                 "Example": "",
                                  "SubFields": null
                               },
                               {
@@ -896,6 +975,7 @@
                                  "Default": "5",
                                  "EnvVar": "",
                                  "Category": false,
+                                 "Example": "",
                                  "SubFields": null
                               }
                            ]
@@ -909,6 +989,7 @@
                            "Default": "",
                            "EnvVar": "",
                            "Category": false,
+                           "Example": "",
                            "SubFields": null
                         },
                         {
@@ -920,6 +1001,7 @@
                            "Default": "",
                            "EnvVar": "",
                            "Category": false,
+                           "Example": "",
                            "SubFields": null
                         },
                         {
@@ -931,6 +1013,7 @@
                            "Default": "",
                            "EnvVar": "",
                            "Category": false,
+                           "Example": "",
                            "SubFields": null
                         }
                      ]
@@ -944,6 +1027,7 @@
                      "Default": "",
                      "EnvVar": "",
                      "Category": false,
+                     "Example": "",
                      "SubFields": null
                   }
                ]

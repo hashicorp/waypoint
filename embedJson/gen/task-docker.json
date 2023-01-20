@@ -13,6 +13,7 @@
          "Default": "",
          "EnvVar": "",
          "Category": false,
+         "Example": "",
          "SubFields": null
       },
       {
@@ -24,6 +25,7 @@
          "Default": "",
          "EnvVar": "",
          "Category": false,
+         "Example": "",
          "SubFields": null
       },
       {
@@ -35,6 +37,7 @@
          "Default": "",
          "EnvVar": "",
          "Category": false,
+         "Example": "",
          "SubFields": null
       },
       {
@@ -46,6 +49,7 @@
          "Default": "",
          "EnvVar": "",
          "Category": false,
+         "Example": "",
          "SubFields": null
       },
       {
@@ -57,6 +61,7 @@
          "Default": "waypoint",
          "EnvVar": "",
          "Category": false,
+         "Example": "",
          "SubFields": null
       },
       {
@@ -68,6 +73,7 @@
          "Default": "",
          "EnvVar": "",
          "Category": true,
+         "Example": "",
          "SubFields": [
             {
                "Field": "cpu",
@@ -78,6 +84,7 @@
                "Default": "",
                "EnvVar": "",
                "Category": false,
+               "Example": "",
                "SubFields": null
             },
             {
@@ -89,6 +96,7 @@
                "Default": "",
                "EnvVar": "",
                "Category": false,
+               "Example": "",
                "SubFields": null
             }
          ]
@@ -102,6 +110,7 @@
          "Default": "",
          "EnvVar": "",
          "Category": false,
+         "Example": "",
          "SubFields": null
       }
    ],
@@ -115,6 +124,7 @@
          "Default": "",
          "EnvVar": "",
          "Category": false,
+         "Example": "",
          "SubFields": null
       }
    ],
@@ -129,6 +139,7 @@
          "Default": "",
          "EnvVar": "",
          "Category": false,
+         "Example": "",
          "SubFields": null
       }
    ],
