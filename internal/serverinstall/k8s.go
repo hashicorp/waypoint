@@ -967,8 +967,8 @@ func (i *K8sInstaller) InstallFlags(set *flag.Set) {
 	set.IntVar(&flag.IntVar{
 		Name:   "k8s-helm-timeout",
 		Target: &i.Config.Timeout,
-		Usage: "Time to wait for the Helm operation. It must be in seconds. " +
-			"The default is 5 minutes.",
+		Default: 300,
+		Usage: "Time to wait in seconds for the Helm operation.",
 	})
 
 	set.StringVar(&flag.StringVar{
