@@ -14,6 +14,7 @@ import (
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/jsonmessage"
 	"github.com/docker/go-connections/nat"
+
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 
 	"github.com/hashicorp/waypoint/internal/clicontext"
@@ -29,8 +30,9 @@ type DockerInstaller struct {
 }
 
 type dockerConfig struct {
-	serverImage string `hcl:"server_image,optional"`
-	odrImage    string `hcl:"odr_image,optional"`
+	serverImage      string `hcl:"server_image,optional"`
+	odrImage         string `hcl:"odr_image,optional"`
+	runnerSocketPath string `hcl:"runner_socket_path,optional"`
 }
 
 var (
@@ -629,6 +631,7 @@ func (i *DockerInstaller) InstallRunner(
 	runnerInstaller := runnerinstall.DockerRunnerInstaller{Config: runnerinstall.DockerConfig{
 		RunnerImage: i.config.serverImage,
 		Network:     "waypoint",
+		SocketPath:  i.config.runnerSocketPath,
 	}}
 	err := runnerInstaller.Install(ctx, opts)
 	if err != nil {
@@ -703,6 +706,13 @@ func (i *DockerInstaller) InstallFlags(set *flag.Set) {
 		Usage: "Docker image for the Waypoint On-Demand Runners. This will " +
 			"default to the server image with the name (not label) suffixed with '-odr'.",
 	})
+
+	set.StringVar(&flag.StringVar{
+		Name:    "docker-runner-socket-path",
+		Target:  &i.config.runnerSocketPath,
+		Usage:   "The path of the Docker socket that will be bound in runner",
+		Default: "/var/run/docker.sock",
+	})
 }
 
 func (i *DockerInstaller) UpgradeFlags(set *flag.Set) {
@@ -718,6 +728,13 @@ func (i *DockerInstaller) UpgradeFlags(set *flag.Set) {
 		Target: &i.config.odrImage,
 		Usage: "Docker image for the Waypoint On-Demand Runners. This will " +
 			"default to the server image with the name (not label) suffixed with '-odr'.",
+	})
+
+	set.StringVar(&flag.StringVar{
+		Name:    "docker-runner-socket-path",
+		Target:  &i.config.runnerSocketPath,
+		Usage:   "The path of the Docker socket that will be bound in runner",
+		Default: "/var/run/docker.sock",
 	})
 }
 
