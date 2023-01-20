@@ -1,0 +1,170 @@
+---
+layout: docs
+page_title: Using GitHub Actions to Unlock GitOps Workflows with HashiCorp Waypoint
+description: |-
+Set up your GitHub Waypoint repo with Actions to automatically deploy your app
+---
+
+# Using GitHub Actions to Unlock GitOps Workflows with HashiCorp Waypoint
+
+[GitOps](https://www.gitops.tech/#what-is-gitops) has become an increasingly popular method of shipping software. Thanks to tools like [GitHub Actions](https://github.com/features/actions), defining an automated GitOps workflow to take action based on your project’s git repository has never been easier than it is today! Whether you’re looking to automate deployments on-merge with your git repo, or are looking for a way to consciously deploy your application on an interval, GitOps deployments will give you a workflow defined through git to deliver your application.
+
+This guide will lead you through setting up GitHub Actions to run a Waypoint pipeline _on push_ to various Git branches, as well as configuring GH Actions to continuously deploy through a scheduled cron job.
+
+## Prerequisites
+
+This guide assumes that you have already set up some kind of infrastructure to run a [Waypoint Runner](/waypoint/tutorials/runners/hcp-runners-on-your-infra), HCP Waypoint access, or optionally a self-managed [Waypoint server](/waypoint/docs/server/run). We recommend either Kubernetes or [HashiCorp Nomad](/nomad) for your infrastructure.
+
+You will need an account on GitHub, as well as a Waypoint project committed to a Github repo. This is the repository we will use to write a GitHub action. If you don’t have a project yet, there are plenty of example Waypoint projects in the [examples repository](https://github.com/hashicorp/waypoint-examples) to get started with.
+
+## Setting Up Waypoint
+
+HashiCorp provides a hosted version of Waypoint that runs the server on HCP. This guide supports using both a self-managed Waypoint server as well as HCP Waypoint. The main difference is what Waypoint server address you configure in your GitHub secrets which we will discuss in the next section. Follow the docs for installing your own [self-managed Waypoint server](/waypoint/docs/server/run), this guide will not go over setting it up.
+
+If you are using [HCP Waypoint](https://cloud.hashicorp.com/products/waypoint), you’ll need to make sure you install a runner on your infrastructure so that Waypoint can run operations. On the platform where you will run your runner on your own infrastructure, you’ll want to configure your CLI context to talk to HCP Waypoint, and then install a runner into your managed infrastructure. Notice that the _waypoint runner install_ commands will change depending on what platform you are installing to.
+
+```
+waypoint context create \
+  -server-addr=api.hashicorp.cloud:443 \
+  -server-auth-token=<WAYPOINT_TOKEN> \
+  -server-require-auth=true \
+  -server-platform="hcp" \
+  -set-default \
+  hcp-yourorg-org-yourproject-project
+
+     # I’m using kubernetes, so my platform for the runner is kubernetes
+waypoint runner install \
+  -platform=kubernetes \
+  -server-addr=api.hashicorp.cloud:443 \
+  -k8s-runner-image=hashicorp/waypoint:latest
+```
+
+Take special note of WAYPOINT_TOKEN and WAYPOINT_SERVER_ADDR. We will be using those values as secrets in the next section for configuring GitHub Actions.
+
+If you already have a Waypoint CLI context configured and runners installed, you can retrieve the server address and token values from your default CLI context. Found via `waypoint context inspect`:
+
+```
+cat ~/.config/waypoint/context/_default.hcl
+
+server {
+  address          = "<WAYPOINT_SERVER_ADDR>"
+  tls              = true
+  tls_skip_verify  = true
+  address_internal = ""
+  require_auth     = true
+  auth_token       = "<WAYPOINT_SERVER_TOKEN>"
+  platform         = "kubernetes"
+}
+```
+
+# Waypoint and GitHub Actions
+
+Setting up your own GitHub Action is as easy as defining an action config in the `.github/workflows` folder of your project. Before we get to that, we’ll want to configure our git repo with a few secrets.
+
+## Configuring Your Waypoint Project For GitHub Actions
+
+To use certain secrets within a GitHub action, we’ll want to figure our GitHub project with a few secrets:
+
+- `WAYPOINT_SERVER_ADDR`: Waypoint Server Address
+- `WAYPOINT_SERVER_TOKEN`: Waypoint Server Authentication Token
+
+We will configure these secrets directly under Settings > Secrets > Actions.
+
+![GitHub Action Secrets Page](/img/use-cases/gh-action/action-secrets.png)
+
+Clicking New repository secret will bring up the window to add a new secret to use with our action. For example, our WAYPOINT_SERVER_ADDR secret:
+
+![GitHub Action setting a secret](/img/use-cases/gh-action/set-action-secret.png)
+
+Don’t forget to configure the Waypoint Authentication Token as well as another Action secret.
+
+Note: Because the Waypoint server address and token are both parameterized, that means switching from a self-managed Waypoint server to HCP Waypoint is as simple as updating these values under your GitHub settings rather than having to reconfigure your GitHub Action script.
+
+## GitHub Action Yaml
+
+Now that we’ve set up our GitHub repository to have a few secret variables, we can commit our Action config:
+
+https://github.com/briancain/waypoint-tetris/blob/52ecff3493b090f3a3c19d1ccb3ac9cbba1e60f8/.github/workflows/main.yaml
+
+```yaml
+#.github/workflows/main.yaml
+name: 'Runs a Waypoint deployment on merge'
+on:
+  # once a day, at the end of the day
+  #schedule:
+  #  - cron: "0 0 * * *"
+  push:
+    branches:
+      - main
+      - prod
+      - test
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - run: |
+          echo running on branch ${{ github.ref_name }}
+      - run: |
+          # Install the latest Waypoint CLI
+          wget -O- https://apt.releases.hashicorp.com/gpg | gpg --dearmor | sudo tee /usr/share/keyrings/hashicorp-archive-keyring.gpg
+          echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
+          sudo apt update && sudo apt install waypoint
+
+          # Create a CLI context to hook up to a Waypoint server
+          waypoint context create \
+            -server-addr=${{ secrets.WAYPOINT_SERVER_ADDR }} \
+            -server-auth-token=${{ secrets.WAYPOINT_SERVER_TOKEN }} \
+            -server-require-auth=true \
+            -server-platform="hcp" \ # change this if not HCP
+            -set-default \
+            hcp-waypoint-gh-runner
+
+      - run: |
+          # Run the “marathon” pipeline!
+          waypoint version
+          waypoint init
+          waypoint pipeline run -workspace=${{ github.ref_name }} \
+            -remote-source=ref=$GITHUB_SHA \
+            marathon
+```
+
+This config will automatically install the latest version of Waypoint from HashiCorp’s release repository. It uses the secrets we set up in GitHub via `${{ secret.SECRET_NAME }}`. Finally, for each run of a pipeline, we will run that operation in the specific workspace mapped to the git branch via `-workspace=${{ github.ref_name }}` and if ran on the non-default branch, we will grab that commit for `-remote-source=ref=$GITHUB_SHA`. You could also change this script to run `waypoint up`.
+
+## Waypoint Deployments on Push
+
+The GitHub action config above by default will run on push to these branches only:
+
+- main
+- prod
+- test
+
+That means when GitHub detects a push, the GitHub action will automatically run for those branches only. GitHub Actions has many different ways to configure how Actions run, so please read the documentation if you’d like your own action to behave differently!
+
+We recommend setting up [branch protections](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/defining-the-mergeability-of-pull-requests/about-protected-branches) as well so that deployments aren’t accidentally pushed out without passing proper GitHub branch checks.
+
+![GitHub Action Workflows](/img/use-cases/gh-action/action-workflows.png)
+
+Based on the configuration, whenever you merge a pull request or push a commit to `main`, `prod`, or `test`, the GitHub action we defined will be executed.
+
+## Deploying Your Application Continuously
+
+GitHub actions can also be configured to run on a scheduled cron. At the time of writing this, scheduled jobs on GitHub Actions will only run on the default branch of the repository. This might be useful for making the `main` branch the continuous integrated branch that deploys to your testing environment before it goes out to production.
+
+To enable this, simply comment out the `scheduled` key of our GitHub Action configuration.
+
+```yaml
+on:
+  # once a day, at the end of the day
+  schedule:
+    - cron: '0 0 * * *'
+```
+
+# Next Steps
+
+- Continuously deployments on different branches
+- https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#schedule
+- Actions can be configured to only run on certain branches, with certain `ref`s. This is considered an advanced use-case and is not covered for this tutorial.
+- GitHub Actions docs: https://docs.github.com/en/actions
+- Try HCP Waypoint: https://developer.hashicorp.com/hcp/docs/waypoint
+- Waypoint Tetris on GitHub: https://github.com/briancain/waypoint-tetris
