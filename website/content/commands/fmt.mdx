@@ -1,8 +1,8 @@
 ---
 layout: commands
-page_title: 'Commands: Fmt'
-sidebar_title: 'fmt'
-description: 'Rewrite waypoint.hcl configuration to a canonical format'
+page_title: "Commands: Fmt"
+sidebar_title: "fmt"
+description: "Rewrite waypoint.hcl configuration to a canonical format"
 ---
 
 # Waypoint Fmt
@@ -17,17 +17,18 @@ Rewrite waypoint.hcl configuration to a canonical format
 
 Usage: `waypoint fmt [options] [FILE]`
 
-Rewrite a waypoint.hcl file to a canonical format.
 
-This only works for HCL-formatted Waypoint configuration files. JSON-formatted
-files do not work and will result in an error.
+  Rewrite a waypoint.hcl file to a canonical format.
 
-If FILE is not specified, then the current directory will be searched
-for a "waypoint.hcl" file. If FILE is "-" then the content will be read
-from stdin.
+  This only works for HCL-formatted Waypoint configuration files. JSON-formatted
+  files do not work and will result in an error.
 
-This command does not validate the waypoint.hcl configuration. This will
-work for older and newer configuration formats.
+  If FILE is not specified, then the current directory will be searched
+  for a "waypoint.hcl" file. If FILE is "-" then the content will be read
+  from stdin.
+
+  This command does not validate the waypoint.hcl configuration. This will
+  work for older and newer configuration formats.
 
 #### Global Options
 

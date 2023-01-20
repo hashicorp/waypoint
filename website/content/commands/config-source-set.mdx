@@ -1,8 +1,8 @@
 ---
 layout: commands
-page_title: 'Commands: Config source-set'
-sidebar_title: 'config source-set'
-description: 'Set the configuration for a dynamic source plugin'
+page_title: "Commands: Config source-set"
+sidebar_title: "config source-set"
+description: "Set the configuration for a dynamic source plugin"
 ---
 
 # Waypoint Config source-set
@@ -17,23 +17,24 @@ Set the configuration for a dynamic source plugin
 
 Usage: `waypoint config source-set [options]`
 
-Set the configuration for a dynamic configuration source plugin.
 
-This does not add a dynamic configuration variable to your application.
-This command is for configuring the plugin that is used to fetch dynamic
-configurations globally. For example, configuring authentication information
-or server addresses and so on.
+  Set the configuration for a dynamic configuration source plugin.
 
-To use this command, you should specify a "-type" flag along with one or more
-"-config" values. Please see the documentation for the config source type
-you're configuring for details on what configuration fields are available.
+  This does not add a dynamic configuration variable to your application.
+  This command is for configuring the plugin that is used to fetch dynamic
+  configurations globally. For example, configuring authentication information
+  or server addresses and so on.
 
-This command overrides all configuration already set for a configuration
-source plugin. When modifying an existing configuration, all desired
-"-config" flags will need to be set each time the command is ran.
+  To use this command, you should specify a "-type" flag along with one or more
+  "-config" values. Please see the documentation for the config source type
+  you're configuring for details on what configuration fields are available.
 
-Configuration for this command is global. The "-app", "-project", and
-"-workspace" flags are ignored on this command.
+  This command overrides all configuration already set for a configuration
+  source plugin. When modifying an existing configuration, all desired
+  "-config" flags will need to be set each time the command is ran.
+
+  Configuration for this command is global. The "-app", "-project", and
+  "-workspace" flags are ignored on this command.
 
 #### Global Options
 

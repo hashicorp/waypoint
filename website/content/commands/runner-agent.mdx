@@ -1,8 +1,8 @@
 ---
 layout: commands
-page_title: 'Commands: Runner agent'
-sidebar_title: 'runner agent'
-description: 'Run a runner for executing remote operations.'
+page_title: "Commands: Runner agent"
+sidebar_title: "runner agent"
+description: "Run a runner for executing remote operations."
 ---
 
 # Waypoint Runner agent
@@ -17,27 +17,28 @@ Run a runner for executing remote operations.
 
 Usage: `waypoint runner agent [options]`
 
-Run a remote runner for executing remote operations.
 
-Runners are named or identified via the ID and the label set. The ID
-can be manually specified or automatically generated. The label set is
-specified using "-label" flags.
+  Run a remote runner for executing remote operations.
 
-A runner can be registered with the server in two ways. First, a
-runner token can be created with "waypoint runner token" and used with
-this command (using the WAYPOINT_SERVER_TOKEN environment variable,
-"waypoint context", etc.). This will allow the runner to begin accepting
-jobs immediately since it is preauthorized.
+  Runners are named or identified via the ID and the label set. The ID
+  can be manually specified or automatically generated. The label set is
+  specified using "-label" flags.
 
-The second approach is to specify only the cookie value (acquired using
-the "waypoint server cookie" command) and the server address. This will
-trigger a process that puts the runner in a pending state until a human
-manually verifies it. This is useful for easily installing runners.
+  A runner can be registered with the server in two ways. First, a
+  runner token can be created with "waypoint runner token" and used with
+  this command (using the WAYPOINT_SERVER_TOKEN environment variable,
+  "waypoint context", etc.). This will allow the runner to begin accepting
+  jobs immediately since it is preauthorized.
 
-The "-state-dir" flag is optional, but important. This flag allows runners
-to restart gracefully without regenerating a new ID or losing a rotated
-authentication token. Runners can be run without a state directory but it is
-not generally recommended.
+  The second approach is to specify only the cookie value (acquired using
+  the "waypoint server cookie" command) and the server address. This will
+  trigger a process that puts the runner in a pending state until a human
+  manually verifies it. This is useful for easily installing runners.
+
+  The "-state-dir" flag is optional, but important. This flag allows runners
+  to restart gracefully without regenerating a new ID or losing a rotated
+  authentication token. Runners can be run without a state directory but it is
+  not generally recommended.
 
 #### Global Options
 
@@ -54,6 +55,6 @@ not generally recommended.
 - `-cookie=<string>` - The cookie value of the server to validate API requests. This is required for runner adoption. If you do not already have a runner token, this must be set.
 - `-state-dir=<string>` - Directory to store state between restarts. This is optional. If this is set, then a runner can restart without re-triggering the adoption process.
 - `-label=<key=value>` - Labels to set for this runner in 'k=v' format. Can be specified multiple times.
-- `-concurrency=<int>` - The number of concurrent jobs that can be running at one time. This has no effect if `-odr` is set. The default value applied will be (total number of logical cpus available \* 3). A value of less than 1 will default to 1.
+- `-concurrency=<int>` - The number of concurrent jobs that can be running at one time. This has no effect if `-odr` is set. The default value applied will be (total number of logical cpus available * 3). A value of less than 1 will default to 1.
 
 @include "commands/runner-agent_more.mdx"

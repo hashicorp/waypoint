@@ -1,8 +1,8 @@
 ---
 layout: commands
-page_title: 'Commands: Runner reject'
-sidebar_title: 'runner reject'
-description: 'Reject a pending runner'
+page_title: "Commands: Runner reject"
+sidebar_title: "runner reject"
+description: "Reject a pending runner"
 ---
 
 # Waypoint Runner reject
@@ -17,16 +17,17 @@ Reject a pending runner
 
 Usage: `waypoint runner reject [options] ID`
 
-Reject a pending or adopted runner with the given ID.
 
-The ID can be retrieved via the "waypoint runner list" command or
-the API. This ID must be the ID of a currently registered runner. The
-runner can be in any state: new, preadopted, adopted, or rejected. This
-will move the runner to the rejected state.
+  Reject a pending or adopted runner with the given ID.
 
-A rejected runner will never be sent any configuration or jobs. Runners
-that were previously adopted will continue their currently running jobs
-and then will not receive any further jobs.
+  The ID can be retrieved via the "waypoint runner list" command or
+  the API. This ID must be the ID of a currently registered runner. The
+  runner can be in any state: new, preadopted, adopted, or rejected. This
+  will move the runner to the rejected state.
+
+  A rejected runner will never be sent any configuration or jobs. Runners
+  that were previously adopted will continue their currently running jobs
+  and then will not receive any further jobs.
 
 #### Global Options
 

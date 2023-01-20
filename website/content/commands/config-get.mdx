@@ -1,8 +1,8 @@
 ---
 layout: commands
-page_title: 'Commands: Config get'
-sidebar_title: 'config get'
-description: 'Get config variables.'
+page_title: "Commands: Config get"
+sidebar_title: "config get"
+description: "Get config variables."
 ---
 
 # Waypoint Config get
@@ -17,28 +17,29 @@ Get config variables.
 
 Usage: `waypoint config get [prefix]`
 
-Retrieve and print all config variables previously configured that have
-the given prefix. If no prefix is given, all variables are returned.
 
-The output of this command depends on whether an exact application is
-specified or not. If no app is specified with "-app", this will list
-all POSSIBLE config vars that could be set for applications within the project.
-It is the list of "possible" variables because some are dependent on the
-application name, workspace, or labels.
+  Retrieve and print all config variables previously configured that have
+  the given prefix. If no prefix is given, all variables are returned.
 
-By specifying the "-app" flag you can look at config variables that
-would be resolved for a specific application. This will never show duplicate
-variables and will show the full resolved list of variables that will be
-set for a specific application. This will default to a workspace of "default,"
-the current project, and empty labels.
+  The output of this command depends on whether an exact application is
+  specified or not. If no app is specified with "-app", this will list
+  all POSSIBLE config vars that could be set for applications within the project.
+  It is the list of "possible" variables because some are dependent on the
+  application name, workspace, or labels.
 
-To further simulate what config variables an application would receive,
-you may specify the "-workspace" flag or the "-label" flag (repeatedly)
-to set the label context.
+  By specifying the "-app" flag you can look at config variables that
+  would be resolved for a specific application. This will never show duplicate
+  variables and will show the full resolved list of variables that will be
+  set for a specific application. This will default to a workspace of "default,"
+  the current project, and empty labels.
 
-The "-runner" flag can be specified to show the list of variables that
-would be set for a runner. All of the above filtering applies to runners,
-as well.
+  To further simulate what config variables an application would receive,
+  you may specify the "-workspace" flag or the "-label" flag (repeatedly)
+  to set the label context.
+
+  The "-runner" flag can be specified to show the list of variables that
+  would be set for a runner. All of the above filtering applies to runners,
+  as well.
 
 #### Global Options
 

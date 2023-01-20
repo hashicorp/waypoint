@@ -106,7 +106,7 @@ Username of Docker registry account.
 The authentication information to log into the docker repository.
 
 The format of this is base64-encoded JSON. The structure is the [`AuthConfig`](https://pkg.go.dev/github.com/docker/cli/cli/config/types#AuthConfig) structure used by Docker.
-WARNING: be very careful to not leak the authentication information by hardcoding it here. Use a helper function like `file()` to read the information from a file not stored in VCS.
+  WARNING: be very careful to not leak the authentication information by hardcoding it here. Use a helper function like `file()` to read the information from a file not stored in VCS.
 
 - Type: **string**
 - **Optional**
