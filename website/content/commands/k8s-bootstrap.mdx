@@ -1,8 +1,8 @@
 ---
 layout: commands
-page_title: "Commands: K8s bootstrap"
-sidebar_title: "k8s bootstrap"
-description: "Post-Helm-install bootstrapping"
+page_title: 'Commands: K8s bootstrap'
+sidebar_title: 'k8s bootstrap'
+description: 'Post-Helm-install bootstrapping'
 ---
 
 # Waypoint K8s bootstrap
@@ -17,26 +17,25 @@ Post-Helm-install bootstrapping
 
 Usage: `waypoint k8s bootstrap [options]`
 
+Bootstrap a Waypoint installation from the Waypoint Helm chart.
+This is an internal command and not expected to be manually executed.
+This command only works with in-cluster Kubernetes authentication and
+will not work with out-of-cluster kubectl configuration.
 
-  Bootstrap a Waypoint installation from the Waypoint Helm chart.
-  This is an internal command and not expected to be manually executed.
-  This command only works with in-cluster Kubernetes authentication and
-  will not work with out-of-cluster kubectl configuration.
+This command will do a number of things:
 
-  This command will do a number of things:
+1. Equivalent of "waypoint server bootstrap"
+2. Write a bootstrap token to the given Kubernetes secret
+3. Create a token for a static runner and write it to the configured
+   Kubernetes secret.
+4. Configure Kubernetes on-demand runners.
 
-  1. Equivalent of "waypoint server bootstrap"
-  2. Write a bootstrap token to the given Kubernetes secret
-  3. Create a token for a static runner and write it to the configured
-     Kubernetes secret.
-  4. Configure Kubernetes on-demand runners.
-
-  This command will only run if the server hasn't already been bootstrapped.
-  If the server is bootstrapped, this will not run again. This doesn't handle
-  partial failures well: if the server bootstrap succeeds but writing the
-  secret fails, then the Waypoint installation should be fully uninstalled
-  and then reinstalled. This is only use for fresh installations so there
-  should be no concern of data loss in the event of a bootstrap failure.
+This command will only run if the server hasn't already been bootstrapped.
+If the server is bootstrapped, this will not run again. This doesn't handle
+partial failures well: if the server bootstrap succeeds but writing the
+secret fails, then the Waypoint installation should be fully uninstalled
+and then reinstalled. This is only use for fresh installations so there
+should be no concern of data loss in the event of a bootstrap failure.
 
 #### Global Options
 

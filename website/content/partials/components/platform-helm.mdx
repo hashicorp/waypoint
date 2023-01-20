@@ -9,11 +9,11 @@ Waypoint [entrypoint functionality](/waypoint/docs/entrypoint#functionality) suc
 as logs, exec, app configuration, and more require two properties to be true:
 
 1. The running image must already have the Waypoint entrypoint installed
-  and configured as the entrypoint. This should happen in the build stage.
+   and configured as the entrypoint. This should happen in the build stage.
 
 2. Proper environment variables must be set so the entrypoint knows how
-  to communicate to the Waypoint server. **This step happens in this
-  deployment stage.**
+   to communicate to the Waypoint server. **This step happens in this
+   deployment stage.**
 
 **Step 2 does not happen automatically.** You must manually set the entrypoint
 environment variables using the [templating feature](/waypoint/docs/waypoint-hcl/functions/template).

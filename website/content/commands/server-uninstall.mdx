@@ -1,8 +1,8 @@
 ---
 layout: commands
-page_title: "Commands: Server uninstall"
-sidebar_title: "server uninstall"
-description: "Uninstall the Waypoint server"
+page_title: 'Commands: Server uninstall'
+sidebar_title: 'server uninstall'
+description: 'Uninstall the Waypoint server'
 ---
 
 # Waypoint Server uninstall
@@ -17,24 +17,23 @@ Uninstall the Waypoint server
 
 Usage: `waypoint server uninstall [options]`
 
+Uninstall the Waypoint server. This command is not intended to uninstall a
+server that was manually run with the 'waypoint server run' CLI, but with
+a Waypoint server that was installed via 'waypoint server install'.
 
-  Uninstall the Waypoint server. This command is not intended to uninstall a
-  server that was manually run with the 'waypoint server run' CLI, but with
-  a Waypoint server that was installed via 'waypoint server install'.
+The platform can be specified as kubernetes, nomad, ecs, or docker. If not
+specified, the CLI command will attempt to retrieve the platform defined in
+the server context.
 
-  The platform can be specified as kubernetes, nomad, ecs, or docker. If not
-  specified, the CLI command will attempt to retrieve the platform defined in
-  the server context.
+By default, this command deletes the default server's context and creates
+a server snapshot.
 
-  By default, this command deletes the default server's context and creates 
-  a server snapshot.
+This command does not destroy Waypoint resources, such as deployments and
+releases. Clear all workspaces prior to uninstall to prevent hanging resources.
 
-  This command does not destroy Waypoint resources, such as deployments and
-  releases. Clear all workspaces prior to uninstall to prevent hanging resources.
-
-  If a runner was installed via "waypoint install", the runner will also be
-  uninstalled. Manually installed runners (outside of the "waypoint install"
-  command) will not be affected.
+If a runner was installed via "waypoint install", the runner will also be
+uninstalled. Manually installed runners (outside of the "waypoint install"
+command) will not be affected.
 
 #### Global Options
 

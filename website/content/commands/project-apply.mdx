@@ -1,8 +1,8 @@
 ---
 layout: commands
-page_title: "Commands: Project apply"
-sidebar_title: "project apply"
-description: "Create or update a project."
+page_title: 'Commands: Project apply'
+sidebar_title: 'project apply'
+description: 'Create or update a project.'
 ---
 
 # Waypoint Project apply
@@ -17,19 +17,18 @@ Create or update a project.
 
 Usage: `waypoint project apply [options] NAME`
 
+Create or update a project.
 
-  Create or update a project.
+This will create a new project with the given options. If a project with
+the same name already exists, this will update the existing project using
+the fields that are set.
 
-  This will create a new project with the given options. If a project with
-  the same name already exists, this will update the existing project using
-  the fields that are set.
+This command should be used to create a new project pointing to a VCS
+repo. If you have a "waypoint.hcl" file and a local repository, you can
+also use "waypoint init" in the directory of the project.
 
-  This command should be used to create a new project pointing to a VCS
-  repo. If you have a "waypoint.hcl" file and a local repository, you can
-  also use "waypoint init" in the directory of the project.
-
-  You may create a project from a waypoint.hcl file and optionally overwrite
-  some fields using flags by specifying the -waypoint-hcl flag.
+You may create a project from a waypoint.hcl file and optionally overwrite
+some fields using flags by specifying the -waypoint-hcl flag.
 
 #### Global Options
 

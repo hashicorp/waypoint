@@ -1,8 +1,8 @@
 ---
 layout: commands
-page_title: "Commands: Server run"
-sidebar_title: "server run"
-description: "Manually run the builtin server"
+page_title: 'Commands: Server run'
+sidebar_title: 'server run'
+description: 'Manually run the builtin server'
 ---
 
 # Waypoint Server run
@@ -17,12 +17,11 @@ Manually run the builtin server
 
 Usage: `waypoint server run [options]`
 
+Run the builtin server.
 
-  Run the builtin server.
-
-  The easier way to run a server is to use the "waypoint install" command.
-  This command is for people who are manually running the server in any
-  environment.
+The easier way to run a server is to use the "waypoint install" command.
+This command is for people who are manually running the server in any
+environment.
 
 #### Global Options
 
@@ -47,9 +46,9 @@ Usage: `waypoint server run [options]`
 - `-url-control-token=<string>` - Token for the Waypoint URL server control API.
 - `-url-auto-app-hostname` - Whether apps automatically get a hostname on deploy. The default is true.
 - `-advertise-addr=<string>` - Address to advertise for the server. This is used by the entrypoints
-binaries to communicate back to the server. If this is blank, then
-the entrypoints will not communicate to the server. Features such as
-logs, exec, etc. will not work.
+  binaries to communicate back to the server. If this is blank, then
+  the entrypoints will not communicate to the server. Features such as
+  logs, exec, etc. will not work.
 - `-advertise-tls` - If true, the advertised address should be connected to with TLS. The default is true.
 - `-advertise-tls-skip-verify` - Do not verify the TLS certificate presented by the server. The default is false.
 - `-accept-tos` - Pass to accept the Terms of Service and Privacy Policy to use the Waypoint URL Service. This is required if the URL service is enabled and you're using the HashiCorp-provided URL service rather than self-hosting. See the privacy policy at https://hashicorp.com/privacy and the ToS at https://waypointproject.io/terms. The default is false.

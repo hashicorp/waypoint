@@ -1,8 +1,8 @@
 ---
 layout: commands
-page_title: "Commands: Install"
-sidebar_title: "install"
-description: "Install the Waypoint server to Kubernetes, Nomad, ECS, or Docker"
+page_title: 'Commands: Install'
+sidebar_title: 'install'
+description: 'Install the Waypoint server to Kubernetes, Nomad, ECS, or Docker'
 ---
 
 # Waypoint Install
@@ -19,29 +19,28 @@ Usage: `waypoint server install [options]`
 
 Alias: `waypoint install`
 
+Installs a Waypoint server to an existing platform. The platform should be
+specified as kubernetes, nomad, ecs, or docker.
 
-  Installs a Waypoint server to an existing platform. The platform should be
-  specified as kubernetes, nomad, ecs, or docker.
+This will also install a single Waypoint runner by default. This enables
+remote operations out of the box, such as polling a Git repository. This can
+be disabled by specifying "-runner=false".
 
-  This will also install a single Waypoint runner by default. This enables
-  remote operations out of the box, such as polling a Git repository. This can
-  be disabled by specifying "-runner=false".
+By default, this will also automatically create a new default CLI context
+(see "waypoint context") so the CLI will be configured to use the newly
+installed server.
 
-  By default, this will also automatically create a new default CLI context
-  (see "waypoint context") so the CLI will be configured to use the newly
-  installed server.
+This command will require you to accept the Waypoint Terms of Service
+and Privacy Policy for the Waypoint URL service by specifying the "-accept-tos"
+flag. This only applies to the Waypoint URL service. You may disable the
+URL service by manually running the server. If you disable the URL service,
+you do not need to accept any terms.
 
-  This command will require you to accept the Waypoint Terms of Service
-  and Privacy Policy for the Waypoint URL service by specifying the "-accept-tos"
-  flag. This only applies to the Waypoint URL service. You may disable the
-  URL service by manually running the server. If you disable the URL service,
-  you do not need to accept any terms.
-
-  To further customize the server installation, you may pass advanced flag options
-  specified in the documentation for the 'server run' command. To set these values,
-  include a '--' after the full argument list for 'install', followed by these
-  advanced flag options. As an example, to set the server log level to trace
-  and disable the UI, the command would be:
+To further customize the server installation, you may pass advanced flag options
+specified in the documentation for the 'server run' command. To set these values,
+include a '--' after the full argument list for 'install', followed by these
+advanced flag options. As an example, to set the server log level to trace
+and disable the UI, the command would be:
 
     waypoint install -platform=docker -accept-tos -- -vvv -disable-ui
 
@@ -86,8 +85,6 @@ Alias: `waypoint install`
 - `-k8s-annotate-service=<key=value>` - Annotations for the Service generated.
 - `-k8s-context=<string>` - The Kubernetes context to install the Waypoint server to. If left unset, Waypoint will use the current Kubernetes context.
 - `-k8s-helm-version=<string>` - The version of the Helm chart to use for the Waypoint runner install. The required version number format is: 'vX.Y.Z'.
-- `-k8s-helm-timeout=<int>` - Time to wait in seconds for the Helm operation. The default is 300.
-- `-k8s-helm-atomic` - Make the Helm operation atomic. The default is false.
 - `-k8s-cpu-request=<string>` - Configures the requested CPU amount for the Waypoint server in Kubernetes. The default is 0.
 - `-k8s-mem-request=<string>` - Configures the requested memory amount for the Waypoint server in Kubernetes. The default is 0.
 - `-k8s-cpu-limit=<string>` - Configures the CPU limit for the Waypoint server in Kubernetes. The default is 0.

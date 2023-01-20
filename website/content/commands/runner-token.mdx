@@ -1,8 +1,8 @@
 ---
 layout: commands
-page_title: "Commands: Runner token"
-sidebar_title: "runner token"
-description: "Request a new token to run a runner"
+page_title: 'Commands: Runner token'
+sidebar_title: 'runner token'
+description: 'Request a new token to run a runner'
 ---
 
 # Waypoint Runner token
@@ -17,16 +17,15 @@ Request a new token to run a runner
 
 Usage: `waypoint runner token [options]`
 
+Generate a new runner token used for runners.
 
-  Generate a new runner token used for runners.
+This generates a new token that can be used for "waypoint runner agent".
+Generating a token in advance enables the "pre-adoption" mode where a runner
+avoids the manual adoption process and begins accepting work immediately.
 
-  This generates a new token that can be used for "waypoint runner agent".
-  Generating a token in advance enables the "pre-adoption" mode where a runner
-  avoids the manual adoption process and begins accepting work immediately.
-
-  While this makes it possible to do things such as automate runners all the
-  way to running, it is generally not recommended since it requires a higher
-  level of security to transfer a token around.
+While this makes it possible to do things such as automate runners all the
+way to running, it is generally not recommended since it requires a higher
+level of security to transfer a token around.
 
 #### Global Options
 

@@ -1,8 +1,8 @@
 ---
 layout: commands
-page_title: "Commands: Runner adopt"
-sidebar_title: "runner adopt"
-description: "Adopt a pending runner"
+page_title: 'Commands: Runner adopt'
+sidebar_title: 'runner adopt'
+description: 'Adopt a pending runner'
 ---
 
 # Waypoint Runner adopt
@@ -17,17 +17,16 @@ Adopt a pending runner
 
 Usage: `waypoint runner adopt [options] ID`
 
+Adopt a pending runner with the given ID.
 
-  Adopt a pending runner with the given ID.
+The ID can be retrieved via the "waypoint runner list" command or
+the API. This ID must be the ID of a currently registered runner. The
+runner can be in any state: new, preadopted, adopted, or rejected. This
+will move the runner to the adopted state.
 
-  The ID can be retrieved via the "waypoint runner list" command or
-  the API. This ID must be the ID of a currently registered runner. The
-  runner can be in any state: new, preadopted, adopted, or rejected. This
-  will move the runner to the adopted state.
-
-  Once a runner is adopted, that runner ID will remain adopted. Runners may
-  restart and will accept jobs immediately, so long as they continue using
-  the token they received during the adoption process.
+Once a runner is adopted, that runner ID will remain adopted. Runners may
+restart and will accept jobs immediately, so long as they continue using
+the token they received during the adoption process.
 
 #### Global Options
 

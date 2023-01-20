@@ -1,8 +1,8 @@
 ---
 layout: commands
-page_title: "Commands: User invite"
-sidebar_title: "user invite"
-description: "Invite a user to join the Waypoint server"
+page_title: 'Commands: User invite'
+sidebar_title: 'user invite'
+description: 'Invite a user to join the Waypoint server'
 ---
 
 # Waypoint User invite
@@ -17,16 +17,15 @@ Invite a user to join the Waypoint server
 
 Usage: `waypoint user invite [options]`
 
+Generate an invite token that can be used to log in.
 
-  Generate an invite token that can be used to log in.
+You must be logged in already to generate an invite token. If you need to
+log in, use the "waypoint login" command.
 
-  You must be logged in already to generate an invite token. If you need to
-  log in, use the "waypoint login" command.
-
-  This generates a new invite token. An invite token can be exchanged for
-  a login token. If your Waypoint server has OIDC (non-token) auth enabled,
-  it is recommended to instead invite users using your UI URL or directly
-  via "waypoint login".
+This generates a new invite token. An invite token can be exchanged for
+a login token. If your Waypoint server has OIDC (non-token) auth enabled,
+it is recommended to instead invite users using your UI URL or directly
+via "waypoint login".
 
 #### Global Options
 

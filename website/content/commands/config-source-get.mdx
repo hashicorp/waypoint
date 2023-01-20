@@ -1,8 +1,8 @@
 ---
 layout: commands
-page_title: "Commands: Config source-get"
-sidebar_title: "config source-get"
-description: "Get the configuration for a dynamic source plugin"
+page_title: 'Commands: Config source-get'
+sidebar_title: 'config source-get'
+description: 'Get the configuration for a dynamic source plugin'
 ---
 
 # Waypoint Config source-get
@@ -17,17 +17,16 @@ Get the configuration for a dynamic source plugin
 
 Usage: `waypoint config source-get [options]`
 
+Get the configuration for a dynamic configuration source plugin.
 
-  Get the configuration for a dynamic configuration source plugin.
+This does not list the dynamic configuration variables for an application.
+This command is for configuring the plugin that is used to fetch dynamic
+configurations globally for the server.
 
-  This does not list the dynamic configuration variables for an application.
-  This command is for configuring the plugin that is used to fetch dynamic
-  configurations globally for the server.
+To use this command, you must specify a "-type" flag.
 
-  To use this command, you must specify a "-type" flag.
-
-  Configuration for this command is global. The "-app", "-project", and
-  "-workspace" flags are ignored on this command.
+Configuration for this command is global. The "-app", "-project", and
+"-workspace" flags are ignored on this command.
 
 #### Global Options
 

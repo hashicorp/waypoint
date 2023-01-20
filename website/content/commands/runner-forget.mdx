@@ -1,8 +1,8 @@
 ---
 layout: commands
-page_title: "Commands: Runner forget"
-sidebar_title: "runner forget"
-description: "Forget a previously registered runner"
+page_title: 'Commands: Runner forget'
+sidebar_title: 'runner forget'
+description: 'Forget a previously registered runner'
 ---
 
 # Waypoint Runner forget
@@ -17,13 +17,12 @@ Forget a previously registered runner
 
 Usage: `waypoint runner forget [options] ID`
 
+Forget a previously registered runner.
 
-  Forget a previously registered runner.
-
-  This will delete any records of a previously registered runner. If the
-  runner is currently running, it will begin to error on the next job request.
-  On subsequent registrations, the Waypoint server behaves as if it has never
-  seen this runner before and triggers the full adoption process again.
+This will delete any records of a previously registered runner. If the
+runner is currently running, it will begin to error on the next job request.
+On subsequent registrations, the Waypoint server behaves as if it has never
+seen this runner before and triggers the full adoption process again.
 
 #### Global Options
 

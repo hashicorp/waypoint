@@ -1,8 +1,8 @@
 ---
 layout: commands
-page_title: "Commands: Up"
-sidebar_title: "up"
-description: "Perform the build, deploy, and release steps"
+page_title: 'Commands: Up'
+sidebar_title: 'up'
+description: 'Perform the build, deploy, and release steps'
 ---
 
 # Waypoint Up
@@ -17,8 +17,7 @@ Perform the build, deploy, and release steps
 
 Usage: `waypoint up [options]`
 
-
-  Perform the build, deploy, and release steps.
+Perform the build, deploy, and release steps.
 
 #### Global Options
 
@@ -30,12 +29,12 @@ Usage: `waypoint up [options]`
 #### Operation Options
 
 - `-label=<key=value>` - Labels to set for this operation. Can be specified multiple times.
-- `-local` - True to use a local runner to execute the operation, false to use a remote runner. 
-If unset, Waypoint will automatically determine where the operation will occur, 
-defaulting to remote if possible.
+- `-local` - True to use a local runner to execute the operation, false to use a remote runner.
+  If unset, Waypoint will automatically determine where the operation will occur,
+  defaulting to remote if possible.
 - `-remote-source=<key=value>` - Override configurations for how remote runners source data. This is specified to the data source type being used in your configuration. This is used for example to set a specific Git ref to run against.
 - `-var=<key=value>` - Variable value to set for this operation. Can be specified multiple times.
-- `-var-file=<string>` - HCL or JSON file containing variable values to set for this operation. If any "*.auto.wpvars" or "*.auto.wpvars.json" files are present, they will be automatically loaded.
+- `-var-file=<string>` - HCL or JSON file containing variable values to set for this operation. If any "_.auto.wpvars" or "_.auto.wpvars.json" files are present, they will be automatically loaded.
 
 #### Command Options
 

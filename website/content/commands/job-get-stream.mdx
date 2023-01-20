@@ -1,8 +1,8 @@
 ---
 layout: commands
-page_title: "Commands: Job get-stream"
-sidebar_title: "job get-stream"
-description: "Attach a local CLI to a job stream by id"
+page_title: 'Commands: Job get-stream'
+sidebar_title: 'job get-stream'
+description: 'Attach a local CLI to a job stream by id'
 ---
 
 # Waypoint Job get-stream
@@ -17,8 +17,7 @@ Attach a local CLI to a job stream by id
 
 Usage: `waypoint job get-stream [options] <job-id>`
 
-
-  Connects the local CLI to an active job stream.
+Connects the local CLI to an active job stream.
 
 #### Global Options
 
@@ -30,11 +29,11 @@ Usage: `waypoint job get-stream [options] <job-id>`
 #### Operation Options
 
 - `-label=<key=value>` - Labels to set for this operation. Can be specified multiple times.
-- `-local` - True to use a local runner to execute the operation, false to use a remote runner. 
-If unset, Waypoint will automatically determine where the operation will occur, 
-defaulting to remote if possible.
+- `-local` - True to use a local runner to execute the operation, false to use a remote runner.
+  If unset, Waypoint will automatically determine where the operation will occur,
+  defaulting to remote if possible.
 - `-remote-source=<key=value>` - Override configurations for how remote runners source data. This is specified to the data source type being used in your configuration. This is used for example to set a specific Git ref to run against.
 - `-var=<key=value>` - Variable value to set for this operation. Can be specified multiple times.
-- `-var-file=<string>` - HCL or JSON file containing variable values to set for this operation. If any "*.auto.wpvars" or "*.auto.wpvars.json" files are present, they will be automatically loaded.
+- `-var-file=<string>` - HCL or JSON file containing variable values to set for this operation. If any "_.auto.wpvars" or "_.auto.wpvars.json" files are present, they will be automatically loaded.
 
 @include "commands/job-get-stream_more.mdx"

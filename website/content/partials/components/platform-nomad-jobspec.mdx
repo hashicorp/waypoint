@@ -17,7 +17,7 @@ variables such as `artifact.image` to dynamically configure the
 Docker image within the Nomad job specification.
 
 -> **Note:** If using [Nomad interpolation](/nomad/docs/runtime/interpolation) in your jobspec file,
-and the `templatefile` function in your waypoint.hcl file, any interpolated values must be escaped with a second 
+and the `templatefile` function in your waypoint.hcl file, any interpolated values must be escaped with a second
 `$`. For example: `$${meta.metadata}` instead of `${meta.metadata}`.
 
 ### Entrypoint Functionality
@@ -26,18 +26,18 @@ Waypoint [entrypoint functionality](/waypoint/docs/entrypoint#functionality) suc
 as logs, exec, app configuration, and more require two properties to be true:
 
 1. The running image must already have the Waypoint entrypoint installed
-  and configured as the entrypoint. This should happen in the build stage.
+   and configured as the entrypoint. This should happen in the build stage.
 
 2. Proper environment variables must be set so the entrypoint knows how
-  to communicate to the Waypoint server. **This step happens in this
-  deployment stage.**
+   to communicate to the Waypoint server. **This step happens in this
+   deployment stage.**
 
 **Step 2 does not happen automatically.** You must manually set the entrypoint
 environment variables using the [templating feature](/waypoint/docs/waypoint-hcl/functions/template).
 One of the examples below shows the entrypoint environment variables being
 injected.
 
--> **Note:** The Waypoint entrypoint and the [Nomad entrypoint functionality](/nomad/docs/drivers/docker#entrypoint) 
+-> **Note:** The Waypoint entrypoint and the [Nomad entrypoint functionality](/nomad/docs/drivers/docker#entrypoint)
 cannot be used simultaneously. In order to use the features of the Waypoint entrypoint, the Nomad entrypoint must not be used in your jobspec.
 
 ### URL Service
@@ -101,7 +101,6 @@ The Consul ACL token used to register services with the Nomad job.
 
 Uses the runner config environment variable CONSUL_HTTP_TOKEN.
 
-
 - Environment Variable: **CONSUL_HTTP_TOKEN**
 
 #### jobspec
@@ -115,7 +114,6 @@ Path to a Nomad job specification file.
 The Vault token used to deploy the Nomad job with a token having specific Vault policies attached.
 
 Uses the runner config environment variable VAULT_TOKEN.
-
 
 - Environment Variable: **VAULT_TOKEN**
 

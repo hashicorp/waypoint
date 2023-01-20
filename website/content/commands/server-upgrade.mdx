@@ -1,8 +1,8 @@
 ---
 layout: commands
-page_title: "Commands: Server upgrade"
-sidebar_title: "server upgrade"
-description: "Upgrades Waypoint server in the current context to the latest version"
+page_title: 'Commands: Server upgrade'
+sidebar_title: 'server upgrade'
+description: 'Upgrades Waypoint server in the current context to the latest version'
 ---
 
 # Waypoint Server upgrade
@@ -17,15 +17,14 @@ Upgrades Waypoint server in the current context to the latest version
 
 Usage: `waypoint server upgrade [options]`
 
+Upgrade Waypoint server in the current context to the latest version or the
+server image version specified. By default, Waypoint will upgrade to server
+version "hashicorp/waypoint:latest". Before upgrading, a snapshot of the
+server will be taken in case of any upgrade failures.
 
-  Upgrade Waypoint server in the current context to the latest version or the
-  server image version specified. By default, Waypoint will upgrade to server
-  version "hashicorp/waypoint:latest". Before upgrading, a snapshot of the
-  server will be taken in case of any upgrade failures.
-
-  If a runner was installed via "waypoint install" then that runner will also
-  be upgraded to the latest version after the server is upgraded. Any other
-  manually installed runners will not be automatically upgraded.
+If a runner was installed via "waypoint install" then that runner will also
+be upgraded to the latest version after the server is upgraded. Any other
+manually installed runners will not be automatically upgraded.
 
 #### Global Options
 
@@ -63,8 +62,6 @@ Usage: `waypoint server upgrade [options]`
 
 #### kubernetes Options
 
-- `-k8s-helm-timeout=<int>` - Time to wait in seconds for the Helm operation. The default is 300.
-- `-k8s-helm-atomic` - Make the Helm operation atomic. The default is false.
 - `-k8s-advertise-internal` - Advertise the internal service address rather than the external. This is useful if all your deployments will be able to access the private service address. This will default to false but will be automatically set to true if the external host is detected to be localhost. The default is false.
 - `-k8s-context=<string>` - The Kubernetes context to upgrade the Waypoint server to. If left unset, Waypoint will use the current Kubernetes context.
 - `-k8s-namespace=<string>` - Namespace to install the Waypoint server into for Kubernetes. The default is default.

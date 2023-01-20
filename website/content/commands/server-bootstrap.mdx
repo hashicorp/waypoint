@@ -1,8 +1,8 @@
 ---
 layout: commands
-page_title: "Commands: Server bootstrap"
-sidebar_title: "server bootstrap"
-description: "Bootstrap the server and retrieve the initial auth token"
+page_title: 'Commands: Server bootstrap'
+sidebar_title: 'server bootstrap'
+description: 'Bootstrap the server and retrieve the initial auth token'
 ---
 
 # Waypoint Server bootstrap
@@ -17,21 +17,20 @@ Bootstrap the server and retrieve the initial auth token
 
 Usage: `waypoint server bootstrap [options]`
 
+Bootstrap a new server and retrieve the initial auth token.
 
-  Bootstrap a new server and retrieve the initial auth token.
+When a server is started for the first time against an empty database,
+it is able to be bootstrapped. The bootstrap process retrieves the initial
+auth token for the server. After the auth token is retrieved, it can never
+be bootstrapped again.
 
-  When a server is started for the first time against an empty database,
-  it is able to be bootstrapped. The bootstrap process retrieves the initial
-  auth token for the server. After the auth token is retrieved, it can never
-  be bootstrapped again.
+This command is only required for manually run servers. For servers
+installed with "waypoint install", the bootstrap is done automatically
+during the install process.
 
-  This command is only required for manually run servers. For servers
-  installed with "waypoint install", the bootstrap is done automatically
-  during the install process.
-
-  The easiest way to run this command against a new server is by using
-  flags to specify server connection information. This command will setup
-  a CLI context by default.
+The easiest way to run this command against a new server is by using
+flags to specify server connection information. This command will setup
+a CLI context by default.
 
 #### Global Options
 
