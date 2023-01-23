@@ -1,0 +1,3 @@
+```release-note:bug
+cli: Show full command flags when displaying help text for `waypoint runner inspect`.
+```
