@@ -144,5 +144,5 @@ Usage: waypoint runner inspect <id>
 
   Show detailed information about a runner.
 
-`)
+` + c.Flags().Help())
 }
