@@ -1,6 +1,6 @@
 integration {
   name        = "Azure Container Instance"
-  description = "TODO"
+  description = "The Azure ACI plugin deploys a container to Azure Container Instances."
   identifier  = "waypoint/azure-container-instance"
   components  = ["platform"]
   flags       = ["builtin"]

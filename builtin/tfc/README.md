@@ -1,3 +1,7 @@
-## Getting Started
+## Terraform Cloud
 
-TODO, Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+The Terraform Cloud plugin reads Terraform state outputs from [Terraform Cloud](https://cloud.hashicorp.com/products/terraform).
+
+### Components
+
+1. [ConfigSourcer](/waypoint/integrations/terraform-cloud/latest/components/config-sourcer)

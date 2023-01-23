@@ -1,6 +1,6 @@
 integration {
   name        = "CloudNative Buildpacks"
-  description = "TODO"
+  description = "The Pack plugin creates a Docker image using CloudNative Buildpacks."
   identifier  = "waypoint/pack"
   components  = ["builder"]
   flags       = ["builtin"]

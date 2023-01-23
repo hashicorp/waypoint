@@ -1,6 +1,6 @@
 integration {
   name        = "Docker Ref"
-  description = "TODO"
+  description = "The Docker Ref plugin refers to an existing Docker image, passing its image information - the image name and tag - to the Waypoint lifecycle."
   identifier  = "waypoint/docker-ref"
   components  = ["builder"]
   flags       = ["builtin"]

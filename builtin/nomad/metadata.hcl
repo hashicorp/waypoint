@@ -1,6 +1,6 @@
 integration {
   name        = "Nomad"
-  description = "TODO"
+  description = "The Nomad plugin deploys a Docker container to a Nomad cluster. It also launches on-demand runners to do operations remotely."
   identifier  = "waypoint/nomad"
   components  = ["platform", "task"]
   flags       = ["builtin"]

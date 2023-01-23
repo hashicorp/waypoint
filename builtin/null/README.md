@@ -1,3 +1,4 @@
-## Getting Started
+## Null
 
-TODO, Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+The Null plugin is used for testing and experimentation with the different
+plugin components.

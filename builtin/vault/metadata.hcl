@@ -1,6 +1,6 @@
 integration {
   name        = "Vault"
-  description = "TODO"
+  description = "The Vault plugin reads configuration values from Vault."
   identifier  = "waypoint/vault"
   components  = ["config-sourcer"]
   flags       = ["builtin"]

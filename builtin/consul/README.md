@@ -1,3 +1,7 @@
-## Getting Started
+## Consul
 
-TODO, Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+The Consul plugin reads configuration values from the [Consul KV store](https://developer.hashicorp.com/consul/docs/dynamic-app-config/kv).
+
+### Components
+
+1. [ConfigSourcer](/waypoint/integrations/consul/latest/components/config-sourcer)

@@ -1,5 +1,5 @@
 <!-- This file was generated via `make gen/integrations-hcl` -->
-Deploy to a nomad cluster as a service using docker.
+Deploy to a Nomad cluster as a service using Docker.
 
 ### Interface
 

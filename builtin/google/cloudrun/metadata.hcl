@@ -1,6 +1,6 @@
 integration {
   name        = "Google Cloud Run"
-  description = "TODO"
+  description = "The Google Cloud Run plugin deploys a container to Google Cloud Run."
   identifier  = "waypoint/google-cloud-run"
   components  = ["platform", "release-manager"]
   flags       = ["builtin"]

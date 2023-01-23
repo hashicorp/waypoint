@@ -1,6 +1,6 @@
 integration {
   name        = "Terraform Cloud"
-  description = "TODO"
+  description = "The Terraform Cloud plugin reads Terraform state outputs from Terraform Cloud."
   identifier  = "waypoint/terraform-cloud"
   components  = ["config-sourcer"]
   flags       = ["builtin"]

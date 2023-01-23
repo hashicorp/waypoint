@@ -1,3 +1,11 @@
-## Getting Started
+## Pack
 
-TODO, Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+The Pack plugin creates a Docker image using [CloudNative Buildpacks](https://buildpacks.io/).
+
+### Components
+
+1. [Builder](/waypoint/integrations/pack/latest/components/builder)
+
+### Related Plugins
+
+1. [Docker](/waypoint/integrations/docker)

@@ -1,3 +1,7 @@
-## Getting Started
+## Vault
 
-TODO, Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+The Vault plugin reads configuration values from [Vault](https://www.vaultproject.io/).
+
+### Components
+
+1. [ConfigSourcer](/waypoint/integrations/vault/latest/components/config-sourcer)

@@ -1,6 +1,6 @@
 integration {
   name        = "Nomad Jobspec"
-  description = "TODO"
+  description = "The Nomad Jobspec plugin deploys to a Nomad cluster from a pre-existing Nomad job specification file."
   identifier  = "waypoint/nomad-jobspec"
   components  = ["platform"]
   flags       = ["builtin"]

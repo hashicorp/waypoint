@@ -1,6 +1,6 @@
 integration {
   name        = "Kubernetes Apply"
-  description = "TODO"
+  description = "The Kubernetes Apply plugin deploys Kubernetes resources directly from a single file or a directory of YAML or JSON files."
   identifier  = "waypoint/kubernetes-apply"
   components  = ["platform"]
   flags       = ["builtin"]
