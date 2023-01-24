@@ -15,14 +15,15 @@ import (
 	"github.com/aws/aws-sdk-go/service/lambda"
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/hashicorp/go-hclog"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint-plugin-sdk/docs"
 	"github.com/hashicorp/waypoint-plugin-sdk/framework/resource"
 	sdk "github.com/hashicorp/waypoint-plugin-sdk/proto/gen"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/builtin/aws/utils"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 type Releaser struct {
@@ -293,7 +294,19 @@ func (r *Releaser) resourceFunctionUrlCreate(
 		functionUrlAuthType = strings.ToUpper(r.config.AuthType)
 	}
 
-	cors := lambda.Cors{}
+	corsCfg := r.config.Cors
+	if corsCfg == nil {
+		corsCfg = &ReleaserConfigCors{}
+	}
+
+	cors := lambda.Cors{
+		AllowCredentials: corsCfg.AllowCredentials,
+		AllowHeaders:     corsCfg.AllowHeaders,
+		AllowMethods:     corsCfg.AllowMethods,
+		AllowOrigins:     corsCfg.AllowOrigins,
+		ExposeHeaders:    corsCfg.ExposeHeaders,
+		MaxAge:           corsCfg.MaxAge,
+	}
 
 	step := sg.Add("Creating Lambda URL...")
 	defer step.Abort()
@@ -324,7 +337,7 @@ func (r *Releaser) resourceFunctionUrlCreate(
 					return err
 				} else {
 					// compare remote config to incoming config
-					if functionUrlAuthType != *gfc.AuthType {
+					if functionUrlAuthType != *gfc.AuthType || !reflect.DeepEqual(&cors, gfc.Cors) {
 						shouldUpdate = true
 					} else {
 						step.Update("Reusing existing Lambda URL: %q", *gfc.FunctionUrl)
@@ -424,6 +437,41 @@ type ReleaserConfig struct {
 	AuthType string `hcl:"auth_type,optional"`
 	// Only permitted if AuthType is "AWS_IAM" otherwise defaults to "*"
 	Principal string `hcl:"principal,optional"`
+	// Configuration options for function url CORS
+	Cors *ReleaserConfigCors `hcl:"cors,block"`
+}
+
+// Based on the Cors type from the AWS SDK, but with our HCL mappings.
+// https://pkg.go.dev/github.com/aws/aws-sdk-go/service/lambda#Cors
+type ReleaserConfigCors struct {
+	// Whether to allow cookies or other credentials in requests to your function
+	// URL. The default is false.
+	AllowCredentials *bool `hcl:"allow_credentials,optional"`
+
+	// The HTTP headers that origins can include in requests to your function URL.
+	// For example: Date, Keep-Alive, X-Custom-Header.
+	AllowHeaders []*string `hcl:"allow_headers,optional"`
+
+	// The HTTP methods that are allowed when calling your function URL. For example:
+	// GET, POST, DELETE, or the wildcard character (*).
+	AllowMethods []*string `hcl:"allow_methods,optional"`
+
+	// The origins that can access your function URL. You can list any number of
+	// specific origins, separated by a comma. For example: https://www.example.com,
+	// http://localhost:60905.
+	//
+	// Alternatively, you can grant access to all origins using the wildcard character
+	// (*).
+	AllowOrigins []*string `hcl:"allow_origins,optional"`
+
+	// The HTTP headers in your function response that you want to expose to origins
+	// that call your function URL. For example: Date, Keep-Alive, X-Custom-Header.
+	ExposeHeaders []*string `hcl:"expose_headers,optional"`
+
+	// The maximum amount of time, in seconds, that web browsers can cache results
+	// of a preflight request. By default, this is set to 0, which means that the
+	// browser doesn't cache results.
+	MaxAge *int64 `hcl:"max_age,optional"`
 }
 
 func (r *Releaser) Status(
@@ -480,6 +528,9 @@ func (r *Releaser) Documentation() (*docs.Documentation, error) {
 release {
 	use "lambda-function-url" {
 		auth_type = "NONE"
+		cors {
+			allow_methods = ["*"]
+		}
 	}
 }
 `)
@@ -503,6 +554,44 @@ release {
 			"The Principal parameter specifies the principal that is allowed to invoke the function.",
 		),
 		docs.Default("*"),
+	)
+
+	doc.SetField(
+		"cors",
+		"CORS configuration for the function URL",
+		docs.Default("NONE"),
+		docs.SubFields(func(d *docs.SubFieldDoc) {
+			d.SetField(
+				"allow_credentials",
+				"Whether to allow cookies or other credentials in requests to your function URL.",
+				docs.Default("false"),
+			)
+			d.SetField(
+				"allow_headers",
+				"The HTTP headers that origins can include in requests to your function URL. For example: Date, Keep-Alive, X-Custom-Header.",
+				docs.Default("[]"),
+			)
+			d.SetField(
+				"allow_methods",
+				"The HTTP methods that are allowed when calling your function URL. For example: GET, POST, DELETE, or the wildcard character (*).",
+				docs.Default("[]"),
+			)
+			d.SetField(
+				"allow_origins",
+				"The origins that can access your function URL. You can list any number of specific origins, separated by a comma. You can grant access to all origins using the wildcard character (*).",
+				docs.Default("[]"),
+			)
+			d.SetField(
+				"expose_headers",
+				"The HTTP headers in your function response that you want to expose to origins that call your function URL. For example: Date, Keep-Alive, X-Custom-Header.",
+				docs.Default("[]"),
+			)
+			d.SetField(
+				"max_age",
+				"The maximum amount of time, in seconds, that web browsers can cache results of a preflight request.",
+				docs.Default("0"),
+			)
+		}),
 	)
 
 	return doc, nil
