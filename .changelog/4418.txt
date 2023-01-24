@@ -1,0 +1,3 @@
+```release-note:improvement
+plugin/aws: Add CORS configuration to lambda-function-url releaser
+```
