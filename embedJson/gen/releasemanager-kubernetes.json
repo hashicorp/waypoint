@@ -12,6 +12,7 @@
          "Default": "",
          "EnvVar": "",
          "Category": false,
+         "Example": "",
          "SubFields": null
       },
       {
@@ -23,6 +24,7 @@
          "Default": "",
          "EnvVar": "",
          "Category": false,
+         "Example": "",
          "SubFields": null
       },
       {
@@ -34,6 +36,7 @@
          "Default": "",
          "EnvVar": "KUBECONFIG",
          "Category": false,
+         "Example": "",
          "SubFields": null
       },
       {
@@ -45,6 +48,7 @@
          "Default": "",
          "EnvVar": "",
          "Category": false,
+         "Example": "",
          "SubFields": null
       },
       {
@@ -56,6 +60,7 @@
          "Default": "",
          "EnvVar": "",
          "Category": false,
+         "Example": "",
          "SubFields": null
       },
       {
@@ -67,6 +72,7 @@
          "Default": "",
          "EnvVar": "",
          "Category": false,
+         "Example": "",
          "SubFields": null
       },
       {
@@ -78,6 +84,7 @@
          "Default": "80",
          "EnvVar": "",
          "Category": false,
+         "Example": "",
          "SubFields": null
       },
       {
@@ -89,6 +96,7 @@
          "Default": "",
          "EnvVar": "",
          "Category": false,
+         "Example": "",
          "SubFields": null
       }
    ],
@@ -102,6 +110,7 @@
          "Default": "",
          "EnvVar": "",
          "Category": true,
+         "Example": "",
          "SubFields": [
             {
                "Field": "annotations",
@@ -112,6 +121,7 @@
                "Default": "",
                "EnvVar": "",
                "Category": false,
+               "Example": "",
                "SubFields": null
             },
             {
@@ -123,6 +133,7 @@
                "Default": "false",
                "EnvVar": "",
                "Category": false,
+               "Example": "",
                "SubFields": null
             },
             {
@@ -134,6 +145,7 @@
                "Default": "",
                "EnvVar": "",
                "Category": false,
+               "Example": "",
                "SubFields": null
             },
             {
@@ -145,6 +157,7 @@
                "Default": "/",
                "EnvVar": "",
                "Category": false,
+               "Example": "",
                "SubFields": null
             },
             {
@@ -156,6 +169,7 @@
                "Default": "Prefix",
                "EnvVar": "",
                "Category": false,
+               "Example": "",
                "SubFields": null
             },
             {
@@ -167,6 +181,7 @@
                "Default": "",
                "EnvVar": "",
                "Category": true,
+               "Example": "",
                "SubFields": [
                   {
                      "Field": "hosts",
@@ -177,6 +192,7 @@
                      "Default": "",
                      "EnvVar": "",
                      "Category": false,
+                     "Example": "",
                      "SubFields": null
                   },
                   {
@@ -188,6 +204,7 @@
                      "Default": "",
                      "EnvVar": "",
                      "Category": false,
+                     "Example": "",
                      "SubFields": null
                   }
                ]

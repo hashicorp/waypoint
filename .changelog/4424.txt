@@ -1,0 +1,4 @@
+```release-note:bug
+cli: Fix panic in `waypoint pipeline list` and `waypoint pipeline inspect` where
+a pipeline run was given with no jobs.
+```

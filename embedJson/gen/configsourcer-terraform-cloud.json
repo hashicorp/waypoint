@@ -3,7 +3,20 @@
    "example": "config {\n  env = {\n    \"DATABASE_USERNAME\" = dynamic(\"terraform-cloud\", {\n\t\t\torganization = \"foocorp\"\n\t\t\tworkspace = \"databases\"\n\t\t\toutput = \"db_username\"\n    })\n\n    \"DATABASE_PASSWORD\" = dynamic(\"vault\", {\n\t\t\torganization = \"foocorp\"\n\t\t\tworkspace = \"databases\"\n\t\t\toutput = \"db_password\"\n    })\n\n    \"DATABASE_HOST\" = dynamic(\"vault\", {\n\t\t\torganization = \"foocorp\"\n\t\t\tworkspace = \"databases\"\n\t\t\toutput = \"db_hostname\"\n    })\n  }\n}",
    "mappers": null,
    "name": "terraform-cloud",
-   "optionalFields": null,
+   "optionalFields": [
+      {
+         "Field": "output",
+         "Type": "string",
+         "Synopsis": "Optional: The name of the output to read the value of. All outputs if blank.",
+         "Summary": "The name of the output from Terraform Cloud to return. Only strings and objects representable as json (i.e. maps and lists) are currently supported. If unspecified, all outputs from the workspace will be read and returned as a map[string]object, and can be referenced as such in the waypoint.hcl. See https://github.com/hashicorp/waypoint-examples/tree/main/terraform/variables for examples.",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "Example": "",
+         "SubFields": null
+      }
+   ],
    "optionalSourceFields": [
       {
          "Field": "base_url",
@@ -14,6 +27,7 @@
          "Default": "https://api.terraform.io",
          "EnvVar": "",
          "Category": false,
+         "Example": "",
          "SubFields": null
       },
       {
@@ -25,6 +39,7 @@
          "Default": "10m0s",
          "EnvVar": "",
          "Category": false,
+         "Example": "",
          "SubFields": null
       },
       {
@@ -36,6 +51,7 @@
          "Default": "",
          "EnvVar": "TFC_SKIP_VERIFY",
          "Category": false,
+         "Example": "",
          "SubFields": null
       }
    ],
@@ -49,28 +65,19 @@
          "Default": "",
          "EnvVar": "",
          "Category": false,
-         "SubFields": null
-      },
-      {
-         "Field": "output",
-         "Type": "string",
-         "Synopsis": "The name of the output to read the value of",
-         "Summary": "",
-         "Optional": false,
-         "Default": "",
-         "EnvVar": "",
-         "Category": false,
+         "Example": "",
          "SubFields": null
       },
       {
          "Field": "workspace",
          "Type": "string",
          "Synopsis": "The Terraform Cloud workspace associated with the given organization to read the outputs of",
-         "Summary": "The outputs associtaed with the most recent state version for the given workspace are the ones that are used. These values are refreshed according to refreshInternal, a source field.",
+         "Summary": "The outputs associated with the most recent state version for the given workspace are the ones that are used. These values are refreshed according to refreshInternal, a source field.",
          "Optional": false,
          "Default": "",
          "EnvVar": "",
          "Category": false,
+         "Example": "",
          "SubFields": null
       }
    ],
@@ -84,6 +91,7 @@
          "Default": "",
          "EnvVar": "",
          "Category": false,
+         "Example": "",
          "SubFields": null
       }
    ],

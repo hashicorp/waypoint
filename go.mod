@@ -103,7 +103,7 @@ require (
 	github.com/zclconf/go-cty-yaml v1.0.2
 	go.etcd.io/bbolt v1.3.6
 	go.opencensus.io v0.24.0
-	go.uber.org/goleak v1.1.10
+	go.uber.org/goleak v1.1.12
 	golang.org/x/crypto v0.0.0-20220622213112-05595931fe9d
 	golang.org/x/oauth2 v0.0.0-20221014153046-6fdb5e3db783
 	golang.org/x/sys v0.0.0-20220728004956-3c1f35247d10
@@ -144,7 +144,7 @@ require (
 	github.com/Masterminds/sprig v2.22.0+incompatible // indirect
 	github.com/Masterminds/sprig/v3 v3.2.2 // indirect
 	github.com/Masterminds/squirrel v1.5.0 // indirect
-	github.com/Microsoft/go-winio v0.4.17 // indirect
+	github.com/Microsoft/go-winio v0.5.2 // indirect
 	github.com/Microsoft/hcsshim v0.8.24 // indirect
 	github.com/PuerkitoBio/purell v1.1.1 // indirect
 	github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578 // indirect
@@ -167,8 +167,8 @@ require (
 	github.com/census-instrumentation/opencensus-proto v0.2.1 // indirect
 	github.com/cespare/xxhash/v2 v2.1.1 // indirect
 	github.com/cheggaaa/pb/v3 v3.0.5 // indirect
-	github.com/containerd/cgroups v1.0.1 // indirect
-	github.com/containerd/containerd v1.5.11 // indirect
+	github.com/containerd/cgroups v1.0.3 // indirect
+	github.com/containerd/containerd v1.5.16 // indirect
 	github.com/containerd/stargz-snapshotter/estargz v0.4.1 // indirect
 	github.com/containerd/typeurl v1.0.2 // indirect
 	github.com/coreos/go-oidc/v3 v3.0.0 // indirect
@@ -261,7 +261,7 @@ require (
 	github.com/mailru/easyjson v0.7.6 // indirect
 	github.com/mattn/go-colorable v0.1.12 // indirect
 	github.com/mattn/go-runewidth v0.0.9 // indirect
-	github.com/matttproud/golang_protobuf_extensions v1.0.2-0.20181231171920-c182affec369 // indirect
+	github.com/matttproud/golang_protobuf_extensions v1.0.4 // indirect
 	github.com/miekg/dns v1.1.41 // indirect
 	github.com/mitchellh/colorstring v0.0.0-20190213212951-d06e56a500db // indirect
 	github.com/mitchellh/go-server-timing v1.0.0 // indirect
@@ -322,7 +322,6 @@ require (
 	go.mongodb.org/mongo-driver v1.11.0 // indirect
 	go.starlark.net v0.0.0-20200707032745-474f21a9602d // indirect
 	go.uber.org/atomic v1.9.0 // indirect
-	golang.org/x/lint v0.0.0-20210508222113-6edffad5e616 // indirect
 	golang.org/x/mod v0.6.0-dev.0.20220419223038-86c51ed26bb4 // indirect
 	golang.org/x/net v0.0.0-20221014081412-f15817d10f9b // indirect
 	golang.org/x/sync v0.1.0 // indirect
@@ -362,7 +361,7 @@ require (
 	github.com/evanphx/grpc-gateway v1.16.1-0.20220211183845-48e5be386c15
 	github.com/hashicorp/go-grpc-net-conn v0.0.0-20220321172933-7ab38178cb90
 	github.com/hashicorp/opaqueany v0.0.0-20220321170339-a5c6ff5bb0ec
-	github.com/hashicorp/waypoint-plugin-sdk v0.0.0-20221209154611-9ceb8a691558
+	github.com/hashicorp/waypoint-plugin-sdk v0.0.0-20230119170844-cb3f0fdd21ec
 	github.com/jinzhu/now v1.1.1 // indirect
 	github.com/mattn/go-isatty v0.0.14 // indirect
 	github.com/rs/cors v1.7.0 // indirect

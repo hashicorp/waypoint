@@ -366,9 +366,19 @@ so the required environment variable name will usually have a mix of upper
 and lower case letters as in the above example.
 
 -> **Note:** Environment variables specified with `env` are only loaded
-as default values on the Waypoint [runner](/waypoint/docs/runner). For local operations
-this is the same machine as the CLI but for production use cases this might
-be a remote machine.
+as default values on the Waypoint [runner](/waypoint/docs/runner).
+For local operations this is the same machine as the CLI
+but for production use cases this might be a remote machine.
+
+If the environment variables are desired to be used by runners and on-demand
+runners, then use `waypoint config set -runner key=val` where you can specify a
+`-scope` of `global`, `project`, or `app`. See more details in our
+[config set documentation](/waypoint/commands/config-set).
+Alternatively, if you are targeting a specific runner profile, you can use the
+`waypoint runner profile set -env-var=key=val -name=runner-profile` command where
+the on-demand runner will be exposed to the environment variables. For more
+information on creating and updating a runner profile page visit our
+[runner profile set documentation](/waypoint/commands/runner-profile-set).
 
 ### Variables in the UI
 

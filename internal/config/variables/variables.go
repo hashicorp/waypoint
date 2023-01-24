@@ -5,6 +5,7 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -130,7 +131,7 @@ type HclVariable struct {
 // create the final map of cty.Values for config hcl context evaluation.
 type Values map[string]*Value
 
-// Value contain the value of the variable along with associated metada,
+// Value contain the value of the variable along with associated metadata,
 // including the source it was set from: cli, file, env, vcs, server/ui
 type Value struct {
 	Value  cty.Value
@@ -203,7 +204,9 @@ func decodeVariableBlock(
 	}
 
 	if attr, ok := content.Attributes["type"]; ok {
-		t, moreDiags := typeexpr.Type(attr.Expr)
+		// TypeConstraint allows "any", and it's OK if users opt out of
+		// waypoint type checking here.
+		t, moreDiags := typeexpr.TypeConstraint(attr.Expr)
 		diags = append(diags, moreDiags...)
 		if moreDiags.HasErrors() {
 			return nil, diags
@@ -237,18 +240,24 @@ func decodeVariableBlock(
 		// Depending on the value type, we behave differently.
 		switch val.Type() {
 		case dynamic.Type:
-			// For dynamic types we don't do conversion because we don't yet
-			// have the value. For now we require v.Type to be string so that
-			// the user isn't surprised by anything. Users can use explicit
-			// type conversion such as `tonumber`.
-			if v.Type != cty.String {
+			// Dynamic types can either be strings, or values that can be
+			// represented as json (i.e. objects and maps). The only allowed
+			// primitive type is string, and users can use explicit
+			// type conversion such as `tonumber` to achieve other primitive types.
+
+			// This is intended to help users catch invalid types early. If
+			// the type they specified doesn't match the actual type at runtime,
+			// they'll get another error and that's OK.
+			switch v.Type {
+			case cty.Number, cty.Bool:
 				diags = append(diags, &hcl.Diagnostic{
 					Severity: hcl.DiagError,
 					Summary:  fmt.Sprintf("type for variable %q must be string for dynamic values", name),
 					Detail: "When using dynamically sourced configuration values, " +
-						"the variable type must be string. You may use explicit " +
-						"type conversion functions such as `tonumber` when using " +
-						"the variable.",
+						"can either be strings, or complex types. If you're unsure of " +
+						"which, consult your configsourcer plugin documentation. If you want " +
+						"to represent a string as another kind of value, use type " +
+						"conversion functions such as `tonumber` when using the variable.",
 					Subject: attr.Expr.Range().Ptr(),
 				})
 				val = cty.DynamicVal
@@ -524,13 +533,67 @@ func LoadDynamicDefaults(
 			var result []*pb.Variable
 
 			for _, f := range config.Files {
-				result = append(result, &pb.Variable{
-					Name: f.Path,
-					Value: &pb.Variable_Str{
-						Str: string(f.Data),
-					},
-					Source: &pb.Variable_Dynamic{},
-				})
+
+				if matchingVar, ok := vars[f.Path]; ok {
+					if !matchingVar.Type.Equals(cty.String) {
+
+						// This is some hacking. The user put something other than
+						// `type = string` as the type for this variable.
+						// The plugin has done one of three things:
+						//
+						// 1: Returned json typed data (e.g. plugin.proto ConfigSource -> Value -> Value -> result -> json)
+						//    This is the happy path.
+						//    JSON is valid HCL, so we can run it up as an hcl variable,
+						//    it'll get properly marshalled and type checked, and can be
+						//    used elsewhere in the waypoint hcl.
+						// 2: The plugin returned a string value, but the string is
+						//    actually json. This will also work, as long as the json
+						//    and user-specified types match.
+						// 3: The plugin returned a non-json string. In this case, we
+						//    emit a runtime error.
+
+						// Someday, it would be nice to KNOW here if the plugin returned structured
+						// data or not. That's work though, and option 2 is a happy side effect
+						// of us not knowing, so it's OK for today.
+
+						// Make sure the plugin returned valid non-string data.
+						if err := json.Unmarshal(f.Data, &json.RawMessage{}); err != nil {
+							diags = append(diags, &hcl.Diagnostic{
+								Severity: hcl.DiagError,
+								Summary:  "Plugin output <> hcl type mismatch",
+								Detail: fmt.Sprintf(
+									"Variable %q is declared as non-string type %q, \n"+
+										"but the configsourcer plugin did not return\n"+
+										"structured data that can be json-marshalled:\n%s",
+									matchingVar.Name,
+									matchingVar.Type.FriendlyNameForConstraint(),
+									err,
+								),
+								Subject: &hcl.Range{
+									Filename: "waypoint.hcl",
+								},
+							})
+							return nil, diags
+						}
+
+						result = append(result, &pb.Variable{
+							Name: f.Path,
+							Value: &pb.Variable_Hcl{
+								// json is valid hcl!
+								Hcl: string(f.Data),
+							},
+							Source: &pb.Variable_Dynamic{},
+						})
+					} else {
+						result = append(result, &pb.Variable{
+							Name: f.Path,
+							Value: &pb.Variable_Str{
+								Str: string(f.Data),
+							},
+							Source: &pb.Variable_Dynamic{},
+						})
+					}
+				}
 			}
 
 			return result, diags

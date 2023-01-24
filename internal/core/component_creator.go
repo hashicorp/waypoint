@@ -200,7 +200,7 @@ func (cc *componentCreator) create(
 				"component type %s is not configured", cc.Type)
 		}
 
-		// This should represent an operartion otherwise we have nothing to do.
+		// This should represent an operation otherwise we have nothing to do.
 		opCfger, ok := cfg.(interface {
 			Operation() *config.Operation
 		})

@@ -6,4 +6,7 @@
 // Application configuration is primarily used by the entrypoint with
 // Waypoint to load (and reload) configuration values. However, this package
 // can be used standalone if application config wants to be pulled in anywhere.
+//
+// This package is also used for getting dynamic config values and rendering
+// them into other stanzas in the waypoint.hcl.
 package appconfig

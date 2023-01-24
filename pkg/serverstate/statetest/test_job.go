@@ -8,12 +8,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/hashicorp/go-memdb"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/timestamppb"
-
-	"github.com/hashicorp/go-memdb"
 
 	"github.com/hashicorp/waypoint/pkg/pagination"
 	"github.com/hashicorp/waypoint/pkg/serverstate"
@@ -2588,7 +2587,7 @@ func TestJobHeartbeat(t *testing.T, factory Factory, rf RestartFactory) {
 		// Should time out
 		require.Eventually(func() bool {
 			// Verify it is canceled
-			job, err = s.JobById(ctx, "A", nil)
+			job, err = s.JobById(context.Background(), "A", nil)
 			require.NoError(err)
 			return job.Job.State == pb.Job_ERROR
 		}, 4*time.Second, time.Second)
