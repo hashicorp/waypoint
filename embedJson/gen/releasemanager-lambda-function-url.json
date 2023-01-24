@@ -1,6 +1,6 @@
 {
    "description": "Create an AWS Lambda function URL",
-   "example": "release {\n\tuse \"lambda-function-url\" {\n\t\tauth_type = \"NONE\"\n\t}\n}",
+   "example": "release {\n\tuse \"lambda-function-url\" {\n\t\tauth_type = \"NONE\"\n\t\tcors {\n\t\t\tallow_methods = [\"*\"]\n\t\t}\n\t}\n}",
    "input": "lambda.Deployment",
    "mappers": null,
    "name": "lambda-function-url",
@@ -16,6 +16,91 @@
          "Category": false,
          "Example": "",
          "SubFields": null
+      },
+      {
+         "Field": "cors",
+         "Type": "function_url.ReleaserConfigCors",
+         "Synopsis": "CORS configuration for the function URL",
+         "Summary": "",
+         "Optional": false,
+         "Default": "NONE",
+         "EnvVar": "",
+         "Category": true,
+         "Example": "",
+         "SubFields": [
+            {
+               "Field": "allow_credentials",
+               "Type": "bool",
+               "Synopsis": "Whether to allow cookies or other credentials in requests to your function URL.",
+               "Summary": "",
+               "Optional": true,
+               "Default": "false",
+               "EnvVar": "",
+               "Category": false,
+               "Example": "",
+               "SubFields": null
+            },
+            {
+               "Field": "allow_headers",
+               "Type": "list of string",
+               "Synopsis": "The HTTP headers that origins can include in requests to your function URL. For example: Date, Keep-Alive, X-Custom-Header.",
+               "Summary": "",
+               "Optional": true,
+               "Default": "[]",
+               "EnvVar": "",
+               "Category": false,
+               "Example": "",
+               "SubFields": null
+            },
+            {
+               "Field": "allow_methods",
+               "Type": "list of string",
+               "Synopsis": "The HTTP methods that are allowed when calling your function URL. For example: GET, POST, DELETE, or the wildcard character (*).",
+               "Summary": "",
+               "Optional": true,
+               "Default": "[]",
+               "EnvVar": "",
+               "Category": false,
+               "Example": "",
+               "SubFields": null
+            },
+            {
+               "Field": "allow_origins",
+               "Type": "list of string",
+               "Synopsis": "The origins that can access your function URL. You can list any number of specific origins, separated by a comma. You can grant access to all origins using the wildcard character (*).",
+               "Summary": "",
+               "Optional": true,
+               "Default": "[]",
+               "EnvVar": "",
+               "Category": false,
+               "Example": "",
+               "SubFields": null
+            },
+            {
+               "Field": "expose_headers",
+               "Type": "list of string",
+               "Synopsis": "The HTTP headers in your function response that you want to expose to origins that call your function URL. For example: Date, Keep-Alive, X-Custom-Header.",
+               "Summary": "",
+               "Optional": true,
+               "Default": "[]",
+               "EnvVar": "",
+               "Category": false,
+               "Example": "",
+               "SubFields": null
+            },
+            {
+               "Field": "max_age",
+               "Type": "int64",
+               "Synopsis": "The maximum amount of time, in seconds, that web browsers can cache results of a preflight request.",
+               "Summary": "",
+               "Optional": true,
+               "Default": "0",
+               "EnvVar": "",
+               "Category": false,
+               "Example": "",
+               "SubFields": null
+            }
+         ]
       },
       {
          "Field": "principal",
