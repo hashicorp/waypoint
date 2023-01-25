@@ -13,7 +13,7 @@ The `plugin` stanza configures a plugin that will be used by the Waypoint
 configuration. This can set settings such as the checksum of the plugin,
 the kind of features the plugin supports, etc.
 
-The `plugin` stanza is **optional.** When you use a [`use`](/docs/waypoint-hcl/use)
+The `plugin` stanza is **optional.** When you use a [`use`](/waypoint/docs/waypoint-hcl/use)
 stanza, it implicitly defines a plugin that Waypoint will require. You do not
 need to explicitly create a `plugin` configuration as well. You only need to
 create a `plugin` stanza for additional plugin configuration.
@@ -41,7 +41,7 @@ The `plugin` stanza takes a label. The label of the stanza is the name
 of the plugin. In the above example, the label is "my-platform"
 
 The plugin name is significant because it defines how the plugin binary
-will be named on the local system. See [plugin loading](/docs/plugins) for more
+will be named on the local system. See [plugin loading](/waypoint/docs/plugins) for more
 information.
 
 ### Optional
@@ -49,7 +49,7 @@ information.
 - `checksum` `(string: "")` - A SHA-256 checksum for the external plugin binary.
   This has no effect for built-in plugins.
 
-- `type` <code>([type](/docs/waypoint-hcl/plugin#type-parameters): nil)</code> - The
+- `type` <code>([type](/waypoint/docs/waypoint-hcl/plugin#type-parameters): nil)</code> - The
   type of plugin that this is. A plugin can implement multiple types.
 
 ## `type` Parameters

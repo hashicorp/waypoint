@@ -1,5 +1,5 @@
 {
-   "description": "\nDeploy to Kubernetes from a Helm chart. The Helm chart can be a local path\nor a chart in a repository.\n\n### Entrypoint Functionality\n\nWaypoint [entrypoint functionality](/docs/entrypoint#functionality) such\nas logs, exec, app configuration, and more require two properties to be true:\n\n1. The running image must already have the Waypoint entrypoint installed\n  and configured as the entrypoint. This should happen in the build stage.\n\n2. Proper environment variables must be set so the entrypoint knows how\n  to communicate to the Waypoint server. **This step happens in this\n  deployment stage.**\n\n**Step 2 does not happen automatically.** You must manually set the entrypoint\nenvironment variables using the [templating feature](/docs/waypoint-hcl/functions/template).\nThese must be passed in using Helm values (i.e. the chart must make\nenvironment variables configurable).\n\nThis is documented in more detail with a full example in the\n[Kubernetes Helm Deployment documentation](/docs/platforms/kubernetes/helm-deploy).\n\n#### URL Service\n\nIf you want your workload to be accessible by the\n[Waypoint URL service](/docs/url), you must set the PORT environment variable\nwithin the pod with your web service and also be using the Waypoint\nentrypoint (documented in the previous section).\n\nThe PORT environment variable should be the port that your web service\nis listening on that the URL service will connect to. See one of the examples\nbelow for more details.\n\n",
+   "description": "\nDeploy to Kubernetes from a Helm chart. The Helm chart can be a local path\nor a chart in a repository.\n\n### Entrypoint Functionality\n\nWaypoint [entrypoint functionality](/waypoint/docs/entrypoint#functionality) such\nas logs, exec, app configuration, and more require two properties to be true:\n\n1. The running image must already have the Waypoint entrypoint installed\n  and configured as the entrypoint. This should happen in the build stage.\n\n2. Proper environment variables must be set so the entrypoint knows how\n  to communicate to the Waypoint server. **This step happens in this\n  deployment stage.**\n\n**Step 2 does not happen automatically.** You must manually set the entrypoint\nenvironment variables using the [templating feature](/waypoint/docs/waypoint-hcl/functions/template).\nThese must be passed in using Helm values (i.e. the chart must make\nenvironment variables configurable).\n\nThis is documented in more detail with a full example in the\n[Kubernetes Helm Deployment documentation](/waypoint/docs/platforms/kubernetes/helm-deploy).\n\n#### URL Service\n\nIf you want your workload to be accessible by the\n[Waypoint URL service](/waypoint/docs/url), you must set the PORT environment variable\nwithin the pod with your web service and also be using the Waypoint\nentrypoint (documented in the previous section).\n\nThe PORT environment variable should be the port that your web service\nis listening on that the URL service will connect to. See one of the examples\nbelow for more details.\n\n",
    "example": "// Configuring an image to match the build. This assumes the chart\n// has a value named \"deployment.image\".\ndeploy {\n  use \"helm\" {\n    chart = \"${path.app}/chart\"\n\n    set {\n      name  = \"deployment.image\"\n      value = artifact.name\n    }\n  }\n}",
    "mappers": null,
    "name": "helm",
@@ -13,6 +13,7 @@
          "Default": "",
          "EnvVar": "",
          "Category": false,
+         "Example": "",
          "SubFields": null
       },
       {
@@ -24,6 +25,7 @@
          "Default": "",
          "EnvVar": "",
          "Category": false,
+         "Example": "",
          "SubFields": null
       },
       {
@@ -35,6 +37,7 @@
          "Default": "false",
          "EnvVar": "",
          "Category": false,
+         "Example": "",
          "SubFields": null
       },
       {
@@ -46,6 +49,7 @@
          "Default": "secret",
          "EnvVar": "",
          "Category": false,
+         "Example": "",
          "SubFields": null
       },
       {
@@ -57,6 +61,7 @@
          "Default": "",
          "EnvVar": "KUBECONFIG",
          "Category": false,
+         "Example": "",
          "SubFields": null
       },
       {
@@ -68,6 +73,7 @@
          "Default": "",
          "EnvVar": "",
          "Category": false,
+         "Example": "",
          "SubFields": null
       },
       {
@@ -79,6 +85,7 @@
          "Default": "",
          "EnvVar": "",
          "Category": false,
+         "Example": "",
          "SubFields": null
       },
       {
@@ -90,6 +97,7 @@
          "Default": "",
          "EnvVar": "",
          "Category": false,
+         "Example": "",
          "SubFields": null
       },
       {
@@ -101,6 +109,7 @@
          "Default": "",
          "EnvVar": "",
          "Category": false,
+         "Example": "",
          "SubFields": null
       },
       {
@@ -112,6 +121,7 @@
          "Default": "",
          "EnvVar": "",
          "Category": false,
+         "Example": "",
          "SubFields": null
       }
    ],
@@ -125,10 +135,11 @@
          "Default": "",
          "EnvVar": "",
          "Category": false,
+         "Example": "",
          "SubFields": null
       }
    ],
-   "outputAttrsHelp": "Output attributes can be used in your `waypoint.hcl` as [variables](/docs/waypoint-hcl/variables) via [`artifact`](/docs/waypoint-hcl/variables/artifact) or [`deploy`](/docs/waypoint-hcl/variables/deploy).",
+   "outputAttrsHelp": "Output attributes can be used in your `waypoint.hcl` as [variables](/waypoint/docs/waypoint-hcl/variables) via [`artifact`](/waypoint/docs/waypoint-hcl/variables/artifact) or [`deploy`](/waypoint/docs/waypoint-hcl/variables/deploy).",
    "requiredFields": [
       {
          "Field": "chart",
@@ -139,6 +150,7 @@
          "Default": "",
          "EnvVar": "",
          "Category": false,
+         "Example": "",
          "SubFields": null
       },
       {
@@ -150,6 +162,7 @@
          "Default": "",
          "EnvVar": "",
          "Category": false,
+         "Example": "",
          "SubFields": null
       },
       {
@@ -161,9 +174,10 @@
          "Default": "",
          "EnvVar": "",
          "Category": false,
+         "Example": "",
          "SubFields": null
       }
    ],
    "type": "platform",
-   "use": "the [`use` stanza](/docs/waypoint-hcl/use) for this plugin."
+   "use": "the [`use` stanza](/waypoint/docs/waypoint-hcl/use) for this plugin."
 }

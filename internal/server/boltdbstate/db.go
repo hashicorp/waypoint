@@ -19,14 +19,14 @@ var (
 	sysVersionKey = []byte("version")
 )
 
-//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 //
-// DB Version
+// # DB Version
 //
 // THIS SHOULD BE CHANGED WITH EXTREME CAUTION. Changing this will force users
 // to perform a db upgrade when they upgrade their Waypoint version.
 //
-//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 const (
 	dbVersion int64 = 1
 )

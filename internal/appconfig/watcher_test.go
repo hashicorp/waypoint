@@ -486,11 +486,72 @@ func TestWatcher_variableEscape(t *testing.T) {
 	require.Equal([]string{"V1=connect://${get_hostname()}"}, env.EnvVars)
 }
 
+// TestWatcher_sourcerJson tests that the configsourcer can handle
+// plugins returning json values, not just string values.
+// We expect configsourcers to return json typed data to feed
+// dynamic default variables, and not for app or runner config.
+func TestWatcher_sourcerJson(t *testing.T) {
+	t.Parallel()
+
+	require := require.New(t)
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer cancel()
+
+	// Create our test config source
+	testSource := &testConfigSourcer{
+		readJson: map[string][]byte{
+			"structuredValKey": []byte("{'foo':'bar'}"),
+		},
+	}
+
+	w, err := NewWatcher(
+		WithRefreshInterval(10*time.Millisecond),
+		testWithConfigSourcer("cloud", testSource),
+	)
+	require.NoError(err)
+	defer w.Close()
+
+	// Change our config
+	w.UpdateVars(ctx, []*pb.ConfigVar{
+		{
+			Name:       "structuredVal",
+			NameIsPath: true,
+			Value: &pb.ConfigVar_Dynamic{
+				Dynamic: &pb.ConfigVar_DynamicVal{
+					From: "cloud",
+					Config: map[string]string{
+						"key": "structuredValKey",
+					},
+				},
+			},
+		},
+	})
+
+	cfg, _, err := w.Next(ctx, 0)
+	require.NoError(err)
+
+	// It is undeniably weird that we're returning json data as raw file contents.
+	// We've very much outgrown the current app config system that returns either
+	// files or env vars. IMO, we should refactor this system to return structured data,
+	// and the caller can decide to use it for files, env vars, or some other purpose.
+	//
+	// For now, we're doubling down on the existing hack wherein the variable system
+	// requests its dynamic config vars to be treated as "files", and it
+	// can figure out on its own whether to treat it as json or a string based
+	// on the variable type the user specified in the HCL.
+	require.Equal(cfg.Files, []*FileContent{{
+		Path: "structuredVal", Data: []byte("{'foo':'bar'}"),
+	}})
+}
+
 type testConfigSourcer struct {
 	sync.Mutex
 
 	stopCount int
 	readValue map[string]string
+
+	// json values
+	readJson map[string][]byte
 }
 
 func (s *testConfigSourcer) ReadFunc() interface{} {
@@ -500,12 +561,24 @@ func (s *testConfigSourcer) ReadFunc() interface{} {
 
 		var result []*sdkpb.ConfigSource_Value
 		for _, req := range reqs {
-			result = append(result, &sdkpb.ConfigSource_Value{
-				Name: req.Name,
-				Result: &sdkpb.ConfigSource_Value_Value{
-					Value: s.readValue[req.Config["key"]],
-				},
-			})
+
+			if stringVal, ok := s.readValue[req.Config["key"]]; ok {
+				result = append(result, &sdkpb.ConfigSource_Value{
+					Name: req.Name,
+					Result: &sdkpb.ConfigSource_Value_Value{
+						Value: stringVal,
+					},
+				})
+			} else if jsonVal, ok := s.readJson[req.Config["key"]]; ok {
+				result = append(result, &sdkpb.ConfigSource_Value{
+					Name: req.Name,
+					Result: &sdkpb.ConfigSource_Value_Json{
+						Json: jsonVal,
+					},
+				})
+			} else {
+				panic("invalid test - request for unset key " + req.Config["key"])
+			}
 		}
 
 		return result, nil

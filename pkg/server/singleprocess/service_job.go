@@ -48,7 +48,11 @@ func (s *Service) ListJobs(
 	ctx context.Context,
 	req *pb.ListJobsRequest,
 ) (*pb.ListJobsResponse, error) {
-	jobs, err := s.state(ctx).JobList(ctx, req)
+	if err := serverptypes.ValidateListJobsRequest(req); err != nil {
+		return nil, err
+	}
+
+	jobs, pagination, err := s.state(ctx).JobList(ctx, req)
 	if err != nil {
 		return nil, hcerr.Externalize(
 			hclog.FromContext(ctx),
@@ -58,7 +62,8 @@ func (s *Service) ListJobs(
 	}
 
 	return &pb.ListJobsResponse{
-		Jobs: jobs,
+		Jobs:       jobs,
+		Pagination: pagination,
 	}, nil
 }
 
@@ -130,21 +135,19 @@ func (s *Service) queueJobReqToJob(
 	log.Debug("checking job project", "project", job.Application.Project)
 	project, err := s.state(ctx).ProjectGet(ctx, &pb.Ref_Project{Project: job.Application.Project})
 	if status.Code(err) == codes.NotFound {
-		return nil, "", status.Errorf(codes.NotFound,
+		return nil, "", hcerr.UserErrorWithCodef(codes.NotFound, nil,
 			"Project %q was not found! Please ensure that 'waypoint init' was run with this project.",
-			job.Application.Project,
-		)
+			job.Application.Project)
 	}
 
 	if job.DataSource == nil {
 		if project.DataSource == nil {
-			return nil, "", status.Errorf(codes.FailedPrecondition,
+			return nil, "", hcerr.UserErrorWithCodef(codes.FailedPrecondition, nil,
 				"Project %s does not have a data source configured. Remote jobs "+
 					"require a data source such as Git to be configured with the project. "+
 					"Data sources can be configured via the CLI or UI. For help, see : "+
 					"https://www.waypointproject.io/docs/projects/git#configuring-the-project",
-				job.Application.Project,
-			)
+				job.Application.Project)
 		}
 
 		job.DataSource = project.DataSource
@@ -156,7 +159,7 @@ func (s *Service) queueJobReqToJob(
 			job, err = s.populateDataSource(ctx, job)
 			if err != nil {
 				log.Error("error populating data source for job", "error", err)
-				return nil, "", status.Errorf(codes.Internal,
+				return nil, "", hcerr.UserErrorWithCodef(codes.Internal, err,
 					"An internal server issue was detected when calculating the data source")
 			}
 
@@ -164,14 +167,14 @@ func (s *Service) queueJobReqToJob(
 			// error out.
 			if job.DataSource.GetRemote() != nil {
 				log.Error("populateDataSource returned another remote DS job")
-				return nil, "", status.Errorf(codes.Internal,
+				return nil, "", hcerr.UserErrorWithCodef(codes.Internal, err,
 					"An internal server issue was detected when calculating the data source")
 			}
 		} else {
 			log.Error("job has a remote DataSource but server provided no populateDataSource")
 			// This is a server misconfiguration.
 			if job.DataSource.GetRemote() != nil {
-				return nil, "", status.Errorf(codes.Internal,
+				return nil, "", hcerr.UserErrorWithCodef(codes.Internal, err,
 					"An internal server issue was detected when calculating the data source")
 			}
 		}
@@ -181,7 +184,8 @@ func (s *Service) queueJobReqToJob(
 	if job.Id == "" {
 		id, err := server.Id()
 		if err != nil {
-			return nil, "", status.Errorf(codes.Internal, "uuid generation failed: %s", err)
+			return nil, "", hcerr.UserErrorWithCodef(codes.Internal, err,
+				"uuid generation failed")
 		}
 		job.Id = id
 	}
@@ -191,8 +195,8 @@ func (s *Service) queueJobReqToJob(
 	if req.ExpiresIn != "" {
 		dur, err := time.ParseDuration(req.ExpiresIn)
 		if err != nil {
-			return nil, "", status.Errorf(codes.FailedPrecondition,
-				"Invalid expiry duration: %s", err.Error())
+			return nil, "", hcerr.UserErrorWithCodef(codes.FailedPrecondition, err,
+				"Invalid job expiry duration %q: %q", req.ExpiresIn, err.Error())
 		}
 		job.ExpireTime = timestamppb.New(time.Now().Add(dur))
 	}
@@ -249,6 +253,8 @@ func (s *Service) QueueJob(
 	ctx context.Context,
 	req *pb.QueueJobRequest,
 ) (*pb.QueueJobResponse, error) {
+	log := hclog.FromContext(ctx)
+
 	if req.Job == nil {
 		return nil, status.Errorf(codes.FailedPrecondition, "job must be set")
 	}
@@ -264,12 +270,12 @@ func (s *Service) QueueJob(
 
 	jobs, jobId, err := s.queueJobReqToJob(ctx, req)
 	if err != nil {
-		return nil, err
+		return nil, hcerr.Externalize(log, err, "failed to create job to queue")
 	}
 
 	// Queue the job
 	if err := s.state(ctx).JobCreate(ctx, jobs...); err != nil {
-		return nil, err
+		return nil, hcerr.Externalize(log, err, "failed to create job(s)")
 	}
 
 	return &pb.QueueJobResponse{JobId: jobId}, nil
@@ -282,21 +288,23 @@ func (s *Service) QueueJob(
 // A diagram of the dependency chain created is shown below. The dashed
 // border is the "source" job.
 //
-//           ┌────────────────┐
-//           │   Start Task   │─────────────┐
-//           └────────────────┘             │
-//                    │                     │
-//          ┌─────────┴─────────┐           │
-//          ▼                   ▼           │
+//	 ┌────────────────┐
+//	 │   Start Task   │─────────────┐
+//	 └────────────────┘             │
+//	          │                     │
+//	┌─────────┴─────────┐           │
+//	▼                   ▼           │
+//
 // ┌────────────────┐   ┌─ ── ── ── ── ──   │
 // │   Watch Task   │   │      Job       │  │
 // └────────────────┘   └ ── ── ── ── ── ┘  │
-//          │                    │          │
-//          └─────────┬──────────┘          │
-//                    ▼                     │
-//           ┌────────────────┐             │
-//           │   Stop Task    │◀────────────┘
-//           └────────────────┘
+//
+//	│                    │          │
+//	└─────────┬──────────┘          │
+//	          ▼                     │
+//	 ┌────────────────┐             │
+//	 │   Stop Task    │◀────────────┘
+//	 └────────────────┘
 //
 // Details:
 //
@@ -306,7 +314,6 @@ func (s *Service) QueueJob(
 //     logs, exit code, etc.
 //   - Finally, stop task is called to clean up the resources associated
 //     with start.
-//
 func (s *Service) wrapJobWithRunner(
 	ctx context.Context,
 	source *pb.Job,
@@ -686,7 +693,7 @@ func (s *Service) GetJobStream(
 	ws := memdb.NewWatchSet()
 	job, err := s.state(ctx).JobById(ctx, req.JobId, ws)
 	if err != nil {
-		return err
+		return hcerr.Externalize(log, err, "failed to get job with id", "job_id", req.JobId)
 	}
 	if job == nil {
 		return status.Errorf(codes.NotFound, "job not found for ID: %s", req.JobId)
@@ -699,7 +706,7 @@ func (s *Service) GetJobStream(
 			Open: &pb.GetJobStreamResponse_Open{},
 		},
 	}); err != nil {
-		return err
+		return hcerr.Externalize(log, err, "failed to send job response")
 	}
 
 	// Start a goroutine that watches for job changes

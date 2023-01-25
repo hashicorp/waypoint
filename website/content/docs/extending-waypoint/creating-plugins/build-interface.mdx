@@ -28,7 +28,7 @@ BuildFunc() interface{}
 
 The function to be called does not strictly correspond to any signature for the input parameters. Waypoint functions
 have their parameters dynamically injected at runtime. The list of available parameters can be found in the
-[Default Parameters](/docs/extending-waypoint/plugin-interfaces/default-parameters) documentation.
+[Default Parameters](/waypoint/docs/extending-waypoint/plugin-interfaces/default-parameters) documentation.
 
 While you can choose the input parameters for your `BuildFunc`, Waypoint enforces specific output parameters. These
 return parameters must be of types `proto.Message`, and `error`. The `proto.Message` is a struct which implements the
@@ -86,7 +86,7 @@ type Binary struct {
 
 For this guide, you do not need to change `Binary`; however, if you would like to learn more about passing values
 between components, please see the
-[specific documentation](/docs/extending-waypoint/passing-values).
+[specific documentation](/waypoint/docs/extending-waypoint/passing-values).
 
 ## Creating the Build Process
 
@@ -173,4 +173,4 @@ step. Add the following code to your `build` function after the error check.
 
 The code for the plugin is now complete; let's see how to build and test it.
 
-[Next - Compiling the Plugin](/docs/extending-waypoint/creating-plugins/compiling)
+[Next - Compiling the Plugin](/waypoint/docs/extending-waypoint/creating-plugins/compiling)

@@ -63,7 +63,7 @@ Runner profiles
 
 It may be necessary to add configuration (environment variables or files) to an
 on-demand runner. The best way is to use runner config via
-the `waypoint config -runner`, detailed [here](/docs/runner/config). These
+the `waypoint config -runner`, detailed [here](/waypoint/docs/runner/config). These
 configuration variables will be available to any on-demand runner.
 
 ### Static environment variables
@@ -103,18 +103,42 @@ profile.
 If multiple profiles are set as the default, Waypoint will choose one at random for
 each operation.
 
-### Using Plugin-Config
+### Using or Modifying Plugin-Config
 
 Waypoint on-demand runners are backed by the `Task` plugin type, which provides an
 interface for launching short-lived container-based instances and is implemented by
 the plugins for multiple platforms. To see the task config options for your platform
-of interest, see [plugin docs](/plugins). For example, the Kubernetes task plugin
-docs are located [here](/plugins/kubernetes#kubernetes-task).
+of interest, see [plugin docs](/waypoint/plugins). For example, the Kubernetes task plugin
+docs are located [here](/waypoint/plugins/kubernetes#kubernetes-task).
 
 The `-plugin-config` flag lets you modify the way that tasks are launched.
-For example, to modify the Kubernetes default runner profile to use a
-different Kubernetes service account, create an hcl file with your
-new plugin config, following at location `./k8s-runner-profile-plugin-config.hcl`:
+For example, to edit the Kubernetes default runner profile's plugin config to use a
+different Kubernetes service account run `waypoint runner profile inspect` and copy
+the `Additional Plugin Configuration` to a new file.
+
+#### Json
+
+If the `Additional Plugin Configuration` output is json,
+create a json file with your new plugin config, at location
+`./k8s-runner-profile-plugin-config.json`:
+
+```json
+{
+  "service_account": "my-custom-service-account"
+}
+```
+
+And then apply it to your plugin with `waypoint runner profile set`:
+
+```
+$ waypoint runner profile set -name=kubernetes -plugin-type=kubernetes -plugin-config=./k8s-runner-profile-plugin-config.json
+```
+
+#### Hcl
+
+If the `Additional Plugin Configuration` output is hcl,
+create an hcl file with your new plugin config, at location
+`./k8s-runner-profile-plugin-config.hcl`:
 
 ```hcl
 service_account=my-custom-service-account

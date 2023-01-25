@@ -1,0 +1,4 @@
+```release-note:bug
+install/nomad: Fix connectivity to Waypoint server from the CLi at the end of
+the Nomad server install.
+```

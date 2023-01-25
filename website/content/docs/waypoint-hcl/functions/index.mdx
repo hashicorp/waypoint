@@ -13,7 +13,7 @@ to represent complex configurations using programming techniques.
 
 Most functions can be used anywhere in the Waypoint configuration file.
 Some functions are context-specific and are only valid when called from the correct locations.
-Function documentation pages may use [placement tables](/docs/waypoint-hcl#placement-tables)
+Function documentation pages may use [placement tables](/waypoint/docs/waypoint-hcl#placement-tables)
 to document where functions are valid. If a placement table is not present
 for a function, it is safe to assume that it can be used anywhere.
 
@@ -59,4 +59,4 @@ the base64 encoded contents of a file in your app's source project, you can use:
 file_contents = filebase64("${path.app}/config.conf")
 ```
 
-For a complete list of variables, see [variables](/docs/waypoint-hcl/variables)
+For a complete list of variables, see [variables](/waypoint/docs/waypoint-hcl/variables)

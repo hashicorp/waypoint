@@ -1,0 +1,3 @@
+```release-note:bug
+plugin/ecs: `runner install` now creates aws policies to facilitate remotely running StopTask and WatchTask jobs
+```

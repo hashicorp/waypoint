@@ -296,13 +296,13 @@ func (s *State) JobProjectScopedRequest(
 func (s *State) JobList(
 	ctx context.Context,
 	req *pb.ListJobsRequest,
-) ([]*pb.Job, error) {
+) ([]*pb.Job, *pb.PaginationResponse, error) {
 	memTxn := s.inmem.Txn(false)
 	defer memTxn.Abort()
 
 	iter, err := memTxn.Get(jobTableName, jobIdIndexName+"_prefix", "")
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	var result []*pb.Job
@@ -423,7 +423,7 @@ func (s *State) JobList(
 		result = append(result, job)
 	}
 
-	return result, nil
+	return result, nil, nil // TODO (andrew): add pagination for boltdb
 }
 
 // JobById looks up a job by ID. The returned Job will be a deep copy
@@ -1167,6 +1167,57 @@ func (s *State) JobIsAssignable(ctx context.Context, jobpb *pb.Job) (bool, error
 		// This works!
 		return true, nil
 	}
+}
+
+// JobLatestInit looks up the latest init job for the given project. The returned
+// Job will be a deep copy of the job so it is safe to read/write. If the job
+// can't be found, a nil result with no error is returned.
+func (s *State) JobLatestInit(ctx context.Context, proj *pb.Ref_Project) (*pb.Job, error) {
+	memTxn := s.inmem.Txn(false)
+	defer memTxn.Abort()
+
+	iter, err := memTxn.GetReverse(jobTableName, jobQueueTimeIndexName)
+	if err != nil {
+		return nil, err
+	}
+
+	var jobIdx *jobIndex
+	initOpType := reflect.TypeOf((*pb.Job_Init)(nil))
+
+	for {
+		next := iter.Next()
+		if next == nil {
+			break
+		}
+
+		idx, ok := next.(*jobIndex)
+		if !ok {
+			break
+		}
+
+		if idx.OpType != initOpType {
+			continue
+		}
+
+		if idx.Application.Project != proj.Project {
+			continue
+		}
+
+		jobIdx = idx
+		break
+	}
+
+	if jobIdx == nil {
+		return nil, nil
+	}
+
+	var job *pb.Job
+	err = s.db.View(func(dbTxn *bolt.Tx) error {
+		job, err = s.jobById(dbTxn, jobIdx.Id)
+		return err
+	})
+
+	return job, err
 }
 
 // jobIndexInit initializes the config index from persisted data.

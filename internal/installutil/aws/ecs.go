@@ -3,7 +3,6 @@ package aws
 import (
 	"context"
 	"fmt"
-	"strconv"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -18,7 +17,6 @@ import (
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
-	"github.com/hashicorp/waypoint/pkg/serverconfig"
 )
 
 const (
@@ -87,11 +85,14 @@ func (lf *Lifecycle) Execute(log hclog.Logger, ui terminal.UI) error {
 	return nil
 }
 
+// SetupNetworking retrieves subnet information and creates the security group
+// necessary for Waypoint.
 func SetupNetworking(
 	ctx context.Context,
 	ui terminal.UI,
 	sess *session.Session,
 	subnet []string,
+	ports []*int64,
 ) (*NetworkInformation, error) {
 	sg := ui.StepGroup()
 	defer sg.Wait()
@@ -104,14 +105,6 @@ func SetupNetworking(
 	}
 
 	s.Update("Setting up security group...")
-	grpcPort, _ := strconv.Atoi(serverconfig.DefaultGRPCPort)
-	httpPort, _ := strconv.Atoi(serverconfig.DefaultHTTPPort)
-	ports := []*int64{
-		aws.Int64(int64(grpcPort)),
-		aws.Int64(int64(httpPort)),
-		aws.Int64(int64(2049)), // EFS File system port
-	}
-
 	sgID, err := createSG(ctx, s, sess, DefaultSecurityGroupName, vpcID, ports)
 	if err != nil {
 		return nil, err
@@ -131,6 +124,7 @@ func SetupEFS(
 	ui terminal.UI,
 	sess *session.Session,
 	netInfo *NetworkInformation,
+	efsTags []*efs.Tag,
 ) (*EfsInformation, error) {
 	sg := ui.StepGroup()
 	defer sg.Wait()
@@ -144,12 +138,7 @@ func SetupEFS(
 	fsd, err := efsSvc.CreateFileSystem(&efs.CreateFileSystemInput{
 		CreationToken: aws.String(ulid),
 		Encrypted:     aws.Bool(true),
-		Tags: []*efs.Tag{
-			{
-				Key:   aws.String(defaultServerTagName),
-				Value: aws.String(defaultServerTagValue),
-			},
-		},
+		Tags:          efsTags,
 	})
 	if err != nil {
 		return nil, err
@@ -204,6 +193,7 @@ EFSLOOP:
 	s.Update("Creating EFS Access Point...")
 	uid := aws.Int64(int64(100))
 	gid := aws.Int64(int64(1000))
+	// TODO: Change path to not always include "server"
 	accessPoint, err := efsSvc.CreateAccessPoint(&efs.CreateAccessPointInput{
 		FileSystemId: fsd.FileSystemId,
 		PosixUser: &efs.PosixUser{
@@ -298,6 +288,7 @@ func CreateService(serviceInput *ecs.CreateServiceInput, ecsSvc *ecs.ECS) (*ecs.
 }
 
 // TODO: Add runner ID as tag
+// SetupExecutionRole creates the necessary IAM execution role for Waypoint, if it does not exist
 func SetupExecutionRole(
 	ctx context.Context,
 	ui terminal.UI,
@@ -377,6 +368,8 @@ func SetupExecutionRole(
 	return roleArn, nil
 }
 
+// subnetInfo returns the subnets and VPC to the caller. If no subnets
+// were provided as input, then the default subnets are returned.
 func subnetInfo(
 	ctx context.Context,
 	s terminal.Step,
@@ -565,6 +558,7 @@ func SetupLogs(
 	return logGroup, nil
 }
 
+// DeleteEcsCommonResources deletes the provided ECS service and task definition
 func DeleteEcsCommonResources(
 	ctx context.Context,
 	sess *session.Session,

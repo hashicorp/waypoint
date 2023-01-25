@@ -22,8 +22,7 @@
     "start": "ember serve",
     "test": "npm-run-all lint test:*",
     "test:ember": "ember test",
-    "test:ember:percy": "percy exec ember test",
-    "test:ember:percy:ci": "percy exec ember test --path=dist"
+    "test:ember:ci": "ember test --path=dist"
   },
   "devDependencies": {
     "@ember/optional-features": "^2.0.0",
@@ -32,8 +31,6 @@
     "@glimmer/component": "^1.1.2",
     "@glimmer/tracking": "^1.0.4",
     "@hashicorp/pds-ember": "^0.6.3",
-    "@percy/cli": "^1.10.2",
-    "@percy/ember": "^4.0.0",
     "@types/codemirror": "^5.60.2",
     "@types/ember": "^4.0.1",
     "@types/ember-qunit": "^3.4.9",
@@ -57,7 +54,7 @@
     "ember-auto-import-typescript": "^0.6.3",
     "ember-changeset": "^3.15.0",
     "ember-changeset-validations": "^3.16.0",
-    "ember-classic-decorator": "^1.0.8",
+    "ember-classic-decorator": "^3.0.1",
     "ember-cli": "~3.28.5",
     "ember-cli-app-version": "^5.0.0",
     "ember-cli-babel": "^7.26.10",

@@ -19,8 +19,8 @@ referencing the most recently built artifacts, etc.
 
 -> **Not a Helm user? No problem!** Waypoint supports many other mechanisms
 for deploying to Kubernetes. You can use the
-[`kubernetes`](/docs/platforms/kubernetes/deploy) plugin for highly opinionated, no YAML deployments. Or you can use
-[`kubernetes-apply`](/docs/platforms/kubernetes/kubectl-deploy) with
+[`kubernetes`](/waypoint/docs/platforms/kubernetes/deploy) plugin for highly opinionated, no YAML deployments. Or you can use
+[`kubernetes-apply`](/waypoint/docs/platforms/kubernetes/kubectl-deploy) with
 a directory of YAML files.
 
 ## Why Helm?
@@ -29,7 +29,7 @@ The Helm deployment plugin for Waypoint is aimed primarily at people
 who either already use Helm or need to use a tool that lets them specify
 any custom Kubernetes resources. If you don't know Helm and are just trying
 to deploy a typical web service, you can use the YAML-less
-[`kubernetes`](/plugins/helm#values) plugin. And you can always switch
+[`kubernetes`](/waypoint/plugins/helm#values) plugin. And you can always switch
 deployment plugins later, so you don't need to be worried about making a
 "wrong" decision.
 
@@ -40,7 +40,7 @@ Helm directly? There are many reasons:
 1. **Dynamic Chart values.** Waypoint makes it easy to set chart values
    based on dynamic information such as metadata about the most recent
    artifact build, Git commit information, or just computed or templated
-   information using [HCL functions](/docs/waypoint-hcl/functions/all).
+   information using [HCL functions](/waypoint/docs/waypoint-hcl/functions/all).
 
 2. **Environments.** Waypoint handles the higher level multi-environment
    abstraction for you, so you can deploy your chart to multiple environments
@@ -50,15 +50,15 @@ Helm directly? There are many reasons:
    you can invoke Helm using the same tool you're using to invoke builds,
    release management, etc.
 
-4. **Other Waypoint features.** You can take advantage of other Waypoint features such as [remote operations](/docs/waypoint-hcl/functions/all),
-   [logs](/docs/logs), [exec](/docs/exec), [input variables](/docs/waypoint-hcl/variables/input), and more.
+4. **Other Waypoint features.** You can take advantage of other Waypoint features such as [remote operations](/waypoint/docs/waypoint-hcl/functions/all),
+   [logs](/waypoint/docs/logs), [exec](/waypoint/docs/exec), [input variables](/waypoint/docs/waypoint-hcl/variables/input), and more.
 
 ## Using Helm with Waypoint
 
 The example below shows a `waypoint.hcl` configuration that uses a
 Helm chart in the "helm" directory. We set two Chart values `image.repository`
 and `image.tag` to point to the artifact we just built (see
-[here for more information on artifact variables](/docs/waypoint-hcl/variables/artifact)). Notice that with the
+[here for more information on artifact variables](/waypoint/docs/waypoint-hcl/variables/artifact)). Notice that with the
 `set` Chart values, we could use any Waypoint variables, HCL functions, etc.
 to dynamically set chart configuration.
 
@@ -99,7 +99,7 @@ built already) and Waypoint will use Helm to deploy your application.
 
 -> **Note:** The `set` syntax is the same as the `--set` flag used
 with the `helm` CLI. This is documented on the Helm website [here](https://helm.sh/docs/intro/using_helm/#the-format-and-limitations-of---set). You can also specify
-[values YAML files](/plugins/helm#values).
+[values YAML files](/waypoint/plugins/helm#values).
 
 ### Chart Repositories
 
@@ -117,14 +117,14 @@ deploy {
 
 ## Entrypoint Variables
 
-If you want to use the [Waypoint entrypoint](/docs/entrypoint) functionality,
-you must manually inject the [entrypoint environment variables](/docs/entrypoint).
-The [opinionated Kubernetes plugin](/docs/platforms/kubernetes/deploy) does this
+If you want to use the [Waypoint entrypoint](/waypoint/docs/entrypoint) functionality,
+you must manually inject the [entrypoint environment variables](/waypoint/docs/entrypoint).
+The [opinionated Kubernetes plugin](/waypoint/docs/platforms/kubernetes/deploy) does this
 automatically but since with Helm you're writing manual Kubernetes resources with
 YAML, we can't automatically inject the environment variables.
 
 A map of the environment variables to set are exposed in the `waypoint.hcl`
-as [`entrypoint.env`](/docs/waypoint-hcl/variables/entrypoint). This can be
+as [`entrypoint.env`](/waypoint/docs/waypoint-hcl/variables/entrypoint). This can be
 passed into your Helm chart either as values or templating your YAML templates.
 The recommended approach is to use Helm values, to avoid templating a template.
 
@@ -134,7 +134,7 @@ but an incomplete example is shown below to briefly explain the process.
 -> **Note:** This also requires that the entrypoint binary is already
 injected into the image as part of the build process. This happens automatically
 for `docker` or `pack` builders. If you're using an externally built image,
-you must [inject the entrypoint manually](/docs/platforms/kubernetes/external-build#waypoint-entrypoint-with-external-image-builds).
+you must [inject the entrypoint manually](/waypoint/docs/platforms/kubernetes/external-build#waypoint-entrypoint-with-external-image-builds).
 
 ```hcl
 app "my-app" {
@@ -198,6 +198,6 @@ to specify a values YAML file.
 ## Reference Documentation
 
 To view a full list of the available options for the Helm plugin,
-please see the [plugin reference documentation](/plugins/helm).
+please see the [plugin reference documentation](/waypoint/plugins/helm).
 This documentation is more dense and has less examples, but is an
 exhaustive list of the available options.

@@ -36,7 +36,7 @@ after the equals sign is the parameter's value.
 
 The context where the parameter appears determines what names and value types
 are valid. Parameter values can also be built up using
-[expressions](/docs/waypoint-hcl/syntax/expressions) which allow the value to
+[expressions](/waypoint/docs/waypoint-hcl/syntax/expressions) which allow the value to
 either be specified literally or generated from other values programmatically.
 
 ### Stanzas
@@ -46,7 +46,7 @@ A _stanza_ is a container for other configuration content:
 ```hcl
 app "web" {
   build {
-    use "docker {
+    use "docker" {
       dockerfile = "${path.app}/Dockerfile"
     }
   }
@@ -69,7 +69,7 @@ and stanzas may be nested, creating a hierarchy of stanzas and their associated
 parameters.
 
 All of the stanza types that Waypoint supports are listed in the documentation
-sidebar to the left. The documentation uses [placement tables](/docs/waypoint-hcl#placement-tables)
+sidebar to the left. The documentation uses [placement tables](/waypoint/docs/waypoint-hcl#placement-tables)
 to document the context in which stanzas are valid.
 
 ## Comments

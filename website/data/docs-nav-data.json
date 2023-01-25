@@ -30,6 +30,31 @@
     ]
   },
   {
+    "title": "Use Cases",
+    "routes": [
+      {
+        "title": "Dynamic App Config with Vault Dynamic Secrets",
+        "path": "use-cases/dynamic-config-vault-dynamic-secrets"
+      },
+      {
+        "title": "Blue-Green Deployments with Nomad and Consul",
+        "path": "use-cases/blue-green-deployment"
+      },
+      {
+        "title": "Using GitHub Actions to Unlock GitOps Workflows",
+        "path": "use-cases/waypoint-gh-actions"
+      },
+      {
+        "title": "Service Mesh Microservice Deployment",
+        "path": "use-cases/service-mesh-microservice-deployment"
+      },
+      {
+        "title": "Seamless Cloud Migration With Waypoint",
+        "path": "use-cases/migrate-clouds"
+      }
+    ]
+  },
+  {
     "title": "Getting Started",
     "path": "getting-started"
   },
@@ -90,6 +115,10 @@
           {
             "title": "Upgrade to 0.9.0",
             "path": "upgrading/version-guides/0.9.0"
+          },
+          {
+            "title": "Upgrade to 0.10.0",
+            "path": "upgrading/version-guides/0.10.0"
           }
         ]
       }

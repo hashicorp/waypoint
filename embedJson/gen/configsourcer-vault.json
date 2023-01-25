@@ -14,6 +14,7 @@
          "Default": "",
          "EnvVar": "VAULT_ADDR",
          "Category": false,
+         "Example": "",
          "SubFields": null
       },
       {
@@ -25,6 +26,7 @@
          "Default": "",
          "EnvVar": "VAULT_AGENT_ADDR",
          "Category": false,
+         "Example": "",
          "SubFields": null
       },
       {
@@ -36,6 +38,7 @@
          "Default": "",
          "EnvVar": "",
          "Category": false,
+         "Example": "",
          "SubFields": null
       },
       {
@@ -47,6 +50,7 @@
          "Default": "",
          "EnvVar": "",
          "Category": false,
+         "Example": "",
          "SubFields": null
       },
       {
@@ -58,6 +62,7 @@
          "Default": "",
          "EnvVar": "",
          "Category": false,
+         "Example": "",
          "SubFields": null
       },
       {
@@ -69,6 +74,7 @@
          "Default": "",
          "EnvVar": "",
          "Category": false,
+         "Example": "",
          "SubFields": null
       },
       {
@@ -80,6 +86,7 @@
          "Default": "",
          "EnvVar": "",
          "Category": false,
+         "Example": "",
          "SubFields": null
       },
       {
@@ -91,17 +98,19 @@
          "Default": "60",
          "EnvVar": "",
          "Category": false,
+         "Example": "",
          "SubFields": null
       },
       {
          "Field": "aws_header_value",
          "Type": "string",
-         "Synopsis": "The value to match the [`iam_server_id_header_value`](https://www.vaultproject.io/api/auth/aws#iam_server_id_header_value) if set.",
+         "Synopsis": "The value to match the [`iam_server_id_header_value`](/vault/api-docs/auth/aws#iam_server_id_header_value) if set.",
          "Summary": "",
          "Optional": true,
          "Default": "",
          "EnvVar": "",
          "Category": false,
+         "Example": "",
          "SubFields": null
       },
       {
@@ -113,17 +122,19 @@
          "Default": "us-east-1",
          "EnvVar": "",
          "Category": false,
+         "Example": "",
          "SubFields": null
       },
       {
          "Field": "aws_role",
          "Type": "string",
          "Synopsis": "The role to use for AWS authentication.",
-         "Summary": "This is required for the `aws` auth method. This depends on how you configured the Vault [AWS Auth Method](https://www.vaultproject.io/docs/auth/aws).",
+         "Summary": "This is required for the `aws` auth method. This depends on how you configured the Vault [AWS Auth Method](/vault/docs/auth/aws).",
          "Optional": true,
          "Default": "",
          "EnvVar": "",
          "Category": false,
+         "Example": "",
          "SubFields": null
       },
       {
@@ -135,17 +146,19 @@
          "Default": "",
          "EnvVar": "",
          "Category": false,
+         "Example": "",
          "SubFields": null
       },
       {
          "Field": "aws_type",
          "Type": "string",
          "Synopsis": "The type of authentication to use for AWS: either `iam` or `ec2`.",
-         "Summary": "This is required for the `aws` auth method. This depends on how you configured the Vault [AWS Auth Method](https://www.vaultproject.io/docs/auth/aws).",
+         "Summary": "This is required for the `aws` auth method. This depends on how you configured the Vault [AWS Auth Method](/vault/docs/auth/aws).",
          "Optional": true,
          "Default": "",
          "EnvVar": "",
          "Category": false,
+         "Example": "",
          "SubFields": null
       },
       {
@@ -157,6 +170,7 @@
          "Default": "",
          "EnvVar": "VAULT_CACERT",
          "Category": false,
+         "Example": "",
          "SubFields": null
       },
       {
@@ -168,6 +182,7 @@
          "Default": "",
          "EnvVar": "VAULT_CAPATH",
          "Category": false,
+         "Example": "",
          "SubFields": null
       },
       {
@@ -179,6 +194,7 @@
          "Default": "",
          "EnvVar": "VAULT_CLIENT_CERT",
          "Category": false,
+         "Example": "",
          "SubFields": null
       },
       {
@@ -190,6 +206,7 @@
          "Default": "",
          "EnvVar": "VAULT_CLIENT_KEY",
          "Category": false,
+         "Example": "",
          "SubFields": null
       },
       {
@@ -201,6 +218,7 @@
          "Default": "",
          "EnvVar": "",
          "Category": false,
+         "Example": "",
          "SubFields": null
       },
       {
@@ -212,6 +230,7 @@
          "Default": "15",
          "EnvVar": "",
          "Category": false,
+         "Example": "",
          "SubFields": null
       },
       {
@@ -223,17 +242,19 @@
          "Default": "",
          "EnvVar": "",
          "Category": false,
+         "Example": "",
          "SubFields": null
       },
       {
          "Field": "gcp_role",
          "Type": "string",
          "Synopsis": "The role to use for GCP authentication.",
-         "Summary": "This is required for the `gcp` auth method. This depends on how you configured the Vault [GCP Auth Method](https://www.vaultproject.io/docs/auth/gcp).",
+         "Summary": "This is required for the `gcp` auth method. This depends on how you configured the Vault [GCP Auth Method](/vault/docs/auth/gcp).",
          "Optional": true,
          "Default": "",
          "EnvVar": "",
          "Category": false,
+         "Example": "",
          "SubFields": null
       },
       {
@@ -245,28 +266,31 @@
          "Default": "",
          "EnvVar": "",
          "Category": false,
+         "Example": "",
          "SubFields": null
       },
       {
          "Field": "gcp_type",
          "Type": "string",
          "Synopsis": "The type of authentication; must be `gce` or `iam`.",
-         "Summary": "This is required for the `gcp` auth method. This depends on how you configured the Vault [GCP Auth Method](https://www.vaultproject.io/docs/auth/gcp).",
+         "Summary": "This is required for the `gcp` auth method. This depends on how you configured the Vault [GCP Auth Method](/vault/docs/auth/gcp).",
          "Optional": true,
          "Default": "",
          "EnvVar": "",
          "Category": false,
+         "Example": "",
          "SubFields": null
       },
       {
          "Field": "kubernetes_role",
          "Type": "string",
          "Synopsis": "The role to use for Kubernetes authentication.",
-         "Summary": "This is required for the `kubernetes` auth method. This is a role that is setup with the [Kubernetes Auth Method in Vault](https://www.vaultproject.io/docs/auth/kubernetes).",
+         "Summary": "This is required for the `kubernetes` auth method. This is a role that is setup with the [Kubernetes Auth Method in Vault](/vault/docs/auth/kubernetes).",
          "Optional": true,
          "Default": "",
          "EnvVar": "",
          "Category": false,
+         "Example": "",
          "SubFields": null
       },
       {
@@ -278,6 +302,7 @@
          "Default": "/var/run/secrets/kubernetes.io/serviceaccount/token",
          "EnvVar": "",
          "Category": false,
+         "Example": "",
          "SubFields": null
       },
       {
@@ -289,6 +314,7 @@
          "Default": "",
          "EnvVar": "VAULT_NAMESPACE",
          "Category": false,
+         "Example": "",
          "SubFields": null
       },
       {
@@ -300,6 +326,7 @@
          "Default": "",
          "EnvVar": "VAULT_SKIP_VERIFY",
          "Category": false,
+         "Example": "",
          "SubFields": null
       },
       {
@@ -311,6 +338,7 @@
          "Default": "",
          "EnvVar": "VAULT_TLS_SERVER_NAME",
          "Category": false,
+         "Example": "",
          "SubFields": null
       },
       {
@@ -322,6 +350,7 @@
          "Default": "",
          "EnvVar": "VAULT_TOKEN",
          "Category": false,
+         "Example": "",
          "SubFields": null
       }
    ],
@@ -330,11 +359,12 @@
          "Field": "key",
          "Type": "string",
          "Synopsis": "The key name that exists at the specified Vault `path` parameter.",
-         "Summary": "The value can be a direct key such as `password` or it can be a [JSON pointer](https://tools.ietf.org/html/rfc6901) string to retrieve a nested value. When using the Vault KV [Version 2](https://www.vaultproject.io/docs/secrets/kv/kv-v2) secret backend, the key must be prefixed with an additional string of `/data`. For example, `/data/password`. When using the Vault KV [Version 1](https://www.vaultproject.io/docs/secrets/kv/kv-v1) secret backend, the key can be a direct key name such as `password`. This is because the Vault KV API returns different data structures in its response depending on the Vault KV version the key is stored in. Therefore, the `/data` prefix is required for keys stored in the Vault KV `Version 2` secret backend in order to retrieve its nested value using JSON pointer string.",
+         "Summary": "The value can be a direct key such as `password` or it can be a [JSON pointer](https://tools.ietf.org/html/rfc6901) string to retrieve a nested value. When using the Vault KV [Version 2](/vault/docs/secrets/kv/kv-v2) secret backend, the key must be prefixed with an additional string of `/data`. For example, `/data/password`. When using the Vault KV [Version 1](/vault/docs/secrets/kv/kv-v1) secret backend, the key can be a direct key name such as `password`. This is because the Vault KV API returns different data structures in its response depending on the Vault KV version the key is stored in. Therefore, the `/data` prefix is required for keys stored in the Vault KV `Version 2` secret backend in order to retrieve its nested value using JSON pointer string.",
          "Optional": false,
          "Default": "",
          "EnvVar": "",
          "Category": false,
+         "Example": "",
          "SubFields": null
       },
       {
@@ -346,11 +376,12 @@
          "Default": "",
          "EnvVar": "",
          "Category": false,
+         "Example": "",
          "SubFields": null
       }
    ],
    "requiredSourceFields": null,
    "sourceFieldsHelp": "Source Parameters\nThe parameters below are used with `waypoint config source-set` to configure\nthe behavior this plugin. These are _not_ used in `dynamic` calls. The\nparameters used for `dynamic` are in the previous section.\n",
    "type": "configsourcer",
-   "use": "`dynamic` for sourcing [configuration values](/docs/app-config/dynamic) or [input variable values](/docs/waypoint-hcl/variables/dynamic)."
+   "use": "`dynamic` for sourcing [configuration values](/waypoint/docs/app-config/dynamic) or [input variable values](/waypoint/docs/waypoint-hcl/variables/dynamic)."
 }

@@ -4,12 +4,13 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/posener/complete"
+
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/internal/clierrors"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	"github.com/hashicorp/waypoint/internal/runnerinstall"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
-	"github.com/posener/complete"
 )
 
 type RunnerUninstallCommand struct {
@@ -137,8 +138,6 @@ func (c *RunnerUninstallCommand) Run(args []string) int {
 		Id:         c.id,
 	})
 	if err != nil {
-		s.Update("Unable to uninstall runner")
-		s.Abort()
 		c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 		return 1
 	}
@@ -149,15 +148,30 @@ func (c *RunnerUninstallCommand) Run(args []string) int {
 	s = sg.Add("Forgetting runner %q on server...", c.id)
 	defer func() { s.Abort() }()
 
-	_, err = c.project.Client().ForgetRunner(ctx, &pb.ForgetRunnerRequest{
-		RunnerId: c.id,
-	})
+	runners, err := c.project.Client().ListRunners(ctx, &pb.ListRunnersRequest{})
 	if err != nil {
-		s.Update("Couldn't forget runner: %s", clierrors.Humanize(err))
-		s.Status(terminal.StatusWarn)
-	} else {
-		s.Update("Runner %q forgotten on server", c.id)
-		s.Status(terminal.StatusOK)
+		c.ui.Output("Error while listing runners: %s", clierrors.Humanize(err), terminal.WithErrorStyle())
+		return 1
+	}
+
+	// We loop and check for the runner in the list of runners, so we don't
+	// fail if it doesn't exist. We allow this so that users can "uninstall"
+	// runners which failed to be installed, and never registered with the server
+	for _, runner := range runners.Runners {
+		if runner.Id == c.id {
+			_, err = c.project.Client().ForgetRunner(ctx, &pb.ForgetRunnerRequest{
+				RunnerId: c.id,
+			})
+			if err != nil {
+				s.Update("Couldn't forget runner: %s", clierrors.Humanize(err))
+				s.Status(terminal.StatusWarn)
+				return 1
+			} else {
+				s.Update("Runner %q forgotten on server", c.id)
+				s.Status(terminal.StatusOK)
+			}
+			break
+		}
 	}
 	s.Done()
 

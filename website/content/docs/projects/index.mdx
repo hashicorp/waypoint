@@ -12,7 +12,7 @@ A project can be comprised of one or more applications. Each application in
 a project represents a single thing that can be deployed. A project is the
 first thing you ever create after installing Waypoint.
 
-Every project has an associated [waypoint.hcl configuration](/docs/waypoint-hcl).
+Every project has an associated [waypoint.hcl configuration](/waypoint/docs/waypoint-hcl).
 This configuration can be a file that is committed alongside the project
 in version control, or it can be stored on the server and associated with
 your project by name.
@@ -26,10 +26,10 @@ mix of the aforementioned methods.
 A project can be created in multiple ways. The recommended approach is
 via the web UI. Information about each approach is documented below.
 
-In each approach, you'll have to have a [waypoint.hcl configuration](/docs/waypoint-hcl)
+In each approach, you'll have to have a [waypoint.hcl configuration](/waypoint/docs/waypoint-hcl)
 ready. The `waypoint.hcl` configuration can be stored either alongside
 your project's source or within the Waypoint server. You can find more
-details about where to place the `waypoint.hcl` [here](/docs/waypoint-hcl#waypoint-hcl-location).
+details about where to place the `waypoint.hcl` [here](/waypoint/docs/waypoint-hcl#waypoint-hcl-location).
 
 ### Web UI
 
@@ -43,7 +43,7 @@ project.
 
 ![new-project](/img/new-waypoint-project.png)
 
-Follow the instructions, and optionally [enable connect a Git repository](/docs/projects/git)
+Follow the instructions, and optionally [enable connect a Git repository](/waypoint/docs/projects/git)
 to the project.
 
 ![project-created](/img/waypoint-project-created.png)
@@ -54,8 +54,8 @@ created.
 
 ### `waypoint init`
 
-If you have written a [waypoint.hcl file](/docs/waypoint-hcl), you can
-use the [`waypoint init`](/commands/init) command to initialize the project.
+If you have written a [waypoint.hcl file](/waypoint/docs/waypoint-hcl), you can
+use the [`waypoint init`](/waypoint/commands/init) command to initialize the project.
 
 You must run this command in the same directory or in a child directory of
 the `waypoint.hcl` file. This will create and configure the project if it is
@@ -78,7 +78,7 @@ commands such as 'waypoint build' to perform steps individually.
 ### `waypoint project apply`
 
 This is the most advanced and lowest level approach to creating or modifying
-a project. The [`waypoint project apply`](/commands/project-apply) command
+a project. The [`waypoint project apply`](/waypoint/commands/project-apply) command
 is a thin layer in front of the direct project API. You can use this command
 to create or update a project:
 
@@ -93,12 +93,12 @@ $ waypoint project apply \
 
 ## Deploying a Project
 
-Once a project is created and [configured](/docs/waypoint-hcl), you
+Once a project is created and [configured](/waypoint/docs/waypoint-hcl), you
 can now deploy the project.
 
 If you have the repository checked out with a `waypoint.hcl` locally,
 you can run `waypoint up` and perform a local deploy. If your project was
-configured to [automatically poll a git repository](/docs/projects/git), Waypoint
+configured to [automatically poll a git repository](/waypoint/docs/projects/git), Waypoint
 will automatically begin the process to build and deploy your application.
 
 ## Multiple Applications
@@ -120,4 +120,4 @@ in a sub-dir of the `waypoint-examples` repo maps to this single repository.
 
 Support for this is seen in the GitOps workflow, where a user specifies
 the parent repo to map to the project and can optionally specify
-a [Git source path](https://www.waypointproject.io/commands/project-apply#git-path).
+a [Git source path](/waypoint/commands/project-apply#git-path).

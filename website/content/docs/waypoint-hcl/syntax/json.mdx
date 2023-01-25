@@ -2,12 +2,12 @@
 layout: docs
 page_title: JSON Syntax - waypoint.hcl
 description: |-
-  Waypoint configuration is usually written in [HCL syntax](/docs/waypoint-hcl/syntax) which is designed to be relatively easy for humans to read and update. Waypoint also supports JSON. This syntax is useful when generating configurations programmatically, since existing JSON libraries can be used to prepare the generated configuration files.
+  Waypoint configuration is usually written in [HCL syntax](/waypoint/docs/waypoint-hcl/syntax) which is designed to be relatively easy for humans to read and update. Waypoint also supports JSON. This syntax is useful when generating configurations programmatically, since existing JSON libraries can be used to prepare the generated configuration files.
 ---
 
 # JSON Configuration Syntax
 
-Waypoint configuration is usually written in [HCL syntax](/docs/waypoint-hcl/syntax)
+Waypoint configuration is usually written in [HCL syntax](/waypoint/docs/waypoint-hcl/syntax)
 which is designed to be relatively easy for humans to read and update. Waypoint
 also supports JSON. This syntax is useful when generating configurations programmatically,
 since existing JSON libraries can be used to prepare the generated configuration files.
@@ -23,7 +23,7 @@ primarily for machines, so readability is not a priority.
 ## JSON File Structure
 
 At the root of any JSON-based Waypoint configuration is a JSON object. The
-properties of this object correspond to the top-level [stanza types](/docs/waypoint-hcl/syntax#stanzas).
+properties of this object correspond to the top-level [stanza types](/waypoint/docs/waypoint-hcl/syntax#stanzas).
 For example:
 
 ```json
@@ -66,7 +66,7 @@ app "web" {
 ## Expression Mapping
 
 Since JSON grammar is not able to represent all of the HCL language
-[expression syntax](/docs/waypoint-hcl/syntax/expressions), JSON values
+[expression syntax](/waypoint/docs/waypoint-hcl/syntax/expressions), JSON values
 interpreted as expressions are mapped as follows:
 
 | JSON    | Waypoint HCL Syntax Interpretation                                                                            |
@@ -78,7 +78,7 @@ interpreted as expressions are mapped as follows:
 | Array   | Each element is mapped per this table, producing a `tuple(...)` value with suitable element types.            |
 | Null    | A literal `null`.                                                                                             |
 
-[string template]: /docs/waypoint-hcl/syntax/expressions#string-templates
+[string template]: /waypoint/docs/waypoint-hcl/syntax/expressions#string-templates
 
 When a JSON string is encountered in a location where arbitrary expressions are
 expected, its value is first parsed as a [string template][]

@@ -1,0 +1,4 @@
+```release-note:improvement
+core: `waypoint job list` will now retrieve paginated list of jobs to avoid
+grpc data limits per request
+```

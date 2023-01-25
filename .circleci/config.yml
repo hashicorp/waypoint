@@ -3,7 +3,7 @@ version: 2.1
 
 references:
   images:
-    go: &GOLANG_IMAGE docker.mirror.hashicorp.services/cimg/go:1.17
+    go: &GOLANG_IMAGE docker.mirror.hashicorp.services/cimg/go:1.19
     ember: &EMBER_IMAGE docker.mirror.hashicorp.services/circleci/node:14-browsers
     website: &WEBSITE_IMAGE docker.mirror.hashicorp.services/node:14
 
@@ -15,7 +15,7 @@ references:
 
   environment: &ENVIRONMENT
     TEST_RESULTS_DIR: *TEST_RESULTS_DIR
-    GOTESTSUM_RELEASE: 0.4.2
+    GOTESTSUM_RELEASE: 1.8.2
     EMAIL: noreply@hashicorp.com
     GIT_AUTHOR_NAME: circleci-waypoint
     GIT_COMMITTER_NAME: circleci-waypoint
@@ -35,7 +35,7 @@ jobs:
           name: Install golangci-lint
           command: |
             download=https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh
-            wget -O- -q $download | sh -x -s -- -d -b /home/circleci/go v1.47.3
+            wget -O- -q $download | sh -x -s -- -d -b /home/circleci/go v1.50.1
       - run: go mod download
       - run:
           name: lint
@@ -236,7 +236,7 @@ jobs:
           at: .
       - run:
           command: |
-            go get github.com/kevinburke/go-bindata/...
+            go install github.com/kevinburke/go-bindata/...
             PATH=/home/circleci/go/bin:$PATH make bin
             cp waypoint /home/circleci/go/bin
       # save dev build to pass to downstream jobs
@@ -259,7 +259,7 @@ jobs:
           at: .
       - run:
           command: |
-            go get github.com/kevinburke/go-bindata/...
+            go install github.com/kevinburke/go-bindata/...
             PATH=/home/circleci/go/bin:$PATH make bin/windows
       - notify_main_failure
 
@@ -297,12 +297,12 @@ jobs:
       - attach_workspace:
           at: .
       # This is just to remind ourselves of what version of Go is default
-      # on this machine image; currently it's 1.18, but we should use 1.17
+      # on this machine image; currently it's 1.18, but we should use 1.19
       - run: go version
       - run:
-          name: Install go v1.17.6
+          name: Install go v1.19.4
           command: |
-            curl -SL --fail -o /tmp/golang.tar.gz https://dl.google.com/go/go1.17.6.linux-amd64.tar.gz
+            curl -SL --fail -o /tmp/golang.tar.gz https://dl.google.com/go/go1.19.4.linux-amd64.tar.gz
             sudo rm -rf /usr/local/go
             sudo tar -C /usr/local/ -xzf /tmp/golang.tar.gz
             rm -rf /tmp/golang.tar.gz
@@ -315,7 +315,7 @@ jobs:
   image-release:
     docker:
       # Use a modern Circle image as we just need up-to-date Docker here
-      - image: docker.mirror.hashicorp.services/cimg/base:2021.12
+      - image: docker.mirror.hashicorp.services/cimg/base:2022.12
     resource_class: medium+
     environment:
       <<: *ENVIRONMENT
@@ -434,7 +434,7 @@ jobs:
       - checkout
       - attach_workspace:
           at: .
-      - run: go get github.com/kevinburke/go-bindata/...
+      - run: go install github.com/kevinburke/go-bindata/...
       - run: make static-assets
       - persist_to_workspace:
           root: .
@@ -490,7 +490,7 @@ jobs:
           at: ui
       - run:
           working_directory: ui
-          command: yarn test:ember:percy:ci
+          command: yarn test:ember:ci
       - store_test_results:
           path: ui/test-results
 

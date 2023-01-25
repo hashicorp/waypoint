@@ -459,7 +459,7 @@ deployment.
 -> **Note:** Using the ` + "`-prune=false`" + ` flag is recommended for this releaser. By default,
 Waypoint prunes and destroys all unreleased deployments and keeps only one previous
 deployment. Therefore, if ` + "`-prune=false`" + ` is not set, Waypoint may delete
-your job via "pruning" a previous version. See [deployment pruning](/docs/lifecycle/release#deployment-pruning)
+your job via "pruning" a previous version. See [deployment pruning](/waypoint/docs/lifecycle/release#deployment-pruning)
 for more information.
 
 ### Release URL

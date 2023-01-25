@@ -1,0 +1,5 @@
+```release-note:bug
+aws/lambda: fix issue where deployment configuration was not injected in to
+Lambda function environments, preventing waypoint-entrypoint from authenticating
+with the Waypoint server
+```

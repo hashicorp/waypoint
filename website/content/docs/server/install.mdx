@@ -8,7 +8,7 @@ description: |-
 # Waypoint Server Install
 
 The recommended way to install the server is using the
-[`waypoint install`](/commands/install) command.
+[`waypoint install`](/waypoint/commands/install) command.
 This command will install a server into Docker, Kubernetes, AWS ECS, or Nomad,
 bootstrap the server, and configure your local CLI to access that server.
 It is a single command to get up and running with Waypoint.
@@ -16,7 +16,7 @@ It is a single command to get up and running with Waypoint.
 This command is configured to install recommended defaults out of the box, while
 giving enough dials and options for users to tweak to still be useful. If there's
 a specific setup that doesn't work for you with `waypoint install`, we recommend
-looking at the [server run](/docs/server/run) documentation instead or opening
+looking at the [server run](/waypoint/docs/server/run) documentation instead or opening
 an issue on GitHub and requesting a feature enhancement.
 
 The server installed by the `waypoint install` command runs Waypoint
@@ -31,10 +31,10 @@ waypoint server run -accept-tos -vv -db=/data/data.db -listen-grpc=0.0.0.0:9701 
 
 Currently, Waypoint supports running its server on the following platforms:
 
-- [Kubernetes](/docs/server/install#kubernetes-platform)
-- [Nomad](/docs/server/install#nomad-platform)
-- [Amazon ECS](/docs/server/install#aws-ecs-platform)
-- [Docker](/docs/server/install#docker-platform)
+- [Kubernetes](/waypoint/docs/server/install#kubernetes-platform)
+- [Nomad](/waypoint/docs/server/install#nomad-platform)
+- [Amazon ECS](/waypoint/docs/server/install#aws-ecs-platform)
+- [Docker](/waypoint/docs/server/install#docker-platform)
 
 ### Kubernetes Platform
 
@@ -107,7 +107,7 @@ Notice that the advertise and web ui address is shown as a hostname, rather than
 Without using Consul, if the Waypoint server allocation ever gets restarted in Nomad, the IP
 address will no longer be valid, and you will have to upgrade every server client's context.
 There are ways around this issue that are considered more advanced, and are likely
-better candidates for using the [server run](/docs/server/run) flow for setting
+better candidates for using the [server run](/waypoint/docs/server/run) flow for setting
 up Waypoint server.
 
 If you do not wish to automatically register a Consul service in Nomad for

@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -191,7 +192,7 @@ func TestVariables_LoadDynamicDefaults(t *testing.T) {
 		file     string
 		provided []*pb.Variable
 		needs    bool
-		expected map[string]string
+		expected map[string]*pb.Variable
 		err      string
 	}{
 		{
@@ -231,9 +232,25 @@ func TestVariables_LoadDynamicDefaults(t *testing.T) {
 				},
 			},
 			true,
-			map[string]string{
-				"teeth": "hello",
+			map[string]*pb.Variable{
+				"teeth": {Value: &pb.Variable_Str{Str: "hello"}}},
+			"",
+		},
+
+		{
+			"dynamic map",
+			"dynamic_map.hcl",
+			[]*pb.Variable{
+				{
+					Name: "irrelevent",
+					Value: &pb.Variable_Str{
+						Str: "NO",
+					},
+				},
 			},
+			true,
+			map[string]*pb.Variable{
+				"teeth": {Value: &pb.Variable_Hcl{Hcl: `{"k1":"v1", "k2":"v2"}`}}},
 			"",
 		},
 	}
@@ -272,14 +289,22 @@ func TestVariables_LoadDynamicDefaults(t *testing.T) {
 			)
 			require.False(diags.HasErrors())
 
-			actual := map[string]string{}
-			for _, v := range dynVars {
-				actual[v.Name] = v.Value.(*pb.Variable_Str).Str
+			require.Equal(len(tt.expected), len(dynVars))
+
+			for _, actualVar := range dynVars {
+				expectedVar, ok := tt.expected[actualVar.Name]
+				require.True(ok)
+				switch expectedVal := expectedVar.Value.(type) {
+				case *pb.Variable_Str:
+					actualVal, ok := actualVar.Value.(*pb.Variable_Str)
+					require.True(ok)
+					require.Equal(expectedVal.Str, actualVal.Str)
+				case *pb.Variable_Hcl:
+					actualVal, ok := actualVar.Value.(*pb.Variable_Hcl)
+					require.True(ok)
+					require.Equal(expectedVal.Hcl, strings.TrimSpace(actualVal.Hcl))
+				}
 			}
-			if len(actual) == 0 {
-				actual = nil
-			}
-			require.Equal(tt.expected, actual)
 		})
 	}
 }

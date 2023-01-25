@@ -11,7 +11,7 @@
   </th>
   {{#let (or @release.pushedArtifact @release) as |operation|}}
     <td>
-      <span data-test-status class="table__icon-text-cell-span hide-in-percy">
+      <span data-test-status class="table__icon-text-cell-span">
         {{#if operation.status}}
           <FlightIcon
             data-test-status-icon
@@ -55,7 +55,7 @@
         }}
       {{/if}}
     </td>
-    <td data-test-provider class="hide-in-percy">
+    <td data-test-provider>
       <span class="table__icon-text-cell-span">
         <FlightIcon
           data-test-icon-type={{icon-for-component operation.component.name}}

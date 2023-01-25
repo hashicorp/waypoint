@@ -13,7 +13,7 @@ provides a Helm chart to setup a fully production ready Waypoint server cluster
 on Kubernetes.
 
 -> **Why a server?** Waypoint requires a serverside component to enable
-features such as [GitOps](/docs/projects/git), history tracking,
+features such as [GitOps](/waypoint/docs/projects/git), history tracking,
 resource health checking, collaboration with teammates, etc. You can also
 run Waypoint in a purely local mode for quick tasks where the previously
 mentioned features aren't important.
@@ -39,7 +39,7 @@ just trying to _use_ Waypoint, you may be able to just use the web interface
 instead. Ask another team member with Waypoint setup for the URL to your
 interface and credentials to log in.
 
-To install the Waypoint client, go to the [Downloads](/downloads) page
+To install the Waypoint client, go to the [Downloads](/waypoint/downloads) page
 and follow the instructions. We provide raw binaries as well as full system
 packages depending on your operating system.
 
@@ -104,7 +104,7 @@ and `waypoint login` commands:
 - A Waypoint runner profile was configured so that operations such as
   builds, deploys, etc. launch within Kubernetes pods.
 
-- The Waypoint server was [bootstrapped](/docs/server/run#bootstrap-the-server)
+- The Waypoint server was [bootstrapped](/waypoint/docs/server/run#bootstrap-the-server)
   which creates the first user. The authentication token for this first
   user was stored in a Kubernetes Secret.
 

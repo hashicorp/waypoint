@@ -50,15 +50,26 @@ func (p *Platform) Deploy(
 	defer func() { s.Abort() }()
 
 	deployment := &Deployment{
-		PruneLabel: p.config.PruneLabel,
+		PruneLabel:     p.config.PruneLabel,
+		PruneWhitelist: p.config.PruneWhitelist,
 	}
 
-	s.Update("Executing kubectl apply...")
-	cmd, err := p.cmd(ctx, s, "apply",
+	s.Update("Executing kubectl apply ...")
+	args := []string{
 		"-R",
 		"-f", p.config.Path,
-		"--prune", "-l", deployment.PruneLabel,
-	)
+		"--prune",
+		"-l", deployment.PruneLabel,
+	}
+
+	for _, v := range deployment.PruneWhitelist {
+		args = append(args, []string{
+			"--prune-whitelist",
+			v,
+		}...)
+	}
+
+	cmd, err := p.cmd(ctx, s, "apply", args...)
 	if err != nil {
 		return nil, err
 	}
@@ -149,6 +160,11 @@ type Config struct {
 	// Prune label is the label to use to destroy resources that don't match.
 	PruneLabel string `hcl:"prune_label,attr"`
 
+	// PruneWhitelist is a list of Kubernetes Objects that are allowed to be pruned
+	// An empty list means the defaults. Specify them as group/version/kind (e.g: apps/v1/Deployment)
+	// (see https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands --prune-whitelist)
+	PruneWhitelist []string `hcl:"prune_whitelist,attr"`
+
 	// KubeconfigPath is the path to the kubeconfig file.
 	KubeconfigPath string `hcl:"kubeconfig,optional"`
 
@@ -168,7 +184,7 @@ or JSON files.
 
 This plugin lets you use any pre-existing set of Kubernetes resource files
 to deploy to Kubernetes. This plugin supports all the features of Waypoint.
-You may use Waypoint's [templating features](/docs/waypoint-hcl/functions/template)
+You may use Waypoint's [templating features](/waypoint/docs/waypoint-hcl/functions/template)
 to template the resources with information such as the artifact from
 a previous build step, entrypoint environment variables, etc.
 
@@ -185,7 +201,7 @@ used.
 
 ### Artifact Access
 
-You may use Waypoint's [templating features](/docs/waypoint-hcl/functions/template)
+You may use Waypoint's [templating features](/waypoint/docs/waypoint-hcl/functions/template)
 to access information such as the artifact from the build or push stages.
 An example below shows this by using ` + "`templatedir`" + ` mixed with
 variables such as ` + "`artifact.image`" + ` to dynamically configure the
@@ -193,7 +209,7 @@ Docker image within a Kubernetes Deployment.
 
 ### Entrypoint Functionality
 
-Waypoint [entrypoint functionality](/docs/entrypoint#functionality) such
+Waypoint [entrypoint functionality](/waypoint/docs/entrypoint#functionality) such
 as logs, exec, app configuration, and more require two properties to be true:
 
 1. The running image must already have the Waypoint entrypoint installed
@@ -204,14 +220,14 @@ as logs, exec, app configuration, and more require two properties to be true:
   deployment stage.**
 
 **Step 2 does not happen automatically.** You must manually set the entrypoint
-environment variables using the [templating feature](/docs/waypoint-hcl/functions/template).
+environment variables using the [templating feature](/waypoint/docs/waypoint-hcl/functions/template).
 One of the examples below shows the entrypoint environment variables being
 injected.
 
 ### URL Service
 
 If you want your workload to be accessible by the
-[Waypoint URL service](/docs/url), you must set the PORT environment variable
+[Waypoint URL service](/waypoint/docs/url), you must set the PORT environment variable
 within the pod with your web service and also be using the Waypoint
 entrypoint (documented in the previous section).
 
@@ -237,6 +253,10 @@ deploy {
     // build/registry, entrypoint env vars, etc.
     path        = templatedir("${path.app}/k8s")
     prune_label = "app=myapp"
+	prune_whitelist = [
+		"apps/v1/Deployment",
+		"apps/v1/ReplicaSet"
+  	]
   }
 }
 
@@ -278,7 +298,7 @@ spec:
 		docs.Summary(
 			"This will be used for `kubectl apply` to create a set of",
 			"Kubernetes resources. Pair this with `templatefile` or `templatedir`",
-			"[templating functions](/docs/waypoint-hcl/functions/template)",
+			"[templating functions](/waypoint/docs/waypoint-hcl/functions/template)",
 			"to inject dynamic elements into your Kubernetes resources.",
 			"Subdirectories are included recursively.",
 		),

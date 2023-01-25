@@ -13,6 +13,9 @@ Create an AWS Lambda function URL.
 release {
 	use "lambda-function-url" {
 		auth_type = "NONE"
+		cors {
+			allow_methods = ["*"]
+		}
 	}
 }
 ```
@@ -23,7 +26,7 @@ This plugin has no required parameters.
 
 ### Optional Parameters
 
-These parameters are used in the [`use` stanza](/docs/waypoint-hcl/use) for this plugin.
+These parameters are used in the [`use` stanza](/waypoint/docs/waypoint-hcl/use) for this plugin.
 
 #### auth_type
 
@@ -34,6 +37,58 @@ The AuthType parameter determines how Lambda authenticates or authorizes request
 - Type: **string**
 - **Optional**
 - Default: NONE
+
+#### cors (category)
+
+CORS configuration for the function URL.
+
+##### cors.allow_credentials
+
+Whether to allow cookies or other credentials in requests to your function URL.
+
+- Type: **bool**
+- **Optional**
+- Default: false
+
+##### cors.allow_headers
+
+The HTTP headers that origins can include in requests to your function URL. For example: Date, Keep-Alive, X-Custom-Header.
+
+- Type: **list of string**
+- **Optional**
+- Default: []
+
+##### cors.allow_methods
+
+The HTTP methods that are allowed when calling your function URL. For example: GET, POST, DELETE, or the wildcard character (\*).
+
+- Type: **list of string**
+- **Optional**
+- Default: []
+
+##### cors.allow_origins
+
+The origins that can access your function URL. You can list any number of specific origins, separated by a comma. You can grant access to all origins using the wildcard character (\*).
+
+- Type: **list of string**
+- **Optional**
+- Default: []
+
+##### cors.expose_headers
+
+The HTTP headers in your function response that you want to expose to origins that call your function URL. For example: Date, Keep-Alive, X-Custom-Header.
+
+- Type: **list of string**
+- **Optional**
+- Default: []
+
+##### cors.max_age
+
+The maximum amount of time, in seconds, that web browsers can cache results of a preflight request.
+
+- Type: **int64**
+- **Optional**
+- Default: 0
 
 #### principal
 

@@ -11,6 +11,7 @@ import (
 
 	"github.com/hashicorp/go-hclog"
 	"github.com/mitchellh/mapstructure"
+	"github.com/pkg/errors"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -54,7 +55,7 @@ type ConfigSourcer struct {
 }
 
 type cachedSecret struct {
-	Outputs map[string]string // The most recent outputs for a workspace
+	Outputs map[string]StateIncludeAttributes // The most recent outputs for a workspace
 }
 
 // Config implements component.Configurable
@@ -86,11 +87,13 @@ type stateInclude struct {
 	Id   string `json:"id"`
 	Type string `json:"type"`
 
-	Attributes struct {
-		Name  string `json:"name"`
-		Type  string `json:"type"`
-		Value string `json:"value"`
-	} `json:"attributes"`
+	Attributes StateIncludeAttributes `json:"attributes"`
+}
+
+type StateIncludeAttributes struct {
+	Name  string      `json:"name"`
+	Type  string      `json:"type"`
+	Value interface{} `json:"value"`
 }
 
 // stateLookup is used to read the information about the current state version.
@@ -192,7 +195,7 @@ func (cs *ConfigSourcer) read(
 		L := log.With("workspace", tfcReq.Workspace, "organization", tfcReq.Organization)
 
 		// We have to map the organization + workspace  to a workspace-id, so we do that first.
-		// the workspaceIds map is never cleared beacuse the configuration about which
+		// the workspaceIds map is never cleared because the configuration about which
 		// organization + workspace that is in use is static in the context of a config
 		// sourcer.
 		key := tfcReq.Organization + "/" + tfcReq.Workspace
@@ -300,6 +303,14 @@ func (cs *ConfigSourcer) read(
 
 				continue
 			}
+			if resp.StatusCode != 200 {
+				L.Error("error in sending request for state version for workspace, unexpected response code", "workspace_id", id, "code", resp.Status)
+				result.Result = &pb.ConfigSource_Value_Error{
+					Error: status.New(codes.Aborted, err.Error()).Proto(),
+				}
+
+				continue
+			}
 
 			defer resp.Body.Close()
 
@@ -316,7 +327,7 @@ func (cs *ConfigSourcer) read(
 				continue
 			}
 
-			outputs := map[string]string{}
+			outputs := map[string]StateIncludeAttributes{}
 
 			for _, output := range data.Included {
 				if output.Type != "state-version-outputs" {
@@ -324,7 +335,7 @@ func (cs *ConfigSourcer) read(
 					continue
 				}
 
-				outputs[output.Attributes.Name] = output.Attributes.Value
+				outputs[output.Attributes.Name] = output.Attributes
 			}
 
 			L.Info("refreshed outputs from Terraform Cloud", "workspace", id, "vars", len(outputs))
@@ -333,10 +344,57 @@ func (cs *ConfigSourcer) read(
 			cs.secretCache[id] = cachedSecretVal
 		}
 
-		value := cachedSecretVal.Outputs[tfcReq.Output]
+		if tfcReq.Output == "" {
+			// No explicit output specified - getting all outputs.
 
-		result.Result = &pb.ConfigSource_Value_Value{
-			Value: value,
+			// Convert the decorated tfc api response types to a native map[string]interface{}
+			allOutputsMap := make(map[string]interface{})
+			for k, v := range cachedSecretVal.Outputs {
+				allOutputsMap[k] = v.Value
+			}
+
+			allOutputsJson, err := json.Marshal(allOutputsMap)
+			if err != nil {
+				return nil, errors.Wrapf(err, "failed marshalling all TFC outputs for org %q workspace %q to json", tfcReq.Organization, tfcReq.Workspace)
+			}
+
+			result.Result = &pb.ConfigSource_Value_Json{
+				Json: allOutputsJson,
+			}
+		} else {
+			value := cachedSecretVal.Outputs[tfcReq.Output]
+
+			switch value.Type {
+			case "string":
+				stringVal, ok := value.Value.(string)
+				if !ok {
+					return nil, fmt.Errorf("variable %q is a string according to TFC, but is not actually %T, not a string type", value.Name, value.Value)
+				}
+
+				result.Result = &pb.ConfigSource_Value_Value{
+					Value: stringVal,
+				}
+			case "number", "bool":
+				// We only have pathways today to return strings or objects representable as json.
+				// This isn't either of those.
+				// We _could_ stringify the value (i.e. true -> "true") and return that, but I think
+				// that would be more confusing than getting a clear error.
+				// When get feature requests for consuming these types from TFC, we should
+				// update the configsourcer proto resp to add these types to the oneof.
+
+				return nil, fmt.Errorf("output %q is of an unsupported type %q. This configsourcer supports strings or types marshallable to json", value.Name, value.Type)
+			default:
+				// Almost certainly either "list" or "map". Give json marshalling a shot.
+				valueJson, err := json.Marshal(value.Value)
+				if err != nil {
+					return nil, errors.Wrapf(err, "failed marshalling TFC output %q of type %q for org %q workspace %q to json",
+						value.Name, value.Type, tfcReq.Organization, tfcReq.Workspace)
+				}
+
+				result.Result = &pb.ConfigSource_Value_Json{
+					Json: valueJson,
+				}
+			}
 		}
 	}
 
@@ -411,7 +469,7 @@ config {
 		"workspace",
 		"The Terraform Cloud workspace associated with the given organization to read the outputs of",
 		docs.Summary(
-			"The outputs associtaed with the most recent state version for the given workspace",
+			"The outputs associated with the most recent state version for the given workspace",
 			"are the ones that are used. These values are refreshed according to",
 			"refreshInternal, a source field.",
 		),
@@ -419,7 +477,16 @@ config {
 
 	doc.SetRequestField(
 		"output",
-		"The name of the output to read the value of",
+		"Optional: The name of the output to read the value of. All outputs if blank.",
+		docs.Summary(
+			"The name of the output from Terraform Cloud to return.",
+			"Only strings and objects representable as json (i.e. maps and lists)",
+			"are currently supported.",
+			"If unspecified, all outputs from the workspace will be read",
+			"and returned as a map[string]object, and can be referenced as such",
+			"in the waypoint.hcl. ",
+			"See https://github.com/hashicorp/waypoint-examples/tree/main/terraform/variables for examples.",
+		),
 	)
 
 	doc.SetField(
@@ -467,7 +534,7 @@ config {
 type reqConfig struct {
 	Workspace    string `hcl:"workspace"`
 	Organization string `hcl:"organization"`
-	Output       string `hcl:"output"`
+	Output       string `hcl:"output,optional"`
 }
 
 type sourceConfig struct {

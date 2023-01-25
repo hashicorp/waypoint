@@ -1,0 +1,4 @@
+```release-note:improvement
+cli: `waypoint job cancel` now outputs additional insights
+when trying to cancel a running job.
+```

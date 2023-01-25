@@ -88,6 +88,9 @@ type TaskLauncherConfig struct {
 	// wordy because it's only for the WatchTask timing out waiting for the pod
 	// its watching to start up before it attempts to stream its logs.
 	WatchTaskStartupTimeoutSeconds int `hcl:"watchtask_startup_timeout_seconds,optional"`
+
+	// The PodSecurityContext to apply to the pod
+	SecurityContext *PodSecurityContext `hcl:"security_context,block"`
 }
 
 func (p *TaskLauncher) Documentation() (*docs.Documentation, error) {
@@ -379,6 +382,17 @@ func (p *TaskLauncher) StartTask(
 		}
 	}
 
+	var securityContext *corev1.PodSecurityContext = nil
+	podSc := p.config.SecurityContext
+	if podSc != nil {
+		securityContext = &corev1.PodSecurityContext{
+			RunAsUser:    podSc.RunAsUser,
+			RunAsGroup:   podSc.RunAsGroup,
+			RunAsNonRoot: podSc.RunAsNonRoot,
+			FSGroup:      podSc.FsGroup,
+		}
+	}
+
 	resourceRequirements := corev1.ResourceRequirements{
 		Limits:   resourceLimits,
 		Requests: resourceRequests,
@@ -428,6 +442,7 @@ func (p *TaskLauncher) StartTask(
 					Containers:         []corev1.Container{container},
 					ImagePullSecrets:   pullSecrets,
 					RestartPolicy:      corev1.RestartPolicyOnFailure,
+					SecurityContext:    securityContext,
 				},
 			},
 		},

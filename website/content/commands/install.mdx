@@ -62,6 +62,7 @@ and disable the UI, the command would be:
 
 - `-docker-server-image=<string>` - Docker image for the Waypoint server. The default is hashicorp/waypoint:latest.
 - `-docker-odr-image=<string>` - Docker image for the Waypoint On-Demand Runners. This will default to the server image with the name (not label) suffixed with '-odr'.
+- `-docker-runner-socket-path=<string>` - The path of the Docker socket that will be bound in runner. The default is /var/run/docker.sock.
 
 #### ecs Options
 

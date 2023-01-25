@@ -12,7 +12,7 @@ description: |-
 With self managed Waypoint servers, the `waypoint install` command installs and
 manages a single Waypoint static runner.
 
-Additional static runners can be added using [`waypoint runner install`](/commands/runner-install), which automates the process of creating
+Additional static runners can be added using [`waypoint runner install`](/waypoint/commands/runner-install), which automates the process of creating
 resources in Kubernetes, Nomad, ECS, or Docker to execute a static runner.
 
 In the case that none of these work for you, you can configure a static runner manually as
@@ -26,7 +26,7 @@ how the runner is deployed in a platform. By default, the
 server will adopt the static runner and create a new runner profile for it after it
 reports to the server.
 
-To install a static runner, use the [`waypoint runner install`](/commands/runner-install)
+To install a static runner, use the [`waypoint runner install`](/waypoint/commands/runner-install)
 command. Below is an example of using that command to install a Waypoint static runner to
 Docker:
 
@@ -121,7 +121,7 @@ The environment variables specify how to connect to the server:
   (e.g. "1") if the TLS cert is invalid and can be safely ignored,
   such as in a development environment.
 
-- `WAYPOINT_SERVER_TOKEN` should be an [auth token](/docs/server/auth)
+- `WAYPOINT_SERVER_TOKEN` should be an [auth token](/waypoint/docs/server/auth)
   the runner can use to communicate to the server. You can generate a new
   auth token using `waypoint user token`.
 

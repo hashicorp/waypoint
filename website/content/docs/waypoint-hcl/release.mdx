@@ -15,7 +15,7 @@ traffic. This step may involve adding a deployment to a load balancer, updating
 DNS, configuring a service mesh, etc.
 
 Release configuration is **optional.** Please see the documentation on the
-[release phase of the Waypoint lifecycle](/docs/lifecycle/release)
+[release phase of the Waypoint lifecycle](/waypoint/docs/lifecycle/release)
 for the Waypoint behavior when a release phase is not configured.
 
 ```hcl
@@ -56,8 +56,8 @@ app "frontend" {
 
 ### Optional
 
-- `hook` <code>([hook][hook]: nil)</code> - [Hooks](/docs/lifecycle/hooks)
+- `hook` <code>([hook][hook]: nil)</code> - [Hooks](/waypoint/docs/lifecycle/hooks)
   to execute before and/or after the release.
 
-[hook]: /docs/waypoint-hcl/hook 'Hook Stanza'
-[use]: /docs/waypoint-hcl/use 'Use Stanza'
+[hook]: /waypoint/docs/waypoint-hcl/hook 'Hook Stanza'
+[use]: /waypoint/docs/waypoint-hcl/use 'Use Stanza'
