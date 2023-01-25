@@ -7,6 +7,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elbv2"
 	"github.com/hashicorp/go-hclog"
+	"github.com/pkg/errors"
+
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint-plugin-sdk/docs"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
@@ -37,8 +39,9 @@ func (r *Releaser) Release(
 	ui terminal.UI,
 	target *Deployment,
 ) (*Release, error) {
-	if target.LoadBalancerArn == "" && target.TargetGroupArn == "" {
-		log.Info("No load-balancer configured")
+
+	if target.TargetGroupArn == "" {
+		log.Info("No target group configured, skipping release")
 		return &Release{}, nil
 	}
 
@@ -51,29 +54,10 @@ func (r *Releaser) Release(
 	}
 	elbsrv := elbv2.New(sess)
 
-	dlb, err := elbsrv.DescribeLoadBalancers(&elbv2.DescribeLoadBalancersInput{
-		LoadBalancerArns: []*string{&target.LoadBalancerArn},
-	})
-	if err != nil {
-		return nil, err
+	var hostname string
+	if r.p.config.ALB != nil && r.p.config.ALB.FQDN != "" {
+		hostname = r.p.config.ALB.FQDN
 	}
-
-	var lb *elbv2.LoadBalancer
-
-	if len(dlb.LoadBalancers) == 0 {
-		return nil, fmt.Errorf("No load balancers returned by DescribeLoadBalancers")
-	}
-
-	lb = dlb.LoadBalancers[0]
-
-	listeners, err := elbsrv.DescribeListeners(&elbv2.DescribeListenersInput{
-		LoadBalancerArn: lb.LoadBalancerArn,
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	var listener *elbv2.Listener
 
 	tgs := []*elbv2.TargetGroupTuple{
 		{
@@ -82,12 +66,107 @@ func (r *Releaser) Release(
 		},
 	}
 
-	log.Debug("configuring weight 100 for target group", "arn", target.TargetGroupArn)
+	// existingListener, if discovered, will be modified to introduce the new target group.
+	var existingListener *elbv2.Listener
+	var lbArn string
 
-	if len(listeners.Listeners) > 0 {
-		listener = listeners.Listeners[0]
+	switch lbRef := target.LbReference.(type) {
+	case *Deployment_LoadBalancerArn:
+		// We have a load balancer. Either discover the existing listener, or create a new one.
+		lbArn = lbRef.LoadBalancerArn
 
-		def := listener.DefaultActions
+		dlb, err := elbsrv.DescribeLoadBalancers(&elbv2.DescribeLoadBalancersInput{
+			LoadBalancerArns: []*string{&lbRef.LoadBalancerArn},
+		})
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to describe load balancer %q", lbRef.LoadBalancerArn)
+		}
+
+		var lb *elbv2.LoadBalancer
+
+		if len(dlb.LoadBalancers) == 0 {
+			return nil, fmt.Errorf("no load balancers returned by DescribeLoadBalancers")
+		}
+
+		lb = dlb.LoadBalancers[0]
+
+		// Now that we have the LB, set the hostname if necessary
+		if hostname == "" {
+			hostname = *lb.DNSName
+		}
+
+		listeners, err := elbsrv.DescribeListeners(&elbv2.DescribeListenersInput{
+			LoadBalancerArn: lb.LoadBalancerArn,
+		})
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to describe listener for lb %q", lb.LoadBalancerArn)
+		}
+
+		if len(listeners.Listeners) > 0 {
+			if len(listeners.Listeners) > 1 {
+				log.Warn("ALB has multiple listeners - only modifying the first listaner and ignoring all others")
+			}
+			existingListener = listeners.Listeners[0]
+		} else {
+			log.Info("load-balancer defined", "dns-name", *lb.DNSName)
+
+			_, err := elbsrv.CreateListener(&elbv2.CreateListenerInput{
+				LoadBalancerArn: lb.LoadBalancerArn,
+				Port:            aws.Int64(80),
+				Protocol:        aws.String("HTTP"),
+				DefaultActions: []*elbv2.Action{
+					{
+						ForwardConfig: &elbv2.ForwardActionConfig{
+							TargetGroups: tgs,
+						},
+						Type: aws.String("forward"),
+					},
+				},
+			})
+
+			if err != nil {
+				return nil, errors.Wrapf(err, "failed to create listener")
+			}
+
+			// Do not set existingListener
+		}
+
+	case *Deployment_ListenerArn:
+		lo, err := elbsrv.DescribeListeners(&elbv2.DescribeListenersInput{
+			ListenerArns: []*string{&lbRef.ListenerArn},
+		})
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to describe listener %q", lbRef.ListenerArn)
+		}
+		if len(lo.Listeners) == 0 {
+			return nil, errors.Errorf("listener %q not found", lbRef.ListenerArn)
+		}
+		existingListener = lo.Listeners[0]
+		lbArn = *existingListener.LoadBalancerArn
+
+		if hostname == "" {
+			// We need to get the hostname from the existing alb
+
+			dlb, err := elbsrv.DescribeLoadBalancers(&elbv2.DescribeLoadBalancersInput{
+				LoadBalancerArns: []*string{existingListener.LoadBalancerArn},
+			})
+			if err != nil {
+				return nil, errors.Wrapf(err, "failed to describe load balancer for listener %q", *existingListener.LoadBalancerArn)
+			}
+
+			if len(dlb.LoadBalancers) == 0 {
+				return nil, fmt.Errorf("no load balancers returned by DescribeLoadBalancers")
+			}
+
+			hostname = *dlb.LoadBalancers[0].DNSName
+		}
+
+	}
+
+	if existingListener != nil {
+		log.Debug("configuring weight 100 for target group", "arn", target.TargetGroupArn)
+
+		def := existingListener.DefaultActions
 
 		if len(def) > 0 && def[0].ForwardConfig != nil {
 			for _, tg := range def[0].ForwardConfig.TargetGroups {
@@ -104,9 +183,9 @@ func (r *Releaser) Release(
 
 		log.Debug("modifying load balancer", "tgs", len(tgs))
 		_, err = elbsrv.ModifyListener(&elbv2.ModifyListenerInput{
-			ListenerArn: listener.ListenerArn,
-			Port:        listener.Port,
-			Protocol:    listener.Protocol,
+			ListenerArn: existingListener.ListenerArn,
+			Port:        existingListener.Port,
+			Protocol:    existingListener.Protocol,
 			DefaultActions: []*elbv2.Action{
 				{
 					ForwardConfig: &elbv2.ForwardActionConfig{
@@ -117,41 +196,13 @@ func (r *Releaser) Release(
 			},
 		})
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrapf(err, "failed to modify listener %q to introduce new target group", existingListener.ListenerArn)
 		}
-	} else {
-		log.Info("load-balancer defined", "dns-name", *lb.DNSName)
-
-		lo, err := elbsrv.CreateListener(&elbv2.CreateListenerInput{
-			LoadBalancerArn: lb.LoadBalancerArn,
-			Port:            aws.Int64(80),
-			Protocol:        aws.String("HTTP"),
-			DefaultActions: []*elbv2.Action{
-				{
-					ForwardConfig: &elbv2.ForwardActionConfig{
-						TargetGroups: tgs,
-					},
-					Type: aws.String("forward"),
-				},
-			},
-		})
-
-		if err != nil {
-			return nil, err
-		}
-
-		listener = lo.Listeners[0]
-	}
-
-	hostname := *lb.DNSName
-
-	if r.p.config.ALB != nil && r.p.config.ALB.FQDN != "" {
-		hostname = r.p.config.ALB.FQDN
 	}
 
 	return &Release{
 		Url:             "http://" + hostname,
-		LoadBalancerArn: *lb.LoadBalancerArn,
+		LoadBalancerArn: lbArn,
 	}, nil
 }
 

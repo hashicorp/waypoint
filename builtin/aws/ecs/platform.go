@@ -395,7 +395,18 @@ func (p *Platform) Deploy(
 	result.TargetGroupArn = tgState.Arn
 
 	albState := rm.Resource("application load balancer").State().(*Resource_Alb)
-	result.LoadBalancerArn = albState.Arn
+	albListenerState := rm.Resource("alb listener").State().(*Resource_Alb_Listener)
+	if albState != nil && albState.Arn != "" {
+		result.LbReference = &Deployment_LoadBalancerArn{
+			LoadBalancerArn: albState.Arn,
+		}
+	} else if albListenerState != nil && albListenerState.Arn != "" {
+		result.LbReference = &Deployment_ListenerArn{
+			ListenerArn: albListenerState.Arn,
+		}
+	} else {
+		return nil, status.Errorf(codes.FailedPrecondition, "missing an alb and an alb listener - one must be set")
+	}
 
 	cState := rm.Resource("cluster").State().(*Resource_Cluster)
 	result.Cluster = cState.Name
@@ -1720,7 +1731,6 @@ func (p *Platform) resourceAlbCreate(
 	}
 	state.Arn = *lb.LoadBalancerArn
 
-	state.Arn = *lb.LoadBalancerArn
 	state.DnsName = *lb.DNSName
 	state.CanonicalHostedZoneId = *lb.CanonicalHostedZoneId
 
@@ -2514,8 +2524,15 @@ func (p *Platform) loadResourceManagerState(
 		listenerResource.Managed = false
 		log.Debug("Using existing listener", "arn", listenerResource.Arn)
 	} else {
+		var loadBalancerArn string
+		if albRef, ok := deployment.LbReference.(*Deployment_LoadBalancerArn); ok {
+			loadBalancerArn = albRef.LoadBalancerArn
+		} else {
+			return status.Errorf(codes.FailedPrecondition, "cannot restore state to release this old deployment - expecting deployment to have an ALB reference, instead got %T. Please deploy again.", deployment.LbReference)
+		}
+
 		listenerResource.Managed = true
-		s.Update("Describing load balancer %s", deployment.LoadBalancerArn)
+		s.Update("Describing load balancer %s", loadBalancerArn)
 		sess, err := p.getSession(log)
 		if err != nil {
 			return status.Errorf(codes.Internal, "failed to get aws session: %s", err)
@@ -2523,13 +2540,13 @@ func (p *Platform) loadResourceManagerState(
 		elbsrv := elbv2.New(sess)
 
 		listeners, err := elbsrv.DescribeListenersWithContext(ctx, &elbv2.DescribeListenersInput{
-			LoadBalancerArn: &deployment.LoadBalancerArn,
+			LoadBalancerArn: &loadBalancerArn,
 		})
 		if err != nil {
-			return status.Errorf(codes.Internal, "failed to describe listeners for ALB %q: %s", deployment.LoadBalancerArn, err)
+			return status.Errorf(codes.Internal, "failed to describe listeners for ALB %q: %s", loadBalancerArn, err)
 		}
 		if len(listeners.Listeners) == 0 {
-			s.Update("No listeners found for ALB %q", deployment.LoadBalancerArn)
+			s.Update("No listeners found for ALB %q", loadBalancerArn)
 		} else {
 			listenerResource.Arn = *listeners.Listeners[0].ListenerArn
 			s.Update("Found existing listener (ARN: %q)", listenerResource.Arn)
