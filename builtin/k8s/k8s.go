@@ -5,7 +5,7 @@ import (
 	sdk "github.com/hashicorp/waypoint-plugin-sdk"
 )
 
-//go:generate protoc -I ../../.. -I ../../thirdparty/proto --go_opt=plugins=grpc --go_out=../../.. waypoint/builtin/k8s/plugin.proto
+//go:generate protoc -I ../../.. -I ../../thirdparty/proto --go_out=../../.. --go-grpc_out=../../.. waypoint/builtin/k8s/plugin.proto
 
 const platformName = "kubernetes"
 
