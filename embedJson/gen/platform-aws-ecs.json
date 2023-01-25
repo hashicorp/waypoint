@@ -334,8 +334,8 @@
          "SubFields": null
       },
       {
-         "Field": "load_balancer_arn",
-         "Type": "string",
+         "Field": "lb_reference",
+         "Type": "ecs.isDeployment_LbReference",
          "Synopsis": "",
          "Summary": "",
          "Optional": false,
