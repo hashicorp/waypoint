@@ -471,6 +471,8 @@ application. In the future, this may source from Consul.
 
 `)
 
+	doc.Input("jobspec.Deployment")
+
 	doc.Example(`
 // The waypoint.hcl file
 release {

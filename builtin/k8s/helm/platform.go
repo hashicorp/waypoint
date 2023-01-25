@@ -279,6 +279,8 @@ is listening on that the URL service will connect to. See one of the examples
 below for more details.
 
 `)
+	doc.Input("FIXME")
+	doc.Output("k8s_helm.Deployment")
 
 	doc.Example(`
 // A local helm chart relative to the app.

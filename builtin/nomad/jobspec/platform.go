@@ -603,6 +603,9 @@ below for more details.
 
 `)
 
+	doc.Input("docker.Image")
+	doc.Output("jobspec.Deployment")
+
 	doc.Example(`
 deploy {
   use "nomad-jobspec" {
