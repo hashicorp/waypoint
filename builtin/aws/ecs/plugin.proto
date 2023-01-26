@@ -11,13 +11,7 @@ message Deployment {
   string task_arn = 2;
   string service_arn = 3;
   string target_group_arn = 4;
-
-  // Reference to the load balancer. Either the LB itself (if we created it),
-  // or the lb listener if the user specified it.
-  oneof lb_reference {
-    string load_balancer_arn = 5;
-    string listener_arn = 8;
-  }
+  string load_balancer_arn = 5;
 
   string cluster = 6;
   opaqueany.Any resource_state = 7;
