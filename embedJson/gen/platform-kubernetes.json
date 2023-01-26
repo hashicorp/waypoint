@@ -1,6 +1,7 @@
 {
    "description": "Deploy the application into a Kubernetes cluster using Deployment objects",
    "example": "use \"kubernetes\" {\n\timage_secret = \"registry_secret\"\n\treplicas = 3\n\tprobe_path = \"/_healthz\"\n}",
+   "input": "docker.Image",
    "mappers": null,
    "name": "kubernetes",
    "optionalFields": [
@@ -333,6 +334,7 @@
          "SubFields": null
       }
    ],
+   "output": "k8s.Deployment",
    "outputAttrs": [
       {
          "Field": "id",

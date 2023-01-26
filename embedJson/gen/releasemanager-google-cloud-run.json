@@ -1,8 +1,10 @@
 {
    "description": "Manipulates the Cloud Run APIs to make deployments active",
+   "input": "google.cloudrun.Deployment",
    "mappers": null,
    "name": "google-cloud-run",
    "optionalFields": null,
+   "output": "google.cloudrun.Release",
    "requiredFields": null,
    "type": "releasemanager",
    "use": "the [`use` stanza](/waypoint/docs/waypoint-hcl/use) for this plugin."
