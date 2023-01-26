@@ -5,6 +5,18 @@
    "name": "aws-ec2",
    "optionalFields": [
       {
+         "Field": "count",
+         "Type": "ec2.countConfig",
+         "Synopsis": "how many EC2 instances to configure the ASG with",
+         "Summary": "the fields here (desired, min, max) map directly to the typical ASG configuration",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "Example": "",
+         "SubFields": null
+      },
+      {
          "Field": "extra_ports",
          "Type": "list of int",
          "Synopsis": "additional TCP ports to allow into the EC2 instances",
@@ -118,18 +130,6 @@
    ],
    "outputAttrsHelp": "Output attributes can be used in your `waypoint.hcl` as [variables](/waypoint/docs/waypoint-hcl/variables) via [`artifact`](/waypoint/docs/waypoint-hcl/variables/artifact) or [`deploy`](/waypoint/docs/waypoint-hcl/variables/deploy).",
    "requiredFields": [
-      {
-         "Field": "count",
-         "Type": "ec2.countConfig",
-         "Synopsis": "how many EC2 instances to configure the ASG with",
-         "Summary": "the fields here (desired, min, max) map directly to the typical ASG configuration",
-         "Optional": false,
-         "Default": "",
-         "EnvVar": "",
-         "Category": false,
-         "Example": "",
-         "SubFields": null
-      },
       {
          "Field": "instance_type",
          "Type": "string",

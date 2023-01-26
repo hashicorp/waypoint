@@ -6,13 +6,33 @@ Manipulates the Kubernetes Service activate Deployments.
 
 ### Required Parameters
 
+This plugin has no required parameters.
+
+### Optional Parameters
+
 These parameters are used in the [`use` stanza](/waypoint/docs/waypoint-hcl/use) for this plugin.
+
+#### annotations
+
+Annotations to be applied to the kube service.
+
+- Type: **map of string to string**
+- **Optional**
+
+#### context
+
+The kubectl context to use, as defined in the kubeconfig file.
+
+- Type: **string**
+- **Optional**
 
 #### ingress (category)
 
 Configuration to set up an ingress resource to route traffic to the given application from an ingress controller.
 
 An ingress resource can be created on release that will route traffic to the Kubernetes service. Note that before this happens, the Kubernetes cluster must already be configured with an Ingress controller. Otherwise there won't be a way for inbound traffic to be routed to the ingress resource.
+
+- **Optional**
 
 ##### ingress.annotations
 
@@ -56,6 +76,8 @@ Defines the kind of rule the path will be for the ingress controller. Valid path
 
 A stanza of TLS configuration options for traffic to the ingress resource.
 
+- **Optional**
+
 ###### ingress.tls.hosts
 
 A list of hosts included in the TLS certificate.
@@ -63,24 +85,6 @@ A list of hosts included in the TLS certificate.
 ###### ingress.tls.secret_name
 
 The Kubernetes secret name that should be used to look up or store TLS configs.
-
-### Optional Parameters
-
-These parameters are used in the [`use` stanza](/waypoint/docs/waypoint-hcl/use) for this plugin.
-
-#### annotations
-
-Annotations to be applied to the kube service.
-
-- Type: **map of string to string**
-- **Optional**
-
-#### context
-
-The kubectl context to use, as defined in the kubeconfig file.
-
-- Type: **string**
-- **Optional**
 
 #### kubeconfig
 

@@ -69,7 +69,7 @@
          "Type": "cloudrun.VPCAccess",
          "Synopsis": "VPCAccess details",
          "Summary": "",
-         "Optional": false,
+         "Optional": true,
          "Default": "",
          "EnvVar": "",
          "Category": true,
