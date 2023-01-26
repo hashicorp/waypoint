@@ -22,24 +22,6 @@ task {
 
 These parameters are used in the [`use` stanza](/waypoint/docs/waypoint-hcl/use) for this plugin.
 
-#### cpu
-
-Cpu resource request to be added to the task container.
-
-- Type: **k8s.ResourceConfig**
-
-#### ephemeral_storage
-
-Ephemeral_storage resource request to be added to the task container.
-
-- Type: **k8s.ResourceConfig**
-
-#### memory
-
-Memory resource request to be added to the task container.
-
-- Type: **k8s.ResourceConfig**
-
 #### security_context
 
 - Type: **k8s.PodSecurityContext**
@@ -53,6 +35,20 @@ These parameters are used in the [`use` stanza](/waypoint/docs/waypoint-hcl/use)
 The kubectl context to use, as defined in the kubeconfig file.
 
 - Type: **string**
+- **Optional**
+
+#### cpu
+
+Cpu resource request to be added to the task container.
+
+- Type: **k8s.ResourceConfig**
+- **Optional**
+
+#### ephemeral_storage
+
+Ephemeral_storage resource request to be added to the task container.
+
+- Type: **k8s.ResourceConfig**
 - **Optional**
 
 #### image_pull_policy
@@ -80,6 +76,13 @@ By default uses from current user's home directory.
 - Type: **string**
 - **Optional**
 - Environment Variable: **KUBECONFIG**
+
+#### memory
+
+Memory resource request to be added to the task container.
+
+- Type: **k8s.ResourceConfig**
+- **Optional**
 
 #### namespace
 

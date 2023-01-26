@@ -57,7 +57,7 @@
          "Type": "nomad.Resources",
          "Synopsis": "The amount of resources to allocate to the deployed allocation.",
          "Summary": "",
-         "Optional": false,
+         "Optional": true,
          "Default": "",
          "EnvVar": "",
          "Category": true,

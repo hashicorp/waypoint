@@ -11,14 +11,6 @@ Deploy the application into an AutoScaling Group on EC2.
 
 These parameters are used in the [`use` stanza](/waypoint/docs/waypoint-hcl/use) for this plugin.
 
-#### count
-
-How many EC2 instances to configure the ASG with.
-
-The fields here (desired, min, max) map directly to the typical ASG configuration.
-
-- Type: **ec2.countConfig**
-
 #### instance_type
 
 The EC2 instance type to deploy.
@@ -40,6 +32,15 @@ The TCP port on the instances that the app will be running on.
 ### Optional Parameters
 
 These parameters are used in the [`use` stanza](/waypoint/docs/waypoint-hcl/use) for this plugin.
+
+#### count
+
+How many EC2 instances to configure the ASG with.
+
+The fields here (desired, min, max) map directly to the typical ASG configuration.
+
+- Type: **ec2.countConfig**
+- **Optional**
 
 #### extra_ports
 

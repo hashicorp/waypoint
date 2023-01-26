@@ -10,7 +10,7 @@
          "Type": "docker.Auth",
          "Synopsis": "the authentication information to log into the docker repository",
          "Summary": "",
-         "Optional": false,
+         "Optional": true,
          "Default": "",
          "EnvVar": "",
          "Category": true,
@@ -119,6 +119,18 @@
          "Type": "list of string",
          "Synopsis": "A 'source:destination' list of folders to mount onto the container from the host.",
          "Summary": "A list of folders to mount onto the container from the host. The expected format for each string entry in the list is `source:destination`. So for example: `binds: [\"host_folder/scripts:/scripts\"]",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "Example": "",
+         "SubFields": null
+      },
+      {
+         "Field": "client_config",
+         "Type": "docker.ClientConfig",
+         "Synopsis": "client config for remote Docker engine",
+         "Summary": "this config block can be used to configure a remote Docker engine. By default Waypoint will attempt to discover this configuration using the environment variables: `DOCKER_HOST` to set the url to the docker server. `DOCKER_API_VERSION` to set the version of the API to reach, leave empty for latest. `DOCKER_CERT_PATH` to load the TLS certificates from. `DOCKER_TLS_VERIFY` to enable or disable TLS verification, off by default.",
          "Optional": true,
          "Default": "",
          "EnvVar": "",
@@ -287,20 +299,7 @@
       }
    ],
    "outputAttrsHelp": "Output attributes can be used in your `waypoint.hcl` as [variables](/waypoint/docs/waypoint-hcl/variables) via [`artifact`](/waypoint/docs/waypoint-hcl/variables/artifact) or [`deploy`](/waypoint/docs/waypoint-hcl/variables/deploy).",
-   "requiredFields": [
-      {
-         "Field": "client_config",
-         "Type": "docker.ClientConfig",
-         "Synopsis": "client config for remote Docker engine",
-         "Summary": "this config block can be used to configure a remote Docker engine. By default Waypoint will attempt to discover this configuration using the environment variables: `DOCKER_HOST` to set the url to the docker server. `DOCKER_API_VERSION` to set the version of the API to reach, leave empty for latest. `DOCKER_CERT_PATH` to load the TLS certificates from. `DOCKER_TLS_VERIFY` to enable or disable TLS verification, off by default.",
-         "Optional": false,
-         "Default": "",
-         "EnvVar": "",
-         "Category": false,
-         "Example": "",
-         "SubFields": null
-      }
-   ],
+   "requiredFields": null,
    "type": "platform",
    "use": "the [`use` stanza](/waypoint/docs/waypoint-hcl/use) for this plugin."
 }

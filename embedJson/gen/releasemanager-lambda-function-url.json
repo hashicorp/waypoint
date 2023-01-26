@@ -22,7 +22,7 @@
          "Type": "function_url.ReleaserConfigCors",
          "Synopsis": "CORS configuration for the function URL",
          "Summary": "",
-         "Optional": false,
+         "Optional": true,
          "Default": "NONE",
          "EnvVar": "",
          "Category": true,

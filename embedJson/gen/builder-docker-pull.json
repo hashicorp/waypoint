@@ -10,7 +10,7 @@
          "Type": "docker.Auth",
          "Synopsis": "the authentication information to log into the docker repository",
          "Summary": "",
-         "Optional": false,
+         "Optional": true,
          "Default": "",
          "EnvVar": "",
          "Category": true,
