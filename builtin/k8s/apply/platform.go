@@ -237,7 +237,7 @@ below for more details.
 
 `)
 
-	doc.Input("FIXME")
+	doc.Input("None")
 	doc.Output("k8sapply.Deployment")
 
 	doc.Example(`

@@ -279,7 +279,7 @@ is listening on that the URL service will connect to. See one of the examples
 below for more details.
 
 `)
-	doc.Input("FIXME")
+	doc.Input("None")
 	doc.Output("k8s_helm.Deployment")
 
 	doc.Example(`
