@@ -1095,14 +1095,12 @@ func (p *Platform) resourceAlbListenerCreate(
 					Type: aws.String("forward"),
 				},
 			},
-		}
 
-		if alb.Managed {
-			// If we're in charge of this ALB, we also make sure the port, protocol, and certs
-			// match the current config.
-			in.Port = aws.Int64(int64(externalIngressPort))
-			in.Protocol = aws.String(protocol)
-			in.Certificates = certs
+			// Setting these on every deployment so that we pick up any potential changes
+			// in the waypoint.hcl config
+			Port:         aws.Int64(int64(externalIngressPort)),
+			Protocol:     aws.String(protocol),
+			Certificates: certs,
 		}
 
 		_, err = elbsrv.ModifyListenerWithContext(ctx, in)
@@ -1142,7 +1140,6 @@ func (p *Platform) resourceAlbListenerCreate(
 
 	state.Arn = *listener.ListenerArn
 
-	s.Update("state.Arn: %q", state.Arn)
 	s.Done()
 	return nil
 }
