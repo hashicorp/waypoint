@@ -46,11 +46,18 @@ func (r *Releaser) Release(
 	defer s.Abort()
 
 	if target.TargetGroupArn == "" {
-		return nil, errors.New("Deployment did not define a target group - cannot release.")
+		// This should only happen if someone disables the ALB in the deploy config.
+		s.Update("Deployment did not define a target group - skipping release.")
+		s.Done()
+		return &Release{}, nil
 	}
 
 	if target.ListenerArn == "" {
-		return nil, errors.New("Deployment did not define an ALB listener - cannot release.")
+		// This should only happen if someone disables the ALB in the deploy config.
+		s.Update("Deployment did not define an ALB listener - skipping release.")
+		s.Done()
+		return &Release{}, nil
+
 	}
 
 	sess, err := utils.GetSession(&utils.SessionConfig{
