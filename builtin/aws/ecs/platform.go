@@ -2939,7 +2939,7 @@ deploy {
 				"the ARN on an existing ALB to configure",
 				docs.Summary(
 					"when this is set, Waypoint will use this ALB instead of creating",
-					"it's own. A target group will still be created for each deployment,",
+					"its own. A target group will still be created for each deployment,",
 					"and will be added to a listener on the configured ALB port",
 					"(Waypoint will the listener if it doesn't exist).",
 					"This allows users to configure their ALB outside Waypoint but still ",
