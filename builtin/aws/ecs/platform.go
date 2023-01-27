@@ -65,9 +65,10 @@ func (p *Platform) ConfigSet(config interface{}) error {
 	if c.ALB != nil {
 		alb := c.ALB
 		err := utils.Error(validation.ValidateStruct(alb,
-			validation.Field(&alb.CertificateId,
-				validation.Empty.When(alb.LoadBalancerArn != "").Error("certificate cannot be used with load_balancer_arn"),
-			),
+			// ZoneId and FQDN are both used to create a route53 record that points to an ALB.
+			// While we could still create this, if a user is managing their own ALB out of band,
+			// they probably also want to manage the route53 record themselves
+			// too.
 			validation.Field(&alb.ZoneId,
 				validation.Empty.When(alb.LoadBalancerArn != ""),
 				validation.Required.When(alb.FQDN != ""),
@@ -76,13 +77,13 @@ func (p *Platform) ConfigSet(config interface{}) error {
 				validation.Empty.When(alb.LoadBalancerArn != ""),
 				validation.Required.When(alb.ZoneId != "").Error("fqdn only valid with zone_id"),
 			),
+
 			validation.Field(&alb.InternalScheme,
 				validation.Nil.When(alb.LoadBalancerArn != "").Error("internal cannot be used with load_balancer_arn"),
 			),
 			validation.Field(&alb.LoadBalancerArn,
 				validation.Empty.When(
-					alb.CertificateId != "" ||
-						alb.ZoneId != "" ||
+					alb.ZoneId != "" ||
 						alb.FQDN != "" ||
 						len(alb.SecurityGroupIDs) >= 1).Error("load_balancer_arn can not be used with other options"),
 			),

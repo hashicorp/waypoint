@@ -71,20 +71,6 @@ func TestPlatformConfig(t *testing.T) {
 		require.Error(t, p.ConfigSet(cfg))
 	})
 
-	t.Run("errors if cert and alb are set", func(t *testing.T) {
-		var p Platform
-
-		cfg := &Config{
-			Memory: 512,
-			ALB: &ALBConfig{
-				CertificateId:   "xyz",
-				LoadBalancerArn: "abc",
-			},
-		}
-
-		require.Error(t, p.ConfigSet(cfg))
-	})
-
 	t.Run("errors if zone_id and fqdn and load balancer are set", func(t *testing.T) {
 		var p Platform
 
