@@ -60,16 +60,11 @@ Used when listener_arn is not set. If set, the created ALB will have a scheme of
 - Type: **bool**
 - **Optional**
 
-##### alb.listener_arn
-
-- Type: **string**
-- **Optional**
-
 ##### alb.load_balancer_arn
 
 The ARN on an existing ALB to configure.
 
-When this is set, Waypoint will use this ALB instead of creating it's own. A target group will still be created for each deployment, and will be added to a listener on the configured ALB port (Waypoint will the listener if it doesn't exist). This allows users to configure their ALB outside Waypoint but still have Waypoint hook the application to that ALB.
+When this is set, Waypoint will use this ALB instead of creating its own. A target group will still be created for each deployment, and will be added to a listener on the configured ALB port (Waypoint will the listener if it doesn't exist). This allows users to configure their ALB outside Waypoint but still have Waypoint hook the application to that ALB.
 
 - Type: **string**
 

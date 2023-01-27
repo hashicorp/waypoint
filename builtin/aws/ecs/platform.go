@@ -690,7 +690,7 @@ func (p *Platform) resourceServiceCreate(
 	deploymentId DeploymentId,
 	state *Resource_Service,
 
-	// Outputs of other resource creation processes
+// Outputs of other resource creation processes
 	taskDefinition *Resource_TaskDefinition,
 	cluster *Resource_Cluster,
 	targetGroup *Resource_TargetGroup,
@@ -1054,7 +1054,7 @@ func (p *Platform) resourceAlbListenerCreate(
 	}
 	log.Info("load-balancer defined", "dns-name", alb.DnsName)
 
-	s.Update("Looking for listeners for ALB %q", alb.Name)
+	s.Update("Looking for listeners for ALB %q", alb.Arn)
 	listeners, err := elbsrv.DescribeListenersWithContext(ctx, &elbv2.DescribeListenersInput{
 		LoadBalancerArn: &alb.Arn,
 	})
@@ -1367,7 +1367,7 @@ func (p *Platform) resourceTaskDefinitionCreate(
 	deployConfig *component.DeploymentConfig,
 	state *Resource_TaskDefinition,
 
-	// Outputs of other resource creation processes
+// Outputs of other resource creation processes
 	executionRole *Resource_ExecutionRole,
 	taskRole *Resource_TaskRole,
 	logGroup *Resource_LogGroup,
@@ -1628,23 +1628,27 @@ func (p *Platform) resourceAlbCreate(
 	subnets *Resource_AlbSubnets, // Required because we need to know which VPC we're in, and subnets discover it.
 	state *Resource_Alb,
 ) error {
+	s := sg.Add("Initiating ALB creation")
+	defer s.Abort()
+
 	if p.config.DisableALB {
-		log.Debug("ALB disabled - skipping target group creation")
+		s.Update("ALB disabled - skipping ALB")
+		s.Done()
 		return nil
 	}
 
 	albConfig := p.config.ALB
 
-	if albConfig != nil && albConfig.ListenerARN != "" {
-		log.Debug("Existing ALB listener specified - no need to create or discover an ALB")
+	if albConfig != nil && albConfig.LoadBalancerArn != "" {
+		s.Update("Existing ALB specified - no need to create or discover an ALB")
+		s.Done()
+		state.Managed = false
+		state.Arn = albConfig.LoadBalancerArn
 		return nil
 	}
 
 	// If not using an existing listener, the load balancer is owned by waypoint
 	state.Managed = true
-
-	s := sg.Add("Initiating ALB creation")
-	defer s.Abort()
 
 	var certs []*elbv2.Certificate
 	if albConfig != nil && albConfig.CertificateId != "" {
@@ -1701,6 +1705,16 @@ func (p *Platform) resourceAlbCreate(
 			Subnets:        subnetIds,
 			SecurityGroups: securityGroupIds,
 			Scheme:         &scheme,
+			Tags: []*elbv2.Tag{
+				{
+					Key:   aws.String("waypoint_managed"),
+					Value: aws.String("true"),
+				},
+				{
+					Key:   aws.String("waypoint_app"),
+					Value: aws.String(src.App),
+				},
+			},
 		})
 		if err != nil {
 			return status.Errorf(codes.Internal, "failed to create ALB %q: %s", lbName, err)
@@ -2497,34 +2511,29 @@ func (p *Platform) loadResourceManagerState(
 	}
 	rm.Resource("target group").SetState(&targetGroupResource)
 
-	// Restore state of ALB listener. Difficult because it may only be defined on the load balancer.
+	// Restore state of ALB listener by inspecting the load balancer
 	var listenerResource Resource_Alb_Listener
 	listenerResource.TargetGroup = &targetGroupResource
-	if p.config.ALB != nil && p.config.ALB.ListenerARN != "" {
-		listenerResource.Arn = p.config.ALB.ListenerARN
-		listenerResource.Managed = false
-		log.Debug("Using existing listener", "arn", listenerResource.Arn)
-	} else {
-		listenerResource.Managed = true
-		s.Update("Describing load balancer %s", deployment.LoadBalancerArn)
-		sess, err := p.getSession(log)
-		if err != nil {
-			return status.Errorf(codes.Internal, "failed to get aws session: %s", err)
-		}
-		elbsrv := elbv2.New(sess)
 
-		listeners, err := elbsrv.DescribeListenersWithContext(ctx, &elbv2.DescribeListenersInput{
-			LoadBalancerArn: &deployment.LoadBalancerArn,
-		})
-		if err != nil {
-			return status.Errorf(codes.Internal, "failed to describe listeners for ALB %q: %s", deployment.LoadBalancerArn, err)
-		}
-		if len(listeners.Listeners) == 0 {
-			s.Update("No listeners found for ALB %q", deployment.LoadBalancerArn)
-		} else {
-			listenerResource.Arn = *listeners.Listeners[0].ListenerArn
-			s.Update("Found existing listener (ARN: %q)", listenerResource.Arn)
-		}
+	listenerResource.Managed = false // Impossible to know now if we created this initially, so this is the safe choice
+	s.Update("Describing load balancer %s", deployment.LoadBalancerArn)
+	sess, err := p.getSession(log)
+	if err != nil {
+		return status.Errorf(codes.Internal, "failed to get aws session: %s", err)
+	}
+	elbsrv := elbv2.New(sess)
+
+	listeners, err := elbsrv.DescribeListenersWithContext(ctx, &elbv2.DescribeListenersInput{
+		LoadBalancerArn: &deployment.LoadBalancerArn,
+	})
+	if err != nil {
+		return status.Errorf(codes.Internal, "failed to describe listeners for ALB %q: %s", deployment.LoadBalancerArn, err)
+	}
+	if len(listeners.Listeners) == 0 {
+		s.Update("No listeners found for ALB %q", deployment.LoadBalancerArn)
+	} else {
+		listenerResource.Arn = *listeners.Listeners[0].ListenerArn
+		s.Update("Found existing listener (ARN: %q)", listenerResource.Arn)
 	}
 	rm.Resource("alb listener").SetState(&listenerResource)
 
@@ -2613,10 +2622,6 @@ type ALBConfig struct {
 
 	// Fully qualified domain name of the record to create in the target zone id
 	FQDN string `hcl:"domain_name,optional"`
-
-	// When set, waypoint will configure the target group into the specified
-	// ALB Listener ARN. This allows for usage of existing ALBs.
-	ListenerARN string `hcl:"listener_arn,optional"`
 
 	// When set, waypoint will configure the target group into the load balancer.
 	// This allows for usage of existing ALBs.
