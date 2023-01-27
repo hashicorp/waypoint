@@ -1003,6 +1003,8 @@ func (p *Platform) resourceServiceDestroy(
 	return nil
 }
 
+// resourceAlbListenerCreate finds or creates an ALB listener, and ensures that the
+// target group is added to it.
 func (p *Platform) resourceAlbListenerCreate(
 	ctx context.Context,
 	sg terminal.StepGroup,
@@ -1060,6 +1062,7 @@ func (p *Platform) resourceAlbListenerCreate(
 		return status.Errorf(codes.Internal, "failed to describe listeners for alb (ARN %q): %s", alb.Arn, err)
 	}
 
+	// Check for existing listeners on our specified port
 	var listener *elbv2.Listener
 	for _, l := range listeners.Listeners {
 		if *l.Port == int64(externalIngressPort) {
@@ -1068,6 +1071,7 @@ func (p *Platform) resourceAlbListenerCreate(
 	}
 
 	if listener != nil {
+		// Found an existing listener!
 		s.Update("Modifying existing ALB Listener to introduce target group")
 
 		def := listener.DefaultActions

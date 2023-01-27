@@ -1,3 +1,3 @@
 ```release-note:bug
-plugin/aws-ecs: Fix bringing your own alb listener to ecs deployments.
+plugin/aws-ecs: Fix bringing your own alb to ecs deployments.
 ```
