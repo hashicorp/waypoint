@@ -1,6 +1,7 @@
 {
    "description": "Deploy a container to Google Cloud Run",
    "example": "project = \"wpmini\"\n\napp \"wpmini\" {\n  labels = {\n    \"service\" = \"wpmini\",\n    \"env\"     = \"dev\"\n  }\n\n  build {\n    use \"pack\" {}\n\n    registry {\n      use \"docker\" {\n        image = \"gcr.io/waypoint-project-id/wpmini\"\n        tag   = \"latest\"\n      }\n    }\n  }\n\n  deploy {\n    use \"google-cloud-run\" {\n      project  = \"waypoint-project-id\"\n      location = \"europe-north1\"\n\n      port = 5000\n\n      static_environment = {\n        \"NAME\" : \"World\"\n      }\n\n      capacity {\n        memory                     = 128\n        cpu_count                  = 2\n        max_requests_per_container = 10\n        request_timeout            = 300\n      }\n\n\t  service_account_name = \"cloudrun@waypoint-project-id.iam.gserviceaccount.com\"\n\n      auto_scaling {\n        max = 10\n      }\n\n      cloudsql_instances = [\"waypoint-project-id:europe-north1:sql-instance\"]\n\n      vpc_access {\n        connector = \"custom-vpc-connector\"\n        egress = \"all\"\n      }\n    }\n  }\n\n  release {\n    use \"google-cloud-run\" {}\n  }\n}",
+   "input": "docker.Image",
    "mappers": null,
    "name": "google-cloud-run",
    "optionalFields": [
@@ -69,7 +70,7 @@
          "Type": "cloudrun.VPCAccess",
          "Synopsis": "VPCAccess details",
          "Summary": "",
-         "Optional": false,
+         "Optional": true,
          "Default": "",
          "EnvVar": "",
          "Category": true,
@@ -102,6 +103,7 @@
          ]
       }
    ],
+   "output": "google.cloudrun.Deployment",
    "outputAttrs": [
       {
          "Field": "id",

@@ -1,9 +1,11 @@
 {
    "description": "Copies files to a specific directory",
    "example": "build {\n  use \"files\" {}\n  registry {\n\tuse \"files\" {\n\t  path = \"/path/to/file\"\n\t}\n  }\n}",
+   "input": "files.Files",
    "mappers": null,
    "name": "files",
    "optionalFields": null,
+   "output": "files.Files",
    "outputAttrs": [
       {
          "Field": "path",

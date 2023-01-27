@@ -1,6 +1,7 @@
 {
    "description": "\nBuild a Docker image from a Dockerfile.\n\nIf a Docker server is available (either locally or via environment variables\nsuch as \"DOCKER_HOST\"), then \"docker build\" will be used to build an image\nfrom a Dockerfile.\n\n### Dockerless Builds\n\nMany hosted environments, such as Kubernetes clusters, don't provide access\nto a Docker server. In these cases, it is desirable to perform what is called\na \"dockerless\" build: building a Docker image without access to a Docker\ndaemon. Waypoint supports dockerless builds.\n\nWaypoint performs Dockerless builds by leveraging\n[Kaniko](https://github.com/GoogleContainerTools/kaniko)\nwithin on-demand launched runners. This should work in all supported\nWaypoint installation environments by default and you should not have\nto specify any additional configuration.\n",
    "example": "build {\n  use \"docker\" {\n\tbuildkit    = false\n\tdisable_entrypoint = false\n  }\n}",
+   "input": "component.Source",
    "mappers": null,
    "name": "docker",
    "optionalFields": [
@@ -9,7 +10,7 @@
          "Type": "docker.Auth",
          "Synopsis": "the authentication information to log into the docker repository",
          "Summary": "",
-         "Optional": false,
+         "Optional": true,
          "Default": "",
          "EnvVar": "",
          "Category": true,

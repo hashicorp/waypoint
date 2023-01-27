@@ -1,9 +1,11 @@
 {
    "description": "Generates a value representing a path on disk",
    "example": "build {\n  use \"files\" {}\n}",
+   "input": "component.Source",
    "mappers": null,
    "name": "files",
    "optionalFields": null,
+   "output": "files.Files",
    "outputAttrs": [
       {
          "Field": "path",

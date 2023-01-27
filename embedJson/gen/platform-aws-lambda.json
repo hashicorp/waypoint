@@ -117,6 +117,18 @@
          "SubFields": null
       },
       {
+         "Field": "storage",
+         "Type": "int64",
+         "Synopsis": "",
+         "Summary": "",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "Example": "",
+         "SubFields": null
+      },
+      {
          "Field": "target_group_arn",
          "Type": "string",
          "Synopsis": "",

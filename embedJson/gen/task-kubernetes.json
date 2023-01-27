@@ -17,6 +17,30 @@
          "SubFields": null
       },
       {
+         "Field": "cpu",
+         "Type": "k8s.ResourceConfig",
+         "Synopsis": "cpu resource request to be added to the task container",
+         "Summary": "",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "Example": "",
+         "SubFields": null
+      },
+      {
+         "Field": "ephemeral_storage",
+         "Type": "k8s.ResourceConfig",
+         "Synopsis": "ephemeral_storage resource request to be added to the task container",
+         "Summary": "",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "Example": "",
+         "SubFields": null
+      },
+      {
          "Field": "image_pull_policy",
          "Type": "string",
          "Synopsis": "pull policy to use for the task container image",
@@ -48,6 +72,18 @@
          "Optional": true,
          "Default": "",
          "EnvVar": "KUBECONFIG",
+         "Category": false,
+         "Example": "",
+         "SubFields": null
+      },
+      {
+         "Field": "memory",
+         "Type": "k8s.ResourceConfig",
+         "Synopsis": "memory resource request to be added to the task container",
+         "Summary": "",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "",
          "Category": false,
          "Example": "",
          "SubFields": null
@@ -105,42 +141,6 @@
    ],
    "outputAttrsHelp": "Output attributes can be used in your `waypoint.hcl` as [variables](/waypoint/docs/waypoint-hcl/variables) via [`artifact`](/waypoint/docs/waypoint-hcl/variables/artifact) or [`deploy`](/waypoint/docs/waypoint-hcl/variables/deploy).",
    "requiredFields": [
-      {
-         "Field": "cpu",
-         "Type": "k8s.ResourceConfig",
-         "Synopsis": "cpu resource request to be added to the task container",
-         "Summary": "",
-         "Optional": false,
-         "Default": "",
-         "EnvVar": "",
-         "Category": false,
-         "Example": "",
-         "SubFields": null
-      },
-      {
-         "Field": "ephemeral_storage",
-         "Type": "k8s.ResourceConfig",
-         "Synopsis": "ephemeral_storage resource request to be added to the task container",
-         "Summary": "",
-         "Optional": false,
-         "Default": "",
-         "EnvVar": "",
-         "Category": false,
-         "Example": "",
-         "SubFields": null
-      },
-      {
-         "Field": "memory",
-         "Type": "k8s.ResourceConfig",
-         "Synopsis": "memory resource request to be added to the task container",
-         "Summary": "",
-         "Optional": false,
-         "Default": "",
-         "EnvVar": "",
-         "Category": false,
-         "Example": "",
-         "SubFields": null
-      },
       {
          "Field": "security_context",
          "Type": "k8s.PodSecurityContext",

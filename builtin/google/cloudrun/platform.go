@@ -600,6 +600,8 @@ func (p *Platform) Documentation() (*docs.Documentation, error) {
 	}
 
 	doc.Description("Deploy a container to Google Cloud Run")
+	doc.Input("docker.Image")
+	doc.Output("google.cloudrun.Deployment")
 	doc.Example(
 		`
 project = "wpmini"

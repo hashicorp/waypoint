@@ -133,6 +133,8 @@ func (r *Releaser) Documentation() (*docs.Documentation, error) {
 	}
 
 	doc.Description("Manipulates the Cloud Run APIs to make deployments active")
+	doc.Input("google.cloudrun.Deployment")
+	doc.Output("google.cloudrun.Release")
 
 	return doc, nil
 }

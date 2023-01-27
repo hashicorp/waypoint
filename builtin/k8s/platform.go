@@ -1558,6 +1558,8 @@ func (p *Platform) Documentation() (*docs.Documentation, error) {
 	}
 
 	doc.Description("Deploy the application into a Kubernetes cluster using Deployment objects")
+	doc.Input("docker.Image")
+	doc.Output("k8s.Deployment")
 
 	doc.Example(`
 use "kubernetes" {

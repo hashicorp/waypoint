@@ -237,6 +237,9 @@ below for more details.
 
 `)
 
+	doc.Input("None")
+	doc.Output("k8sapply.Deployment")
+
 	doc.Example(`
 deploy {
   use "kubernetes-apply" {

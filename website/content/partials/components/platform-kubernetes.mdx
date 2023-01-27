@@ -4,6 +4,9 @@ Deploy the application into a Kubernetes cluster using Deployment objects.
 
 ### Interface
 
+- Input: **docker.Image**
+- Output: **k8s.Deployment**
+
 ### Examples
 
 ```hcl
@@ -48,6 +51,8 @@ Cpu resource configuration.
 
 CPU lets you define resource limits and requests for a container in a deployment.
 
+- **Optional**
+
 ###### pod.container.cpu.limit
 
 Maximum amount of cpu to give the container. Supports m to indicate milli-cores.
@@ -67,6 +72,8 @@ How much cpu to give the container in cpu cores. Supports m to indicate milli-co
 Memory resource configuration.
 
 Memory lets you define resource limits and requests for a container in a deployment.
+
+- **Optional**
 
 ###### pod.container.memory.limit
 
@@ -140,6 +147,8 @@ Protocol for port. Must be UDP, TCP, or SCTP.
 Configuration to control liveness and readiness probes.
 
 Probe describes a health check to be performed against a container to determine whether it is alive or ready to receive traffic.
+
+- **Optional**
 
 ###### pod.container.probe.failure_threshold
 
@@ -250,6 +259,8 @@ Cpu resource configuration.
 
 CPU lets you define resource limits and requests for a container in a deployment.
 
+- **Optional**
+
 ###### pod.sidecar.container.cpu.limit
 
 Maximum amount of cpu to give the container. Supports m to indicate milli-cores.
@@ -269,6 +280,8 @@ How much cpu to give the container in cpu cores. Supports m to indicate milli-co
 Memory resource configuration.
 
 Memory lets you define resource limits and requests for a container in a deployment.
+
+- **Optional**
 
 ###### pod.sidecar.container.memory.limit
 
@@ -342,6 +355,8 @@ Protocol for port. Must be UDP, TCP, or SCTP.
 Configuration to control liveness and readiness probes.
 
 Probe describes a health check to be performed against a container to determine whether it is alive or ready to receive traffic.
+
+- **Optional**
 
 ###### pod.sidecar.container.probe.failure_threshold
 
@@ -421,6 +436,8 @@ Sets up a horizontal pod autoscaler to scale deployments automatically.
 
 This configuration will automatically set up and associate the current deployment with a horizontal pod autoscaler in Kuberentes. Note that for this to work, you must also define resource limits and requests for a deployment otherwise the metrics-server will not be able to properly determine a deployments target CPU utilization.
 
+- **Optional**
+
 ##### autoscale.cpu_percent
 
 The target CPU percent utilization before the horizontal pod autoscaler scales up a deployments replicas.
@@ -454,6 +471,8 @@ The kubectl context to use, as defined in the kubeconfig file.
 Cpu resource configuration.
 
 CPU lets you define resource limits and requests for a container in a deployment.
+
+- **Optional**
 
 ##### cpu.limit
 
@@ -501,6 +520,8 @@ Memory resource configuration.
 
 Memory lets you define resource limits and requests for a container in a deployment.
 
+- **Optional**
+
 ##### memory.limit
 
 Maximum amount of memory to give the container. Supports k for kilobytes, m for megabytes, and g for gigabytes.
@@ -529,6 +550,8 @@ Namespace is the name of the Kubernetes namespace to apply the deployment in. Th
 Configuration to control liveness and readiness probes.
 
 Probe describes a health check to be performed against a container to determine whether it is alive or ready to receive traffic.
+
+- **Optional**
 
 ##### probe.failure_threshold
 

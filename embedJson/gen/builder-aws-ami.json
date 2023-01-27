@@ -1,5 +1,6 @@
 {
    "description": "Search for and return an existing AMI",
+   "input": "component.Source",
    "mappers": null,
    "name": "aws-ami",
    "optionalFields": [

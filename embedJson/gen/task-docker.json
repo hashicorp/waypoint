@@ -17,6 +17,18 @@
          "SubFields": null
       },
       {
+         "Field": "client_config",
+         "Type": "docker.ClientConfig",
+         "Synopsis": "",
+         "Summary": "",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "Example": "",
+         "SubFields": null
+      },
+      {
          "Field": "debug_containers",
          "Type": "bool",
          "Synopsis": "",
@@ -69,7 +81,7 @@
          "Type": "docker.TaskResources",
          "Synopsis": "The resources that the tasks should use.",
          "Summary": "",
-         "Optional": false,
+         "Optional": true,
          "Default": "",
          "EnvVar": "",
          "Category": true,
@@ -129,20 +141,7 @@
       }
    ],
    "outputAttrsHelp": "Output attributes can be used in your `waypoint.hcl` as [variables](/waypoint/docs/waypoint-hcl/variables) via [`artifact`](/waypoint/docs/waypoint-hcl/variables/artifact) or [`deploy`](/waypoint/docs/waypoint-hcl/variables/deploy).",
-   "requiredFields": [
-      {
-         "Field": "client_config",
-         "Type": "docker.ClientConfig",
-         "Synopsis": "",
-         "Summary": "",
-         "Optional": false,
-         "Default": "",
-         "EnvVar": "",
-         "Category": false,
-         "Example": "",
-         "SubFields": null
-      }
-   ],
+   "requiredFields": null,
    "type": "task",
    "use": "the [`use` stanza](/waypoint/docs/waypoint-hcl/use) for this plugin."
 }

@@ -23,6 +23,9 @@ message Release {
 message Resource {
   message SecurityGroup {
     string id = 1;
+    // Indicates that this resource has been created by and is owned by waypoint
+    // (and is therefore safe for waypoint to delete during a project destroy)
+    bool managed = 2;
   }
 
   message LoadBalancer {

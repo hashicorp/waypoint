@@ -4,6 +4,9 @@ Deploy to a nomad cluster as a service using docker.
 
 ### Interface
 
+- Input: **docker.Image**
+- Output: **nomad.Deployment**
+
 ### Examples
 
 ```hcl
@@ -89,6 +92,8 @@ The replica count for the job.
 #### resources (category)
 
 The amount of resources to allocate to the deployed allocation.
+
+- **Optional**
 
 ##### resources.cpu
 
