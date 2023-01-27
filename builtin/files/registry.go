@@ -62,6 +62,8 @@ func (r *Registry) Documentation() (*docs.Documentation, error) {
 	}
 
 	doc.Description("Copies files to a specific directory")
+	doc.Input("files.Files")
+	doc.Output("files.Files")
 
 	doc.Example(`
 build {

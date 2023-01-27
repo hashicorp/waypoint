@@ -975,6 +975,8 @@ func (r *Releaser) Documentation() (*docs.Documentation, error) {
 	}
 
 	doc.Description("Manipulates the Kubernetes Service activate Deployments")
+	doc.Input("k8s.Deployment")
+	doc.Output("k8s.Release")
 
 	doc.SetField(
 		"annotations",

@@ -44,6 +44,8 @@ func (b *Builder) Documentation() (*docs.Documentation, error) {
 	}
 
 	doc.Description("Generates a value representing a path on disk")
+	doc.Input("component.Source")
+	doc.Output("files.Files")
 
 	doc.Example(`
 build {

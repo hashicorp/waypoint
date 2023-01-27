@@ -467,6 +467,8 @@ func (p *Platform) Documentation() (*docs.Documentation, error) {
 	}
 
 	doc.Description("Deploy to a nomad cluster as a service using docker")
+	doc.Input("docker.Image")
+	doc.Output("nomad.Deployment")
 
 	doc.Example(
 		`

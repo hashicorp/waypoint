@@ -129,6 +129,7 @@ build {
 }
 `)
 
+	doc.Input("component.Source")
 	doc.Output("docker.Image")
 
 	doc.SetField(

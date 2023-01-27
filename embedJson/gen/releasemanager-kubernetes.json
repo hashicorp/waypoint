@@ -1,5 +1,6 @@
 {
    "description": "Manipulates the Kubernetes Service activate Deployments",
+   "input": "k8s.Deployment",
    "mappers": null,
    "name": "kubernetes",
    "optionalFields": [
@@ -210,6 +211,7 @@
          "SubFields": null
       }
    ],
+   "output": "k8s.Release",
    "requiredFields": null,
    "type": "releasemanager",
    "use": "the [`use` stanza](/waypoint/docs/waypoint-hcl/use) for this plugin."
