@@ -86,6 +86,11 @@ docker/gen/server: docker/tools
 	@test -s "thirdparty/proto/api-common-protos/.git" || { echo "git submodules not initialized, run 'git submodule update --init --recursive' and try again"; exit 1; }
 	docker run -v `pwd`:/waypoint -it docker.io/library/waypoint-tools:dev make gen/server
 
+.PHONY: docker/gen/plugins
+docker/gen/plugins: docker/tools
+	@test -s "thirdparty/proto/api-common-protos/.git" || { echo "git submodules not initialized, run 'git submodule update --init --recursive' and try again"; exit 1; }
+	docker run -v `pwd`:/waypoint -it docker.io/library/waypoint-tools:dev make gen/plugins
+
 # expected to be invoked by make gen/changelog LAST_RELEASE=gitref THIS_RELEASE=gitref
 .PHONY: gen/changelog
 gen/changelog: # Generates the changelog for Waypoint
