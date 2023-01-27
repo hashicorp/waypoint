@@ -12,7 +12,8 @@ message Deployment {
   string service_arn = 3;
   string target_group_arn = 4;
   string load_balancer_arn = 5;
-
+  string listener_arn = 8;
+  
   string cluster = 6;
   opaqueany.Any resource_state = 7;
 }
