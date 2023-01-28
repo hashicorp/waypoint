@@ -104,14 +104,6 @@ func (p *Platform) Deploy(
 		roleName = defaultRoleName
 	}
 
-	// roleArn only applies to the initial create
-	var roleArn string
-	if arn, err := p.getOrCreateIamRoleArn(sess, log, roleName); err != nil {
-		return nil, err
-	} else {
-		roleArn = arn
-	}
-
 	mem := int64(p.config.Memory)
 	if mem == 0 {
 		mem = defaultMemory
@@ -134,6 +126,13 @@ func (p *Platform) Deploy(
 
 	rm := p.resourceManager(log)
 
+	var roleArn string
+	if err := rm.Resource("apprunner_iam_role").Create(sess, ctx, log, roleName, ui); err != nil {
+		return nil, err
+	}
+	iamRole := rm.Resource("apprunner_iam_role").State().(*Resource_IamRole)
+	roleArn = iamRole.Arn
+
 	// The operator's waypoint.hcl will realistically only have a svc name, not ARN,
 	// since that is provided by AWS.
 	//
@@ -150,7 +149,7 @@ func (p *Platform) Deploy(
 	step.Done()
 
 	// update or create app runner server
-	summary := rm.Resource("apprunner_service_summary").State().(*ServiceSummary)
+	summary := rm.Resource("apprunner_service_summary").State().(*Resource_ServiceSummary)
 	arSvc := apprunner.New(sess)
 
 	operationId := ""
@@ -273,19 +272,12 @@ func (p *Platform) Deploy(
 	return deployment, nil
 }
 
-type ServiceSummary struct {
-	Name   string
-	Arn    string
-	Url    string
-	Status string
-}
-
 // a helper func to find an apprunner service by name
 func (p *Platform) getServiceSummaryByName(
 	sess *session.Session,
 	log hclog.Logger,
 	name string,
-) (*ServiceSummary, error) {
+) (*Resource_ServiceSummary, error) {
 	arSvc := apprunner.New(sess)
 	lso, err := arSvc.ListServices(&apprunner.ListServicesInput{})
 	if err != nil {
@@ -295,11 +287,11 @@ func (p *Platform) getServiceSummaryByName(
 
 	log.Debug("found services", "service count", len(lso.ServiceSummaryList))
 
-	var serviceSummary *ServiceSummary = nil
+	var serviceSummary *Resource_ServiceSummary = nil
 	for _, ss := range lso.ServiceSummaryList {
 		if *ss.ServiceName == p.config.Name {
 
-			serviceSummary = &ServiceSummary{
+			serviceSummary = &Resource_ServiceSummary{
 				Name:   *ss.ServiceName,
 				Arn:    *ss.ServiceArn,
 				Url:    *ss.ServiceUrl,
@@ -338,49 +330,89 @@ const rolePolicy = `{
 // AWS-managed service policy
 const AWSAppRunnerServicePolicyForECRAccess = `arn:aws:iam::aws:policy/service-role/AWSAppRunnerServicePolicyForECRAccess`
 
-func (p *Platform) getOrCreateIamRoleArn(
-	sess *session.Session,
-	log hclog.Logger,
-	name string,
-) (string, error) {
+// resourceGetOrCreateIamRole is a helper function to get or create an IAM role
+// that is permitted to build and deploy an App Runner service as well as access
+// AWS ECR.
+func (p *Platform) resourceGetOrCreateIamRole(
+	/* Create    */ sess *session.Session,
+	/* Create    */ ctx context.Context,
+	/* Create    */ log hclog.Logger,
+	/* Create    */ roleName string,
+	/* Create    */ ui terminal.UI,
+	/* WithState */ state *Resource_IamRole,
+) error {
+	sg := ui.StepGroup()
+	defer sg.Wait()
+
+	step := sg.Add("Getting IAM Role... Role Name: %s", roleName)
+	defer func() {
+		step.Abort()
+	}()
+
 	iamSvc := iam.New(sess)
+
 	ro, err := iamSvc.GetRole(&iam.GetRoleInput{
-		RoleName: aws.String(name),
+		RoleName: aws.String(roleName),
 	})
+
+	// Handle Error
 	if err != nil {
+		step.Update("IAM Role not found. Creating... Role Name: %s", roleName)
 		if aerr, ok := err.(awserr.Error); ok {
 			switch aerr.Code() {
 			case iam.ErrCodeNoSuchEntityException: // if "NoSuchEntity", create the role
-				log.Info("CreateRole...")
-				if _, err := iamSvc.CreateRole(&iam.CreateRoleInput{
-					RoleName:                 aws.String(name),
+				log.Info("Create IAM Role...", "roleName", roleName)
+
+				cro, err := iamSvc.CreateRole(&iam.CreateRoleInput{
+					RoleName:                 aws.String(roleName),
 					Path:                     aws.String("/service-role/"),
 					AssumeRolePolicyDocument: aws.String(rolePolicy),
 					Description:              aws.String("This role gives App Runner permission to access ECR"),
 					// Tags: ,
-				}); err != nil {
-					log.Info("CreateRole ERROR")
-					return "", err
-				}
-				log.Info("CreateRole OK")
+				})
 
-				log.Info("AttachRolePolicy...")
+				if err != nil {
+					log.Error("Failed to create role", "error", err, "roleName", roleName)
+					return err
+				}
+
+				step.Update("IAM Role created. Attaching App Runner policy... Role Name: %s", roleName)
+
+				log.Info("Attaching App Runner policy...", "roleName", roleName, "policyArn", AWSAppRunnerServicePolicyForECRAccess)
 				if _, err := iamSvc.AttachRolePolicy(&iam.AttachRolePolicyInput{
-					RoleName:  aws.String(name),
+					RoleName:  aws.String(roleName),
 					PolicyArn: aws.String(AWSAppRunnerServicePolicyForECRAccess),
 				}); err != nil {
-					log.Info("AttachRolePolicy ERROR")
-					return "", err
+					log.Error("Failed to attach policy", "error", err, "roleName", roleName, "policyArn", AWSAppRunnerServicePolicyForECRAccess)
+					return err
 				}
-				log.Info("AttachRolePolicy OK")
+
+				// OK
+				state.Name = *cro.Role.RoleName
+				state.Arn = *cro.Role.Arn
+
+				step.Update("IAM Role updated and ready. Role Name: %s", roleName)
+				step.Done()
+
+				return nil
 			default:
-				return "", aerr
+				return aerr
 			}
 		} else {
-			return "", err
+			return err
 		}
+	} else {
+		// Previously created role found
+
+		state.Name = *ro.Role.RoleName
+		state.Arn = *ro.Role.Arn
+
+		step.Update("Using Existing IAM Role: %s", roleName)
+		step.Done()
+
+		// OK
+		return nil
 	}
-	return *ro.Role.Arn, nil
 }
 
 // For Resource manager
@@ -401,7 +433,13 @@ func (p *Platform) resourceManager(log hclog.Logger) *resource.Manager {
 		resource.WithResource(resource.NewResource(
 			resource.WithName("apprunner_service_summary"),
 			resource.WithPlatform("aws-apprunner"),
-			resource.WithState(&ServiceSummary{}),
+			resource.WithState(&Resource_ServiceSummary{}),
+		)),
+		resource.WithResource(resource.NewResource(
+			resource.WithName("apprunner_iam_role"),
+			resource.WithPlatform("aws-apprunner"),
+			resource.WithState(&Resource_IamRole{}),
+			resource.WithCreate(p.resourceGetOrCreateIamRole),
 		)),
 	)
 }

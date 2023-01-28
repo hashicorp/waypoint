@@ -62,6 +62,11 @@ message Resource {
     string url = 3;
     string status = 4;
   }
+
+  message IamRole {
+    string name = 1;
+    string arn = 2;
+  }
 }
 
 
