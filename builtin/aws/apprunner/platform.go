@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint-plugin-sdk/docs"
+	"github.com/hashicorp/waypoint-plugin-sdk/framework/resource"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/builtin/aws/ecr"
 	"github.com/hashicorp/waypoint/builtin/aws/utils"
@@ -131,7 +132,7 @@ func (p *Platform) Deploy(
 	step = sg.Add("Deploying App Runner service %q", p.config.Name)
 	step.Done()
 
-	arSvc := apprunner.New(sess)
+	rm := p.resourceManager(log)
 
 	// The operator's waypoint.hcl will realistically only have a svc name, not ARN,
 	// since that is provided by AWS.
@@ -139,11 +140,18 @@ func (p *Platform) Deploy(
 	// While `DescribeService` only supports a service ARN, our best effort approach
 	// is to list all services and manually match by user-provided name.
 	step = sg.Add("Checking for existing service...")
-	service, err := p.getServiceSummaryByName(sess, log, p.config.Name)
+	_service, err := p.getServiceSummaryByName(sess, log, p.config.Name)
 	if err != nil {
 		return nil, err
 	}
+
+	// Save state to resource manager
+	rm.Resource("apprunner_service_summary").SetState(_service)
 	step.Done()
+
+	// update or create app runner server
+	summary := rm.Resource("apprunner_service_summary").State().(*ServiceSummary)
+	arSvc := apprunner.New(sess)
 
 	operationId := ""
 	serviceArn := ""
@@ -151,14 +159,14 @@ func (p *Platform) Deploy(
 	serviceStatus := ""
 
 	// If we found a previous service, update it.
-	if service != nil {
-		step = sg.Add("Found! Updating service %q", service.Name)
-		serviceArn = service.Arn
-		serviceUrl = service.Url
-		serviceStatus = service.Status
+	if summary != nil {
+		step = sg.Add("Found! Updating service %q", summary.Name)
+		serviceArn = summary.Arn
+		serviceUrl = summary.Url
+		serviceStatus = summary.Status
 
 		uso, err := arSvc.UpdateService(&apprunner.UpdateServiceInput{
-			ServiceArn: aws.String(service.Arn),
+			ServiceArn: aws.String(summary.Arn),
 			InstanceConfiguration: &apprunner.InstanceConfiguration{
 				Cpu:    aws.String(strconv.FormatInt(cpu, 10)),
 				Memory: aws.String(strconv.FormatInt(mem, 10)),
@@ -192,7 +200,7 @@ func (p *Platform) Deploy(
 						// aerr.Code() "InvalidStateException"
 						// aerr.Error() "InvalidStateException: Service cannot be updated in the current state: CREATE_FAILED."
 						// aerr.Message() "Service cannot be updated in the current state: CREATE_FAILED."
-						step.Update("Service %q is in a failed state. Please delete the service and try running `waypoint up` again.", service.Name)
+						step.Update("Service %q is in a failed state. Please delete the service and try running `waypoint up` again.", summary.Name)
 						step.Abort()
 					}
 				}
@@ -373,6 +381,29 @@ func (p *Platform) getOrCreateIamRoleArn(
 		}
 	}
 	return *ro.Role.Arn, nil
+}
+
+// For Resource manager
+func (p *Platform) getSession(
+	log hclog.Logger,
+) (*session.Session, error) {
+	return utils.GetSession(&utils.SessionConfig{
+		Region: p.config.Region,
+		Logger: log,
+	})
+}
+
+// for a reference see builtin/aws/alb/release.go > resourceSecurityGroupCreate()'s args
+func (p *Platform) resourceManager(log hclog.Logger) *resource.Manager {
+	return resource.NewManager(
+		resource.WithLogger(log.Named("resource_manager")),
+		resource.WithValueProvider(p.getSession),
+		resource.WithResource(resource.NewResource(
+			resource.WithName("apprunner_service_summary"),
+			resource.WithPlatform("aws-apprunner"),
+			resource.WithState(&ServiceSummary{}),
+		)),
+	)
 }
 
 func (p *Platform) Documentation() (*docs.Documentation, error) {

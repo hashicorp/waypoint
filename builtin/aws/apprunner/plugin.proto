@@ -54,5 +54,14 @@ message Release {
   string service_arn = 4;
 }
 
+// Resource contains the internal resource states.
+message Resource {
+  message ServiceSummary {
+    string name = 1;
+    string arn = 2;
+    string url = 3;
+    string status = 4;
+  }
+}
 
 
