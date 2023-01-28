@@ -68,7 +68,9 @@ func (p *Platform) Deploy(
 ) (*Deployment, error) {
 
 	sg := ui.StepGroup()
-	defer sg.Wait()
+	defer func() {
+		sg.Wait()
+	}()
 
 	step := sg.Add("Connecting to AWS")
 	defer func() {
@@ -127,7 +129,7 @@ func (p *Platform) Deploy(
 	rm := p.resourceManager(log)
 
 	var roleArn string
-	if err := rm.Resource("apprunner_iam_role").Create(sess, ctx, log, roleName, ui); err != nil {
+	if err := rm.Resource("apprunner_iam_role").Create(sess, ctx, log, roleName, ui, src); err != nil {
 		return nil, err
 	}
 	iamRole := rm.Resource("apprunner_iam_role").State().(*Resource_IamRole)
@@ -138,28 +140,26 @@ func (p *Platform) Deploy(
 	//
 	// While `DescribeService` only supports a service ARN, our best effort approach
 	// is to list all services and manually match by user-provided name.
-	step = sg.Add("Checking for existing service...")
-	_service, err := p.getServiceSummaryByName(sess, log, p.config.Name)
-	if err != nil {
+	serviceName := p.config.Name
+	if err := rm.Resource("apprunner_service_summary").Create(sess, log, serviceName, ui); err != nil {
 		return nil, err
 	}
 
-	// Save state to resource manager
-	rm.Resource("apprunner_service_summary").SetState(_service)
-	step.Done()
-
-	// update or create app runner server
 	summary := rm.Resource("apprunner_service_summary").State().(*Resource_ServiceSummary)
 	arSvc := apprunner.New(sess)
+
+	// Create a new step group — this should prevent
+	// nested resource manager step outputs from ending up
+	// in the wrong place.
+	sg = ui.StepGroup()
 
 	operationId := ""
 	serviceArn := ""
 	serviceUrl := ""
 	serviceStatus := ""
 
-	// If we found a previous service, update it.
-	if summary != nil {
-		step = sg.Add("Found! Updating service %q", summary.Name)
+	if summary.Name != "" { /* If we found a previous service, update it. */
+		step = sg.Add("Updating service %q", summary.Name)
 		serviceArn = summary.Arn
 		serviceUrl = summary.Url
 		serviceStatus = summary.Status
@@ -218,8 +218,7 @@ func (p *Platform) Deploy(
 
 		step.Done()
 
-	} else {
-		// If we didn't find a previous service, create it.
+	} else { /* If we didn't find a previous service, create it. */
 		step = sg.Add("Creating new App Runner service")
 		log.Debug("creating new service...", "name", p.config.Name)
 		log.Debug("using image", "image", img.Name)
@@ -227,6 +226,12 @@ func (p *Platform) Deploy(
 		// Warning: App Runner will crash with a "exec format error"
 		// when running Arm64 images.
 		cso, err := arSvc.CreateService(&apprunner.CreateServiceInput{
+			Tags: []*apprunner.Tag{
+				{
+					Key:   aws.String("waypoint-app"),
+					Value: aws.String(src.App),
+				},
+			},
 			ServiceName: aws.String(p.config.Name),
 			InstanceConfiguration: &apprunner.InstanceConfiguration{
 				Cpu:    aws.String(strconv.Itoa(int(cpu))),
@@ -273,41 +278,48 @@ func (p *Platform) Deploy(
 }
 
 // a helper func to find an apprunner service by name
-func (p *Platform) getServiceSummaryByName(
-	sess *session.Session,
-	log hclog.Logger,
-	name string,
-) (*Resource_ServiceSummary, error) {
+func (p *Platform) resourceServiceSummaryGet(
+	/* Create    */ sess *session.Session,
+	/* Create    */ log hclog.Logger,
+	/* Create    */ serviceName string,
+	/* Create    */ ui terminal.UI,
+	/* WithState */ state *Resource_ServiceSummary,
+) error {
+	sg := ui.StepGroup()
+	defer sg.Wait()
+
+	step := sg.Add("Retrieving service summary... Service Name: %s", serviceName)
+	step.Done()
+
 	arSvc := apprunner.New(sess)
 	lso, err := arSvc.ListServices(&apprunner.ListServicesInput{})
 	if err != nil {
 		log.Error("error listing services")
-		return nil, err
+		return err
 	}
 
 	log.Debug("found services", "service count", len(lso.ServiceSummaryList))
 
-	var serviceSummary *Resource_ServiceSummary = nil
 	for _, ss := range lso.ServiceSummaryList {
 		if *ss.ServiceName == p.config.Name {
 
-			serviceSummary = &Resource_ServiceSummary{
-				Name:   *ss.ServiceName,
-				Arn:    *ss.ServiceArn,
-				Url:    *ss.ServiceUrl,
-				Status: *ss.Status,
-			}
+			state.Name = *ss.ServiceName
+			state.Arn = *ss.ServiceArn
+			state.Url = *ss.ServiceUrl
+			state.Status = *ss.Status
 			break
 		}
 	}
 
-	if serviceSummary != nil {
-		log.Debug("Found matching apprunner service", "name", serviceSummary.Name, "arn", serviceSummary.Arn)
+	// if state is not empty..
+	if state.Name != "" {
+		step = sg.Add("Found matching service. We'll update the existing service.")
 	} else {
-		log.Warn("No matching apprunner service was found")
+		step = sg.Add("No matching service found. We'll create a new one.")
 	}
+	step.Done()
 
-	return serviceSummary, nil
+	return nil
 }
 
 const defaultMemory = 2048
@@ -330,15 +342,16 @@ const rolePolicy = `{
 // AWS-managed service policy
 const AWSAppRunnerServicePolicyForECRAccess = `arn:aws:iam::aws:policy/service-role/AWSAppRunnerServicePolicyForECRAccess`
 
-// resourceGetOrCreateIamRole is a helper function to get or create an IAM role
+// resourceIamRoleGetOrCreate is a helper function to get or create an IAM role
 // that is permitted to build and deploy an App Runner service as well as access
 // AWS ECR.
-func (p *Platform) resourceGetOrCreateIamRole(
+func (p *Platform) resourceIamRoleGetOrCreate(
 	/* Create    */ sess *session.Session,
 	/* Create    */ ctx context.Context,
 	/* Create    */ log hclog.Logger,
 	/* Create    */ roleName string,
 	/* Create    */ ui terminal.UI,
+	/* Create    */ src *component.Source,
 	/* WithState */ state *Resource_IamRole,
 ) error {
 	sg := ui.StepGroup()
@@ -368,7 +381,12 @@ func (p *Platform) resourceGetOrCreateIamRole(
 					Path:                     aws.String("/service-role/"),
 					AssumeRolePolicyDocument: aws.String(rolePolicy),
 					Description:              aws.String("This role gives App Runner permission to access ECR"),
-					// Tags: ,
+					Tags: []*iam.Tag{
+						{
+							Key:   aws.String("waypoint-app"),
+							Value: aws.String(src.App),
+						},
+					},
 				})
 
 				if err != nil {
@@ -434,12 +452,13 @@ func (p *Platform) resourceManager(log hclog.Logger) *resource.Manager {
 			resource.WithName("apprunner_service_summary"),
 			resource.WithPlatform("aws-apprunner"),
 			resource.WithState(&Resource_ServiceSummary{}),
+			resource.WithCreate(p.resourceServiceSummaryGet),
 		)),
 		resource.WithResource(resource.NewResource(
 			resource.WithName("apprunner_iam_role"),
 			resource.WithPlatform("aws-apprunner"),
 			resource.WithState(&Resource_IamRole{}),
-			resource.WithCreate(p.resourceGetOrCreateIamRole),
+			resource.WithCreate(p.resourceIamRoleGetOrCreate),
 		)),
 	)
 }
