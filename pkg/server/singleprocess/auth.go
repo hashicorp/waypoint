@@ -342,7 +342,9 @@ func (s *Service) decodeToken(ctx context.Context, token string) (*pb.TokenTrans
 	}
 
 	if subtle.ConstantTimeCompare(data[:len(tokenMagic)], []byte(tokenMagic)) != 1 {
-		return nil, nil, errors.Errorf("bad magic")
+		return nil, nil, errors.Errorf("Failed to decode authentication token. " +
+			"The magic string embedded in the token does not match what was expected. " +
+			"This is likely due to the token string being an invalid auth token.")
 	}
 
 	var tt pb.TokenTransport
