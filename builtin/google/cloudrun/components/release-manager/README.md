@@ -3,3 +3,6 @@ Manipulates the Cloud Run APIs to make deployments active.
 
 ### Interface
 
+- Input: **google.cloudrun.Deployment**
+- Output: **google.cloudrun.Release**
+

@@ -3,6 +3,9 @@ Deploy a container to Google Cloud Run.
 
 ### Interface
 
+- Input: **docker.Image**
+- Output: **google.cloudrun.Deployment**
+
 ### Examples
 
 ```hcl

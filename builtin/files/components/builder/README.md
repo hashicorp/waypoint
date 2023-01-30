@@ -3,6 +3,9 @@ Generates a value representing a path on disk.
 
 ### Interface
 
+- Input: **component.Source**
+- Output: **files.Files**
+
 ### Examples
 
 ```hcl

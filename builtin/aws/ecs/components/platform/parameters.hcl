@@ -3,7 +3,7 @@ parameter {
   key         = "alb"
   description = "Provides additional configuration for using an ALB with ECS"
   type        = "category"
-  required    = true
+  required    = false
 }
 
 parameter {
@@ -133,7 +133,7 @@ parameter {
   key         = "logging"
   description = "Provides additional configuration for logging flags for ECS\nPart of the ecs task definition.  These configuration flags help control how the awslogs log driver is configured."
   type        = "category"
-  required    = true
+  required    = false
 }
 
 parameter {

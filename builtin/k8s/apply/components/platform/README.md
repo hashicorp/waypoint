@@ -57,6 +57,9 @@ below for more details.
 
 ### Interface
 
+- Input: **None**
+- Output: **k8sapply.Deployment**
+
 ### Examples
 
 ```hcl

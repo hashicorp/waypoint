@@ -48,7 +48,7 @@ parameter {
   key         = "resources"
   description = "The amount of resources to allocate to the deployed allocation."
   type        = "category"
-  required    = true
+  required    = false
 }
 
 parameter {

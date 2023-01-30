@@ -6,5 +6,3 @@ source authentication information for AWS, using the configured task role.
 If no task role name is specified, Waypoint will create one with the required
 permissions.
 
-### Interface
-

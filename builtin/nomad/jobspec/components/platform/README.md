@@ -52,6 +52,9 @@ below for more details.
 
 ### Interface
 
+- Input: **docker.Image**
+- Output: **jobspec.Deployment**
+
 ### Examples
 
 ```hcl

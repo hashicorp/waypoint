@@ -3,5 +3,6 @@ Search for and return an existing AMI.
 
 ### Interface
 
+- Input: **component.Source**
 - Output: **ami.Image**
 

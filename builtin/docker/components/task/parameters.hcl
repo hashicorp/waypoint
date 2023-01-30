@@ -10,7 +10,7 @@ parameter {
   key         = "client_config"
   description = ""
   type        = "docker.ClientConfig"
-  required    = true
+  required    = false
 }
 
 parameter {
@@ -46,7 +46,7 @@ parameter {
   key         = "resources"
   description = "The resources that the tasks should use."
   type        = "category"
-  required    = true
+  required    = false
 }
 
 parameter {

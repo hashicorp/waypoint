@@ -1,8 +1,6 @@
 <!-- This file was generated via `make gen/integrations-hcl` -->
 Read configuration values from Kubernetes ConfigMap or Secret resources. Note that to read a config value from a Secret, you must set `secret = true`. Otherwise Waypoint will load a dynamic value from a ConfigMap.
 
-### Interface
-
 ### Examples
 
 ```hcl

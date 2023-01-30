@@ -106,7 +106,7 @@ parameter {
   key         = "vpc_access"
   description = "VPCAccess details"
   type        = "category"
-  required    = true
+  required    = false
 }
 
 parameter {

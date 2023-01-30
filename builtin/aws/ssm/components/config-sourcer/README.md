@@ -1,8 +1,6 @@
 <!-- This file was generated via `make gen/integrations-hcl` -->
 Read configuration values from AWS SSM Parameter Store.
 
-### Interface
-
 ### Examples
 
 ```hcl

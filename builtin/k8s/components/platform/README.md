@@ -3,6 +3,9 @@ Deploy the application into a Kubernetes cluster using Deployment objects.
 
 ### Interface
 
+- Input: **docker.Image**
+- Output: **k8s.Deployment**
+
 ### Examples
 
 ```hcl

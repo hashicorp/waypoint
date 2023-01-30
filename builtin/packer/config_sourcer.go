@@ -158,8 +158,8 @@ func (cs *ConfigSourcer) Documentation() (*docs.Documentation, error) {
 	}
 
 	doc.Description("Retrieve the image ID of an image whose metadata is pushed " +
-		"to an HCP Packer registry. The image ID is that of the HCP Packer bucket" +
-		"iteration assigned to the configured channel, with a matching cloud provider" +
+		"to an HCP Packer registry. The image ID is that of the HCP Packer bucket " +
+		"iteration assigned to the configured channel, with a matching cloud provider " +
 		"and region.")
 
 	doc.Example(`
