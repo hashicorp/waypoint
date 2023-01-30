@@ -25,7 +25,6 @@
          "Default": "NONE",
          "EnvVar": "",
          "Category": true,
-         "Example": "",
          "SubFields": [
             {
                "Field": "allow_credentials",
@@ -36,7 +35,6 @@
                "Default": "false",
                "EnvVar": "",
                "Category": false,
-               "Example": "",
                "SubFields": null
             },
             {
@@ -48,7 +46,6 @@
                "Default": "[]",
                "EnvVar": "",
                "Category": false,
-               "Example": "",
                "SubFields": null
             },
             {
@@ -60,7 +57,6 @@
                "Default": "[]",
                "EnvVar": "",
                "Category": false,
-               "Example": "",
                "SubFields": null
             },
             {
@@ -72,7 +68,6 @@
                "Default": "[]",
                "EnvVar": "",
                "Category": false,
-               "Example": "",
                "SubFields": null
             },
             {
@@ -84,7 +79,6 @@
                "Default": "[]",
                "EnvVar": "",
                "Category": false,
-               "Example": "",
                "SubFields": null
             },
             {
@@ -96,7 +90,6 @@
                "Default": "0",
                "EnvVar": "",
                "Category": false,
-               "Example": "",
                "SubFields": null
             }
          ]
