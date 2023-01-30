@@ -10,7 +10,7 @@ parameter {
   key         = "autoscale"
   description = "sets up a horizontal pod autoscaler to scale deployments automatically\nThis configuration will automatically set up and associate the current deployment with a horizontal pod autoscaler in Kuberentes. Note that for this to work, you must also define resource limits and requests for a deployment otherwise the metrics-server will not be able to properly determine a deployments target CPU utilization"
   type        = "category"
-  required    = true
+  required    = false
 }
 
 parameter {
@@ -45,7 +45,7 @@ parameter {
   key         = "cpu"
   description = "cpu resource configuration\nCPU lets you define resource limits and requests for a container in a deployment."
   type        = "category"
-  required    = true
+  required    = false
 }
 
 parameter {
@@ -87,7 +87,7 @@ parameter {
   key         = "memory"
   description = "memory resource configuration\nMemory lets you define resource limits and requests for a container in a deployment."
   type        = "category"
-  required    = true
+  required    = false
 }
 
 parameter {
@@ -143,7 +143,7 @@ parameter {
   key         = "pod.container.cpu"
   description = "cpu resource configuration\nCPU lets you define resource limits and requests for a container in a deployment."
   type        = "category"
-  required    = true
+  required    = false
 }
 
 parameter {
@@ -164,7 +164,7 @@ parameter {
   key         = "pod.container.memory"
   description = "memory resource configuration\nMemory lets you define resource limits and requests for a container in a deployment."
   type        = "category"
-  required    = true
+  required    = false
 }
 
 parameter {
@@ -235,7 +235,7 @@ parameter {
   key         = "pod.container.probe"
   description = "configuration to control liveness and readiness probes\nProbe describes a health check to be performed against a container to determine whether it is alive or ready to receive traffic."
   type        = "category"
-  required    = true
+  required    = false
 }
 
 parameter {
@@ -350,7 +350,7 @@ parameter {
   key         = "pod.sidecar.container.cpu"
   description = "cpu resource configuration\nCPU lets you define resource limits and requests for a container in a deployment."
   type        = "category"
-  required    = true
+  required    = false
 }
 
 parameter {
@@ -371,7 +371,7 @@ parameter {
   key         = "pod.sidecar.container.memory"
   description = "memory resource configuration\nMemory lets you define resource limits and requests for a container in a deployment."
   type        = "category"
-  required    = true
+  required    = false
 }
 
 parameter {
@@ -442,7 +442,7 @@ parameter {
   key         = "pod.sidecar.container.probe"
   description = "configuration to control liveness and readiness probes\nProbe describes a health check to be performed against a container to determine whether it is alive or ready to receive traffic."
   type        = "category"
-  required    = true
+  required    = false
 }
 
 parameter {
@@ -501,7 +501,7 @@ parameter {
   key         = "probe"
   description = "configuration to control liveness and readiness probes\nProbe describes a health check to be performed against a container to determine whether it is alive or ready to receive traffic."
   type        = "category"
-  required    = true
+  required    = false
 }
 
 parameter {

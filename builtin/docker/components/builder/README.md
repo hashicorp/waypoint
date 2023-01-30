@@ -20,6 +20,7 @@ to specify any additional configuration.
 
 ### Interface
 
+- Input: **component.Source**
 - Output: **docker.Image**
 
 ### Examples

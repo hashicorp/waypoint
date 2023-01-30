@@ -10,14 +10,14 @@ parameter {
   key         = "cpu"
   description = "cpu resource request to be added to the task container"
   type        = "k8s.ResourceConfig"
-  required    = true
+  required    = false
 }
 
 parameter {
   key         = "ephemeral_storage"
   description = "ephemeral_storage resource request to be added to the task container"
   type        = "k8s.ResourceConfig"
-  required    = true
+  required    = false
 }
 
 parameter {
@@ -45,7 +45,7 @@ parameter {
   key         = "memory"
   description = "memory resource request to be added to the task container"
   type        = "k8s.ResourceConfig"
-  required    = true
+  required    = false
 }
 
 parameter {

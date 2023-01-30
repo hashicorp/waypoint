@@ -12,6 +12,9 @@ Create an AWS Lambda function URL.
 release {
 	use "lambda-function-url" {
 		auth_type = "NONE"
+		cors {
+			allow_methods = ["*"]
+		}
 	}
 }
 ```

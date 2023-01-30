@@ -35,6 +35,9 @@ below for more details.
 
 ### Interface
 
+- Input: **None**
+- Output: **k8s_helm.Deployment**
+
 ### Examples
 
 ```hcl

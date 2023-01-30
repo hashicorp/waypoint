@@ -18,6 +18,12 @@ output {
 }
 
 output {
+  key         = "storage"
+  description = ""
+  type        = "int64"
+}
+
+output {
   key         = "target_group_arn"
   description = ""
   type        = "string"

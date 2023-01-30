@@ -7,8 +7,6 @@ itself (typical for a Kubernetes-based installation), it will use the pod's
 service account unless other auth is explicitly given. This allows the task
 launcher to work by default.
 
-### Interface
-
 ### Examples
 
 ```hcl

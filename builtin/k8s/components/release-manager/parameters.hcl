@@ -17,7 +17,7 @@ parameter {
   key         = "ingress"
   description = "Configuration to set up an ingress resource to route traffic to the given application from an ingress controller\nAn ingress resource can be created on release that will route traffic to the Kubernetes service. Note that before this happens, the Kubernetes cluster must already be configured with an Ingress controller. Otherwise there won't be a way for inbound traffic to be routed to the ingress resource."
   type        = "category"
-  required    = true
+  required    = false
 }
 
 parameter {
@@ -62,7 +62,7 @@ parameter {
   key         = "ingress.tls"
   description = "A stanza of TLS configuration options for traffic to the ingress resource"
   type        = "category"
-  required    = true
+  required    = false
 }
 
 parameter {

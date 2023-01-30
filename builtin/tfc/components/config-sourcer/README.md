@@ -1,8 +1,6 @@
 <!-- This file was generated via `make gen/integrations-hcl` -->
 Read Terraform state outputs from Terraform Cloud.
 
-### Interface
-
 ### Examples
 
 ```hcl

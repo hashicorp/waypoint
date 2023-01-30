@@ -3,7 +3,7 @@ parameter {
   key         = "count"
   description = "how many EC2 instances to configure the ASG with\nthe fields here (desired, min, max) map directly to the typical ASG configuration"
   type        = "ec2.countConfig"
-  required    = true
+  required    = false
 }
 
 parameter {

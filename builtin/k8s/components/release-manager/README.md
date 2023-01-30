@@ -3,3 +3,6 @@ Manipulates the Kubernetes Service activate Deployments.
 
 ### Interface
 
+- Input: **k8s.Deployment**
+- Output: **k8s.Release**
+

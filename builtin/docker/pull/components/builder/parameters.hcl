@@ -3,7 +3,7 @@ parameter {
   key         = "auth"
   description = "the authentication information to log into the docker repository"
   type        = "category"
-  required    = true
+  required    = false
 }
 
 parameter {
