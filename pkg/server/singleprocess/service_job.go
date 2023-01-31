@@ -135,14 +135,14 @@ func (s *Service) queueJobReqToJob(
 	log.Debug("checking job project", "project", job.Application.Project)
 	project, err := s.state(ctx).ProjectGet(ctx, &pb.Ref_Project{Project: job.Application.Project})
 	if status.Code(err) == codes.NotFound {
-		return nil, "", hcerr.UserErrorWithCodef(codes.NotFound, nil,
+		return nil, "", hcerr.UserErrorWithCodef(codes.NotFound, err,
 			"Project %q was not found! Please ensure that 'waypoint init' was run with this project.",
 			job.Application.Project)
 	}
 
 	if job.DataSource == nil {
 		if project.DataSource == nil {
-			return nil, "", hcerr.UserErrorWithCodef(codes.FailedPrecondition, nil,
+			return nil, "", hcerr.UserErrorWithCodef(codes.FailedPrecondition, err,
 				"Project %s does not have a data source configured. Remote jobs "+
 					"require a data source such as Git to be configured with the project. "+
 					"Data sources can be configured via the CLI or UI. For help, see : "+
