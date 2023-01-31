@@ -5,12 +5,15 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/apprunner"
 	"github.com/aws/aws-sdk-go/service/iam"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
@@ -526,8 +529,126 @@ deploy {
 	return doc, nil
 }
 
+// DestroyFunc implements component.Destroyer
+func (p *Platform) DestroyFunc() interface{} {
+	return p.Destroy
+}
+
+func (p *Platform) Destroy(
+	ctx context.Context,
+	log hclog.Logger,
+	ui terminal.UI,
+	deployment *Deployment,
+) error {
+	sg := ui.StepGroup()
+	defer sg.Wait()
+
+	step := sg.Add("Deleting Service")
+	defer func() {
+		step.Abort()
+	}()
+
+	// Delete app runner by service ARN
+	sess, err := utils.GetSession(&utils.SessionConfig{
+		Logger: log,
+	})
+	if err != nil {
+		return err
+	}
+
+	arSvc := apprunner.New(sess)
+
+	step.Update("Deleting service: %s", deployment.ServiceName)
+	dso, err := arSvc.DeleteService(&apprunner.DeleteServiceInput{
+		ServiceArn: aws.String(deployment.ServiceArn),
+	})
+	if err != nil {
+		if aerr, ok := err.(awserr.Error); ok {
+			switch aerr.Code() {
+			// If the service is not found, it's likely that it was already deleted.
+			// We can maybe no-op here.
+			case apprunner.ErrCodeResourceNotFoundException:
+				step.Update("App Runner Service not found: (%s). It is possible this was deleted by another deployment/destroy operation.", deployment.ServiceName)
+			default:
+				return aerr
+			}
+		} else {
+			return err
+		}
+	}
+
+	step.Done()
+
+	d := time.Now().Add(DEFAULT_TIMEOUT)
+	ctx, cancel := context.WithDeadline(ctx, d)
+	defer cancel()
+	ticker := time.NewTicker(5 * time.Second)
+
+	opId := *dso.OperationId
+
+	shouldRetry := true
+
+	step = sg.Add("Waiting for service to be deleted")
+	for shouldRetry {
+		loo, err := arSvc.ListOperations(&apprunner.ListOperationsInput{
+			ServiceArn: &deployment.ServiceArn,
+		})
+
+		if err != nil {
+			if aerr, ok := err.(awserr.Error); ok {
+				switch aerr.Code() {
+				// If the service is not found, it's likely that it was already deleted.
+				// We can maybe no-op here.
+				case apprunner.ErrCodeResourceNotFoundException:
+					step.Update("App Runner Service not found: (%s). It is possible this was deleted by another deployment/destroy operation.", deployment.ServiceName)
+				default:
+					return aerr
+				}
+			} else {
+				return err
+			}
+		} else {
+			if len(loo.OperationSummaryList) == 0 {
+				// No operations found — exit
+				step.Update("No operations found...")
+				break
+			}
+
+			for _, os := range loo.OperationSummaryList {
+				// find operation by id from DeleteService request
+				if *os.Id == opId {
+					switch *os.Status {
+					case apprunner.OperationStatusSucceeded:
+						// OK — resume
+						step.Update("OK!")
+						shouldRetry = false
+					case apprunner.OperationStatusFailed:
+						// Failed — exit
+						step.Update("Failed...")
+						return status.Error(codes.FailedPrecondition, fmt.Sprintf("App Runner responded with status: %s", *os.Status))
+					case apprunner.OperationStatusInProgress:
+						select {
+						case <-ticker.C: // retry
+						case <-ctx.Done(): // abort
+							step.Update("Timeout...")
+							return status.Errorf(codes.Aborted, fmt.Sprintf("Context cancelled from timeout when waiting for App Runner to graduate from %s", *os.Status))
+						}
+					default:
+						log.Warn("Unexpected status: %s", *os.Status)
+					}
+				}
+			}
+		}
+
+	}
+
+	step.Update("Deleted App Runner service: %s", deployment.ServiceName)
+	return nil
+}
+
 var (
 	_ component.Configurable = (*Platform)(nil)
 	_ component.Platform     = (*Platform)(nil)
 	_ component.Documented   = (*Platform)(nil)
+	_ component.Destroyer    = (*Platform)(nil)
 )
