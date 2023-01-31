@@ -4,4 +4,4 @@ The Consul plugin reads configuration values from the [Consul KV store](https://
 
 ### Components
 
-1. [ConfigSourcer](/waypoint/integrations/consul/latest/components/config-sourcer)
+1. [ConfigSourcer](/waypoint/integrations/hashicorp/consul/latest/components/config-sourcer)

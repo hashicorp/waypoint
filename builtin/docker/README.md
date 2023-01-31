@@ -6,24 +6,24 @@ It also launches on-demand runners to do operations remotely.
 
 ### Components
 
-1. [Builder](/waypoint/integrations/docker/latest/components/builder)
-2. [Registry](/waypoint/integrations/docker/latest/components/registry)
-3. [Platform](/waypoint/integrations/docker/latest/components/platform)
+1. [Builder](/waypoint/integrations/hashicorp/docker/latest/components/builder)
+2. [Registry](/waypoint/integrations/hashicorp/docker/latest/components/registry)
+3. [Platform](/waypoint/integrations/hashicorp/docker/latest/components/platform)
 
 ### Related Plugins
 
-1. [AWS ECS](/waypoint/integrations/aws-ecs)
-2. [AWS Lambda](/waypoint/integrations/aws-lambda)
-3. [Azure ACI](/waypoint/integrations/azure)
-4. [Docker Pull](/waypoint/integrations/docker-pull)
-5. [Docker Ref](/waypoint/integrations/docker-ref)
-6. [Google Cloud Run](/waypoint/integrations/google-cloud-run)
-7. [Helm](/waypoint/integrations/helm)
-8. [Kubernetes](/waypoint/integrations/kubernetes)
-9. [Kubernetes Apply](/waypoint/integrations/kubernetes-apply)
-10. [Nomad](/waypoint/integrations/nomad)
-11. [Nomad Jobspec](/waypoint/integrations/nomad-jobspec)
-12. [Pack](/waypoint/integrations/pack)
+1. [AWS ECS](/waypoint/integrations/hashicorp/aws-ecs)
+2. [AWS Lambda](/waypoint/integrations/hashicorp/aws-lambda)
+3. [Azure ACI](/waypoint/integrations/hashicorp/azure)
+4. [Docker Pull](/waypoint/integrations/hashicorp/docker-pull)
+5. [Docker Ref](/waypoint/integrations/hashicorp/docker-ref)
+6. [Google Cloud Run](/waypoint/integrations/hashicorp/google-cloud-run)
+7. [Helm](/waypoint/integrations/hashicorp/helm)
+8. [Kubernetes](/waypoint/integrations/hashicorp/kubernetes)
+9. [Kubernetes Apply](/waypoint/integrations/hashicorp/kubernetes-apply)
+10. [Nomad](/waypoint/integrations/hashicorp/nomad)
+11. [Nomad Jobspec](/waypoint/integrations/hashicorp/nomad-jobspec)
+12. [Pack](/waypoint/integrations/hashicorp/pack)
 
 ### Resources
 

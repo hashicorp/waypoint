@@ -5,9 +5,9 @@ on AWS.
 
 ### Components
 
-1. [Registry](/waypoint/integrations/aws-ecr/latest/components/registry)
+1. [Registry](/waypoint/integrations/hashicorp/aws-ecr/latest/components/registry)
 
 ### Related Plugins
 
-1. [AWS ECR Pull](/waypoint/integrations/aws-ecr-pull)
-2. [AWS ECS](/waypoint/integrations/aws-ecs)
+1. [AWS ECR Pull](/waypoint/integrations/hashicorp/aws-ecr-pull)
+2. [AWS ECS](/waypoint/integrations/hashicorp/aws-ecs)

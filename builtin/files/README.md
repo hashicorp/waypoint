@@ -5,9 +5,9 @@ them to a specific directory.
 
 ### Components
 
-1. [Builder](/waypoint/integrations/files/latest/components/builder)
-2. [Registry](/waypoint/integrations/files/latest/components/registry)
+1. [Builder](/waypoint/integrations/hashicorp/files/latest/components/builder)
+2. [Registry](/waypoint/integrations/hashicorp/files/latest/components/registry)
 
 ### Related Plugins
 
-1. [Exec](/waypoint/integrations/exec)
+1. [Exec](/waypoint/integrations/hashicorp/exec)

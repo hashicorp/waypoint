@@ -5,8 +5,8 @@ a local path or a chart in a repository.
 
 ### Components
 
-1. [Platform](/waypoint/integrations/helm/latest/components/platform)
+1. [Platform](/waypoint/integrations/hashicorp/helm/latest/components/platform)
 
 ### Related Plugins
 
-1. [Docker](/waypoint/integrations/docker)
+1. [Docker](/waypoint/integrations/hashicorp/docker)

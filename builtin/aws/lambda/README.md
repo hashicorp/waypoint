@@ -4,13 +4,13 @@ The AWS Lambda plugin deploys OCI images as functions to [AWS Lambda](https://aw
 
 ### Components
 
-1. [Platform](/waypoint/integrations/aws-lambda/latest/components/platform)
+1. [Platform](/waypoint/integrations/hashicorp/aws-lambda/latest/components/platform)
 
 ### Related Plugins
 
-1. [Docker](/waypoint/integrations/docker)
-2. [AWS ECR](/waypoint/integrations/aws-ecr)
-3. [AWS Lambda Function URL](/waypoint/integrations/lambda-function-url)
+1. [Docker](/waypoint/integrations/hashicorp/docker)
+2. [AWS ECR](/waypoint/integrations/hashicorp/aws-ecr)
+3. [AWS Lambda Function URL](/waypoint/integrations/hashicorp/lambda-function-url)
 
-<!--This plugin does not implement the resource manager framework, so the 
+<!--This plugin does not implement the resource manager framework, so the
 "Resources" section is omitted-->

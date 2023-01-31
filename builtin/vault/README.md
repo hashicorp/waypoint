@@ -4,4 +4,4 @@ The Vault plugin reads configuration values from [Vault](https://www.vaultprojec
 
 ### Components
 
-1. [ConfigSourcer](/waypoint/integrations/vault/latest/components/config-sourcer)
+1. [ConfigSourcer](/waypoint/integrations/hashicorp/vault/latest/components/config-sourcer)

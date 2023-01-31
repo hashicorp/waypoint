@@ -5,18 +5,18 @@ It also launches on-demand runners to do operations remotely.
 
 ### Components
 
-1. [Platform](/waypoint/integrations/aws-ecs/latest/components/platform)
-2. [TaskLauncher](/waypoint/integrations/aws-ecs/latest/components/task)
+1. [Platform](/waypoint/integrations/hashicorp/aws-ecs/latest/components/platform)
+2. [TaskLauncher](/waypoint/integrations/hashicorp/aws-ecs/latest/components/task)
 
 ### Related Plugins
 
-1. [Docker](/waypoint/integrations/docker)
-2. [AWS ECR](/waypoint/integrations/aws-ecr)
+1. [Docker](/waypoint/integrations/hashicorp/docker)
+2. [AWS ECR](/waypoint/integrations/hashicorp/aws-ecr)
 
 ### Resources
 
 1. ECS Cluster
-2. IAM Execution Role 
+2. IAM Execution Role
 3. IAM Task Role
 4. Internal Security Group
 5. External Security Group
