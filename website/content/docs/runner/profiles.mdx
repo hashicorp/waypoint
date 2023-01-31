@@ -5,20 +5,16 @@ description: |-
   Each runner profile entry represents the ability to spawn runners (i.e. on-demand runners) when needed using the configured plugin.
 ---
 
-# Runner Profiles
+# Runner profiles
 
-Waypoint's static runners can be configured to spawn fresh ephemeral runner instances (i.e. on-demand runners)
-to perform app operations, such as building and deploying. Runner profiles describe the configuration and settings
-necessary to create an on-demand runner. Profiles can be used globally, by project, or by app.
+With runner profiles, Waypoint's remote runners can be configured to spawn new ephemeral runner instances (i.e. on-demand runners)
+to perform operations like building and deploying apps. Runner profiles describe the configuration and settings
+necessary to create an on-demand runner. Profiles can be used globally, or by specific projects.
 
-### Default Profiles
+## Viewing runner profiles
 
-Waypoint installations performed with the `waypoint install` command come with a
-default runner profile already configured.
-
-## Viewing Runner Profiles
-
-View runner profiles with the `waypoint runner profile list` command:
+Waypoint installations performed with the `waypoint install` command come with a default
+runner profile already configured. You can view runner profiles with the `waypoint runner profile list` command:
 
 ```shell-session
 $ waypoint runner profile list
@@ -28,12 +24,11 @@ $ waypoint runner profile list
   kubernetes-bootstrap-profile | kubernetes  | hashicorp/waypoint-odr:latest | yes
 ```
 
-If there exists a default runner profile for a given plugin, Waypoint will use that
-profile to create on-demand runners for each operation on the platform with that
-plugin. For the majority of users, this default runner profile should be sufficient.
+If a default runner profile is configured for a given plugin, Waypoint will use that profile to create a new on-demand
+runner for each operation on the platform for that plugin. For the majority of users, this default runner profile should
+be sufficient.
 
-You can also closely inspect a runner profile by name with the
-`waypoint runner profile inspect` command:
+You can also closely inspect a runner profile by name with the `waypoint runner profile inspect` command:
 
 ```shell-session
 # waypoint runner profile inspect kubernetes-bootstrap-profile
@@ -59,34 +54,28 @@ Runner profiles
   ecs                          | aws-ecs     | hashicorp/waypoint-odr:latest |
 ```
 
-## Runner Configuration
+## Modifying runner profiles
 
-It may be necessary to add configuration (environment variables or files) to an
-on-demand runner. The best way is to use runner config via
-the `waypoint config -runner`, detailed [here](/waypoint/docs/runner/config). These
-configuration variables will be available to any on-demand runner.
+It may be necessary to change the config (environment variables or files) delivered to on-demand runners.
+The best way is to add config to every runner and profile with the `waypoint config -runner`, detailed [here](/docs/runner/config).
 
 ### Static environment variables
 
-If you need to scope environment variables to a specific runner profile,
-rather than every runner, you can use the `-env-vars` flag of
-`waypoint runner profile set`, i.e.:
+If you need environment variables that are scoped to a specific runner profile, rather than every runner, you can use
+the `-env-vars` flag of `waypoint runner profile set`, i.e.:
 
 ```shell-session
 $ waypoint runner profile set -name=kubernetes -env-vars="MODE=WAYPOINT_ODR" -env-vars="FOO=BAR" -plugin-type=kubernetes
 ```
 
-This can be useful to configure the behavior of a custom runner image with multiple
-modes of operation, for example.
+This can be useful to configure the behavior of a custom runner image with multiple modes of operation, for example.
 
-### OCI URL
+### OCI-URL
 
-It may be necessary to change the runner profile OCI URL. This can be used to upgrade
-or downgrade the version of the ODR image, or switch to a custom image that contains
-custom tools or behavior.
+It may be necessary to change the runner profile OCI Url. This can be used to upgrade or downgrade the version of the
+ODR image, or switch to a custom image built from hashicorp/waypoint-odr that contains custom tools or behavior.
 
-Below is an example of switching the ODR image to a pre-release alpha version of
-Waypoint:
+Below is an example of switching the odr image to a prerelease alpha version of Waypoint:
 
 ```shell-session
 $ waypoint runner profile set -name=kubernetes -oci-url=ghcr.io/hashicorp/waypoint/alpha-odr:latest -plugin-type=kubernetes
@@ -94,25 +83,19 @@ $ waypoint runner profile set -name=kubernetes -oci-url=ghcr.io/hashicorp/waypoi
 
 ### The Default Profile
 
-The default runner profile for any given plugin will be used to create on-demand
-runners for each operation on that plugin. The default profile can be changed to
-different profile with the `waypoint runner profile set` command by setting
-`-default=false` on the existing default profile, and `-default=true` on the new
-profile.
-
-If multiple profiles are set as the default, Waypoint will choose one at random for
-each operation.
+The default runner profile for any given plugin will be used to create on-demand runners for each operation on that plugin.
+The default profile can be changed with the `waypoint runner profile set` command by setting `-default=false` on the
+existing default profile, and `-default=true` on the new profile. If multiple profiles are set as the default,
+Waypoint will choose one at random for each operation.
 
 ### Using or Modifying Plugin-Config
 
-Waypoint on-demand runners are backed by the `Task` plugin type, which provides an
-interface for launching short-lived container-based instances and is implemented by
-the plugins for multiple platforms. To see the task config options for your platform
-of interest, see [plugin docs](/waypoint/plugins). For example, the Kubernetes task plugin
-docs are located [here](/waypoint/plugins/kubernetes#kubernetes-task).
+Waypoint on-demand runners are backed by the `Task` plugin type, which provides an interface for launching short-lived
+container-based instances and is implemented by the plugins for multiple platforms. To see the task config options for
+your platform of interest, see [plugin docs](/plugins). For example, the Kubernetes task plugin docs are located
+[here](/plugins/kubernetes#kubernetes-task).
 
-The `-plugin-config` flag lets you modify the way that tasks are launched.
-For example, to edit the Kubernetes default runner profile's plugin config to use a
+The `-plugin-config` flag lets you modify the way the plugin of interest launches tasks. For example, to edit the Kubernetes default runner profile's plugin config to use a
 different Kubernetes service account run `waypoint runner profile inspect` and copy
 the `Additional Plugin Configuration` to a new file.
 
@@ -150,13 +133,12 @@ And then apply it to your plugin with `waypoint runner profile set`:
 $ waypoint runner profile set -name=kubernetes -plugin-type=kubernetes -plugin-config=./k8s-runner-profile-plugin-config.hcl
 ```
 
-### Adding a New Runner Profile
+### Adding a new runner profile
 
-Add new runner profiles with the `waypoint profile set` command. Customize the identifier with the `-name` flag.
-
+New runner profiles can be added with the `waypoint profile set` command, using a `-name` that doesn't already exist.
 Here's an example of creating a runner profile for aws-ecs:
 
-First, write sample task plugin data to `./aws-ecs-plugin-config.hcl`:
+Sample task plugin (at `./aws-ecs-plugin-config.hcl`)
 
 ```hcl
 cluster = waypoint
@@ -170,18 +152,17 @@ subnets = "subnet-01exmplc,subnet-fbexmpl3,subnet-acexmpl7,subnet-9aexmpl0"
 task_role_name = waypoint-runner
 ```
 
-Set the runner profile, referencing the above data.
-
 ```shell-session
 waypoint runner profile set -name=ecs -plugin-type=aws-ecs -plugin-config=./aws-ecs-plugin-config.hcl
 ```
 
-Note that to use this profile, the Waypoint static runner will need permission and
-credentials to create ECS tasks in the desired cluster.
+This can either be set as the default plugin, or be used for specific projects. Note that to use this profile,
+the Waypoint remote runner will need permission and credentials to create ECS tasks in the desired cluster.
 
-### Deleting a Runner Profile
+### Deleting a runner profile
 
-Delete runner profiles with the `waypoint runner profile delete` command with the ID as the argument.
+Runner profiles can be deleted with the `waypoint runner profile delete` command including the ID as the argument.
+
 To get the runner ID, run `waypoint runner profile inspect` for a named runner.
 
 ```shell-session
@@ -191,7 +172,6 @@ Runner profiles
 ---------+-------------+-------------------------------+---------------+----------
   docker | docker      | waypoint-odr:dev              | *             | yes
   dev    | kubernetes  | hashicorp/waypoint-odr:latest | dev           |
-
 
 $ waypoint runner profile inspect dev
 » Runner profile:
@@ -203,7 +183,7 @@ $ waypoint runner profile inspect dev
           Target Runner: dev
   Environment Variables: map[]
 
-
 $ waypoint runner profile delete 01G65VD1SSB3HYJ3FS9K629A3B
+
 » Runner profile deleted
 ```
