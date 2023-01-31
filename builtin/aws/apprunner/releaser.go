@@ -6,12 +6,10 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws/awserr"
-	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/apprunner"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint-plugin-sdk/docs"
-	"github.com/hashicorp/waypoint-plugin-sdk/framework/resource"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/builtin/aws/utils"
 	"google.golang.org/grpc/codes"
@@ -46,16 +44,6 @@ func (r *Releaser) Release(
 	sg := ui.StepGroup()
 	defer sg.Wait()
 
-	// Create our resource manager and create
-	rm := r.resourceManager(log)
-	if err := rm.CreateAll(
-		ctx, log, sg, ui, src,
-		dep,
-	); err != nil {
-		log.Info("Error creating resources", "error", err)
-		return nil, err
-	}
-
 	sess, err := utils.GetSession(&utils.SessionConfig{
 		Logger: log,
 	})
@@ -65,8 +53,13 @@ func (r *Releaser) Release(
 
 	arSvc := apprunner.New(sess)
 
-	// wait for operation status to become `SUCCEEDED`
+	step := sg.Add("Waiting for App Runner service to be deployed: %q", dep.ServiceName)
+	defer func() {
+		step.Abort()
+	}()
+	step.Done()
 
+	// wait for operation status to become `SUCCEEDED`
 	operationId := dep.OperationId
 
 	if operationId == "" {
@@ -75,7 +68,10 @@ func (r *Releaser) Release(
 		// made.
 
 		// do nothing as there is no operation to wait for
+		step = sg.Add("No configuration change was made. Moving on...")
+		step.Done()
 	} else {
+		step = sg.Add("App Runner is in state: ...")
 		// Wait for X-minutes
 		d := time.Now().Add(DEFAULT_TIMEOUT)
 		ctx, cancel := context.WithDeadline(ctx, d)
@@ -84,6 +80,8 @@ func (r *Releaser) Release(
 		// Poll every 10 seconds
 		ticker := time.NewTicker(10 * time.Second)
 		shouldRetry := true
+
+		now := time.Now()
 		for shouldRetry {
 			loo, err := arSvc.ListOperations(&apprunner.ListOperationsInput{
 				ServiceArn: &dep.ServiceArn,
@@ -108,14 +106,15 @@ func (r *Releaser) Release(
 				}
 			}
 
+			step.Update("App Runner is in state: %s. Time elapsed: %s", *opsum.Status, time.Since(now).Round(time.Second))
+
 			switch *opsum.Status {
 			case apprunner.OperationStatusSucceeded:
-				// OK — resume
+				// OK — ready to proceed
 				shouldRetry = false
 			case apprunner.OperationStatusFailed:
 				// Failed — exit
 				return nil, status.Error(codes.FailedPrecondition, fmt.Sprintf("App Runner responded with status: %s", *opsum.Status))
-			// case apprunner.OperationStatusInProgress:
 			default:
 				select {
 				case <-ticker.C: // retry
@@ -124,7 +123,11 @@ func (r *Releaser) Release(
 				}
 			}
 		}
+		step.Done()
 	}
+
+	step = sg.Add("App Runner service is ready!")
+	step.Done()
 
 	return &Release{
 		Url:         "https://" + dep.ServiceUrl,
@@ -132,35 +135,6 @@ func (r *Releaser) Release(
 		ServiceName: dep.ServiceName,
 		Region:      dep.Region,
 	}, nil
-}
-
-func (r *Releaser) getSession(
-	_ context.Context,
-	log hclog.Logger,
-	dep *Deployment,
-) (*session.Session, error) {
-	return utils.GetSession(&utils.SessionConfig{
-		Region: dep.Region,
-		Logger: log,
-	})
-}
-
-func (r *Releaser) resourceManager(log hclog.Logger) *resource.Manager {
-	return resource.NewManager(
-		resource.WithLogger(log.Named("resource_manager")),
-		resource.WithValueProvider(r.getSession),
-
-		// resource.WithResource(resource.NewResource(
-		// 	resource.WithName("function_permission"),
-		// 	resource.WithCreate(r.resourceFunctionPermissionCreate),
-		// )),
-
-		// resource.WithResource(resource.NewResource(
-		// 	resource.WithName("function_url"),
-		// 	resource.WithState(&Resource_FunctionUrl{}),
-		// 	resource.WithCreate(r.resourceFunctionUrlCreate),
-		// )),
-	)
 }
 
 func (p *Releaser) Documentation() (*docs.Documentation, error) {
