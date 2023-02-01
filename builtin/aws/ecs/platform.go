@@ -128,6 +128,13 @@ func (p *Platform) ConfigSet(config interface{}) error {
 		}
 	}
 
+	if c.HealthCheck != nil {
+		if c.HealthCheck.Timeout >= c.HealthCheck.Interval {
+			return status.Errorf(codes.FailedPrecondition, "the health check "+
+				"timeout must be less than the interval")
+		}
+	}
+
 	return nil
 }
 
@@ -1301,14 +1308,49 @@ func (p *Platform) resourceTargetGroupCreate(
 
 	state.Port = p.config.ServicePort
 
-	ctg, err := elbsrv.CreateTargetGroupWithContext(ctx, &elbv2.CreateTargetGroupInput{
+	if p.config.HealthCheck.Protocol == "" {
+		p.config.HealthCheck.Protocol = "HTTP"
+	}
+
+	createTargetGroupInput := &elbv2.CreateTargetGroupInput{
 		HealthCheckEnabled: aws.Bool(true),
 		Name:               &targetGroupName,
 		Port:               &state.Port,
-		Protocol:           aws.String("HTTP"),
+		Protocol:           aws.String(p.config.HealthCheck.Protocol),
 		TargetType:         aws.String("ip"),
 		VpcId:              &subnets.Subnets.VpcId,
-	})
+	}
+
+	if p.config.HealthCheck.Path != "" {
+		createTargetGroupInput.HealthCheckPath = aws.String(p.config.HealthCheck.Path)
+	}
+
+	if p.config.HealthCheck.Timeout != 0 {
+		createTargetGroupInput.HealthCheckTimeoutSeconds = aws.Int64(p.config.HealthCheck.Timeout)
+	}
+
+	if p.config.HealthCheck.Interval != 0 {
+		createTargetGroupInput.HealthCheckIntervalSeconds = aws.Int64(p.config.HealthCheck.Interval)
+	}
+
+	if p.config.HealthCheck.HealthyThresholdCount != 0 {
+		createTargetGroupInput.HealthyThresholdCount = aws.Int64(p.config.HealthCheck.HealthyThresholdCount)
+	}
+
+	if p.config.HealthCheck.UnhealthyThresholdCount != 0 {
+		createTargetGroupInput.UnhealthyThresholdCount = aws.Int64(p.config.HealthCheck.UnhealthyThresholdCount)
+	}
+
+	if p.config.HealthCheck.Matcher != nil {
+		if *p.config.HealthCheck.Matcher.GrpcCode != "" || *p.config.HealthCheck.Matcher.HttpCode != "" {
+			createTargetGroupInput.Matcher = &elbv2.Matcher{
+				HttpCode: p.config.HealthCheck.Matcher.HttpCode,
+				GrpcCode: p.config.HealthCheck.Matcher.GrpcCode,
+			}
+		}
+	}
+
+	ctg, err := elbsrv.CreateTargetGroupWithContext(ctx, createTargetGroupInput)
 	if err != nil || ctg == nil || len(ctg.TargetGroups) == 0 {
 		return status.Errorf(codes.Internal, "failed to create target group: %s", err)
 	}
@@ -2843,6 +2885,34 @@ type Config struct {
 	ContainersConfig []*ContainerConfig `hcl:"sidecar,block"`
 
 	Logging *Logging `hcl:"logging,block"`
+
+	HealthCheck *AppHealthCheck `hcl:"health_check,block"`
+}
+
+type AppHealthCheck struct {
+	// Protocol is the protocol for the health check to use - TCP, HTTP, HTTPS.
+	Protocol string `hcl:"protocol,optional"`
+
+	// Path is the destination of the ping path for target health checks.
+	Path string `hcl:"path,optional"`
+
+	// Timeout is the amount of time in seconds during which no target response means a failure.
+	Timeout int64 `hcl:"timeout,optional"`
+
+	// Interval is the amount of time in seconds between health checks.
+	Interval int64 `hcl:"interval,optional"`
+
+	// HealthyThresholdCount is the number of consecutive successful health checks required before considering an unhealthy target healthy.
+	// The range is 2–10. The default is 5.
+	HealthyThresholdCount int64 `hcl:"healthy_threshold_count,optional"`
+
+	// UnhealthyThresholdCount is the number of consecutive failed health checks required before considering a target unhealthy.
+	// The range is 2–10. The default is 2.
+	UnhealthyThresholdCount int64 `hcl:"unhealthy_threshold_count,optional"`
+
+	// Matcher is the HTTP codes to use when checking for a successful response from a target.
+	// The range is 200 to 599. The default is 200-399.
+	Matcher *elbv2.Matcher `hcl:"matcher,optional"`
 }
 
 func (p *Platform) Documentation() (*docs.Documentation, error) {
