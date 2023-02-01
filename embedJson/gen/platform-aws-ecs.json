@@ -6,115 +6,6 @@
    "name": "aws-ecs",
    "optionalFields": [
       {
-         "Field": "alb",
-         "Type": "ecs.ALBConfig",
-         "Synopsis": "Provides additional configuration for using an ALB with ECS",
-         "Summary": "",
-         "Optional": true,
-         "Default": "",
-         "EnvVar": "",
-         "Category": true,
-         "Example": "",
-         "SubFields": [
-            {
-               "Field": "certificate",
-               "Type": "string",
-               "Synopsis": "the ARN of an AWS Certificate Manager cert to associate with the ALB",
-               "Summary": "",
-               "Optional": true,
-               "Default": "",
-               "EnvVar": "",
-               "Category": false,
-               "Example": "",
-               "SubFields": null
-            },
-            {
-               "Field": "domain_name",
-               "Type": "string",
-               "Synopsis": "Fully qualified domain name to set for the ALB",
-               "Summary": "set along with zone_id to have DNS automatically setup for the ALB. this value should include the full hostname and domain name, for instance app.example.com",
-               "Optional": true,
-               "Default": "",
-               "EnvVar": "",
-               "Category": false,
-               "Example": "",
-               "SubFields": null
-            },
-            {
-               "Field": "ingress_port",
-               "Type": "int64",
-               "Synopsis": "Internet-facing traffic port. Defaults to 80 if 'certificate' is unset, 443 if set.",
-               "Summary": "used to set the ALB listener port, and the ALB security group ingress port",
-               "Optional": true,
-               "Default": "",
-               "EnvVar": "",
-               "Category": false,
-               "Example": "",
-               "SubFields": null
-            },
-            {
-               "Field": "internal",
-               "Type": "bool",
-               "Synopsis": "Whether or not the created ALB should be internal",
-               "Summary": "used when listener_arn is not set. If set, the created ALB will have a scheme of `internal`, otherwise by default it has a scheme of `internet-facing`.",
-               "Optional": true,
-               "Default": "",
-               "EnvVar": "",
-               "Category": false,
-               "Example": "",
-               "SubFields": null
-            },
-            {
-               "Field": "listener_arn",
-               "Type": "string",
-               "Synopsis": "the ARN on an existing ALB to configure",
-               "Summary": "when this is set, no ALB or Listener is created. Instead the application is configured by manipulating this existing Listener. This allows users to configure their ALB outside waypoint but still have waypoint hook the application to that ALB",
-               "Optional": true,
-               "Default": "",
-               "EnvVar": "",
-               "Category": false,
-               "Example": "",
-               "SubFields": null
-            },
-            {
-               "Field": "security_group_ids",
-               "Type": "list of string",
-               "Synopsis": "",
-               "Summary": "",
-               "Optional": true,
-               "Default": "",
-               "EnvVar": "",
-               "Category": false,
-               "Example": "",
-               "SubFields": null
-            },
-            {
-               "Field": "subnets",
-               "Type": "list of string",
-               "Synopsis": "the VPC subnets to use for the ALB",
-               "Summary": "",
-               "Optional": true,
-               "Default": "public subnets in the default VPC",
-               "EnvVar": "",
-               "Category": false,
-               "Example": "",
-               "SubFields": null
-            },
-            {
-               "Field": "zone_id",
-               "Type": "string",
-               "Synopsis": "Route53 ZoneID to create a DNS record into",
-               "Summary": "set along with alb.domain_name to have DNS automatically setup for the ALB",
-               "Optional": true,
-               "Default": "",
-               "EnvVar": "",
-               "Category": false,
-               "Example": "",
-               "SubFields": null
-            }
-         ]
-      },
-      {
          "Field": "architecture",
          "Type": "string",
          "Synopsis": "the instruction set CPU architecture that the Amazon ECS supports. Valid values are: \"x86_64\", \"arm64\"",
@@ -334,6 +225,18 @@
          "SubFields": null
       },
       {
+         "Field": "listener_arn",
+         "Type": "string",
+         "Synopsis": "",
+         "Summary": "",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "Example": "",
+         "SubFields": null
+      },
+      {
          "Field": "load_balancer_arn",
          "Type": "string",
          "Synopsis": "",
@@ -408,6 +311,115 @@
    ],
    "outputAttrsHelp": "Output attributes can be used in your `waypoint.hcl` as [variables](/waypoint/docs/waypoint-hcl/variables) via [`artifact`](/waypoint/docs/waypoint-hcl/variables/artifact) or [`deploy`](/waypoint/docs/waypoint-hcl/variables/deploy).",
    "requiredFields": [
+      {
+         "Field": "alb",
+         "Type": "ecs.ALBConfig",
+         "Synopsis": "Provides additional configuration for using an ALB with ECS",
+         "Summary": "",
+         "Optional": false,
+         "Default": "",
+         "EnvVar": "",
+         "Category": true,
+         "Example": "",
+         "SubFields": [
+            {
+               "Field": "certificate",
+               "Type": "string",
+               "Synopsis": "the ARN of an AWS Certificate Manager cert to associate with the ALB",
+               "Summary": "",
+               "Optional": true,
+               "Default": "",
+               "EnvVar": "",
+               "Category": false,
+               "Example": "",
+               "SubFields": null
+            },
+            {
+               "Field": "domain_name",
+               "Type": "string",
+               "Synopsis": "Fully qualified domain name to set for the ALB",
+               "Summary": "set along with zone_id to have DNS automatically setup for the ALB. this value should include the full hostname and domain name, for instance app.example.com",
+               "Optional": true,
+               "Default": "",
+               "EnvVar": "",
+               "Category": false,
+               "Example": "",
+               "SubFields": null
+            },
+            {
+               "Field": "ingress_port",
+               "Type": "int64",
+               "Synopsis": "Internet-facing traffic port. Defaults to 80 if 'certificate' is unset, 443 if set.",
+               "Summary": "used to set the ALB listener port, and the ALB security group ingress port",
+               "Optional": true,
+               "Default": "",
+               "EnvVar": "",
+               "Category": false,
+               "Example": "",
+               "SubFields": null
+            },
+            {
+               "Field": "internal",
+               "Type": "bool",
+               "Synopsis": "Whether or not the created ALB should be internal",
+               "Summary": "used when listener_arn is not set. If set, the created ALB will have a scheme of `internal`, otherwise by default it has a scheme of `internet-facing`.",
+               "Optional": true,
+               "Default": "",
+               "EnvVar": "",
+               "Category": false,
+               "Example": "",
+               "SubFields": null
+            },
+            {
+               "Field": "load_balancer_arn",
+               "Type": "string",
+               "Synopsis": "the ARN on an existing ALB to configure",
+               "Summary": "when this is set, Waypoint will use this ALB instead of creating its own. A target group will still be created for each deployment, and will be added to a listener on the configured ALB port (Waypoint will the listener if it doesn't exist). This allows users to configure their ALB outside Waypoint but still have Waypoint hook the application to that ALB",
+               "Optional": false,
+               "Default": "",
+               "EnvVar": "",
+               "Category": false,
+               "Example": "",
+               "SubFields": null
+            },
+            {
+               "Field": "security_group_ids",
+               "Type": "list of string",
+               "Synopsis": "",
+               "Summary": "",
+               "Optional": true,
+               "Default": "",
+               "EnvVar": "",
+               "Category": false,
+               "Example": "",
+               "SubFields": null
+            },
+            {
+               "Field": "subnets",
+               "Type": "list of string",
+               "Synopsis": "the VPC subnets to use for the ALB",
+               "Summary": "",
+               "Optional": true,
+               "Default": "public subnets in the default VPC",
+               "EnvVar": "",
+               "Category": false,
+               "Example": "",
+               "SubFields": null
+            },
+            {
+               "Field": "zone_id",
+               "Type": "string",
+               "Synopsis": "Route53 ZoneID to create a DNS record into",
+               "Summary": "set along with alb.domain_name to have DNS automatically setup for the ALB",
+               "Optional": true,
+               "Default": "",
+               "EnvVar": "",
+               "Category": false,
+               "Example": "",
+               "SubFields": null
+            }
+         ]
+      },
       {
          "Field": "logging",
          "Type": "ecs.Logging",

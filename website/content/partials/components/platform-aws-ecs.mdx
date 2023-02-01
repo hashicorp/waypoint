@@ -22,6 +22,74 @@ deploy {
 
 These parameters are used in the [`use` stanza](/waypoint/docs/waypoint-hcl/use) for this plugin.
 
+#### alb (category)
+
+Provides additional configuration for using an ALB with ECS.
+
+##### alb.certificate
+
+The ARN of an AWS Certificate Manager cert to associate with the ALB.
+
+- Type: **string**
+- **Optional**
+
+##### alb.domain_name
+
+Fully qualified domain name to set for the ALB.
+
+Set along with zone_id to have DNS automatically setup for the ALB. this value should include the full hostname and domain name, for instance app.example.com.
+
+- Type: **string**
+- **Optional**
+
+##### alb.ingress_port
+
+Internet-facing traffic port. Defaults to 80 if 'certificate' is unset, 443 if set.
+
+Used to set the ALB listener port, and the ALB security group ingress port.
+
+- Type: **int64**
+- **Optional**
+
+##### alb.internal
+
+Whether or not the created ALB should be internal.
+
+Used when listener_arn is not set. If set, the created ALB will have a scheme of `internal`, otherwise by default it has a scheme of `internet-facing`.
+
+- Type: **bool**
+- **Optional**
+
+##### alb.load_balancer_arn
+
+The ARN on an existing ALB to configure.
+
+When this is set, Waypoint will use this ALB instead of creating its own. A target group will still be created for each deployment, and will be added to a listener on the configured ALB port (Waypoint will the listener if it doesn't exist). This allows users to configure their ALB outside Waypoint but still have Waypoint hook the application to that ALB.
+
+- Type: **string**
+
+##### alb.security_group_ids
+
+- Type: **list of string**
+- **Optional**
+
+##### alb.subnets
+
+The VPC subnets to use for the ALB.
+
+- Type: **list of string**
+- **Optional**
+- Default: public subnets in the default VPC
+
+##### alb.zone_id
+
+Route53 ZoneID to create a DNS record into.
+
+Set along with alb.domain_name to have DNS automatically setup for the ALB.
+
+- Type: **string**
+- **Optional**
+
 #### logging (category)
 
 Provides additional configuration for logging flags for ECS.
@@ -165,77 +233,6 @@ Environment variables to expose to this container.
 ### Optional Parameters
 
 These parameters are used in the [`use` stanza](/waypoint/docs/waypoint-hcl/use) for this plugin.
-
-#### alb (category)
-
-Provides additional configuration for using an ALB with ECS.
-
-- **Optional**
-
-##### alb.certificate
-
-The ARN of an AWS Certificate Manager cert to associate with the ALB.
-
-- Type: **string**
-- **Optional**
-
-##### alb.domain_name
-
-Fully qualified domain name to set for the ALB.
-
-Set along with zone_id to have DNS automatically setup for the ALB. this value should include the full hostname and domain name, for instance app.example.com.
-
-- Type: **string**
-- **Optional**
-
-##### alb.ingress_port
-
-Internet-facing traffic port. Defaults to 80 if 'certificate' is unset, 443 if set.
-
-Used to set the ALB listener port, and the ALB security group ingress port.
-
-- Type: **int64**
-- **Optional**
-
-##### alb.internal
-
-Whether or not the created ALB should be internal.
-
-Used when listener_arn is not set. If set, the created ALB will have a scheme of `internal`, otherwise by default it has a scheme of `internet-facing`.
-
-- Type: **bool**
-- **Optional**
-
-##### alb.listener_arn
-
-The ARN on an existing ALB to configure.
-
-When this is set, no ALB or Listener is created. Instead the application is configured by manipulating this existing Listener. This allows users to configure their ALB outside waypoint but still have waypoint hook the application to that ALB.
-
-- Type: **string**
-- **Optional**
-
-##### alb.security_group_ids
-
-- Type: **list of string**
-- **Optional**
-
-##### alb.subnets
-
-The VPC subnets to use for the ALB.
-
-- Type: **list of string**
-- **Optional**
-- Default: public subnets in the default VPC
-
-##### alb.zone_id
-
-Route53 ZoneID to create a DNS record into.
-
-Set along with alb.domain_name to have DNS automatically setup for the ALB.
-
-- Type: **string**
-- **Optional**
 
 #### architecture
 
@@ -388,6 +385,10 @@ If no task role name is specified a task role with a default name will be create
 Output attributes can be used in your `waypoint.hcl` as [variables](/waypoint/docs/waypoint-hcl/variables) via [`artifact`](/waypoint/docs/waypoint-hcl/variables/artifact) or [`deploy`](/waypoint/docs/waypoint-hcl/variables/deploy).
 
 #### cluster
+
+- Type: **string**
+
+#### listener_arn
 
 - Type: **string**
 

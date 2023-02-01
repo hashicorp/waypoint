@@ -31,13 +31,13 @@ func TestPlatformConfig(t *testing.T) {
 		require.NoError(t, p.ConfigSet(cfg))
 	})
 
-	t.Run("fine if only listener", func(t *testing.T) {
+	t.Run("fine if only lb", func(t *testing.T) {
 		var p Platform
 
 		cfg := &Config{
 			Memory: 512,
 			ALB: &ALBConfig{
-				ListenerARN: "xyz",
+				LoadBalancerArn: "xyz",
 			},
 		}
 
@@ -57,43 +57,29 @@ func TestPlatformConfig(t *testing.T) {
 		require.NoError(t, p.ConfigSet(cfg))
 	})
 
-	t.Run("errors if security_group_ids and listener are set", func(t *testing.T) {
+	t.Run("errors if security_group_ids and alb are set", func(t *testing.T) {
 		var p Platform
 
 		cfg := &Config{
 			Memory: 512,
 			ALB: &ALBConfig{
 				SecurityGroupIDs: []string{"xyz", "lmnop"},
-				ListenerARN:      "abc",
+				LoadBalancerArn:  "abc",
 			},
 		}
 
 		require.Error(t, p.ConfigSet(cfg))
 	})
 
-	t.Run("errors if cert and listener are set", func(t *testing.T) {
+	t.Run("errors if zone_id and fqdn and load balancer are set", func(t *testing.T) {
 		var p Platform
 
 		cfg := &Config{
 			Memory: 512,
 			ALB: &ALBConfig{
-				CertificateId: "xyz",
-				ListenerARN:   "abc",
-			},
-		}
-
-		require.Error(t, p.ConfigSet(cfg))
-	})
-
-	t.Run("errors if zone_id and fqdn and listener are set", func(t *testing.T) {
-		var p Platform
-
-		cfg := &Config{
-			Memory: 512,
-			ALB: &ALBConfig{
-				ZoneId:      "xyz",
-				FQDN:        "a.b",
-				ListenerARN: "abc",
+				ZoneId:          "xyz",
+				FQDN:            "a.b",
+				LoadBalancerArn: "abc",
 			},
 		}
 
@@ -140,15 +126,15 @@ func TestPlatformConfig(t *testing.T) {
 		require.NoError(t, p.ConfigSet(cfg))
 	})
 
-	t.Run("errors if internal and listener are set", func(t *testing.T) {
+	t.Run("errors if internal and alb are set", func(t *testing.T) {
 		var p Platform
 
 		i := true
 		cfg := &Config{
 			Memory: 512,
 			ALB: &ALBConfig{
-				InternalScheme: &i,
-				ListenerARN:    "abc",
+				InternalScheme:  &i,
+				LoadBalancerArn: "abc",
 			},
 		}
 
