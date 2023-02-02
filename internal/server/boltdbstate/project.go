@@ -257,9 +257,25 @@ func (s *State) ProjectDelete(ctx context.Context, ref *pb.Ref_Project) error {
 }
 
 func (s *State) ProjectCount(ctx context.Context) (uint64, error) {
+	memTxn := s.inmem.Txn(false)
+	defer memTxn.Abort()
+
+	iter, err := memTxn.Get(projectIndexTableName, projectIndexIdIndexName+"_prefix", "")
+	if err != nil {
+		return 0, err
+	}
+
 	var count uint64
-	var err error
-	return count, err // TODO: Implement count for boltdb
+	for {
+		next := iter.Next()
+		if next == nil {
+			break
+		}
+
+		count++
+	}
+
+	return count, nil
 }
 
 // ProjectList returns the list of projects.
@@ -268,6 +284,14 @@ func (s *State) ProjectList(ctx context.Context, paginationRequest *pb.Paginatio
 	defer memTxn.Abort()
 
 	return s.projectList(memTxn, paginationRequest)
+}
+
+// ProjectListFull returns the list of full projects (rather than refs).
+func (s *State) ProjectListBundles(ctx context.Context, paginationRequest *pb.PaginationRequest) ([]*pb.UI_ProjectBundle, *pb.PaginationResponse, error) {
+	memTxn := s.inmem.Txn(false)
+	defer memTxn.Abort()
+
+	return s.projectListBundles(memTxn, paginationRequest)
 }
 
 // ProjectListWorkspaces returns the list of workspaces that a project is in.
@@ -489,6 +513,47 @@ func (s *State) projectList(
 	}
 
 	return result, &pb.PaginationResponse{}, nil // TODO (andrew): fill in for boltdb
+}
+
+// projectListBundles returns a list of project bundles — that is, projects with
+// additional preloaded data. There is no additional data at present, but we expect
+// to add `latest_init_job` and `latest_destroy_job` in the near future.
+func (s *State) projectListBundles(
+	memTxn *memdb.Txn,
+	paginationRequest *pb.PaginationRequest,
+) ([]*pb.UI_ProjectBundle, *pb.PaginationResponse, error) {
+	// Get the index
+	iter, err := memTxn.Get(projectIndexTableName, projectIndexIdIndexName+"_prefix", "")
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// Populate the result slice
+	var result []*pb.UI_ProjectBundle
+	err = s.db.View(func(dbTxn *bolt.Tx) error {
+		for {
+			next := iter.Next()
+			if next == nil {
+				break
+			}
+			idx := next.(*projectIndexRecord)
+			ref := &pb.Ref_Project{
+				Project: idx.Id,
+			}
+
+			project, err := s.projectGet(dbTxn, memTxn, ref)
+			if err != nil {
+				return err
+			}
+			result = append(result, &pb.UI_ProjectBundle{Project: project})
+		}
+		return nil
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return result, &pb.PaginationResponse{}, nil // TODO(jgwhite): pagination for ProjectListFull
 }
 
 func (s *State) projectDelete(
