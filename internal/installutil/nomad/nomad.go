@@ -169,6 +169,7 @@ func CreatePersistentVolume(
 	id, name, csiPluginId, csiVolumeProvider, csiFS, csiExternalId string,
 	csiVolumeCapacityMin, csiVolumeCapacityMax int64,
 	csiTopologies, csiSecrets, csiParams map[string]string,
+	csiMountFlags []string,
 ) error {
 	vol := api.CSIVolume{
 		ID:         id,
@@ -182,7 +183,7 @@ func CreatePersistentVolume(
 		},
 		MountOptions: &api.CSIMountOptions{
 			FSType:     DefaultCSIVolumeMountFS,
-			MountFlags: []string{"noatime"},
+			MountFlags: csiMountFlags,
 		},
 		RequestedCapacityMin: DefaultCSIVolumeCapacityMin,
 		RequestedCapacityMax: DefaultCSIVolumeCapacityMax,
