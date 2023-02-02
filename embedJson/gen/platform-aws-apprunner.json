@@ -1,39 +1,44 @@
 {
    "description": "\nCreates an App Runner service, with the specified configuration \nfrom `waypoint.hcl`.",
+   "example": "deploy {\n\tuse \"aws-apprunner\" {\n\t\tname = \"go-gin\"\n\t\tregion = var.region\n\t\tport = 8080\n\t\tstatic_environment = {\n\t\t\t\"PORT\" = \"8080\"\n\t\t}\n\t}\n}",
+   "input": "ecr.Image",
    "mappers": null,
    "name": "aws-apprunner",
    "optionalFields": [
       {
          "Field": "cpu",
          "Type": "int",
-         "Synopsis": "",
+         "Synopsis": "the number of vCPU units to reserve for the service. Example: 1024 = 1 vCPU",
          "Summary": "",
          "Optional": true,
-         "Default": "",
+         "Default": "1024",
          "EnvVar": "",
          "Category": false,
+         "Example": "",
          "SubFields": null
       },
       {
          "Field": "memory",
          "Type": "int",
-         "Synopsis": "",
+         "Synopsis": "the amount of memory to reserve for the service. Example: 2048 = 2 GB",
          "Summary": "",
          "Optional": true,
-         "Default": "",
+         "Default": "2048",
          "EnvVar": "",
          "Category": false,
+         "Example": "",
          "SubFields": null
       },
       {
          "Field": "port",
          "Type": "int",
-         "Synopsis": "",
+         "Synopsis": "the port to listen on",
          "Summary": "",
          "Optional": true,
-         "Default": "",
+         "Default": "8080 — This is AppRunner's default port",
          "EnvVar": "",
          "Category": false,
+         "Example": "",
          "SubFields": null
       },
       {
@@ -45,44 +50,49 @@
          "Default": "",
          "EnvVar": "",
          "Category": false,
+         "Example": "",
          "SubFields": null
       },
       {
          "Field": "role_name",
          "Type": "string",
-         "Synopsis": "",
+         "Synopsis": "the name of the IAM role to use for the service",
          "Summary": "",
          "Optional": true,
-         "Default": "",
+         "Default": "AppRunnerECRAccessRole",
          "EnvVar": "",
          "Category": false,
+         "Example": "",
          "SubFields": null
       },
       {
          "Field": "static_environment",
          "Type": "map of string to string",
-         "Synopsis": "",
+         "Synopsis": "environment variables to set for the service. A key-value map or string to string",
          "Summary": "",
          "Optional": true,
          "Default": "",
          "EnvVar": "",
          "Category": false,
+         "Example": "",
          "SubFields": null
       }
    ],
+   "output": "apprunner.Deployment",
    "requiredFields": [
       {
          "Field": "name",
          "Type": "string",
-         "Synopsis": "",
+         "Synopsis": "the name of the service. This is required.",
          "Summary": "",
          "Optional": false,
          "Default": "",
          "EnvVar": "",
          "Category": false,
+         "Example": "",
          "SubFields": null
       }
    ],
    "type": "platform",
-   "use": "the [`use` stanza](/docs/waypoint-hcl/use) for this plugin."
+   "use": "the [`use` stanza](/waypoint/docs/waypoint-hcl/use) for this plugin."
 }

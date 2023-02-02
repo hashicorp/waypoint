@@ -5,32 +5,61 @@ from `waypoint.hcl`.
 
 ### Interface
 
+- Input: **ecr.Image**
+- Output: **apprunner.Deployment**
+
+### Examples
+
+```hcl
+deploy {
+	use "aws-apprunner" {
+		name = "go-gin"
+		region = var.region
+		port = 8080
+		static_environment = {
+			"PORT" = "8080"
+		}
+	}
+}
+```
+
 ### Required Parameters
 
-These parameters are used in the [`use` stanza](/docs/waypoint-hcl/use) for this plugin.
+These parameters are used in the [`use` stanza](/waypoint/docs/waypoint-hcl/use) for this plugin.
 
 #### name
+
+The name of the service. This is required.
 
 - Type: **string**
 
 ### Optional Parameters
 
-These parameters are used in the [`use` stanza](/docs/waypoint-hcl/use) for this plugin.
+These parameters are used in the [`use` stanza](/waypoint/docs/waypoint-hcl/use) for this plugin.
 
 #### cpu
 
+The number of vCPU units to reserve for the service. Example: 1024 = 1 vCPU.
+
 - Type: **int**
 - **Optional**
+- Default: 1024
 
 #### memory
 
+The amount of memory to reserve for the service. Example: 2048 = 2 GB.
+
 - Type: **int**
 - **Optional**
+- Default: 2048
 
 #### port
 
+The port to listen on.
+
 - Type: **int**
 - **Optional**
+- Default: 8080 — This is AppRunner's default port
 
 #### region
 
@@ -39,10 +68,15 @@ These parameters are used in the [`use` stanza](/docs/waypoint-hcl/use) for this
 
 #### role_name
 
+The name of the IAM role to use for the service.
+
 - Type: **string**
 - **Optional**
+- Default: AppRunnerECRAccessRole
 
 #### static_environment
+
+Environment variables to set for the service. A key-value map or string to string.
 
 - Type: **map of string to string**
 - **Optional**
