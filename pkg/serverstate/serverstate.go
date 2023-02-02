@@ -105,6 +105,7 @@ type Interface interface {
 	ProjectUpdateDataRef(context.Context, *pb.Ref_Project, *pb.Ref_Workspace, *pb.Job_DataSource_Ref) error
 	ProjectCount(context.Context) (uint64, error)
 	ProjectList(context.Context, *pb.PaginationRequest) ([]*pb.Ref_Project, *pb.PaginationResponse, error)
+	ProjectListBundles(context.Context, *pb.PaginationRequest) ([]*pb.UI_ProjectBundle, *pb.PaginationResponse, error)
 	ProjectListWorkspaces(context.Context, *pb.Ref_Project) ([]*pb.Workspace_Project, error)
 	ProjectPollPeek(context.Context, memdb.WatchSet) (*pb.Project, time.Time, error)
 	ProjectPollComplete(context.Context, *pb.Project, time.Time) error
