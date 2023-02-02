@@ -69,6 +69,7 @@ type nomadConfig struct {
 	csiVolumeCapacityMin int64             `hcl:"csi_volume_capacity_min,optional"`
 	csiVolumeCapacityMax int64             `hcl:"csi_volume_capacity_max,optional"`
 	csiFS                string            `hcl:"csi_fs,optional"`
+	csiMountFlags        []string          `hcl:"csi_mount_flags,optional"`
 	csiPluginId          string            `hcl:"csi_plugin_id,optional"`
 	csiExternalId        string            `hcl:"nomad_csi_external_id,optional"`
 	csiTopologies        map[string]string `hcl:"nomad_csi_topologies,optional"`
@@ -228,6 +229,7 @@ func (i *NomadInstaller) Install(
 			i.config.csiTopologies,
 			i.config.csiSecrets,
 			i.config.csiParams,
+			i.config.csiMountFlags,
 		)
 		if err != nil {
 			return nil, "", status.Errorf(codes.Internal, "Failed creating Nomad persistent volume: %s", err)
@@ -641,6 +643,7 @@ func (i *NomadInstaller) InstallRunner(
 			CsiVolumeCapacityMin:  i.config.runnerCsiVolumeCapacityMin,
 			CsiVolumeCapacityMax:  i.config.runnerCsiVolumeCapacityMax,
 			CsiFS:                 i.config.csiFS,
+			CsiMountFlags:         i.config.csiMountFlags,
 			CsiTopologies:         i.config.csiTopologies,
 			CsiExternalId:         i.config.csiExternalId,
 			CsiParams:             i.config.csiParams,
@@ -1337,6 +1340,13 @@ func (i *NomadInstaller) InstallFlags(set *flag.Set) {
 		Target:  &i.config.csiFS,
 		Usage:   "Nomad CSI volume mount option file system.",
 		Default: defaultCSIVolumeMountFS,
+	})
+
+	set.StringSliceVar(&flag.StringSliceVar{
+		Name:    "nomad-csi-mount-flags",
+		Target:  &i.config.csiMountFlags,
+		Usage:   "Nomad CSI volume mount option flags.",
+		Default: []string{"noatime"},
 	})
 
 	set.StringMapVar(&flag.StringMapVar{

@@ -90,6 +90,7 @@ the install, the command would be:
 - `-nomad-csi-volume-capacity-min=<int>` - Nomad CSI volume capacity minimum, in bytes. The default is 1073741824.
 - `-nomad-csi-volume-capacity-max=<int>` - Nomad CSI volume capacity maximum, in bytes. The default is 2147483648.
 - `-nomad-csi-fs=<string>` - Nomad CSI volume mount option file system. The default is xfs.
+- `-nomad-csi-mount-flags=<string>` - Nomad CSI volume mount option flags. The default is noatime.
 - `-nomad-csi-params=<key=value>` - Parameters passed directly to the CSI plugin to configure the volume.
 - `-nomad-csi-topologies=<key=value>` - Locations from which the Nomad Volume will be accessible.
 - `-nomad-csi-external-id=<string>` - The ID of the physical volume from the Nomad storage provider.
