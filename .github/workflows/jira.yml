@@ -46,7 +46,6 @@ jobs:
         id: set-ticket-labels
         run: |
           LABELS="["
-          LABELS+="\"oss\", "
           if [[ "${{ contains(github.event.issue.labels.*.name, 'documentation') }}" == "true" ]]; then LABELS+="\"documentation\", "; fi
           if [[ "${{ contains(github.event.issue.labels.*.name, 'ui') }}" == "true" ]]; then LABELS+="\"ui\", "; else LABELS+="\"backend\", "; fi
           if [[ ${#LABELS} != 1 ]]; then LABELS=${LABELS::-2}"]"; else LABELS+="]"; fi
