@@ -3,7 +3,7 @@ parameter {
   key         = "alb"
   description = "Provides additional configuration for using an ALB with ECS"
   type        = "category"
-  required    = false
+  required    = true
 }
 
 parameter {
@@ -35,10 +35,10 @@ parameter {
 }
 
 parameter {
-  key         = "alb.listener_arn"
-  description = "the ARN on an existing ALB to configure\nwhen this is set, no ALB or Listener is created. Instead the application is configured by manipulating this existing Listener. This allows users to configure their ALB outside waypoint but still have waypoint hook the application to that ALB"
+  key         = "alb.load_balancer_arn"
+  description = "the ARN on an existing ALB to configure\nwhen this is set, Waypoint will use this ALB instead of creating its own. A target group will still be created for each deployment, and will be added to a listener on the configured ALB port (Waypoint will the listener if it doesn't exist). This allows users to configure their ALB outside Waypoint but still have Waypoint hook the application to that ALB"
   type        = "string"
-  required    = false
+  required    = true
 }
 
 parameter {

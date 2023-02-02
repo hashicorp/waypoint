@@ -6,6 +6,12 @@ output {
 }
 
 output {
+  key         = "listener_arn"
+  description = ""
+  type        = "string"
+}
+
+output {
   key         = "load_balancer_arn"
   description = ""
   type        = "string"
