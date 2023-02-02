@@ -65,26 +65,27 @@ func (p *Platform) ConfigSet(config interface{}) error {
 	if c.ALB != nil {
 		alb := c.ALB
 		err := utils.Error(validation.ValidateStruct(alb,
-			validation.Field(&alb.CertificateId,
-				validation.Empty.When(alb.ListenerARN != "").Error("certificate cannot be used with listener_arn"),
-			),
+			// ZoneId and FQDN are both used to create a route53 record that points to an ALB.
+			// While we could still create this, if a user is managing their own ALB out of band,
+			// they probably also want to manage the route53 record themselves
+			// too.
 			validation.Field(&alb.ZoneId,
-				validation.Empty.When(alb.ListenerARN != ""),
+				validation.Empty.When(alb.LoadBalancerArn != ""),
 				validation.Required.When(alb.FQDN != ""),
 			),
 			validation.Field(&alb.FQDN,
-				validation.Empty.When(alb.ListenerARN != ""),
+				validation.Empty.When(alb.LoadBalancerArn != ""),
 				validation.Required.When(alb.ZoneId != "").Error("fqdn only valid with zone_id"),
 			),
+
 			validation.Field(&alb.InternalScheme,
-				validation.Nil.When(alb.ListenerARN != "").Error("internal cannot be used with listener_arn"),
+				validation.Nil.When(alb.LoadBalancerArn != "").Error("internal cannot be used with load_balancer_arn"),
 			),
-			validation.Field(&alb.ListenerARN,
+			validation.Field(&alb.LoadBalancerArn,
 				validation.Empty.When(
-					alb.CertificateId != "" ||
-						alb.ZoneId != "" ||
+					alb.ZoneId != "" ||
 						alb.FQDN != "" ||
-						len(alb.SecurityGroupIDs) >= 1).Error("listener_arn can not be used with other options"),
+						len(alb.SecurityGroupIDs) >= 1).Error("load_balancer_arn can not be used with other options"),
 			),
 			validation.Field(&alb.SecurityGroupIDs),
 		))
@@ -397,6 +398,9 @@ func (p *Platform) Deploy(
 	albState := rm.Resource("application load balancer").State().(*Resource_Alb)
 	result.LoadBalancerArn = albState.Arn
 
+	listenerState := rm.Resource("alb listener").State().(*Resource_Alb_Listener)
+	result.ListenerArn = listenerState.Arn
+
 	cState := rm.Resource("cluster").State().(*Resource_Cluster)
 	result.Cluster = cState.Name
 
@@ -687,7 +691,7 @@ func (p *Platform) resourceServiceCreate(
 	deploymentId DeploymentId,
 	state *Resource_Service,
 
-	// Outputs of other resource creation processes
+// Outputs of other resource creation processes
 	taskDefinition *Resource_TaskDefinition,
 	cluster *Resource_Cluster,
 	targetGroup *Resource_TargetGroup,
@@ -1000,6 +1004,8 @@ func (p *Platform) resourceServiceDestroy(
 	return nil
 }
 
+// resourceAlbListenerCreate finds or creates an ALB listener, and ensures that the
+// target group is added to it.
 func (p *Platform) resourceAlbListenerCreate(
 	ctx context.Context,
 	sg terminal.StepGroup,
@@ -1016,7 +1022,7 @@ func (p *Platform) resourceAlbListenerCreate(
 		return nil
 	}
 
-	s := sg.Add("Initiating ALB creation")
+	s := sg.Add("Initiating ALB Listener")
 	defer s.Abort()
 
 	state.TargetGroup = targetGroup
@@ -1031,9 +1037,8 @@ func (p *Platform) resourceAlbListenerCreate(
 	}
 
 	var (
-		certs       []*elbv2.Certificate
-		protocol    = "HTTP"
-		newListener = false
+		certs    []*elbv2.Certificate
+		protocol = "HTTP"
 	)
 
 	if albConfig != nil && albConfig.CertificateId != "" {
@@ -1045,75 +1050,31 @@ func (p *Platform) resourceAlbListenerCreate(
 
 	elbsrv := elbv2.New(sess)
 
+	if alb == nil || alb.Arn == "" {
+		return status.Errorf(codes.InvalidArgument, "cannot create ALB listener - no existing ALB defined.")
+	}
+	log.Info("load-balancer defined", "dns-name", alb.DnsName)
+
+	s.Update("Looking for listeners for ALB %q", alb.Arn)
+	listeners, err := elbsrv.DescribeListenersWithContext(ctx, &elbv2.DescribeListenersInput{
+		LoadBalancerArn: &alb.Arn,
+	})
+	if err != nil {
+		return status.Errorf(codes.Internal, "failed to describe listeners for alb (ARN %q): %s", alb.Arn, err)
+	}
+
+	// Check for existing listeners on our specified port
 	var listener *elbv2.Listener
-
-	if albConfig != nil && albConfig.ListenerARN != "" {
-		s.Update("Describing requested ALB listener (ARN: %s)", albConfig.ListenerARN)
-
-		state.Managed = false
-
-		out, err := elbsrv.DescribeListenersWithContext(ctx, &elbv2.DescribeListenersInput{
-			ListenerArns: []*string{aws.String(albConfig.ListenerARN)},
-		})
-		if err != nil {
-			return status.Errorf(codes.Internal, "failed to describe requested listener ARN %q: %s", albConfig.ListenerARN, err)
-		}
-
-		listener = out.Listeners[0]
-		s.Update("Using configured ALB Listener: %s (load-balancer: %s)",
-			*listener.ListenerArn, *listener.LoadBalancerArn)
-	} else {
-		state.Managed = true
-
-		if alb == nil || alb.Arn == "" {
-			return status.Errorf(codes.InvalidArgument, "cannot create ALB listener - no existing ALB defined.")
-		}
-
-		s.Update("No ALB listener specified - looking for listeners for ALB %q", alb.Name)
-		listeners, err := elbsrv.DescribeListenersWithContext(ctx, &elbv2.DescribeListenersInput{
-			LoadBalancerArn: &alb.Arn,
-		})
-		if err != nil {
-			return status.Errorf(codes.Internal, "failed to describe listeners for alb (ARN %q): %s", alb.Arn, err)
-		}
-
-		if len(listeners.Listeners) > 0 {
-			listener = listeners.Listeners[0]
-			s.Update("Using existing ALB Listener (ARN: %q)", *listener.ListenerArn)
-		} else {
-			s.Update("Creating new ALB Listener")
-			newListener = true
-
-			log.Info("load-balancer defined", "dns-name", alb.DnsName)
-
-			tgs[0].Weight = aws.Int64(100)
-			lo, err := elbsrv.CreateListenerWithContext(ctx, &elbv2.CreateListenerInput{
-				LoadBalancerArn: &alb.Arn,
-				Port:            aws.Int64(int64(externalIngressPort)),
-				Protocol:        aws.String(protocol),
-				Certificates:    certs,
-				DefaultActions: []*elbv2.Action{
-					{
-						ForwardConfig: &elbv2.ForwardActionConfig{
-							TargetGroups: tgs,
-						},
-						Type: aws.String("forward"),
-					},
-				},
-			})
-			if err != nil {
-				return status.Errorf(codes.Internal, "failed to create listener: %s", err)
-			}
-
-			listener = lo.Listeners[0]
-
-			s.Update("Created ALB Listener")
-			log.Debug("Created ALB Listener", "arn", *listener.ListenerArn)
+	for _, l := range listeners.Listeners {
+		if *l.Port == int64(externalIngressPort) {
+			listener = l
 		}
 	}
-	state.Arn = *listener.ListenerArn
 
-	if !newListener {
+	if listener != nil {
+		// Found an existing listener!
+		s.Update("Modifying existing ALB Listener to introduce target group")
+
 		def := listener.DefaultActions
 
 		if len(def) > 0 && def[0].ForwardConfig != nil {
@@ -1125,13 +1086,40 @@ func (p *Platform) resourceAlbListenerCreate(
 			}
 		}
 
-		s.Update("Modifying ALB Listener to introduce target group")
+		in := &elbv2.ModifyListenerInput{
+			ListenerArn: listener.ListenerArn,
+			DefaultActions: []*elbv2.Action{
+				{
+					ForwardConfig: &elbv2.ForwardActionConfig{
+						TargetGroups: tgs,
+					},
+					Type: aws.String("forward"),
+				},
+			},
 
-		_, err := elbsrv.ModifyListenerWithContext(ctx, &elbv2.ModifyListenerInput{
-			ListenerArn:  listener.ListenerArn,
+			// Setting these on every deployment so that we pick up any potential changes
+			// in the waypoint.hcl config
 			Port:         aws.Int64(int64(externalIngressPort)),
 			Protocol:     aws.String(protocol),
 			Certificates: certs,
+		}
+
+		_, err = elbsrv.ModifyListenerWithContext(ctx, in)
+		if err != nil {
+			return status.Errorf(codes.Internal, "failed to introduce new target group to existing ALB listener: %s", err)
+		}
+
+		s.Update("Modified ALB Listener to introduce target group")
+	} else {
+		s.Update("Creating new ALB Listener")
+		state.Managed = true
+
+		tgs[0].Weight = aws.Int64(100)
+		lo, err := elbsrv.CreateListenerWithContext(ctx, &elbv2.CreateListenerInput{
+			LoadBalancerArn: &alb.Arn,
+			Port:            aws.Int64(int64(externalIngressPort)),
+			Protocol:        aws.String(protocol),
+			Certificates:    certs,
 			DefaultActions: []*elbv2.Action{
 				{
 					ForwardConfig: &elbv2.ForwardActionConfig{
@@ -1142,11 +1130,16 @@ func (p *Platform) resourceAlbListenerCreate(
 			},
 		})
 		if err != nil {
-			return status.Errorf(codes.Internal, "failed to introduce new target group to existing ALB listener: %s", err)
+			return status.Errorf(codes.Internal, "failed to create listener: %s", err)
 		}
 
-		s.Update("Modified ALB Listener to introduce target group")
+		listener = lo.Listeners[0]
+
+		s.Update("Created ALB Listener")
+		log.Debug("Created ALB Listener", "arn", *listener.ListenerArn)
 	}
+
+	state.Arn = *listener.ListenerArn
 
 	s.Done()
 	return nil
@@ -1375,7 +1368,7 @@ func (p *Platform) resourceTaskDefinitionCreate(
 	deployConfig *component.DeploymentConfig,
 	state *Resource_TaskDefinition,
 
-	// Outputs of other resource creation processes
+// Outputs of other resource creation processes
 	executionRole *Resource_ExecutionRole,
 	taskRole *Resource_TaskRole,
 	logGroup *Resource_LogGroup,
@@ -1636,23 +1629,27 @@ func (p *Platform) resourceAlbCreate(
 	subnets *Resource_AlbSubnets, // Required because we need to know which VPC we're in, and subnets discover it.
 	state *Resource_Alb,
 ) error {
+	s := sg.Add("Initiating ALB creation")
+	defer s.Abort()
+
 	if p.config.DisableALB {
-		log.Debug("ALB disabled - skipping target group creation")
+		s.Update("ALB disabled - skipping ALB")
+		s.Done()
 		return nil
 	}
 
 	albConfig := p.config.ALB
 
-	if albConfig != nil && albConfig.ListenerARN != "" {
-		log.Debug("Existing ALB listener specified - no need to create or discover an ALB")
+	if albConfig != nil && albConfig.LoadBalancerArn != "" {
+		s.Update("Existing ALB specified - no need to create or discover an ALB")
+		s.Done()
+		state.Managed = false
+		state.Arn = albConfig.LoadBalancerArn
 		return nil
 	}
 
 	// If not using an existing listener, the load balancer is owned by waypoint
 	state.Managed = true
-
-	s := sg.Add("Initiating ALB creation")
-	defer s.Abort()
 
 	var certs []*elbv2.Certificate
 	if albConfig != nil && albConfig.CertificateId != "" {
@@ -1709,6 +1706,16 @@ func (p *Platform) resourceAlbCreate(
 			Subnets:        subnetIds,
 			SecurityGroups: securityGroupIds,
 			Scheme:         &scheme,
+			Tags: []*elbv2.Tag{
+				{
+					Key:   aws.String("waypoint_managed"),
+					Value: aws.String("true"),
+				},
+				{
+					Key:   aws.String("waypoint_app"),
+					Value: aws.String(src.App),
+				},
+			},
 		})
 		if err != nil {
 			return status.Errorf(codes.Internal, "failed to create ALB %q: %s", lbName, err)
@@ -1720,7 +1727,6 @@ func (p *Platform) resourceAlbCreate(
 	}
 	state.Arn = *lb.LoadBalancerArn
 
-	state.Arn = *lb.LoadBalancerArn
 	state.DnsName = *lb.DNSName
 	state.CanonicalHostedZoneId = *lb.CanonicalHostedZoneId
 
@@ -2506,34 +2512,29 @@ func (p *Platform) loadResourceManagerState(
 	}
 	rm.Resource("target group").SetState(&targetGroupResource)
 
-	// Restore state of ALB listener. Difficult because it may only be defined on the load balancer.
+	// Restore state of ALB listener by inspecting the load balancer
 	var listenerResource Resource_Alb_Listener
 	listenerResource.TargetGroup = &targetGroupResource
-	if p.config.ALB != nil && p.config.ALB.ListenerARN != "" {
-		listenerResource.Arn = p.config.ALB.ListenerARN
-		listenerResource.Managed = false
-		log.Debug("Using existing listener", "arn", listenerResource.Arn)
-	} else {
-		listenerResource.Managed = true
-		s.Update("Describing load balancer %s", deployment.LoadBalancerArn)
-		sess, err := p.getSession(log)
-		if err != nil {
-			return status.Errorf(codes.Internal, "failed to get aws session: %s", err)
-		}
-		elbsrv := elbv2.New(sess)
 
-		listeners, err := elbsrv.DescribeListenersWithContext(ctx, &elbv2.DescribeListenersInput{
-			LoadBalancerArn: &deployment.LoadBalancerArn,
-		})
-		if err != nil {
-			return status.Errorf(codes.Internal, "failed to describe listeners for ALB %q: %s", deployment.LoadBalancerArn, err)
-		}
-		if len(listeners.Listeners) == 0 {
-			s.Update("No listeners found for ALB %q", deployment.LoadBalancerArn)
-		} else {
-			listenerResource.Arn = *listeners.Listeners[0].ListenerArn
-			s.Update("Found existing listener (ARN: %q)", listenerResource.Arn)
-		}
+	listenerResource.Managed = false // Impossible to know now if we created this initially, so this is the safe choice
+	s.Update("Describing load balancer %s", deployment.LoadBalancerArn)
+	sess, err := p.getSession(log)
+	if err != nil {
+		return status.Errorf(codes.Internal, "failed to get aws session: %s", err)
+	}
+	elbsrv := elbv2.New(sess)
+
+	listeners, err := elbsrv.DescribeListenersWithContext(ctx, &elbv2.DescribeListenersInput{
+		LoadBalancerArn: &deployment.LoadBalancerArn,
+	})
+	if err != nil {
+		return status.Errorf(codes.Internal, "failed to describe listeners for ALB %q: %s", deployment.LoadBalancerArn, err)
+	}
+	if len(listeners.Listeners) == 0 {
+		s.Update("No listeners found for ALB %q", deployment.LoadBalancerArn)
+	} else {
+		listenerResource.Arn = *listeners.Listeners[0].ListenerArn
+		s.Update("Found existing listener (ARN: %q)", listenerResource.Arn)
 	}
 	rm.Resource("alb listener").SetState(&listenerResource)
 
@@ -2623,9 +2624,9 @@ type ALBConfig struct {
 	// Fully qualified domain name of the record to create in the target zone id
 	FQDN string `hcl:"domain_name,optional"`
 
-	// When set, waypoint will configure the target group into the specified
-	// ALB Listener ARN. This allows for usage of existing ALBs.
-	ListenerARN string `hcl:"listener_arn,optional"`
+	// When set, waypoint will configure the target group into the load balancer.
+	// This allows for usage of existing ALBs.
+	LoadBalancerArn string `hcl:"load_balancer_arn"`
 
 	// Indicates, when creating an ALB, that it should be internal rather than
 	// internet facing.
@@ -2940,13 +2941,15 @@ deploy {
 			)
 
 			doc.SetField(
-				"listener_arn",
+				"load_balancer_arn",
 				"the ARN on an existing ALB to configure",
 				docs.Summary(
-					"when this is set, no ALB or Listener is created. Instead the application is",
-					"configured by manipulating this existing Listener. This allows users to",
-					"configure their ALB outside waypoint but still have waypoint hook the application",
-					"to that ALB",
+					"when this is set, Waypoint will use this ALB instead of creating",
+					"its own. A target group will still be created for each deployment,",
+					"and will be added to a listener on the configured ALB port",
+					"(Waypoint will the listener if it doesn't exist).",
+					"This allows users to configure their ALB outside Waypoint but still ",
+					"have Waypoint hook the application to that ALB",
 				),
 			)
 

@@ -2191,6 +2191,12 @@ func TestJobCancel(t *testing.T, factory Factory, rf RestartFactory) {
 		s := factory(t)
 		defer s.Close()
 
+		// Write project
+		ref := &pb.Ref_Project{Project: "project"}
+		require.NoError(s.ProjectPut(ctx, serverptypes.TestProject(t, &pb.Project{
+			Name: ref.Project,
+		})))
+
 		// Create a new pipeline run
 		p := serverptypes.TestPipeline(t, nil)
 		err := s.PipelinePut(ctx, p)
@@ -2199,6 +2205,8 @@ func TestJobCancel(t *testing.T, factory Factory, rf RestartFactory) {
 			Pipeline: &pb.Ref_Pipeline{Ref: &pb.Ref_Pipeline_Id{Id: p.Id}},
 		}
 		r := serverptypes.TestPipelineRun(t, pr)
+		err = s.PipelineRunPut(ctx, r)
+		require.NoError(err)
 
 		// Create jobs
 		require.NoError(s.JobCreate(ctx, serverptypes.TestJobNew(t, &pb.Job{
