@@ -10,6 +10,39 @@ import (
 	serverptypes "github.com/hashicorp/waypoint/pkg/server/ptypes"
 )
 
+func (s *Service) UI_ListProjects(
+	ctx context.Context,
+	req *pb.UI_ListProjectsRequest,
+) (*pb.UI_ListProjectsResponse, error) {
+	if err := serverptypes.ValidateUIListProjectsRequest(req); err != nil {
+		return nil, err
+	}
+
+	count, err := s.state(ctx).ProjectCount(ctx)
+	if err != nil {
+		return nil, hcerr.Externalize(
+			hclog.FromContext(ctx),
+			err,
+			"failed to count projects",
+		)
+	}
+
+	projectBundles, pagination, err := s.state(ctx).ProjectListBundles(ctx, req.Pagination)
+	if err != nil {
+		return nil, hcerr.Externalize(
+			hclog.FromContext(ctx),
+			err,
+			"failed to list projects",
+		)
+	}
+
+	return &pb.UI_ListProjectsResponse{
+		ProjectBundles: projectBundles,
+		Pagination:     pagination,
+		TotalCount:     count,
+	}, nil
+}
+
 func (s *Service) UI_GetProject(
 	ctx context.Context,
 	req *pb.UI_GetProjectRequest,
