@@ -3150,6 +3150,38 @@ deploy {
 		}),
 	)
 
+	doc.SetField("health_check",
+		"Health check settings for the app.",
+		docs.SubFields(func(doc *docs.SubFieldDoc) {
+			doc.SetField("protocol",
+				"The protocol for the health check to use.")
+
+			doc.SetField("path",
+				"The destination of the ping path for the target health check.")
+
+			doc.SetField("timeout",
+				"The amount of time, in seconds, for which no target response "+
+					"means a failure.")
+
+			doc.SetField("interval",
+				"The amount of time, in seconds, between health checks.")
+
+			doc.SetField("healthy_threshold_count",
+				"The number of consecutive successful health checks required to"+
+					"consider a target healthy.",
+				docs.Default("5"))
+
+			doc.SetField("unhealthy_threshold_count",
+				"The number of consecutive failed health checks required to "+
+					"consider a target unhealthy.",
+				docs.Default("2"))
+
+			doc.SetField("matcher",
+				"The range of HTTP codes to use when checking for a successful response from"+
+					"the target.",
+			)
+		}))
+
 	doc.SetField(
 		"sidecar",
 		"Additional container to run as a sidecar.",
