@@ -1,0 +1,3 @@
+```release-note:feature
+aws/apprunner: Introduce AWS AppRunner plugin
+```
