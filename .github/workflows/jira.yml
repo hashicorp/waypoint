@@ -47,7 +47,7 @@ jobs:
         run: |
           LABELS="["
           if [[ "${{ contains(github.event.issue.labels.*.name, 'documentation') }}" == "true" ]]; then LABELS+="\"documentation\", "; fi
-          if [[ "${{ contains(github.event.issue.labels.*.name, 'ui') }}" == "true" ]]; then LABELS+="\"ui\", "; else LABELS+="\"backend\", "; fi
+          if [[ "${{ contains(github.event.issue.labels.*.name, 'ui') }}" == "true" ]]; then LABELS+="\"experiences\", "; else LABELS+="\"foundations\", "; fi
           if [[ ${#LABELS} != 1 ]]; then LABELS=${LABELS::-2}"]"; else LABELS+="]"; fi
           echo "::set-output name=labels::${LABELS}"
       
@@ -73,7 +73,7 @@ jobs:
         uses: tomhjp/gh-action-jira-search@v0.2.1
         with:
           # cf[10089] is Issue Link (use JIRA API to retrieve)
-          jql: 'issuetype = "${{ steps.set-ticket-type.outputs.type }}" and cf[10089] = "${{ github.event.issue.html_url || github.event.pull_request.html_url }}"'
+          jql: 'cf[10089] = "${{ github.event.issue.html_url || github.event.pull_request.html_url }}"'
 
       - name: Create ticket
         if: ( github.event.action == 'labeled' && steps.is-team-member.outputs.message == 'true' && !steps.search.outputs.issue )
