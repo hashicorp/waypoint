@@ -1,4 +1,4 @@
-ASSETFS_PATH?=pkg/server/gen/bindata_ui.go
+ ASSETFS_PATH?=pkg/server/gen/bindata_ui.go
 
 GIT_COMMIT=$$(git rev-parse --short HEAD)
 GIT_DIRTY=$$(test -n "`git status --porcelain`" && echo "+CHANGES" || true)
