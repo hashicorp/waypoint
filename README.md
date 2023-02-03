@@ -5,7 +5,7 @@
 # Waypoint
 
 * Website: https://www.waypointproject.io
-* Tutorials: [HashiCorp Learn](https://learn.hashicorp.com/waypoint)
+* Tutorials: [HashiCorp Developer](https://developer.hashicorp.com/waypoint/tutorials)
 * Forum: [Discuss](https://discuss.hashicorp.com/c/waypoint)
 
 Waypoint allows developers to define their application build, deploy, and release lifecycle as code, reducing the time to deliver deployments through a consistent and repeatable workflow.
@@ -29,25 +29,24 @@ contacting us at security@hashicorp.com.
 
 ## Quick Start
 
-A few quick start guides are available on the [Waypoint website](https://www.waypointproject.io/docs/getting-started)
-and on [HashiCorp Learn](https://learn.hashicorp.com/waypoint):
+A [quick start guide](https://developer.hashicorp.com/waypoint/docs/getting-started) is available on HashiCorp Developer. You can also find [tutorials](https://developer.hashicorp.com/waypoint/tutorials) which cover topics ranging from getting started guides to more advanced usage.
 
-* [Getting Started](https://www.waypointproject.io/docs/getting-started)
-* [Introduction](https://learn.hashicorp.com/tutorials/waypoint/get-started-intro)
-* [Installation](https://learn.hashicorp.com/tutorials/waypoint/get-started-install)
-* [Docker](https://learn.hashicorp.com/tutorials/waypoint/get-started-docker)
-* [Kubernetes](https://learn.hashicorp.com/tutorials/waypoint/get-started-kubernetes)
-* [Nomad](https://learn.hashicorp.com/tutorials/waypoint/get-started-nomad)
-* [Waypoint UI](https://learn.hashicorp.com/tutorials/waypoint/get-started-ui)
-* [AWS ECS](https://learn.hashicorp.com/tutorials/waypoint/aws-ecs)
-* [Azure Container Instance](https://learn.hashicorp.com/tutorials/waypoint/azure-container-instance)
-* [Google Cloud Run](https://learn.hashicorp.com/tutorials/waypoint/google-cloud-run)
+* [Getting Started](https://developer.hashicorp.com/waypoint/docs/getting-started)
+* [Introduction](https://developer.hashicorp.com/waypoint/tutorials/get-started-docker/get-started-intro)
+* [Installation](https://developer.hashicorp.com/waypoint/tutorials/get-started-docker/get-started-install)
+* [Docker](https://developer.hashicorp.com/waypoint/tutorials/get-started-docker/get-started-docker)
+* [Kubernetes](https://developer.hashicorp.com/waypoint/tutorials/get-started-kubernetes/get-started-kubernetes)
+* [Nomad](https://developer.hashicorp.com/waypoint/tutorials/get-started-nomad/get-started-nomad)
+* [Waypoint UI](https://developer.hashicorp.com/waypoint/tutorials/get-started-docker/get-started-ui)
+* [AWS ECS](https://developer.hashicorp.com/waypoint/tutorials/deploy-aws/aws-ecs)
+* [Azure Container Instance](https://developer.hashicorp.com/waypoint/tutorials/deploy-azure/azure-container-instance)
+* [Google Cloud Run](https://developer.hashicorp.com/waypoint/tutorials/deploy-google-cloud/google-cloud-run)
 
 ## Documentation
 
-Full, comprehensive documentation is available on the Waypoint website:
+Full, comprehensive documentation is available on HashiCorp Developer:
 
-https://www.waypointproject.io/docs
+https://developer.hashicorp.com/waypoint/docs
 
 ## Contributing
 
