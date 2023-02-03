@@ -41,6 +41,7 @@ jobs:
           - "waypoint/hashicorp/nomad"
           - "waypoint/hashicorp/null"
           - "waypoint/hashicorp/pack"
+          - "waypoint/hashicorp/packer"
           - "waypoint/hashicorp/terraform-cloud"
           - "waypoint/hashicorp/vault"
     steps:
