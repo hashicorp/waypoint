@@ -1,0 +1,113 @@
+---
+layout: docs
+page_title: A Complete Cloud Ecosystem in Two Commands with Waypoint, Terraform, and the HashiStack
+description: |-
+Your enterprise application is only one `terraform apply` and `waypoint up` away from life on the cloud.
+---
+
+# A Complete Cloud Ecosystem in Two Commands with Waypoint, Terraform, and the HashiStack
+
+In this use case, we will spin up our entire infrastructure with one `terraform apply`,
+then launch the application to an EC2 container within our secured internal network with `waypoint up`.
+Welcome to the HashiStack magic.
+
+The ingredients for this special dish are [Waypoint](https://www.waypointproject.io/),
+[Terraform](https://www.terraform.io/), [Consul](https://www.consul.io/), [Nomad](https://www.nomadproject.io/), and
+[Vault](https://www.vaultproject.io/).
+We chose to use HashiCorp managed versions of Waypoint, Consul, and Vault for one convenient HCP UI and
+to showcase the [HashiCorp Virtual Network (HVN)](https://developer.hashicorp.com/hcp/docs/hcp/network).
+The same experience is of course possible with self-managed versions.
+
+## Prerequisites
+
+To follow along with this use case on your own machine, you will need:
+
+- A [HashiCorp Cloud Platform (HCP)](https://portal.cloud.hashicorp.com/sign-in) account.
+- An [AWS account](https://aws.amazon.com/account/) with AWS Access Credentials configured locally:
+```
+export AWS_ACCESS_KEY_ID=<your AWS access key ID>
+export AWS_SECRET_ACCESS_KEY=<your AWS secret access key>
+export AWS_SESSION_TOKEN=<your AWS session token>
+```
+- Docker registry
+- Credentials to push to the docker registry
+
+As well as the following software installed locally:
+
+- [Waypoint CLI](https://developer.hashicorp.com/waypoint/downloads)
+- [Terraform CLI](https://developer.hashicorp.com/terraform/tutorials/aws-get-started/install-cli)
+
+It will help to have some familiarity with HashiCorp Configuration Language (HCL), which is the syntax used to
+write configuration files for [Terraform](https://developer.hashicorp.com/terraform/language) and [Waypoint](https://developer.hashicorp.com/waypoint/docs/waypoint-hcl/syntax).
+
+In this use case, we will configure our infrastructure as code, which Terraform will run to automatically provision the following:
+- [AWS Virtual Private Cloud](https://aws.amazon.com/pt/vpc/) and peer it with our [HashiCorp Virtual Network (HVN)](https://developer.hashicorp.com/hcp/docs/hcp/network)
+- [HCP Consul](https://cloud.hashicorp.com/products/consul) service mesh to manage services within the secure private network
+- [HCP Vault](https://cloud.hashicorp.com/products/vault) cluster to securely store credentials
+- [Nomad](https://developer.hashicorp.com/nomad/tutorials/get-started/get-started-intro) cluster on AWS EC2 instance to manage application containers.
+
+We will write application deployment configurations as code, which [HCP Waypoint](https://cloud.hashicorp.com/products/waypoint)
+will run to build the container image and deploy the application to the infrastructure we set up with Terraform.
+
+All it takes are two commands:
+
+`terraform apply`
+`waypoint up`
+
+The Terraform and Waypoint configuration files and a sample application live in [this repository](https://github.com/xiaolin-ninja/2048_hcp_hashistack).
+We will deploy a custom HashiCorp version of the popular game "2048".
+Please clone the repo if you'd like to follow along the tutorial on your local machine.
+
+## Create service principal and key
+
+To leverage the Terraform integration and be able to deploy your HCP Consul using
+Terraform, you have to create a Service Principal and a key associated to it.
+
+From the left menu select _Access Control (IAM)_.
+On the left menu of the _Access Control (IAM)_ page, click on the _Service Principals_ tab, and on
+the page click on the create link.
+
+Use the name you prefer to create the Service Principal (we used `xx-2048` for
+this use case) but remember to use `Contributor` as the role.
+
+Once the Service Principal is created, click on the service principal name on
+the page to view its details. From the detail page, click on **+ Generate key**.
+
+Save the client ID and secret as the environment variables `HCP_CLIENT_ID` and `HCP_CLIENT_SECRET`.
+Or, configure the provider with the client ID and secret by copy-pasting the values directly into provider config.
+
+```
+// Credentials can be set explicitly or via the environment variables HCP_CLIENT_ID and HCP_CLIENT_SECRET
+provider "hcp" {
+client_id     = "service-principal-key-client-id"
+client_secret = "service-principal-key-client-secret"
+}
+```
+```
+export HCP_CLIENT_ID="service-principal-key-client-id"
+export HCP_CLIENT_SECRET="service-principal-key-client-secret"
+```
+
+![Service Principal](/img/use-cases/hcp-hashistack-quickstart/service-principal.png)
+
+When client credentials are set, they are always used by the HCP Provider client, regardless of an existing user session.
+
+
+### Set up the Virtual Network
+
+First, we set up the HVN (HashiCorp Virtual Network)
+
+```
+
+```
+
+## Set up HCP Waypoint
+
+## Further Reading
+
+- [Waypoint Pipelines](/waypoint/docs/pipelines)
+- [Waypoint Plugins](/waypoint/plugins)
+- [Nomad Blue-Green Deployment](/nomad/tutorials/job-updates/job-blue-green-and-canary-deployments)
+- [Terraform Provider for Waypoint](https://registry.terraform.io/providers/hashicorp-dev-advocates/waypoint)
+- [Consul Service Splitter Config Entries](/consul/docs/connect/config-entries/service-splitter)
+- [Consul Service Resolver Config Entries](/consul/docs/connect/config-entries/service-resolver)
