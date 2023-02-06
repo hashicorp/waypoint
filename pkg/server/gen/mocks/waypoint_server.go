@@ -1973,6 +1973,29 @@ func (_m *WaypointServer) UI_ListDeployments(_a0 context.Context, _a1 *gen.UI_Li
 	return r0, r1
 }
 
+// UI_ListProjects provides a mock function with given fields: _a0, _a1
+func (_m *WaypointServer) UI_ListProjects(_a0 context.Context, _a1 *gen.UI_ListProjectsRequest) (*gen.UI_ListProjectsResponse, error) {
+	ret := _m.Called(_a0, _a1)
+
+	var r0 *gen.UI_ListProjectsResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.UI_ListProjectsRequest) *gen.UI_ListProjectsResponse); ok {
+		r0 = rf(_a0, _a1)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gen.UI_ListProjectsResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.UI_ListProjectsRequest) error); ok {
+		r1 = rf(_a0, _a1)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // UI_ListReleases provides a mock function with given fields: _a0, _a1
 func (_m *WaypointServer) UI_ListReleases(_a0 context.Context, _a1 *gen.UI_ListReleasesRequest) (*gen.UI_ListReleasesResponse, error) {
 	ret := _m.Called(_a0, _a1)

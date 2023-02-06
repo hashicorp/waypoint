@@ -319,6 +319,8 @@ type WaypointClient interface {
 	// ConfigSyncPipeline takes a request for a given project and syncs the current
 	// project config to the Waypoint database.
 	ConfigSyncPipeline(ctx context.Context, in *ConfigSyncPipelineRequest, opts ...grpc.CallOption) (*ConfigSyncPipelineResponse, error)
+	// List full projects (not just refs)
+	UI_ListProjects(ctx context.Context, in *UI_ListProjectsRequest, opts ...grpc.CallOption) (*UI_ListProjectsResponse, error)
 	// Get a given project with useful related records.
 	UI_GetProject(ctx context.Context, in *UI_GetProjectRequest, opts ...grpc.CallOption) (*UI_GetProjectResponse, error)
 	// List deployments for a given application.
@@ -1476,6 +1478,15 @@ func (c *waypointClient) ConfigSyncPipeline(ctx context.Context, in *ConfigSyncP
 	return out, nil
 }
 
+func (c *waypointClient) UI_ListProjects(ctx context.Context, in *UI_ListProjectsRequest, opts ...grpc.CallOption) (*UI_ListProjectsResponse, error) {
+	out := new(UI_ListProjectsResponse)
+	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/UI_ListProjects", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *waypointClient) UI_GetProject(ctx context.Context, in *UI_GetProjectRequest, opts ...grpc.CallOption) (*UI_GetProjectResponse, error) {
 	out := new(UI_GetProjectResponse)
 	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/UI_GetProject", in, out, opts...)
@@ -1812,6 +1823,8 @@ type WaypointServer interface {
 	// ConfigSyncPipeline takes a request for a given project and syncs the current
 	// project config to the Waypoint database.
 	ConfigSyncPipeline(context.Context, *ConfigSyncPipelineRequest) (*ConfigSyncPipelineResponse, error)
+	// List full projects (not just refs)
+	UI_ListProjects(context.Context, *UI_ListProjectsRequest) (*UI_ListProjectsResponse, error)
 	// Get a given project with useful related records.
 	UI_GetProject(context.Context, *UI_GetProjectRequest) (*UI_GetProjectResponse, error)
 	// List deployments for a given application.
@@ -2129,6 +2142,9 @@ func (UnimplementedWaypointServer) ListPipelineRuns(context.Context, *ListPipeli
 }
 func (UnimplementedWaypointServer) ConfigSyncPipeline(context.Context, *ConfigSyncPipelineRequest) (*ConfigSyncPipelineResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ConfigSyncPipeline not implemented")
+}
+func (UnimplementedWaypointServer) UI_ListProjects(context.Context, *UI_ListProjectsRequest) (*UI_ListProjectsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UI_ListProjects not implemented")
 }
 func (UnimplementedWaypointServer) UI_GetProject(context.Context, *UI_GetProjectRequest) (*UI_GetProjectResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UI_GetProject not implemented")
@@ -4033,6 +4049,24 @@ func _Waypoint_ConfigSyncPipeline_Handler(srv interface{}, ctx context.Context, 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Waypoint_UI_ListProjects_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UI_ListProjectsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(WaypointServer).UI_ListProjects(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/hashicorp.waypoint.Waypoint/UI_ListProjects",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(WaypointServer).UI_ListProjects(ctx, req.(*UI_ListProjectsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Waypoint_UI_GetProject_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(UI_GetProjectRequest)
 	if err := dec(in); err != nil {
@@ -4475,6 +4509,10 @@ var Waypoint_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ConfigSyncPipeline",
 			Handler:    _Waypoint_ConfigSyncPipeline_Handler,
+		},
+		{
+			MethodName: "UI_ListProjects",
+			Handler:    _Waypoint_UI_ListProjects_Handler,
 		},
 		{
 			MethodName: "UI_GetProject",

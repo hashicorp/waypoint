@@ -102,6 +102,15 @@ func ValidateListProjectsRequest(v *pb.ListProjectsRequest) error {
 	))
 }
 
+// ValidateUIListProjectsRequest
+func ValidateUIListProjectsRequest(v *pb.UI_ListProjectsRequest) error {
+	return validationext.Error(validation.ValidateStruct(v,
+		validationext.StructField(&v.Pagination, func() []*validation.FieldRules {
+			return ValidatePaginationRequestRules(v.Pagination)
+		}),
+	))
+}
+
 // ValidateDestroyProjectRequest
 func ValidateDestroyProjectRequest(v *pb.DestroyProjectRequest) error {
 	return validationext.Error(validation.ValidateStruct(v,
