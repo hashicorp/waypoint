@@ -30,6 +30,7 @@ export AWS_ACCESS_KEY_ID=<your AWS access key ID>
 export AWS_SECRET_ACCESS_KEY=<your AWS secret access key>
 export AWS_SESSION_TOKEN=<your AWS session token>
 ```
+
 - Docker registry
 - Credentials to push to the docker registry
 
@@ -42,6 +43,7 @@ It will help to have some familiarity with HashiCorp Configuration Language (HCL
 write configuration files for [Terraform](https://developer.hashicorp.com/terraform/language) and [Waypoint](https://developer.hashicorp.com/waypoint/docs/waypoint-hcl/syntax).
 
 In this use case, we will configure our infrastructure as code, which Terraform will run to automatically provision the following:
+
 - [AWS Virtual Private Cloud](https://aws.amazon.com/pt/vpc/) and peer it with our [HashiCorp Virtual Network (HVN)](https://developer.hashicorp.com/hcp/docs/hcp/network)
 - [HCP Consul](https://cloud.hashicorp.com/products/consul) service mesh to manage services within the secure private network
 - [HCP Vault](https://cloud.hashicorp.com/products/vault) cluster to securely store credentials
@@ -198,6 +200,7 @@ resource "hcp_consul_cluster" "xx_2048_consul" {
   public_endpoint = true
 }
 ```
+
 You can also provision a Consul cluster with one click in the HCP UI.
 
 ## Define HCP Vault
@@ -435,8 +438,6 @@ After our `terraform apply` and `waypoint up`, you should have a full HCP Hashis
 
 ### HashiCorp Virtual Network
 
-
-
 ### Consul Dashboard
 
 You can access the HCP Consul UI by navigating to the Consul tab in HCP, and clicking "Access Consul".
@@ -474,7 +475,6 @@ Hopefully, this use case showcases the synergy between HashiCorp products, and h
 Our mission is to help increase productivity, reduce risk and capital expenditure,
 and drive innovation within your organization.
 Thanks for taking the time to follow along this use case, and we are excited to see how you innovate with our tools!
-
 
 ## Dive Deeper into the HashiStack
 
