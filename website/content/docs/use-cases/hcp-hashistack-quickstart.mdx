@@ -98,12 +98,6 @@ You can view existing keys and generate new ones on this page:
 
 When client credentials are set, they are always used by the HCP Provider client, regardless of an existing user session.
 
-## Set up HCP Waypoint Context
-
-HCP Waypoint is currently in Beta, so we don't have a convenient Terraform module to provision Waypoint automatically yet (as of February 2023).
-
-Head into your HCP UI to set up
-
 ## Define the Virtual Network
 
 ### VPC
@@ -345,6 +339,139 @@ Do you want to perform these actions?
 
 Remember to confirm the run by entering `yes`!
 
+## Set up HCP Waypoint Context
+
+HCP Waypoint is currently in Beta, so we don't have a convenient Terraform module to provision Waypoint automatically yet (as of February 2023).
+
+Head into your HCP UI and [follow this tutorial](https://developer.hashicorp.com/waypoint/tutorials/runners/hcp-runners-on-your-infra#set-up-the-environment)
+to set up your local environment.
+
+Navigate to Waypoint in the HCP dashboard:
+![HCP UI](img/use-cases/hcp-hashistack-quickstart/hcp.png)
+
+Then click on "Install New Runner", which will generate terminal inputs to set up the Waypoint context and install a Runner on your chosen platform.
+In this case, we choose Nomad with a host volume named "wp_runner".
+![Waypoint Install New Runner](img/use-cases/hcp-hashistack-quickstart/waypoint-runner-install.png)
+
+You will need to export the Nomad server address, which you can find on the AWS EC2 instance:
+![Nomad EC2 Instances](img/use-cases/hcp-hashistack-quickstart/nomad-ec2.png)
+
+```shell
+export NOMAD_ADDR=<nomad_private_addr>
+```
+
+![Waypoint Install New Runner CLI](img/use-cases/hcp-hashistack-quickstart/wp-runner-install.png)
+
+Export the nomad address to your local environment and install the runner after installing the HCP Waypoint context,
+and you're all set to use HCP Waypoint.
+
+The `waypoint.hcl` file defines application deployment configurations.
+For this use case, we have a simple "build", "deploy", and "release" flow:
+
+```hcl
+project = "2048-hashistack"
+
+app "nomad" {
+  build {
+    use "docker" {}
+    registry {
+      use "docker" {
+        ...
+      }
+    }
+  }
+
+  deploy {
+    use "nomad" {
+      datacenter = "hcp-2048"
+    }
+  }
+}
+```
+
+You can [read more about Waypoint HCL](https://developer.hashicorp.com/waypoint/docs/waypoint-hcl) fundamentals,
+or explore [advanced deployment workflows using custom pipelines](https://developer.hashicorp.com/waypoint/docs/pipelines).
+
+Now, run `waypoint init`:
+
+```shell
+$ waypoint init
+✓ Configuration file appears valid
+✓ Connection to Waypoint server was successful
+✓ Project "2048-hashistack" and all apps are registered with the server.
+```
+
+And the moment of magic...
+
+`waypoint up`
+
+```shell
+$ waypoint up
+
+» Operation is queued waiting for job "01GRM4JZAFWRC4RA8M8BBR4NV8". Waiting for runner assignment...
+  If you interrupt this command, the job will still run in the background.
+  Performing operation on "nomad" with runner profile "nomad-01GQTC242045AME1DMSK1KPCDS"
+
+...
+...
+
+The deploy was successful!
+
+The release did not provide a URL and the URL service is disabled on the
+server, so no further URL information can be automatically provided. If
+this is unexpected, please ensure the Waypoint server has both the URL service
+enabled and advertise addresses set.
+```
+
+Congratulations, your application is live!
+
+HCP Waypoint does not provide a URL service.
+You can also deploy the application by [installing self-hosted Waypoint](https://developer.hashicorp.com/waypoint/commands/install)
+and running `waypoint up` with a different context.
+
+## Easy to Monitor Dashboards
+
+After our `terraform apply` and `waypoint up`, you should have a full HCP Hashistack set up automatically and application deployed.
+
+### HashiCorp Virtual Network
+
+
+
+### Consul Dashboard
+
+You can access the HCP Consul UI by navigating to the Consul tab in HCP, and clicking "Access Consul".
+For this use case, we configured a public IP address for the cluster, so you can access Consul with the public address.
+This is not recommended for a production use case.
+
+![Consul UI](img/use-cases/hcp-hashistack-quickstart/consul.png)
+
+As you can see, Consul service mesh keeps track of services in our VPC.
+
+### Nomad Dashboard
+
+Nomad is a workload orchestration program, so services in the HVN are reflected as jobs.
+You can see the Nomad server, client, and Waypoint runner.
+
+![Nomad UI](img/use-cases/hcp-hashistack-quickstart/nomad-ui.png)
+
+Have fun exploring! You can find more guidance in the [Nomad UI documentation](https://developer.hashicorp.com/nomad/tutorials/web-ui).
+
+## Summary
+
+Waypoint and Terraform
+Cloud automation magic,
+Easy deployments!
+
+Our Engineers aren't paid to write haikus, but infrastructure automation inspires innovation.
+
+HashiCorp customers already know how easy it is to provision and manage cloud infrastructure with HashiCorp tools,
+and Waypoint expands the HashiStack by enabling deployment automation with custom pipelines.
+Hopefully, this use case showcases the synergy between HashiCorp products, and how easy they are to configure.
+Our mission is to help increase productivity, reduce risk and capital expenditure,
+and drive innovation within your organization.
+Thanks for taking the time to follow along this use case, and we are excited to see how you innovate with our tools!
+
+
 ## Dive Deeper into the HashiStack
 
 We covered many HashiCorp tools in this use case. We focused on HCP product offerings, where HashiCorp manages the tooling for you.
@@ -359,3 +486,4 @@ so you can explore this sweet HashiStack magic with self-managed Waypoint, Consu
 - [Set Up a Nomad Cluster on AWS](https://developer.hashicorp.com/nomad/tutorials/cluster-setup/cluster-setup-aws)
 - [Blue-Green Deployments with Waypoint, Nomad, and Consul](https://developer.hashicorp.com/waypoint/docs/use-cases/blue-green-deployment)
 - [Consul Deployment Guide](https://developer.hashicorp.com/consul/tutorials/production-deploy/deployment-guide)
+- [Advanced Deployment Pipelines with Waypoint](https://developer.hashicorp.com/waypoint/docs/pipelines)
