@@ -1432,8 +1432,19 @@ func TestJobComplete(t *testing.T, factory Factory, rf RestartFactory) {
 			DependsOn: []string{"A"},
 		})))
 
+		// Ensure they were created by Id
+		job, err := s.JobById(ctx, "A", nil)
+		require.NoError(err)
+		job, err = s.JobById(ctx, "B", nil)
+		require.NoError(err)
+
+		// Should have both jobs
+		jobs, _, err := s.JobList(ctx, &pb.ListJobsRequest{})
+		require.NoError(err)
+		require.Len(jobs, 2)
+
 		// Assign it, we should get this build
-		job, err := s.JobAssignForRunner(context.Background(), &pb.Runner{Id: "R_A"})
+		job, err = s.JobAssignForRunner(context.Background(), &pb.Runner{Id: "R_A"})
 		require.NoError(err)
 		require.NotNil(job)
 		require.Equal("A", job.Id)
@@ -1462,6 +1473,12 @@ func TestJobComplete(t *testing.T, factory Factory, rf RestartFactory) {
 		require.Error(err)
 		require.Nil(job)
 		require.Equal(ctx.Err(), err)
+
+		// Should have both jobs
+		ctx, cancel = context.WithCancel(context.Background())
+		jobs, _, err = s.JobList(ctx, &pb.ListJobsRequest{})
+		require.NoError(err)
+		require.Len(jobs, 2)
 
 		// Dependent should be error
 		job, err = s.JobById(ctx, "B", nil)
@@ -1521,6 +1538,7 @@ func TestJobComplete(t *testing.T, factory Factory, rf RestartFactory) {
 		require.Equal(ctx.Err(), err)
 
 		// Dependent should be error
+		ctx, cancel = context.WithCancel(context.Background())
 		job, err = s.JobById(ctx, "B", nil)
 		require.NoError(err)
 		require.Equal(pb.Job_ERROR, job.State)
