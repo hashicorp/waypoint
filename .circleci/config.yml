@@ -161,7 +161,7 @@ jobs:
   go-test:
     docker:
       - image: *GOLANG_IMAGE
-      - image: docker.mirror.hashicorp.services/localstack/localstack:latest
+      - image: docker.mirror.hashicorp.services/localstack/localstack:1.3
       - image: docker.mirror.hashicorp.services/letsencrypt/pebble
         command: ["pebble"]
         environment:
