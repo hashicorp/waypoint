@@ -1475,7 +1475,7 @@ func TestJobComplete(t *testing.T, factory Factory, rf RestartFactory) {
 		require.Equal(ctx.Err(), err)
 
 		// Should have both jobs
-		ctx, cancel = context.WithCancel(context.Background())
+		ctx, _ = context.WithCancel(context.Background())
 		jobs, _, err = s.JobList(ctx, &pb.ListJobsRequest{})
 		require.NoError(err)
 		require.Len(jobs, 2)
@@ -1538,7 +1538,7 @@ func TestJobComplete(t *testing.T, factory Factory, rf RestartFactory) {
 		require.Equal(ctx.Err(), err)
 
 		// Dependent should be error
-		ctx, cancel = context.WithCancel(context.Background())
+		ctx, _ = context.WithCancel(context.Background())
 		job, err = s.JobById(ctx, "B", nil)
 		require.NoError(err)
 		require.Equal(pb.Job_ERROR, job.State)
