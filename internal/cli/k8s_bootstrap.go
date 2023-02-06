@@ -254,6 +254,14 @@ func (c *K8SBootstrapCommand) Run(args []string) int {
 			Default:      true,
 		},
 	})
+	if err != nil {
+		c.ui.Output(
+			"Error storing runner config on server: %s",
+			clierrors.Humanize(err),
+			terminal.WithErrorStyle(),
+		)
+		return 1
+	}
 
 	log.Info("bootstrap complete")
 	return 0
