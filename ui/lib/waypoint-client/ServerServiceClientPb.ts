@@ -817,26 +817,26 @@ export class WaypointClient {
   methodDescriptorListProjects = new grpcWeb.MethodDescriptor(
     '/hashicorp.waypoint.Waypoint/ListProjects',
     grpcWeb.MethodType.UNARY,
-    google_protobuf_empty_pb.Empty,
+    pkg_server_proto_server_pb.ListProjectsRequest,
     pkg_server_proto_server_pb.ListProjectsResponse,
-    (request: google_protobuf_empty_pb.Empty) => {
+    (request: pkg_server_proto_server_pb.ListProjectsRequest) => {
       return request.serializeBinary();
     },
     pkg_server_proto_server_pb.ListProjectsResponse.deserializeBinary
   );
 
   listProjects(
-    request: google_protobuf_empty_pb.Empty,
+    request: pkg_server_proto_server_pb.ListProjectsRequest,
     metadata: grpcWeb.Metadata | null): Promise<pkg_server_proto_server_pb.ListProjectsResponse>;
 
   listProjects(
-    request: google_protobuf_empty_pb.Empty,
+    request: pkg_server_proto_server_pb.ListProjectsRequest,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.RpcError,
                response: pkg_server_proto_server_pb.ListProjectsResponse) => void): grpcWeb.ClientReadableStream<pkg_server_proto_server_pb.ListProjectsResponse>;
 
   listProjects(
-    request: google_protobuf_empty_pb.Empty,
+    request: pkg_server_proto_server_pb.ListProjectsRequest,
     metadata: grpcWeb.Metadata | null,
     callback?: (err: grpcWeb.RpcError,
                response: pkg_server_proto_server_pb.ListProjectsResponse) => void) {
@@ -4039,6 +4039,49 @@ export class WaypointClient {
     request,
     metadata || {},
     this.methodDescriptorConfigSyncPipeline);
+  }
+
+  methodDescriptorUI_ListProjects = new grpcWeb.MethodDescriptor(
+    '/hashicorp.waypoint.Waypoint/UI_ListProjects',
+    grpcWeb.MethodType.UNARY,
+    pkg_server_proto_server_pb.UI.ListProjectsRequest,
+    pkg_server_proto_server_pb.UI.ListProjectsResponse,
+    (request: pkg_server_proto_server_pb.UI.ListProjectsRequest) => {
+      return request.serializeBinary();
+    },
+    pkg_server_proto_server_pb.UI.ListProjectsResponse.deserializeBinary
+  );
+
+  uI_ListProjects(
+    request: pkg_server_proto_server_pb.UI.ListProjectsRequest,
+    metadata: grpcWeb.Metadata | null): Promise<pkg_server_proto_server_pb.UI.ListProjectsResponse>;
+
+  uI_ListProjects(
+    request: pkg_server_proto_server_pb.UI.ListProjectsRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.UI.ListProjectsResponse) => void): grpcWeb.ClientReadableStream<pkg_server_proto_server_pb.UI.ListProjectsResponse>;
+
+  uI_ListProjects(
+    request: pkg_server_proto_server_pb.UI.ListProjectsRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback?: (err: grpcWeb.RpcError,
+               response: pkg_server_proto_server_pb.UI.ListProjectsResponse) => void) {
+    if (callback !== undefined) {
+      return this.client_.rpcCall(
+        this.hostname_ +
+          '/hashicorp.waypoint.Waypoint/UI_ListProjects',
+        request,
+        metadata || {},
+        this.methodDescriptorUI_ListProjects,
+        callback);
+    }
+    return this.client_.unaryCall(
+    this.hostname_ +
+      '/hashicorp.waypoint.Waypoint/UI_ListProjects',
+    request,
+    metadata || {},
+    this.methodDescriptorUI_ListProjects);
   }
 
   methodDescriptorUI_GetProject = new grpcWeb.MethodDescriptor(
