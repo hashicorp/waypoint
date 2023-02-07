@@ -421,6 +421,127 @@
          ]
       },
       {
+         "Field": "health_check",
+         "Type": "ecs.AppHealthCheck",
+         "Synopsis": "Health check settings for the app.",
+         "Summary": "",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "",
+         "Category": true,
+         "Example": "",
+         "SubFields": [
+            {
+               "Field": "grpc_code",
+               "Type": "string",
+               "Synopsis": "",
+               "Summary": "",
+               "Optional": true,
+               "Default": "",
+               "EnvVar": "",
+               "Category": false,
+               "Example": "",
+               "SubFields": null
+            },
+            {
+               "Field": "healthy_threshold_count",
+               "Type": "int64",
+               "Synopsis": "The number of consecutive successful health checks required toconsider a target healthy.",
+               "Summary": "",
+               "Optional": true,
+               "Default": "5",
+               "EnvVar": "",
+               "Category": false,
+               "Example": "",
+               "SubFields": null
+            },
+            {
+               "Field": "http_code",
+               "Type": "string",
+               "Synopsis": "",
+               "Summary": "",
+               "Optional": true,
+               "Default": "",
+               "EnvVar": "",
+               "Category": false,
+               "Example": "",
+               "SubFields": null
+            },
+            {
+               "Field": "interval",
+               "Type": "int64",
+               "Synopsis": "The amount of time, in seconds, between health checks.",
+               "Summary": "",
+               "Optional": true,
+               "Default": "",
+               "EnvVar": "",
+               "Category": false,
+               "Example": "",
+               "SubFields": null
+            },
+            {
+               "Field": "matcher",
+               "Type": "",
+               "Synopsis": "The range of HTTP codes to use when checking for a successful response fromthe target.",
+               "Summary": "",
+               "Optional": false,
+               "Default": "",
+               "EnvVar": "",
+               "Category": false,
+               "Example": "",
+               "SubFields": null
+            },
+            {
+               "Field": "path",
+               "Type": "string",
+               "Synopsis": "The destination of the ping path for the target health check.",
+               "Summary": "",
+               "Optional": true,
+               "Default": "",
+               "EnvVar": "",
+               "Category": false,
+               "Example": "",
+               "SubFields": null
+            },
+            {
+               "Field": "protocol",
+               "Type": "string",
+               "Synopsis": "The protocol for the health check to use.",
+               "Summary": "",
+               "Optional": true,
+               "Default": "",
+               "EnvVar": "",
+               "Category": false,
+               "Example": "",
+               "SubFields": null
+            },
+            {
+               "Field": "timeout",
+               "Type": "int64",
+               "Synopsis": "The amount of time, in seconds, for which no target response means a failure.",
+               "Summary": "",
+               "Optional": true,
+               "Default": "",
+               "EnvVar": "",
+               "Category": false,
+               "Example": "",
+               "SubFields": null
+            },
+            {
+               "Field": "unhealthy_threshold_count",
+               "Type": "int64",
+               "Synopsis": "The number of consecutive failed health checks required to consider a target unhealthy.",
+               "Summary": "",
+               "Optional": true,
+               "Default": "2",
+               "EnvVar": "",
+               "Category": false,
+               "Example": "",
+               "SubFields": null
+            }
+         ]
+      },
+      {
          "Field": "logging",
          "Type": "ecs.Logging",
          "Synopsis": "Provides additional configuration for logging flags for ECS",
