@@ -1341,13 +1341,12 @@ func (p *Platform) resourceTargetGroupCreate(
 		createTargetGroupInput.UnhealthyThresholdCount = aws.Int64(p.config.HealthCheck.UnhealthyThresholdCount)
 	}
 
-	if p.config.HealthCheck.Matcher != nil {
-		if *p.config.HealthCheck.Matcher.GrpcCode != "" || *p.config.HealthCheck.Matcher.HttpCode != "" {
-			createTargetGroupInput.Matcher = &elbv2.Matcher{
-				HttpCode: p.config.HealthCheck.Matcher.HttpCode,
-				GrpcCode: p.config.HealthCheck.Matcher.GrpcCode,
-			}
-		}
+	if p.config.HealthCheck.GrpcCode != "" {
+		createTargetGroupInput.Matcher.GrpcCode = aws.String(p.config.HealthCheck.GrpcCode)
+	}
+
+	if p.config.HealthCheck.HttpCode != "" {
+		createTargetGroupInput.Matcher.HttpCode = aws.String(p.config.HealthCheck.HttpCode)
 	}
 
 	ctg, err := elbsrv.CreateTargetGroupWithContext(ctx, createTargetGroupInput)
@@ -1359,7 +1358,6 @@ func (p *Platform) resourceTargetGroupCreate(
 	state.Arn = *ctg.TargetGroups[0].TargetGroupArn
 
 	s.Update("Created target group %s", state.Name)
-
 	s.Done()
 	return nil
 }
@@ -2910,9 +2908,13 @@ type AppHealthCheck struct {
 	// The range is 2–10. The default is 2.
 	UnhealthyThresholdCount int64 `hcl:"unhealthy_threshold_count,optional"`
 
-	// Matcher is the HTTP codes to use when checking for a successful response from a target.
+	// GrpcCode is the gRPC codes to use when checking for a successful response from a target.
+	// The default value is 12.
+	GrpcCode string `hcl:"grpc_code,optional"`
+
+	// HttpCode is the HTTP codes to use when checking for a successful response from a target.
 	// The range is 200 to 599. The default is 200-399.
-	Matcher *elbv2.Matcher `hcl:"matcher,optional"`
+	HttpCode string `hcl:"http_code,optional"`
 }
 
 func (p *Platform) Documentation() (*docs.Documentation, error) {
