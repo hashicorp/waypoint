@@ -1,5 +1,5 @@
 {
-   "description": "Deploy to a nomad cluster as a service using docker",
+   "description": "Deploy to a nomad cluster as a service using Docker",
    "example": "deploy {\n        use \"nomad\" {\n          region = \"global\"\n          datacenter = \"dc1\"\n          auth {\n            username = \"username\"\n            password = \"password\"\n          }\n          static_environment = {\n            \"environment\": \"production\",\n            \"LOG_LEVEL\": \"debug\"\n          }\n          service_port = 3000\n          replicas = 1\n        }\n}",
    "input": "docker.Image",
    "mappers": null,
