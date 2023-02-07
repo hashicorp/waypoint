@@ -33,7 +33,7 @@
     "title": "Use Cases",
     "routes": [
       {
-        "title": "HashiStack Quickstart with Waypoint, Terraform, and HCP",
+        "title": "HCP Stack Quickstart with Terraform, Waypoint, Consul, Vault, and Nomad",
         "path": "use-cases/hcp-hashistack-quickstart"
       },
       {
