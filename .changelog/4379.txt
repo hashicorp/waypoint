@@ -1,0 +1,3 @@
+```release-note:improvement
+api: Enable HTTP API to talk to Waypoint
+```
