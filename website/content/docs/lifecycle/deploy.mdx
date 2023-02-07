@@ -43,19 +43,19 @@ The deployment platform must be compatible with the app artifact output format f
 
 You can currently use Waypoint to deploy your app to any of these platforms.
 
-- [Kubernetes](/waypoint/plugins/kubernetes)
-- [HashiCorp Nomad](/waypoint/plugins/nomad)
-- [AWS EC2](/waypoint/plugins/aws-ec2)
-- [AWS ECS](/waypoint/plugins/aws-ecs)
-- [AWS Lambda](/waypoint/plugins/aws-lambda)
-- [Google Cloud Run](/waypoint/plugins/google-cloud-run)
-- [Azure Container Instances](/waypoint/plugins/azure-container-instance)
+- [Kubernetes](/waypoint/integrations/hashicorp/kubernetes)
+- [HashiCorp Nomad](/waypoint/integrations/hashicorp/nomad)
+- [AWS EC2](/waypoint/integrations/hashicorp/aws-ec2)
+- [AWS ECS](/waypoint/integrations/hashicorp/aws-ecs)
+- [AWS Lambda](/waypoint/integrations/hashicorp/aws-lambda)
+- [Google Cloud Run](/waypoint/integrations/hashicorp/google-cloud-run)
+- [Azure Container Instances](/waypoint/integrations/hashicorp/azure-container-instance)
 
 ~> You may use the Kubernetes plugin to target any Kubernetes instance. For example, AWS EKS, Azure AKS, Google GKE, and Kubernetes for Docker Desktop.
 
 #### How to Add a Deployment Platform to Waypoint
 
-You can also create a [plugin](/waypoint/plugins) to extend Waypoint with your own deployment platform. If you would like to add a plugin for a platform currently not in Waypoint, please file a [GitHub Issue for the project](https://github.com/hashicorp/waypoint/issues).
+You can also create a [plugin](/waypoint/docs/plugins) to extend Waypoint with your own deployment platform. If you would like to add a plugin for a platform currently not in Waypoint, please file a [GitHub Issue for the project](https://github.com/hashicorp/waypoint/issues).
 
 ## Automatic Release
 
@@ -90,8 +90,7 @@ For Kubernetes, reference [authenticate to private container registries
 with a kubernetes
 secret](https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/).
 If you named the secret `example-registry-secret`, then you can [reference the
-secret in
-Waypoint](/waypoint/plugins/kubernetes#image_secret) like:
+secret in Waypoint](/waypoint/integrations/hashicorp/kubernetes/latest/components/platform#parameters.image_secret) like:
 
 ```hcl
 ...

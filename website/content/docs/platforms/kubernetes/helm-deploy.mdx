@@ -29,7 +29,7 @@ The Helm deployment plugin for Waypoint is aimed primarily at people
 who either already use Helm or need to use a tool that lets them specify
 any custom Kubernetes resources. If you don't know Helm and are just trying
 to deploy a typical web service, you can use the YAML-less
-[`kubernetes`](/waypoint/plugins/helm#values) plugin. And you can always switch
+[`kubernetes`](/waypoint/integrations/hashicorp/helm/latest/components/platform) plugin. And you can always switch
 deployment plugins later, so you don't need to be worried about making a
 "wrong" decision.
 
@@ -99,7 +99,7 @@ built already) and Waypoint will use Helm to deploy your application.
 
 -> **Note:** The `set` syntax is the same as the `--set` flag used
 with the `helm` CLI. This is documented on the Helm website [here](https://helm.sh/docs/intro/using_helm/#the-format-and-limitations-of---set). You can also specify
-[values YAML files](/waypoint/plugins/helm#values).
+[values YAML files](/waypoint/integrations/hashicorp/helm/latest/components/platform).
 
 ### Chart Repositories
 
@@ -198,6 +198,6 @@ to specify a values YAML file.
 ## Reference Documentation
 
 To view a full list of the available options for the Helm plugin,
-please see the [plugin reference documentation](/waypoint/plugins/helm).
+please see the [plugin reference documentation](/waypoint/integrations/hashicorp/helm).
 This documentation is more dense and has less examples, but is an
 exhaustive list of the available options.

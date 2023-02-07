@@ -28,15 +28,15 @@ not thoroughly explain the config setting CLI or `waypoint.hcl` stanzas.
 The following is a list of currently available configuration sources
 and their associated documentation:
 
-- [Terraform Cloud](/waypoint/plugins/terraform-cloud#terraform-cloud-configsourcer) -
+- [Terraform Cloud](/waypoint/integrations/hashicorp/terraform-cloud/latest/components/config-sourcer) -
   Read Terraform state outputs from Terraform Cloud.
-- [Kubernetes](/waypoint/plugins/kubernetes#kubernetes-configsourcer) - Read values from
+- [Kubernetes](/waypoint/integrations/hashicorp/kubernetes/latest/components/config-sourcer) - Read values from
   ConfigMaps and Secrets.
-- [Vault](/waypoint/plugins/vault#vault-configsourcer) - Read values from Vault secrets,
+- [Vault](/waypoint/integrations/hashicorp/vault/latest/components/config-sourcer) - Read values from Vault secrets,
   including dynamic secrets such as database credentials.
-- [AWS SSM](/waypoint/plugins/aws-ssm#aws-ssm-configsourcer) - Read configuration values
+- [AWS SSM](/waypoint/integrations/hashicorp/aws-ssm/latest/components/config-sourcer) - Read configuration values
   from AWS SSM Parameter Store.
-- [Consul](/waypoint/plugins/consul#consul-configsourcer) - Read values from Consul key
+- [Consul](/waypoint/integrations/hashicorp/consul/latest/components/config-sourcer) - Read values from Consul key
   value storage.
 
 -> **Custom configuration source plugins are coming soon.** Currently it's overly
@@ -92,7 +92,7 @@ $ waypoint config set PORT=
 
 Configuration sources sometimes support global settings for their behavior or
 require global settings to be set for them to function at all.
-For example, [Vault](/waypoint/plugins/vault#vault-configsourcer) has some global
+For example, [Vault](/waypoint/integrations/hashicorp/vault/latest/components/config-sourcer) has some global
 settings around how to authenticate. Without setting these, Vault configurations
 in applications will not work. These _source settings_ are set at the server
 level and used by all `dynamic` calls.

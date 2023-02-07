@@ -34,11 +34,11 @@ app "my-app" {
 
 Waypoint includes these builtin plugins to build a Docker image for your app.
 
-- [Docker Build](/waypoint/plugins/docker#docker-builder)
-- [Docker Pull Build](/waypoint/plugins/docker#docker-pull-builder)
-- [Cloud Native Buildpacks](/waypoint/plugins/pack)
+- [Docker Build](/waypoint/integrations/hashicorp/docker/latest/components/builder)
+- [Docker Pull Build](/waypoint/integrations/hashicorp/docker-pull/latest/components/builder)
+- [Cloud Native Buildpacks](/waypoint/integrations/hashicorp/pack)
 
-You can also create a [plugin](/waypoint/plugins) to extend Waypoint with your own builder.
+You can also create a [plugin](/waypoint/docs/plugins) to extend Waypoint with your own builder.
 
 ### Choosing How to Build Your App
 
@@ -59,7 +59,7 @@ image. If you application works with the `docker build`
 [Docker command](https://docs.docker.com/engine/reference/commandline/build/)
 it should work well the Waypoint Docker plugin.
 
-Reference the [Docker plugin](/waypoint/plugins/docker) for all configuration options.
+Reference the [Docker plugin](/waypoint/integrations/hashicorp/docker) for all configuration options.
 
 #### Docker Pull Build
 
@@ -215,7 +215,7 @@ Example Docker Registry Configuration
 ...
 ```
 
-Reference `aws-ecs` plugin documentation for an [AWS Elastic Container Registry example](/waypoint/plugins/aws-ecs#examples).
+Reference the [AWS ECS plugin](/waypoint/integrations/hashicorp/aws-ecs) documentation for an AWS Elastic Container Registry example.
 
 ### Scenarios for a Registry
 

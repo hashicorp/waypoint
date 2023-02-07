@@ -439,7 +439,6 @@ func removeEmptyStrings(s []string) []string {
 }
 
 // generates README.md, parameters.hcl, and outputs.hcl for builtin plugins' components
-// TODO: consider treating config-sourcers differently
 func (c *AppDocsCommand) hclFormat(name, ct string, doc *docs.Documentation) {
 	// example target = builtin/aws/ami/components/builder/outputs.hcl
 
@@ -502,17 +501,40 @@ func (c *AppDocsCommand) hclFormat(name, ct string, doc *docs.Documentation) {
 		os.MkdirAll(fmt.Sprintf("./builtin/%s/components/%s", pluginPath, componentSlug), os.ModePerm)
 
 		// populate README.md
-		readme, err := os.Create(fmt.Sprintf("./builtin/%s/components/%s/readme.md", pluginPath, componentSlug))
+		readme, err := os.Create(fmt.Sprintf("./builtin/%s/components/%s/README.md", pluginPath, componentSlug))
 		if err != nil {
 			panic(err)
 		}
 
 		fmt.Fprintln(readme, "<!-- This file was generated via `make gen/integrations-hcl` -->")
 
-		fmt.Fprintf(readme, "## %s (%s)\n\n", name, ct)
+		// fmt.Fprintf(readme, "## %s (%s)\n\n", name, ct)
 
 		if dets.Description != "" {
 			fmt.Fprintf(readme, "%s\n\n", c.humanize(dets.Description))
+		}
+
+		if componentSlug == "config-sourcer" || componentSlug == "task" {
+			// config-sourcer and task components don't have inputs or outputs
+			// don't generate interface section
+		} else {
+			fmt.Fprintf(readme, "### Interface\n\n")
+		}
+
+		space := false
+
+		if dets.Input != "" {
+			fmt.Fprintf(readme, "- Input: **%s**\n", dets.Input)
+			space = true
+		}
+
+		if dets.Output != "" {
+			fmt.Fprintf(readme, "- Output: **%s**\n", dets.Output)
+			space = true
+		}
+
+		if space {
+			fmt.Fprintln(readme)
 		}
 
 		if dets.Example != "" {
@@ -527,9 +549,8 @@ func (c *AppDocsCommand) hclFormat(name, ct string, doc *docs.Documentation) {
 				fmt.Fprintf(readme, "#### %s\n\n", m.Description)
 				fmt.Fprintf(readme, "- Input: **%s**\n", m.Input)
 				fmt.Fprintf(readme, "- Output: **%s**\n", m.Output)
+				fmt.Fprintln(readme)
 			}
-
-			fmt.Fprintln(readme)
 		}
 	}
 
