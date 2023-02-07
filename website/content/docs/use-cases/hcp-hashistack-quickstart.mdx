@@ -141,7 +141,7 @@ data "aws_availability_zones" "available" {
 
 ### HVN
 
-In the [`hcp.tf`](https://github.com/xiaolin-ninja/2048_hcp_hashistack/blob/main/hcp.tf) configuration file,
+In the [`hcp.tf`](https://github.com/xiaolin-ninja/2048_hcp_hashistack/blob/2da3a78f24e95901e49926ec224edf2237057d24/hcp.tf) configuration file,
 we define a HashiCorp Virtual Network (HVN) named "xx-2048" and peer it to the VPC.
 HVNs enable you to deploy HashiCorp Cloud products without having to manage the networking details.
 Creating peering connections from your HVN will allow you to connect and launch AWS resources from your HCP account.
@@ -230,11 +230,11 @@ provider "vault" {
 }
 ```
 
-You can find the detailed Vault configurations in [`vault-config.tf`](https://github.com/xiaolin-ninja/2048_hcp_hashistack/blob/main/vault-config.tf)
+You can find the detailed Vault configurations in [`vault-config.tf`](https://github.com/xiaolin-ninja/2048_hcp_hashistack/blob/2da3a78f24e95901e49926ec224edf2237057d24/vault-config.tf)
 
 ## Define Nomad Configurations
 
-In [`nomad.tf`](https://github.com/xiaolin-ninja/2048_hcp_hashistack/blob/main/nomad.tf),
+In [`nomad.tf`](https://github.com/xiaolin-ninja/2048_hcp_hashistack/blob/2da3a78f24e95901e49926ec224edf2237057d24/nomad.tf),
 we configure the AWS Security Group, find a demo AMI, and configure the Nomad server, client, and auto-scaling.
 The scripts `user-data-client.sh` and `user-data-server.sh` are run directly in the EC2 instances spun up by Terraform to provision Nomad.
 
