@@ -142,7 +142,7 @@ func (s *Service) queueJobReqToJob(
 
 	if job.DataSource == nil {
 		if project.DataSource == nil {
-			return nil, "", hcerr.UserErrorWithCodef(codes.FailedPrecondition, err,
+			return nil, "", hcerr.UserConditionWithCodef(codes.FailedPrecondition,
 				"Project %s does not have a data source configured. Remote jobs "+
 					"require a data source such as Git to be configured with the project. "+
 					"Data sources can be configured via the CLI or UI. For help, see : "+
@@ -167,14 +167,14 @@ func (s *Service) queueJobReqToJob(
 			// error out.
 			if job.DataSource.GetRemote() != nil {
 				log.Error("populateDataSource returned another remote DS job")
-				return nil, "", hcerr.UserErrorWithCodef(codes.Internal, err,
+				return nil, "", hcerr.UserConditionWithCodef(codes.Internal,
 					"An internal server issue was detected when calculating the data source")
 			}
 		} else {
 			log.Error("job has a remote DataSource but server provided no populateDataSource")
 			// This is a server misconfiguration.
 			if job.DataSource.GetRemote() != nil {
-				return nil, "", hcerr.UserErrorWithCodef(codes.Internal, err,
+				return nil, "", hcerr.UserConditionWithCodef(codes.Internal,
 					"An internal server issue was detected when calculating the data source")
 			}
 		}
