@@ -1,7 +1,7 @@
 ---
 layout: docs
 page_title: A Complete Cloud Ecosystem built with Terraform, HCP Waypoint, HCP Vault, HCP Consul, and Nomad
-description: |-
+description:  |-
 Your enterprise application is only a 'terraform apply' and 'waypoint up' away from life on the cloud.
 ---
 
@@ -15,7 +15,7 @@ The ingredients for this special dish are [Waypoint](https://www.waypointproject
 [Terraform](https://www.terraform.io/), [Consul](https://www.consul.io/), [Nomad](https://www.nomadproject.io/), and
 [Vault](https://www.vaultproject.io/).
 We chose to use HashiCorp managed versions of Waypoint, Consul, and Vault for one convenient HCP UI and
-to showcase the [HashiCorp Virtual Network (HVN)](https://developer.hashicorp.com/hcp/docs/hcp/network).
+to showcase the [HashiCorp Virtual Network (HVN)](/hcp/docs/hcp/network).
 A similar experience is of course possible with self-managed versions,
 and equally possible with Terraform automation, although it may require more familiarity with Terraform modules.
 
@@ -37,18 +37,18 @@ export AWS_SESSION_TOKEN=<your AWS session token>
 
 As well as the following binaries installed locally:
 
-- [Waypoint CLI](https://developer.hashicorp.com/waypoint/downloads)
-- [Terraform CLI](https://developer.hashicorp.com/terraform/tutorials/aws-get-started/install-cli)
+- [Waypoint CLI](/waypoint/downloads)
+- [Terraform CLI](/terraform/tutorials/aws-get-started/install-cli)
 
 It will help to have some familiarity with HashiCorp Configuration Language (HCL), which is the syntax used to
-write configuration files for [Terraform](https://developer.hashicorp.com/terraform/language) and [Waypoint](https://developer.hashicorp.com/waypoint/docs/waypoint-hcl/syntax).
+write configuration files for [Terraform](/terraform/language) and [Waypoint](/waypoint/docs/waypoint-hcl/syntax).
 
 In this use case, we will configure our infrastructure as code, which Terraform will run to provision the following:
 
-- [AWS Virtual Private Cloud](https://aws.amazon.com/pt/vpc/) and peer it with our [HashiCorp Virtual Network (HVN)](https://developer.hashicorp.com/hcp/docs/hcp/network)
+- [AWS Virtual Private Cloud](https://aws.amazon.com/pt/vpc/) and peer it with our [HashiCorp Virtual Network (HVN)](/hcp/docs/hcp/network)
 - [HCP Consul](https://cloud.hashicorp.com/products/consul) service mesh to manage services within the secure private network
 - [HCP Vault](https://cloud.hashicorp.com/products/vault) cluster to securely store credentials
-- [Nomad](https://developer.hashicorp.com/nomad/tutorials/get-started/get-started-intro) cluster on AWS EC2 instance to manage application containers.
+- [Nomad](/nomad/tutorials/get-started/get-started-intro) cluster on AWS EC2 instance to manage application containers.
 
 We will write application deployment configurations as code, which [HCP Waypoint](https://cloud.hashicorp.com/products/waypoint)
 will run to build the container image and deploy the application to the infrastructure we set up with Terraform.
@@ -202,7 +202,7 @@ resource "hcp_consul_cluster" "xx_2048_consul" {
 }
 ```
 
-You can also [provision a Consul cluster via the HCP UI](https://developer.hashicorp.com/consul/tutorials/get-started-hcp/hcp-gs-deploy).
+You can also [provision a Consul cluster via the HCP UI](/consul/tutorials/get-started-hcp/hcp-gs-deploy).
 
 ## Define HCP Vault
 
@@ -299,7 +299,7 @@ resource "aws_launch_template" "nomad-servers" {
 ```
 
 This is not the only way to define Nomad clusters in Terraform.
-For more practice deploying Nomad to EC2 with Terraform, [follow this tutorial](https://developer.hashicorp.com/nomad/tutorials/cluster-setup/cluster-setup-aws).
+For more practice deploying Nomad to EC2 with Terraform, [follow this tutorial](/nomad/tutorials/cluster-setup/cluster-setup-aws).
 
 ## Deploy the Infrastructure!
 
@@ -347,7 +347,7 @@ Remember to confirm the run by entering `yes`!
 
 HCP Waypoint is currently in Beta, and a Terraform module to provision Waypoint is still under development.
 
-Head into your HCP UI and [follow this tutorial](https://developer.hashicorp.com/waypoint/tutorials/runners/hcp-runners-on-your-infra#set-up-the-environment)
+Head into your HCP UI and [follow this tutorial](/waypoint/tutorials/runners/hcp-runners-on-your-infra#set-up-the-environment)
 to set up your local environment.
 
 Navigate to Waypoint in the HCP dashboard:
@@ -393,8 +393,8 @@ app "nomad" {
 }
 ```
 
-You can [read more about Waypoint HCL](https://developer.hashicorp.com/waypoint/docs/waypoint-hcl) fundamentals,
-or explore [advanced deployment workflows using custom pipelines](https://developer.hashicorp.com/waypoint/docs/pipelines).
+You can [read more about Waypoint HCL](/waypoint/docs/waypoint-hcl) fundamentals,
+or explore [advanced deployment workflows using custom pipelines](/waypoint/docs/pipelines).
 
 Now, run `waypoint init`:
 
@@ -430,7 +430,7 @@ enabled and advertise addresses set.
 Congratulations, your application is live!
 
 HCP Waypoint does not provide a URL service.
-You can also deploy the application by [installing self-hosted Waypoint](https://developer.hashicorp.com/waypoint/commands/install)
+You can also deploy the application by [installing self-hosted Waypoint](/waypoint/commands/install)
 and running `waypoint up` with a different context.
 
 ## Easy to Monitor Dashboards
@@ -461,7 +461,7 @@ You can see the Nomad server, client, and Waypoint runner.
 
 ![Nomad UI](img/use-cases/hcp-hashistack-quickstart/nomad-ui.png)
 
-Have fun exploring! You can find more guidance in the [Nomad UI documentation](https://developer.hashicorp.com/nomad/tutorials/web-ui).
+Have fun exploring! You can find more guidance in the [Nomad UI documentation](/nomad/tutorials/web-ui).
 
 ### HashiCorp stack 2048
 
@@ -493,9 +493,9 @@ We include below a few tutorials that dive deeper into pieces of the workflow sh
 so you can explore this sweet HashiCorp stack synergy with self-managed Waypoint, Consul, Nomad, and Vault as well!
 
 - [HashiCorp Cloud Platform](https://cloud.hashicorp.com/)
-- [Consul Service Mesh](https://developer.hashicorp.com/consul/docs/connect)
-- [Deploy an Application to Nomad with Waypoint](https://developer.hashicorp.com/waypoint/tutorials/get-started-nomad/get-started-nomad)
-- [Set Up a Nomad Cluster on AWS](https://developer.hashicorp.com/nomad/tutorials/cluster-setup/cluster-setup-aws)
-- [Blue-Green Deployments with Waypoint, Nomad, and Consul](https://developer.hashicorp.com/waypoint/docs/use-cases/blue-green-deployment)
-- [Consul Deployment Guide](https://developer.hashicorp.com/consul/tutorials/production-deploy/deployment-guide)
-- [Advanced Deployment Pipelines with Waypoint](https://developer.hashicorp.com/waypoint/docs/pipelines)
+- [Consul Service Mesh](/consul/docs/connect)
+- [Deploy an Application to Nomad with Waypoint](/waypoint/tutorials/get-started-nomad/get-started-nomad)
+- [Set Up a Nomad Cluster on AWS](/nomad/tutorials/cluster-setup/cluster-setup-aws)
+- [Blue-Green Deployments with Waypoint, Nomad, and Consul](/waypoint/docs/use-cases/blue-green-deployment)
+- [Consul Deployment Guide](/consul/tutorials/production-deploy/deployment-guide)
+- [Advanced Deployment Pipelines with Waypoint](/waypoint/docs/pipelines)
