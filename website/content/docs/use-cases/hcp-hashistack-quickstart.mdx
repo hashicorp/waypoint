@@ -1,13 +1,13 @@
 ---
 layout: docs
-page_title: A Complete Cloud Ecosystem in Two Commands with Waypoint, Terraform, and the HashiCorp stack
+page_title: A Complete Cloud Ecosystem built with Terraform, HCP Waypoint, HCP Vault, HCP Consul, and Nomad
 description: |-
 Your enterprise application is only a 'terraform apply' and 'waypoint up' away from life on the cloud.
 ---
 
-# A Complete Cloud Ecosystem in Two Commands with Waypoint, Terraform, and the HashiCorp stack
+# A Complete Cloud Ecosystem built with Terraform, HCP Waypoint, HCP Vault, HCP Consul, and Nomad
 
-In this use case, we will spin up our entire infrastructure with one `terraform apply`,
+In this use case, we will spin up our entire infrastructure with `terraform apply`,
 then launch the application to an EC2 container within our secured internal network with `waypoint up`.
 Welcome to the HashiCorp stack magic.
 
@@ -16,7 +16,8 @@ The ingredients for this special dish are [Waypoint](https://www.waypointproject
 [Vault](https://www.vaultproject.io/).
 We chose to use HashiCorp managed versions of Waypoint, Consul, and Vault for one convenient HCP UI and
 to showcase the [HashiCorp Virtual Network (HVN)](https://developer.hashicorp.com/hcp/docs/hcp/network).
-The same experience is of course possible with self-managed versions.
+A similar experience is of course possible with self-managed versions,
+and equally possible with Terraform automation, although it may require more familiarity with Terraform modules.
 
 ## Prerequisites
 
@@ -32,9 +33,9 @@ export AWS_SESSION_TOKEN=<your AWS session token>
 ```
 
 - Docker registry
-- Credentials to push to the docker registry
+- Credentials to push to the Docker registry
 
-As well as the following software installed locally:
+As well as the following binaries installed locally:
 
 - [Waypoint CLI](https://developer.hashicorp.com/waypoint/downloads)
 - [Terraform CLI](https://developer.hashicorp.com/terraform/tutorials/aws-get-started/install-cli)
@@ -42,7 +43,7 @@ As well as the following software installed locally:
 It will help to have some familiarity with HashiCorp Configuration Language (HCL), which is the syntax used to
 write configuration files for [Terraform](https://developer.hashicorp.com/terraform/language) and [Waypoint](https://developer.hashicorp.com/waypoint/docs/waypoint-hcl/syntax).
 
-In this use case, we will configure our infrastructure as code, which Terraform will run to automatically provision the following:
+In this use case, we will configure our infrastructure as code, which Terraform will run to provision the following:
 
 - [AWS Virtual Private Cloud](https://aws.amazon.com/pt/vpc/) and peer it with our [HashiCorp Virtual Network (HVN)](https://developer.hashicorp.com/hcp/docs/hcp/network)
 - [HCP Consul](https://cloud.hashicorp.com/products/consul) service mesh to manage services within the secure private network
@@ -54,8 +55,8 @@ will run to build the container image and deploy the application to the infrastr
 
 All it takes are two commands:
 
-`terraform apply`
-`waypoint up`
+- `terraform apply`
+- `waypoint up`
 
 The Terraform and Waypoint configuration files and a sample application live in [this repository](https://github.com/xiaolin-ninja/2048_hcp_hashistack).
 We will deploy a custom HashiCorp version of the popular game "2048".
@@ -201,11 +202,11 @@ resource "hcp_consul_cluster" "xx_2048_consul" {
 }
 ```
 
-You can also provision a Consul cluster with one click in the HCP UI.
+You can also [provision a Consul cluster via the HCP UI](https://developer.hashicorp.com/consul/tutorials/get-started-hcp/hcp-gs-deploy).
 
 ## Define HCP Vault
 
-Defining a Vault cluster in Terraform is as simple as with Consul,
+Defining an HCP Vault cluster via Terraform also requires minimal configuration,
 using the [`hcp_vault_cluster`](https://registry.terraform.io/providers/hashicorp/hcp/latest/docs/resources/vault_cluster) resource.
 
 ```terraform
@@ -237,12 +238,12 @@ In [`nomad.tf`](https://github.com/xiaolin-ninja/2048_hcp_hashistack/blob/main/n
 we configure the AWS Security Group, find a demo AMI, and configure the Nomad server, client, and auto-scaling.
 The scripts `user-data-client.sh` and `user-data-server.sh` are run directly in the EC2 instances spun up by Terraform to provision Nomad.
 
-~> **Note:** Since this is a use-case demo, I am not following Security best-practices.
+~> **Note:** Since this is a use-case demo, we are not following Security best-practices.
 For example, my AWS Security Group allows all ingress and egress traffic.
-I am also provisioning only one Nomad server and client cluster each, which does not insulate against downtime.
+We also provision only one Nomad server and client cluster each, which does not insulate against downtime.
 For real production use cases, please properly configure your security group and have multiple clusters.
 
-This is how the launch template looks like:
+The launch template looks like this:
 
 ```terraform
 resource "aws_launch_template" "nomad-servers" {
@@ -329,7 +330,7 @@ Terraform will perform the following actions:
 Plan: 11 to add, 0 to change, 0 to destroy.
 ```
 
-Finally, this is the magic moment I promised:
+Finally, this is the magic moment we promised:
 
 ```shell
 $ terraform apply
@@ -344,7 +345,7 @@ Remember to confirm the run by entering `yes`!
 
 ## Set up HCP Waypoint Context
 
-HCP Waypoint is currently in Beta, so we don't have a convenient Terraform module to provision Waypoint automatically yet (as of February 2023).
+HCP Waypoint is currently in Beta, and a Terraform module to provision Waypoint is still under development.
 
 Head into your HCP UI and [follow this tutorial](https://developer.hashicorp.com/waypoint/tutorials/runners/hcp-runners-on-your-infra#set-up-the-environment)
 to set up your local environment.
@@ -438,6 +439,11 @@ After our `terraform apply` and `waypoint up`, you should have a full HCP HashiC
 
 ### HashiCorp Virtual Network
 
+You can find "HashiCorp Virtual Networks" on the left sidebar and see that our HCP Consul and HCP Vault resources have
+been automatically provisioned via Terraform in the same VPC, and associated with the network. Magic!
+
+![HVN UI](img/use-cases/hcp-hashistack-quickstart/hvn.png)
+
 ### Consul Dashboard
 
 You can access the HCP Consul UI by navigating to the Consul tab in HCP, and clicking "Access Consul".
@@ -483,7 +489,7 @@ Thanks for taking the time to follow along this use case, and we are excited to 
 We covered many HashiCorp tools in this use case. We focused on HCP product offerings, where HashiCorp manages the tooling for you.
 Provisioning is easy with the UI or Terraform, as shown in this demo.
 Of course, all our tools have Open Source versions and are available for self-management as well.
-I included some tutorials that cover bits and pieces of the workflow shown in this use case,
+We include below a few tutorials that dive deeper into pieces of the workflow shown in this use case,
 so you can explore this sweet HashiCorp stack synergy with self-managed Waypoint, Consul, Nomad, and Vault as well!
 
 - [HashiCorp Cloud Platform](https://cloud.hashicorp.com/)
