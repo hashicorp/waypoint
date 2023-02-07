@@ -1,0 +1,4 @@
+```release-note:bug
+plugin/ecs: Update ECS destroyer to wait for there to be zero listeners for the
+target group before destroying the target group.
+```
