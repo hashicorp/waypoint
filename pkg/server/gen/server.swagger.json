@@ -11,7 +11,7 @@
     "application/json"
   ],
   "paths": {
-    "/v1/artifact/{ref.id}": {
+    "/artifact/{ref.id}": {
       "get": {
         "summary": "GetPushedArtifact returns a deployment",
         "operationId": "Waypoint_GetPushedArtifact",
@@ -61,7 +61,7 @@
         ]
       }
     },
-    "/v1/auth-method": {
+    "/auth-method": {
       "post": {
         "summary": "UpsertAuthMethod upserts the auth method. All users logged in with\nthis auth method will remain logged in even if settings change.",
         "operationId": "Waypoint_UpsertAuthMethod",
@@ -94,7 +94,7 @@
         ]
       }
     },
-    "/v1/auth-method/{auth_method.name}": {
+    "/auth-method/{auth_method.name}": {
       "get": {
         "summary": "GetAuthMethod returns the auth method.",
         "operationId": "Waypoint_GetAuthMethod",
@@ -154,7 +154,7 @@
         ]
       }
     },
-    "/v1/auth-methods": {
+    "/auth-methods": {
       "get": {
         "summary": "ListAuthMethods returns a list of all the auth methods.",
         "operationId": "Waypoint_ListAuthMethods",
@@ -177,7 +177,7 @@
         ]
       }
     },
-    "/v1/build/{ref.id}": {
+    "/build/{ref.id}": {
       "get": {
         "summary": "GetBuild returns a build",
         "operationId": "Waypoint_GetBuild",
@@ -227,7 +227,7 @@
         ]
       }
     },
-    "/v1/config-source": {
+    "/config-source": {
       "get": {
         "summary": "Get the matching configuration source for the request. This will return\nthe most specific matching config source given the scope in the request.\nFor example, if you search for an app-specific config source and only\na global config exists, the global config will be returned.",
         "operationId": "Waypoint_GetConfigSource",
@@ -314,7 +314,7 @@
         ]
       }
     },
-    "/v1/deployment/{deployment.id}/status-report": {
+    "/deployment/{deployment.id}/status-report": {
       "put": {
         "summary": "ExpediteStatusReport returns the queued status report job id",
         "operationId": "Waypoint_ExpediteStatusReport",
@@ -353,7 +353,7 @@
         ]
       }
     },
-    "/v1/deployment/{deployment_id}/logs": {
+    "/deployment/{deployment_id}/logs": {
       "post": {
         "summary": "GetLogStream reads the log stream for a deployment. This will immediately\nsend a single LogEntry with the lines we have so far. If there are no\navailable lines this will NOT block and instead will return an error.\nThe client can choose to retry or not.",
         "operationId": "Waypoint_GetLogStream",
@@ -402,7 +402,7 @@
         ]
       }
     },
-    "/v1/deployment/{ref.id}": {
+    "/deployment/{ref.id}": {
       "get": {
         "summary": "GetDeployment returns a deployment",
         "operationId": "Waypoint_GetDeployment",
@@ -465,7 +465,7 @@
         ]
       }
     },
-    "/v1/exec": {
+    "/exec": {
       "post": {
         "summary": "StartExecStream starts an exec session.",
         "operationId": "Waypoint_StartExecStream",
@@ -508,7 +508,7 @@
         ]
       }
     },
-    "/v1/hcl/format": {
+    "/hcl/format": {
       "post": {
         "summary": "WaypointHclFmt formats a waypoint.hcl file. This must be in HCL format.\nJSON formatting is not supported.",
         "operationId": "Waypoint_WaypointHclFmt",
@@ -541,7 +541,7 @@
         ]
       }
     },
-    "/v1/hostname/{hostname}": {
+    "/hostname/{hostname}": {
       "delete": {
         "summary": "Delete a hostname with the URL service.",
         "operationId": "Waypoint_DeleteHostname",
@@ -572,7 +572,7 @@
         ]
       }
     },
-    "/v1/instances/{deployment_id}": {
+    "/instances/{deployment_id}": {
       "get": {
         "summary": "ListInstances returns the running instances of deployments.",
         "operationId": "Waypoint_ListInstances",
@@ -629,7 +629,7 @@
         ]
       }
     },
-    "/v1/jobs/cancel/{job_id}": {
+    "/jobs/cancel/{job_id}": {
       "put": {
         "summary": "CancelJob cancels a job. If the job is still queued this is a quick\nand easy operation. If the job is already completed, then this does\nnothing. If the job is assigned or running, then this will signal\nthe runner about the cancellation but it may take time.",
         "description": "This RPC always returns immediately. You must use GetJob or GetJobStream\nto wait on the status of the cancellation.",
@@ -670,7 +670,7 @@
         ]
       }
     },
-    "/v1/jobs/project/{project.project}": {
+    "/jobs/project/{project.project}": {
       "get": {
         "summary": "ListJobs will return a list of jobs known to Waypoint server. Can be filtered\nby request on values like workspace, project, application, job state, etc.",
         "operationId": "Waypoint_ListJobs3",
@@ -794,7 +794,7 @@
         ]
       }
     },
-    "/v1/jobs/queue": {
+    "/jobs/queue": {
       "post": {
         "summary": "QueueJob queues a job for execution by a runner. This will return as\nsoon as the job is queued, it will not wait for execution.",
         "operationId": "Waypoint_QueueJob",
@@ -827,7 +827,7 @@
         ]
       }
     },
-    "/v1/jobs/runner/by-id/{targetRunner.id.id}": {
+    "/jobs/runner/by-id/{targetRunner.id.id}": {
       "get": {
         "summary": "ListJobs will return a list of jobs known to Waypoint server. Can be filtered\nby request on values like workspace, project, application, job state, etc.",
         "operationId": "Waypoint_ListJobs5",
@@ -951,7 +951,7 @@
         ]
       }
     },
-    "/v1/jobs/state/{jobState}": {
+    "/jobs/state/{jobState}": {
       "get": {
         "summary": "ListJobs will return a list of jobs known to Waypoint server. Can be filtered\nby request on values like workspace, project, application, job state, etc.",
         "operationId": "Waypoint_ListJobs4",
@@ -1076,7 +1076,7 @@
         ]
       }
     },
-    "/v1/jobs/stream/{job_id}": {
+    "/jobs/stream/{job_id}": {
       "get": {
         "summary": "GetJobStream opens a job event stream for a running job. This can be\nused to listen for terminal output and other events of a running job.\nMultiple listeners can open a job stream.",
         "operationId": "Waypoint_GetJobStream",
@@ -1116,7 +1116,7 @@
         ]
       }
     },
-    "/v1/jobs/validate": {
+    "/jobs/validateJob": {
       "post": {
         "summary": "ValidateJob checks if a job appears valid. This will check the job\nstructure itself (i.e. missing fields) and can also check to ensure\nthe job is assignable to a runner.",
         "operationId": "Waypoint_ValidateJob",
@@ -1149,7 +1149,7 @@
         ]
       }
     },
-    "/v1/jobs/workspace/{workspace.workspace}": {
+    "/jobs/workspace/{workspace.workspace}": {
       "get": {
         "summary": "ListJobs will return a list of jobs known to Waypoint server. Can be filtered\nby request on values like workspace, project, application, job state, etc.",
         "operationId": "Waypoint_ListJobs",
@@ -1273,7 +1273,7 @@
         ]
       }
     },
-    "/v1/jobs/workspace/{workspace.workspace}/state/{jobState}": {
+    "/jobs/workspace/{workspace.workspace}/state/{jobState}": {
       "get": {
         "summary": "ListJobs will return a list of jobs known to Waypoint server. Can be filtered\nby request on values like workspace, project, application, job state, etc.",
         "operationId": "Waypoint_ListJobs2",
@@ -1398,7 +1398,7 @@
         ]
       }
     },
-    "/v1/jobs/{job_id}": {
+    "/jobs/{job_id}": {
       "get": {
         "summary": "GetJob queries a job by ID.",
         "operationId": "Waypoint_GetJob",
@@ -1430,7 +1430,7 @@
         ]
       }
     },
-    "/v1/oidc/methods": {
+    "/oidc/methods": {
       "get": {
         "summary": "List the available OIDC providers for authentication. The \"name\" of the\nOIDC provider can be used with GetOIDCAuthURL and CompleteOIDCAuth to\nperform OIDC-based authentication.",
         "operationId": "Waypoint_ListOIDCAuthMethods",
@@ -1453,7 +1453,7 @@
         ]
       }
     },
-    "/v1/oidc/{auth_method.name}/complete": {
+    "/oidc/{auth_method.name}/complete": {
       "post": {
         "summary": "Complete the OIDC auth cycle after receiving the callback from the\nOIDC provider.",
         "operationId": "Waypoint_CompleteOIDCAuth",
@@ -1492,7 +1492,7 @@
         ]
       }
     },
-    "/v1/oidc/{auth_method.name}/url": {
+    "/oidc/{auth_method.name}/url": {
       "post": {
         "summary": "Get the URL to visit to start authentication with OIDC.",
         "operationId": "Waypoint_GetOIDCAuthURL",
@@ -1531,7 +1531,7 @@
         ]
       }
     },
-    "/v1/on-demand-runner/by-id/{config.id}": {
+    "/on-demand-runner/by-id/{config.id}": {
       "get": {
         "summary": "GetOnDemandRunnerConfig returns the on-demand runner configuration.",
         "operationId": "Waypoint_GetOnDemandRunnerConfig",
@@ -1568,7 +1568,7 @@
         ]
       }
     },
-    "/v1/on-demand-runner/by-name/{config.name}": {
+    "/on-demand-runner/by-name/{config.name}": {
       "get": {
         "summary": "GetOnDemandRunnerConfig returns the on-demand runner configuration.",
         "operationId": "Waypoint_GetOnDemandRunnerConfig2",
@@ -1605,7 +1605,7 @@
         ]
       }
     },
-    "/v1/on-demand-runners": {
+    "/on-demand-runners": {
       "get": {
         "summary": "ListOnDemandRunnerConfigs returns a list of all the on-demand runners configs.",
         "operationId": "Waypoint_ListOnDemandRunnerConfigs",
@@ -1628,7 +1628,7 @@
         ]
       }
     },
-    "/v1/pipeline/{pipeline.id}": {
+    "/pipeline/{pipeline.id}": {
       "get": {
         "summary": "GetPipeline returns a pipeline proto by pipeline ref id",
         "operationId": "Waypoint_GetPipeline2",
@@ -1673,7 +1673,7 @@
         ]
       }
     },
-    "/v1/pipeline/{pipeline.id}/latest-run": {
+    "/pipeline/{pipeline.id}/latest-run": {
       "get": {
         "summary": "GetLatestPipelineRun returns a pipeline run proto by pipeline ref id and sequence",
         "operationId": "Waypoint_GetLatestPipelineRun2",
@@ -1718,7 +1718,7 @@
         ]
       }
     },
-    "/v1/pipeline/{pipeline.id}/run": {
+    "/pipeline/{pipeline.id}/run": {
       "post": {
         "summary": "RunPipeline queues a pipeline execution.",
         "operationId": "Waypoint_RunPipeline2",
@@ -1758,7 +1758,7 @@
         ]
       }
     },
-    "/v1/pipeline/{pipeline.id}/run/{sequence}": {
+    "/pipeline/{pipeline.id}/run/{sequence}": {
       "get": {
         "summary": "GetPipelineRun returns a pipeline run proto by pipeline ref id and sequence",
         "operationId": "Waypoint_GetPipelineRun2",
@@ -1810,7 +1810,7 @@
         ]
       }
     },
-    "/v1/pipeline/{pipeline.id}/runs": {
+    "/pipeline/{pipeline.id}/runs": {
       "get": {
         "summary": "ListPipelineRuns takes a pipeline ref and returns a list of runs of that pipeline.\nIt will return an error if the requested pipeline does not exist, or an empty response\nif there are no runs for the pipeline.",
         "operationId": "Waypoint_ListPipelineRuns2",
@@ -1855,7 +1855,7 @@
         ]
       }
     },
-    "/v1/project": {
+    "/project": {
       "post": {
         "summary": "UpsertProject upserts the project.",
         "operationId": "Waypoint_UpsertProject",
@@ -1888,7 +1888,7 @@
         ]
       }
     },
-    "/v1/project/config": {
+    "/project/config": {
       "put": {
         "summary": "Set one or more configuration variables for applications or runners.",
         "operationId": "Waypoint_SetConfig",
@@ -1921,7 +1921,7 @@
         ]
       }
     },
-    "/v1/project/{application.application.project}/application/{application.application.application}/instances": {
+    "/project/{application.application.project}/application/{application.application.application}/instances": {
       "get": {
         "summary": "ListInstances returns the running instances of deployments.",
         "operationId": "Waypoint_ListInstances2",
@@ -1978,7 +1978,7 @@
         ]
       }
     },
-    "/v1/project/{application.application.project}/application/{application.application.application}/logs": {
+    "/project/{application.application.project}/application/{application.application.application}/logs": {
       "post": {
         "summary": "GetLogStream reads the log stream for a deployment. This will immediately\nsend a single LogEntry with the lines we have so far. If there are no\navailable lines this will NOT block and instead will return an error.\nThe client can choose to retry or not.",
         "operationId": "Waypoint_GetLogStream2",
@@ -2032,7 +2032,7 @@
         ]
       }
     },
-    "/v1/project/{application.application.project}/application/{application.application.application}/workspace/{application.workspace.workspace}/instances": {
+    "/project/{application.application.project}/application/{application.application.application}/workspace/{application.workspace.workspace}/instances": {
       "get": {
         "summary": "ListInstances returns the running instances of deployments.",
         "operationId": "Waypoint_ListInstances3",
@@ -2089,7 +2089,7 @@
         ]
       }
     },
-    "/v1/project/{application.application.project}/application/{application.application.application}/workspace/{application.workspace.workspace}/logs": {
+    "/project/{application.application.project}/application/{application.application.application}/workspace/{application.workspace.workspace}/logs": {
       "post": {
         "summary": "GetLogStream reads the log stream for a deployment. This will immediately\nsend a single LogEntry with the lines we have so far. If there are no\navailable lines this will NOT block and instead will return an error.\nThe client can choose to retry or not.",
         "operationId": "Waypoint_GetLogStream3",
@@ -2149,7 +2149,7 @@
         ]
       }
     },
-    "/v1/project/{application.project}/application/{application.application}": {
+    "/project/{application.project}/application/{application.application}": {
       "get": {
         "summary": "GetApplication returns one application on the project.",
         "operationId": "Waypoint_GetApplication",
@@ -2186,7 +2186,7 @@
         ]
       }
     },
-    "/v1/project/{application.project}/application/{application.application}/artifact/latest": {
+    "/project/{application.project}/application/{application.application}/artifact/latest": {
       "get": {
         "summary": "GetLatestPushedArtifact returns the most recent successfully completed\nartifact push for an app.",
         "operationId": "Waypoint_GetLatestPushedArtifact",
@@ -2229,7 +2229,7 @@
         ]
       }
     },
-    "/v1/project/{application.project}/application/{application.application}/artifacts": {
+    "/project/{application.project}/application/{application.application}/artifacts": {
       "get": {
         "summary": "ListPushedArtifacts returns the builds.",
         "operationId": "Waypoint_ListPushedArtifacts",
@@ -2306,7 +2306,7 @@
         ]
       }
     },
-    "/v1/project/{application.project}/application/{application.application}/build/latest": {
+    "/project/{application.project}/application/{application.application}/build/latest": {
       "get": {
         "summary": "GetLatestBuild returns the most recent successfully completed build\nfor an app.",
         "operationId": "Waypoint_GetLatestBuild",
@@ -2349,7 +2349,7 @@
         ]
       }
     },
-    "/v1/project/{application.project}/application/{application.application}/builds": {
+    "/project/{application.project}/application/{application.application}/builds": {
       "get": {
         "summary": "ListBuilds returns the builds.",
         "operationId": "Waypoint_ListBuilds",
@@ -2419,7 +2419,7 @@
         ]
       }
     },
-    "/v1/project/{application.project}/application/{application.application}/config": {
+    "/project/{application.project}/application/{application.application}/config": {
       "get": {
         "summary": "Retrieve merged configuration values for a specific scope. You can determine\nwhere a configuration variable was set by looking at the scope field on\neach variable.",
         "operationId": "Waypoint_GetConfig",
@@ -2481,7 +2481,7 @@
         ]
       }
     },
-    "/v1/project/{application.project}/application/{application.application}/deployments": {
+    "/project/{application.project}/application/{application.application}/deployments": {
       "get": {
         "summary": "ListDeployments returns the deployments.",
         "operationId": "Waypoint_ListDeployments",
@@ -2578,7 +2578,7 @@
         ]
       }
     },
-    "/v1/project/{application.project}/application/{application.application}/release/latest": {
+    "/project/{application.project}/application/{application.application}/release/latest": {
       "get": {
         "summary": "GetLatestRelease returns the most recent successfully completed\nrelease for an app.",
         "operationId": "Waypoint_GetLatestRelease",
@@ -2635,7 +2635,7 @@
         ]
       }
     },
-    "/v1/project/{application.project}/application/{application.application}/releases": {
+    "/project/{application.project}/application/{application.application}/releases": {
       "get": {
         "summary": "ListReleases returns the releases.",
         "operationId": "Waypoint_ListReleases",
@@ -2733,7 +2733,7 @@
         ]
       }
     },
-    "/v1/project/{application.project}/application/{application.application}/status-report/latest": {
+    "/project/{application.project}/application/{application.application}/status-report/latest": {
       "get": {
         "summary": "GetLatestStatusReport returns the most recent successfully completed\nhealth report for an app",
         "operationId": "Waypoint_GetLatestStatusReport",
@@ -2788,7 +2788,7 @@
         ]
       }
     },
-    "/v1/project/{application.project}/application/{application.application}/status-reports": {
+    "/project/{application.project}/application/{application.application}/status-reports": {
       "get": {
         "summary": "ListStatusReports returns the deployments.",
         "operationId": "Waypoint_ListStatusReports",
@@ -2884,7 +2884,7 @@
         ]
       }
     },
-    "/v1/project/{application.project}/application/{application.application}/triggers": {
+    "/project/{application.project}/application/{application.application}/triggers": {
       "get": {
         "summary": "ListTriggers takes a request filter, and returns any matching existing triggers",
         "operationId": "Waypoint_ListTriggers3",
@@ -2944,7 +2944,7 @@
         ]
       }
     },
-    "/v1/project/{application.project}/application/{application.application}/workspace/{workspace.workspace}/artifact/latest": {
+    "/project/{application.project}/application/{application.application}/workspace/{workspace.workspace}/artifact/latest": {
       "get": {
         "summary": "GetLatestPushedArtifact returns the most recent successfully completed\nartifact push for an app.",
         "operationId": "Waypoint_GetLatestPushedArtifact2",
@@ -2987,7 +2987,7 @@
         ]
       }
     },
-    "/v1/project/{application.project}/application/{application.application}/workspace/{workspace.workspace}/artifacts": {
+    "/project/{application.project}/application/{application.application}/workspace/{workspace.workspace}/artifacts": {
       "get": {
         "summary": "ListPushedArtifacts returns the builds.",
         "operationId": "Waypoint_ListPushedArtifacts2",
@@ -3064,7 +3064,7 @@
         ]
       }
     },
-    "/v1/project/{application.project}/application/{application.application}/workspace/{workspace.workspace}/build/latest": {
+    "/project/{application.project}/application/{application.application}/workspace/{workspace.workspace}/build/latest": {
       "get": {
         "summary": "GetLatestBuild returns the most recent successfully completed build\nfor an app.",
         "operationId": "Waypoint_GetLatestBuild2",
@@ -3107,7 +3107,7 @@
         ]
       }
     },
-    "/v1/project/{application.project}/application/{application.application}/workspace/{workspace.workspace}/builds": {
+    "/project/{application.project}/application/{application.application}/workspace/{workspace.workspace}/builds": {
       "get": {
         "summary": "ListBuilds returns the builds.",
         "operationId": "Waypoint_ListBuilds2",
@@ -3177,7 +3177,7 @@
         ]
       }
     },
-    "/v1/project/{application.project}/application/{application.application}/workspace/{workspace.workspace}/deployments": {
+    "/project/{application.project}/application/{application.application}/workspace/{workspace.workspace}/deployments": {
       "get": {
         "summary": "ListDeployments returns the deployments.",
         "operationId": "Waypoint_ListDeployments2",
@@ -3274,7 +3274,7 @@
         ]
       }
     },
-    "/v1/project/{application.project}/application/{application.application}/workspace/{workspace.workspace}/release/latest": {
+    "/project/{application.project}/application/{application.application}/workspace/{workspace.workspace}/release/latest": {
       "get": {
         "summary": "GetLatestRelease returns the most recent successfully completed\nrelease for an app.",
         "operationId": "Waypoint_GetLatestRelease2",
@@ -3331,7 +3331,7 @@
         ]
       }
     },
-    "/v1/project/{application.project}/application/{application.application}/workspace/{workspace.workspace}/releases": {
+    "/project/{application.project}/application/{application.application}/workspace/{workspace.workspace}/releases": {
       "get": {
         "summary": "ListReleases returns the releases.",
         "operationId": "Waypoint_ListReleases2",
@@ -3429,7 +3429,7 @@
         ]
       }
     },
-    "/v1/project/{application.project}/application/{application.application}/workspace/{workspace.workspace}/status-report/latest": {
+    "/project/{application.project}/application/{application.application}/workspace/{workspace.workspace}/status-report/latest": {
       "get": {
         "summary": "GetLatestStatusReport returns the most recent successfully completed\nhealth report for an app",
         "operationId": "Waypoint_GetLatestStatusReport2",
@@ -3484,7 +3484,7 @@
         ]
       }
     },
-    "/v1/project/{application.project}/application/{application.application}/workspace/{workspace.workspace}/status-reports": {
+    "/project/{application.project}/application/{application.application}/workspace/{workspace.workspace}/status-reports": {
       "get": {
         "summary": "ListStatusReports returns the deployments.",
         "operationId": "Waypoint_ListStatusReports2",
@@ -3580,7 +3580,7 @@
         ]
       }
     },
-    "/v1/project/{application.project}/application/{application.application}/workspace/{workspace.workspace}/triggers": {
+    "/project/{application.project}/application/{application.application}/workspace/{workspace.workspace}/triggers": {
       "get": {
         "summary": "ListTriggers takes a request filter, and returns any matching existing triggers",
         "operationId": "Waypoint_ListTriggers4",
@@ -3640,7 +3640,7 @@
         ]
       }
     },
-    "/v1/project/{application.project}/application/{application.application}/workspaces": {
+    "/project/{application.project}/application/{application.application}/workspaces": {
       "get": {
         "summary": "ListWorkspaces returns a list of all workspaces.",
         "description": "Note that currently this list is never pruned, even if a workspace is\nno longer in use. We plan to prune this in a future improvement.",
@@ -3684,7 +3684,7 @@
         ]
       }
     },
-    "/v1/project/{application.project}/{application.application}/config": {
+    "/project/{application.project}/{application.application}/config": {
       "get": {
         "summary": "Retrieve merged configuration values for a specific scope. You can determine\nwhere a configuration variable was set by looking at the scope field on\neach variable.",
         "operationId": "Waypoint_GetConfig3",
@@ -3746,7 +3746,7 @@
         ]
       }
     },
-    "/v1/project/{deployment.sequence.application.project}/application/{deployment.sequence.application.application}/deployment/{deployment.sequence.number}/status-report": {
+    "/project/{deployment.sequence.application.project}/application/{deployment.sequence.application.application}/deployment/{deployment.sequence.number}/status-report": {
       "put": {
         "summary": "ExpediteStatusReport returns the queued status report job id",
         "operationId": "Waypoint_ExpediteStatusReport3",
@@ -3798,7 +3798,7 @@
         ]
       }
     },
-    "/v1/project/{pipeline.owner.project.project}/pipeline/{pipeline.owner.pipeline_name}": {
+    "/project/{pipeline.owner.project.project}/pipeline/{pipeline.owner.pipeline_name}": {
       "get": {
         "summary": "GetPipeline returns a pipeline proto by pipeline ref id",
         "operationId": "Waypoint_GetPipeline",
@@ -3843,7 +3843,7 @@
         ]
       }
     },
-    "/v1/project/{pipeline.owner.project.project}/pipeline/{pipeline.owner.pipeline_name}/latest-run": {
+    "/project/{pipeline.owner.project.project}/pipeline/{pipeline.owner.pipeline_name}/latest-run": {
       "get": {
         "summary": "GetLatestPipelineRun returns a pipeline run proto by pipeline ref id and sequence",
         "operationId": "Waypoint_GetLatestPipelineRun",
@@ -3888,7 +3888,7 @@
         ]
       }
     },
-    "/v1/project/{pipeline.owner.project.project}/pipeline/{pipeline.owner.pipeline_name}/run": {
+    "/project/{pipeline.owner.project.project}/pipeline/{pipeline.owner.pipeline_name}/run": {
       "post": {
         "summary": "RunPipeline queues a pipeline execution.",
         "operationId": "Waypoint_RunPipeline",
@@ -3934,7 +3934,7 @@
         ]
       }
     },
-    "/v1/project/{pipeline.owner.project.project}/pipeline/{pipeline.owner.pipeline_name}/run/{sequence}": {
+    "/project/{pipeline.owner.project.project}/pipeline/{pipeline.owner.pipeline_name}/run/{sequence}": {
       "get": {
         "summary": "GetPipelineRun returns a pipeline run proto by pipeline ref id and sequence",
         "operationId": "Waypoint_GetPipelineRun",
@@ -3986,7 +3986,7 @@
         ]
       }
     },
-    "/v1/project/{pipeline.owner.project.project}/pipeline/{pipeline.owner.pipeline_name}/runs": {
+    "/project/{pipeline.owner.project.project}/pipeline/{pipeline.owner.pipeline_name}/runs": {
       "get": {
         "summary": "ListPipelineRuns takes a pipeline ref and returns a list of runs of that pipeline.\nIt will return an error if the requested pipeline does not exist, or an empty response\nif there are no runs for the pipeline.",
         "operationId": "Waypoint_ListPipelineRuns",
@@ -4031,7 +4031,7 @@
         ]
       }
     },
-    "/v1/project/{project.project}": {
+    "/project/{project.project}": {
       "get": {
         "summary": "GetProject returns the project.",
         "operationId": "Waypoint_GetProject",
@@ -4091,7 +4091,7 @@
         ]
       }
     },
-    "/v1/project/{project.project}/application": {
+    "/project/{project.project}/application": {
       "post": {
         "summary": "UpsertApplication upserts an application with a project.",
         "operationId": "Waypoint_UpsertApplication",
@@ -4130,7 +4130,7 @@
         ]
       }
     },
-    "/v1/project/{project.project}/config": {
+    "/project/{project.project}/config": {
       "get": {
         "summary": "Retrieve merged configuration values for a specific scope. You can determine\nwhere a configuration variable was set by looking at the scope field on\neach variable.",
         "operationId": "Waypoint_GetConfig2",
@@ -4192,7 +4192,7 @@
         ]
       }
     },
-    "/v1/project/{project.project}/config-sync-pipeline": {
+    "/project/{project.project}/config-sync-pipeline": {
       "post": {
         "summary": "ConfigSyncPipeline takes a request for a given project and syncs the current\nproject config to the Waypoint database.",
         "operationId": "Waypoint_ConfigSyncPipeline",
@@ -4231,7 +4231,7 @@
         ]
       }
     },
-    "/v1/project/{project.project}/pipelines": {
+    "/project/{project.project}/pipelines": {
       "get": {
         "summary": "ListPipelines takes a project and evaluates the projects config to get\na list of Pipeline protos to return in the response. These pipelines\nare scoped to a single project from the request. It will return an\nerror if the requested project does not exist, or an empty response\nif no pipelines are defined for the project.",
         "operationId": "Waypoint_ListPipelines",
@@ -4262,7 +4262,7 @@
         ]
       }
     },
-    "/v1/project/{project.project}/triggers": {
+    "/project/{project.project}/triggers": {
       "get": {
         "summary": "ListTriggers takes a request filter, and returns any matching existing triggers",
         "operationId": "Waypoint_ListTriggers2",
@@ -4322,7 +4322,7 @@
         ]
       }
     },
-    "/v1/project/{project.project}/workspaces": {
+    "/project/{project.project}/workspaces": {
       "get": {
         "summary": "ListWorkspaces returns a list of all workspaces.",
         "description": "Note that currently this list is never pruned, even if a workspace is\nno longer in use. We plan to prune this in a future improvement.",
@@ -4366,7 +4366,7 @@
         ]
       }
     },
-    "/v1/project/{ref.sequence.application.project}/application/{ref.sequence.application.application}/artifact/{ref.sequence.number}": {
+    "/project/{ref.sequence.application.project}/application/{ref.sequence.application.application}/artifact/{ref.sequence.number}": {
       "get": {
         "summary": "GetPushedArtifact returns a deployment",
         "operationId": "Waypoint_GetPushedArtifact2",
@@ -4416,7 +4416,7 @@
         ]
       }
     },
-    "/v1/project/{ref.sequence.application.project}/application/{ref.sequence.application.application}/build/{ref.sequence.number}": {
+    "/project/{ref.sequence.application.project}/application/{ref.sequence.application.application}/build/{ref.sequence.number}": {
       "get": {
         "summary": "GetBuild returns a build",
         "operationId": "Waypoint_GetBuild2",
@@ -4466,7 +4466,7 @@
         ]
       }
     },
-    "/v1/project/{ref.sequence.application.project}/application/{ref.sequence.application.application}/deployment/{ref.sequence.number}": {
+    "/project/{ref.sequence.application.project}/application/{ref.sequence.application.application}/deployment/{ref.sequence.number}": {
       "get": {
         "summary": "GetDeployment returns a deployment",
         "operationId": "Waypoint_GetDeployment2",
@@ -4529,7 +4529,7 @@
         ]
       }
     },
-    "/v1/project/{ref.sequence.application.project}/application/{ref.sequence.application.application}/release/{ref.sequence.number}": {
+    "/project/{ref.sequence.application.project}/application/{ref.sequence.application.application}/release/{ref.sequence.number}": {
       "get": {
         "summary": "GetRelease returns a release",
         "operationId": "Waypoint_GetRelease2",
@@ -4593,7 +4593,7 @@
         ]
       }
     },
-    "/v1/project/{release.sequence.application.project}/application/{release.sequence.application.application}/release/{release.sequence.number}/status-report": {
+    "/project/{release.sequence.application.project}/application/{release.sequence.application.application}/release/{release.sequence.number}/status-report": {
       "put": {
         "summary": "ExpediteStatusReport returns the queued status report job id",
         "operationId": "Waypoint_ExpediteStatusReport4",
@@ -4645,7 +4645,7 @@
         ]
       }
     },
-    "/v1/project/{target.application.application.project}/application/{target.application.application.application}/hostname": {
+    "/project/{target.application.application.project}/application/{target.application.application.application}/hostname": {
       "post": {
         "summary": "Create a hostname with the URL service.",
         "operationId": "Waypoint_CreateHostname",
@@ -4690,7 +4690,7 @@
         ]
       }
     },
-    "/v1/project/{target.application.application.project}/application/{target.application.application.application}/hostnames": {
+    "/project/{target.application.application.project}/application/{target.application.application.application}/hostnames": {
       "get": {
         "summary": "List all our registered hostnames.",
         "operationId": "Waypoint_ListHostnames",
@@ -4733,7 +4733,7 @@
         ]
       }
     },
-    "/v1/project/{target.application.application.project}/application/{target.application.application.application}/workspace/{target.application.workspace.workspace}/hostname": {
+    "/project/{target.application.application.project}/application/{target.application.application.application}/workspace/{target.application.workspace.workspace}/hostname": {
       "post": {
         "summary": "Create a hostname with the URL service.",
         "operationId": "Waypoint_CreateHostname2",
@@ -4784,7 +4784,7 @@
         ]
       }
     },
-    "/v1/project/{target.application.application.project}/application/{target.application.application.application}/workspace/{target.application.workspace.workspace}/hostnames": {
+    "/project/{target.application.application.project}/application/{target.application.application.application}/workspace/{target.application.workspace.workspace}/hostnames": {
       "get": {
         "summary": "List all our registered hostnames.",
         "operationId": "Waypoint_ListHostnames2",
@@ -4827,7 +4827,7 @@
         ]
       }
     },
-    "/v1/projects": {
+    "/projects": {
       "get": {
         "summary": "ListProjects returns a list of all the projects. There is no equivalent\nListApplications because applications are a part of projects and you\ncan use GetProject to get more information about the project.",
         "operationId": "Waypoint_ListProjects",
@@ -4874,7 +4874,7 @@
         ]
       }
     },
-    "/v1/release/by-id/{ref.id}": {
+    "/release/by-id/{ref.id}": {
       "get": {
         "summary": "GetStatusReport returns a StatusReport",
         "operationId": "Waypoint_GetStatusReport",
@@ -4924,7 +4924,7 @@
         ]
       }
     },
-    "/v1/release/{ref.id}": {
+    "/release/{ref.id}": {
       "get": {
         "summary": "GetRelease returns a release",
         "operationId": "Waypoint_GetRelease",
@@ -4988,7 +4988,7 @@
         ]
       }
     },
-    "/v1/release/{release.id}/status-report": {
+    "/release/{release.id}/status-report": {
       "put": {
         "summary": "ExpediteStatusReport returns the queued status report job id",
         "operationId": "Waypoint_ExpediteStatusReport2",
@@ -5027,7 +5027,7 @@
         ]
       }
     },
-    "/v1/runner/on-demand": {
+    "/runner/on-demand": {
       "post": {
         "summary": "UpsertOnDemandRunnerConfig updates or inserts a on-demand runner\nconfiguration. This configuration can be used by projects for running\noperations on just-in-time launched runners.",
         "operationId": "Waypoint_UpsertOnDemandRunnerConfig",
@@ -5060,7 +5060,7 @@
         ]
       }
     },
-    "/v1/runner/{runner_id}": {
+    "/runner/{runner_id}": {
       "get": {
         "summary": "GetRunner gets information about a single runner.",
         "operationId": "Waypoint_GetRunner",
@@ -5092,7 +5092,7 @@
         ]
       }
     },
-    "/v1/runner/{runner_id}/adopt": {
+    "/runner/{runner_id}/adopt": {
       "post": {
         "summary": "AdoptRunners allows marking a runner as adopted or rejected.",
         "operationId": "Waypoint_AdoptRunner",
@@ -5132,7 +5132,7 @@
         ]
       }
     },
-    "/v1/runner/{runner_id}/forget": {
+    "/runner/{runner_id}/forget": {
       "post": {
         "summary": "ForgetRunner deletes an existing runner entry and makes the server\nbehave as if the runner no longer exists. If the runner is currently\nrunning, it will receive errors on subsequent jobs, and will have to\nre-register. A forgotten runner will not be assigned new jobs until\nre-registered.",
         "operationId": "Waypoint_ForgetRunner",
@@ -5164,7 +5164,7 @@
         ]
       }
     },
-    "/v1/runners": {
+    "/runners": {
       "get": {
         "summary": "ListRunners lists runners that are currently registered with the waypoint server.\nThis list does not include previous on-demand runners that have exited.",
         "operationId": "Waypoint_ListRunners",
@@ -5187,7 +5187,7 @@
         ]
       }
     },
-    "/v1/server/config": {
+    "/server/config": {
       "get": {
         "summary": "GetServerConfig sets configuration for the Waypoint server.",
         "operationId": "Waypoint_GetServerConfig",
@@ -5241,7 +5241,7 @@
         ]
       }
     },
-    "/v1/task/by-job/{ref.job_id}": {
+    "/task/by-job/{ref.job_id}": {
       "get": {
         "summary": "GetTask returns a requested Task message. Or an error if it does not exist.",
         "operationId": "Waypoint_GetTask2",
@@ -5280,7 +5280,7 @@
         ]
       }
     },
-    "/v1/task/by-job/{ref.job_id}/cancel": {
+    "/task/by-job/{ref.job_id}/cancel": {
       "put": {
         "summary": "CancelTask will attempt to gracefully cancel each job in the task job triple",
         "operationId": "Waypoint_CancelTask2",
@@ -5320,7 +5320,7 @@
         ]
       }
     },
-    "/v1/task/{ref.id}": {
+    "/task/{ref.id}": {
       "get": {
         "summary": "GetTask returns a requested Task message. Or an error if it does not exist.",
         "operationId": "Waypoint_GetTask",
@@ -5359,7 +5359,7 @@
         ]
       }
     },
-    "/v1/task/{ref.id}/cancel": {
+    "/task/{ref.id}/cancel": {
       "put": {
         "summary": "CancelTask will attempt to gracefully cancel each job in the task job triple",
         "operationId": "Waypoint_CancelTask",
@@ -5399,7 +5399,7 @@
         ]
       }
     },
-    "/v1/tasks": {
+    "/tasks": {
       "get": {
         "summary": "ListTask will return a list of all existing Tasks",
         "operationId": "Waypoint_ListTask",
@@ -5445,7 +5445,7 @@
         ]
       }
     },
-    "/v1/token/decode": {
+    "/token/decode": {
       "post": {
         "summary": "DecodeToken takes a token string and returns the structured information\nabout the given token. This is useful for frontends (CLI, UI, etc.) to\nlearn more about a token before using it. For example, if a UI wants to\ncreate a signup flow around signup tokens, they can validate the token\nahead of time.",
         "description": "This endpoint does NOT require authentication.",
@@ -5479,7 +5479,7 @@
         ]
       }
     },
-    "/v1/token/exchange": {
+    "/token/exchange": {
       "post": {
         "summary": "Exchange a invite token for a login token. If the invite token is\nfor a new user, this will create a new user account with the provided\nusername hint.",
         "operationId": "Waypoint_ConvertInviteToken",
@@ -5512,7 +5512,7 @@
         ]
       }
     },
-    "/v1/token/invite": {
+    "/token/invite": {
       "post": {
         "summary": "Generate a new invite token that users can exchange for a login token.\nThis can be used to also invite new users to the Waypoint server.",
         "operationId": "Waypoint_GenerateInviteToken",
@@ -5545,7 +5545,7 @@
         ]
       }
     },
-    "/v1/token/login": {
+    "/token/login": {
       "post": {
         "summary": "Generate a new login token that users can use to login directly.\nThis can only be called for existing users.",
         "operationId": "Waypoint_GenerateLoginToken",
@@ -5578,7 +5578,7 @@
         ]
       }
     },
-    "/v1/token/runner": {
+    "/token/runner": {
       "post": {
         "summary": "Generate a new runner token that can be used with runners so they\nimmediately begin work. The recommended appraoch is to instead use\nthe adoption flow but this also works.",
         "operationId": "Waypoint_GenerateRunnerToken",
@@ -5611,7 +5611,7 @@
         ]
       }
     },
-    "/v1/trigger/{ref.id}": {
+    "/trigger/{ref.id}": {
       "get": {
         "summary": "GetTrigger returns a requested trigger message. Or an error if it does not exist.",
         "operationId": "Waypoint_GetTrigger",
@@ -5708,7 +5708,7 @@
         ]
       }
     },
-    "/v1/triggers": {
+    "/triggers": {
       "get": {
         "summary": "ListTriggers takes a request filter, and returns any matching existing triggers",
         "operationId": "Waypoint_ListTriggers",
@@ -5799,7 +5799,7 @@
         ]
       }
     },
-    "/v1/triggers/no-auth/{ref.id}/run": {
+    "/triggers/no-auth/{ref.id}/run": {
       "post": {
         "summary": "Attempts to run a trigger given a trigger ID reference. If the trigger does\nnot exist, we return not found. If the trigger exists but requires authentication\nwe return an error.",
         "operationId": "Waypoint_NoAuthRunTrigger",
@@ -5838,7 +5838,7 @@
         ]
       }
     },
-    "/v1/ui/deployments/application/{application.application}": {
+    "/ui/deployments/application/{application.application}": {
       "get": {
         "summary": "List deployments for a given application.",
         "operationId": "Waypoint_UI_ListDeployments2",
@@ -5922,7 +5922,7 @@
         ]
       }
     },
-    "/v1/ui/deployments/project/{application.project}": {
+    "/ui/deployments/project/{application.project}": {
       "get": {
         "summary": "List deployments for a given application.",
         "operationId": "Waypoint_UI_ListDeployments3",
@@ -6006,7 +6006,7 @@
         ]
       }
     },
-    "/v1/ui/deployments/state/{physical_state}": {
+    "/ui/deployments/state/{physical_state}": {
       "get": {
         "summary": "List deployments for a given application.",
         "operationId": "Waypoint_UI_ListDeployments4",
@@ -6089,7 +6089,7 @@
         ]
       }
     },
-    "/v1/ui/deployments/workspace/{workspace.workspace}": {
+    "/ui/deployments/workspace/{workspace.workspace}": {
       "get": {
         "summary": "List deployments for a given application.",
         "operationId": "Waypoint_UI_ListDeployments",
@@ -6173,7 +6173,7 @@
         ]
       }
     },
-    "/v1/ui/project/{project.project}": {
+    "/ui/project/{project.project}": {
       "get": {
         "summary": "Get a given project with useful related records.",
         "operationId": "Waypoint_UI_GetProject",
@@ -6204,7 +6204,7 @@
         ]
       }
     },
-    "/v1/ui/projects": {
+    "/ui/projects": {
       "get": {
         "summary": "List full projects (not just refs)",
         "operationId": "Waypoint_UI_ListProjects",
@@ -6251,7 +6251,7 @@
         ]
       }
     },
-    "/v1/ui/releases/application/{application.application}": {
+    "/ui/releases/application/{application.application}": {
       "get": {
         "summary": "List releases for a given application.",
         "operationId": "Waypoint_UI_ListReleases2",
@@ -6335,7 +6335,7 @@
         ]
       }
     },
-    "/v1/ui/releases/project/{application.project}": {
+    "/ui/releases/project/{application.project}": {
       "get": {
         "summary": "List releases for a given application.",
         "operationId": "Waypoint_UI_ListReleases3",
@@ -6419,7 +6419,7 @@
         ]
       }
     },
-    "/v1/ui/releases/state/{physical_state}": {
+    "/ui/releases/state/{physical_state}": {
       "get": {
         "summary": "List releases for a given application.",
         "operationId": "Waypoint_UI_ListReleases4",
@@ -6502,7 +6502,7 @@
         ]
       }
     },
-    "/v1/ui/releases/workspace/{workspace.workspace}": {
+    "/ui/releases/workspace/{workspace.workspace}": {
       "get": {
         "summary": "List releases for a given application.",
         "operationId": "Waypoint_UI_ListReleases",
@@ -6586,7 +6586,7 @@
         ]
       }
     },
-    "/v1/user/by-id/{user.id.id}": {
+    "/user/by-id/{user.id.id}": {
       "get": {
         "summary": "GetUser returns the current logged in user or some other user.",
         "operationId": "Waypoint_GetUser",
@@ -6658,7 +6658,7 @@
         ]
       }
     },
-    "/v1/user/by-username/{user.username.username}": {
+    "/user/by-username/{user.username.username}": {
       "get": {
         "summary": "GetUser returns the current logged in user or some other user.",
         "operationId": "Waypoint_GetUser2",
@@ -6730,7 +6730,7 @@
         ]
       }
     },
-    "/v1/user/{user.id}": {
+    "/user/{user.id}": {
       "put": {
         "summary": "Update the details about an existing user.",
         "operationId": "Waypoint_UpdateUser",
@@ -6770,7 +6770,7 @@
         ]
       }
     },
-    "/v1/users": {
+    "/users": {
       "get": {
         "summary": "List all users in the system.",
         "operationId": "Waypoint_ListUsers",
@@ -6793,7 +6793,7 @@
         ]
       }
     },
-    "/v1/version": {
+    "/version": {
       "get": {
         "summary": "GetVersionInfo returns information about the server. This RPC call does\nNOT require authentication. It can be used by clients to determine if they\nare capable of talking to this server.",
         "operationId": "Waypoint_GetVersionInfo",
@@ -6816,7 +6816,7 @@
         ]
       }
     },
-    "/v1/workspace": {
+    "/workspace": {
       "post": {
         "summary": "UpsertWorkspace upserts the workspace. Changes to a Workspace's Projects\nare ignored at this time.",
         "operationId": "Waypoint_UpsertWorkspace",
@@ -6849,7 +6849,7 @@
         ]
       }
     },
-    "/v1/workspace/{workspace.workspace}": {
+    "/workspace/{workspace.workspace}": {
       "get": {
         "summary": "GetWorkspace returns the workspace.",
         "operationId": "Waypoint_GetWorkspace",
@@ -6880,7 +6880,7 @@
         ]
       }
     },
-    "/v1/workspaces": {
+    "/workspaces": {
       "get": {
         "summary": "ListWorkspaces returns a list of all workspaces.",
         "description": "Note that currently this list is never pruned, even if a workspace is\nno longer in use. We plan to prune this in a future improvement.",
