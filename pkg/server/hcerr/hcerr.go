@@ -53,7 +53,7 @@ func Externalize(log hclog.Logger, err error, msg string, args ...interface{}) e
 	// and add them to the final error message
 	currentError := err
 	for currentError != nil {
-		var userErr UserError
+		var userErr *UserError
 		if errors.As(currentError, &userErr) {
 			msg = fmt.Sprintf("%s\n%s", msg, userErr.UserMessage)
 			currentError = userErr.Unwrap()
