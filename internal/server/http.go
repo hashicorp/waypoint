@@ -29,7 +29,7 @@ type httpServer struct {
 
 // newHttpServer initializes a new http server.
 // Uses grpc-web to wrap an existing grpc server.
-func newHttpServer(grpcServer *grpc.Server, ln net.Listener, opts *options) *httpServer {
+func newHttpServer(grpcServer *grpc.Server, ln net.Listener, opts *options) (*httpServer, error) {
 	log := opts.Logger.Named("http").With("ln", ln.Addr().String())
 
 	// Wrap the grpc server so that it is grpc-web compatible
@@ -65,7 +65,7 @@ func newHttpServer(grpcServer *grpc.Server, ln net.Listener, opts *options) *htt
 
 	err := gen.RegisterWaypointHandlerFromEndpoint(opts.Context, grpcHandler, grpcAddr, grpcOpts)
 	if err != nil {
-		log.Error("Unable to register waypoint grpc gateway service")
+		return nil, err
 	}
 
 	// Create our full router
@@ -99,7 +99,7 @@ func newHttpServer(grpcServer *grpc.Server, ln net.Listener, opts *options) *htt
 				return opts.Context
 			},
 		},
-	}
+	}, nil
 }
 
 // start starts an http server
