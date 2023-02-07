@@ -115,6 +115,48 @@ jobs:
           fi
       - notify_main_failure
 
+  generate-integration-hcl:
+    docker:
+      - image: *GOLANG_IMAGE
+    environment:
+      <<: *ENVIRONMENT
+    steps:
+      - checkout
+      - attach_workspace:
+          at: .
+      - run:
+          command: make gen/integrations-hcl
+      - persist_to_workspace:
+          root: .
+          paths:
+            - .
+      - notify_main_failure
+
+  check-integration-hcl:
+    docker:
+      - image: *GOLANG_IMAGE
+    environment:
+      <<: *ENVIRONMENT
+    steps:
+      - attach_workspace:
+          at: .
+      - run:
+          command: git status
+      - run: |
+          if ! git diff --exit-code builtin > /dev/null; then
+            echo "Built-in integration documentation has unstaged changes. This is because you have modified"
+            echo "docs for a builtin plugin that must be reflected in the website."
+            echo
+            echo "Run the following make command:"
+            echo
+            echo "make gen/integrations-hcl"
+            echo
+            echo "And then validate that the corresponding website pages look acceptable."
+            git status
+            exit 1
+          fi
+      - notify_main_failure
+
   generate-json-docs:
     docker:
       - image: *GOLANG_IMAGE
@@ -574,6 +616,21 @@ workflows:
           filters:
             branches:
               only:
+                - main
+
+  integration-hcl:
+    jobs:
+      - generate-integration-hcl:
+          filters:
+            branches:
+              ignore:
+                - main
+      - check-integration-hcl:
+          requires:
+            - generate-integration-hcl
+          filters:
+            branches:
+              ignore:
                 - main
 
   website-mdx:
