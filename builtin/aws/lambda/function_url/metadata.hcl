@@ -1,6 +1,6 @@
 integration {
   name        = "Lambda Function URL"
-  description = "TODO"
+  description = "The AWS Lambda Function URL plugin releases a function deployed with the AWS Lambda plugin by creating a Lambda function URL."
   identifier  = "waypoint/lambda-function-url"
   components  = ["release-manager"]
   flags       = ["builtin"]
