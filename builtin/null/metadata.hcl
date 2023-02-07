@@ -1,6 +1,6 @@
 integration {
   name        = "Null"
-  description = "TODO"
+  description = "The Null plugin is used for testing and experimentation with the different plugin components."
   identifier  = "waypoint/null"
   components  = ["config-sourcer", "builder", "platform", "release-manager"]
   flags       = ["builtin"]
