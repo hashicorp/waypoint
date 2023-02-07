@@ -963,7 +963,7 @@ func TestJobAssign(t *testing.T, factory Factory, rf RestartFactory) {
 		require.Equal(ctx.Err(), err)
 
 		// Create a target
-		require.NoError(s.JobCreate(ctx, serverptypes.TestJobNew(t, &pb.Job{
+		require.NoError(s.JobCreate(context.Background(), serverptypes.TestJobNew(t, &pb.Job{
 			Id: "B",
 			TargetRunner: &pb.Ref_Runner{
 				Target: &pb.Ref_Runner_Id{
@@ -1022,11 +1022,11 @@ func TestJobAssign(t *testing.T, factory Factory, rf RestartFactory) {
 		require.Equal("B", job.Id)
 
 		// Ack it
-		_, err = s.JobAck(ctx, "A", true)
+		_, err = s.JobAck(context.Background(), "A", true)
 		require.NoError(err)
 
 		// Complete it
-		require.NoError(s.JobComplete(ctx, "A", &pb.Job_Result{
+		require.NoError(s.JobComplete(context.Background(), "A", &pb.Job_Result{
 			Build: &pb.Job_BuildResult{},
 		}, nil))
 
@@ -1091,11 +1091,11 @@ func TestJobAssign(t *testing.T, factory Factory, rf RestartFactory) {
 			require.Equal(ctx.Err(), err)
 
 			// Ack it
-			_, err = s.JobAck(ctx, job.Id, true)
+			_, err = s.JobAck(context.Background(), job.Id, true)
 			require.NoError(err)
 
 			// Complete it
-			require.NoError(s.JobComplete(ctx, job.Id, &pb.Job_Result{
+			require.NoError(s.JobComplete(context.Background(), job.Id, &pb.Job_Result{
 				Build: &pb.Job_BuildResult{},
 			}, nil))
 		}
@@ -1432,8 +1432,19 @@ func TestJobComplete(t *testing.T, factory Factory, rf RestartFactory) {
 			DependsOn: []string{"A"},
 		})))
 
+		// Ensure they were created by Id
+		job, err := s.JobById(ctx, "A", nil)
+		require.NoError(err)
+		job, err = s.JobById(ctx, "B", nil)
+		require.NoError(err)
+
+		// Should have both jobs
+		jobs, _, err := s.JobList(ctx, &pb.ListJobsRequest{})
+		require.NoError(err)
+		require.Len(jobs, 2)
+
 		// Assign it, we should get this build
-		job, err := s.JobAssignForRunner(context.Background(), &pb.Runner{Id: "R_A"})
+		job, err = s.JobAssignForRunner(context.Background(), &pb.Runner{Id: "R_A"})
 		require.NoError(err)
 		require.NotNil(job)
 		require.Equal("A", job.Id)
@@ -1462,6 +1473,12 @@ func TestJobComplete(t *testing.T, factory Factory, rf RestartFactory) {
 		require.Error(err)
 		require.Nil(job)
 		require.Equal(ctx.Err(), err)
+
+		// Should have both jobs
+		ctx = context.Background()
+		jobs, _, err = s.JobList(ctx, &pb.ListJobsRequest{})
+		require.NoError(err)
+		require.Len(jobs, 2)
 
 		// Dependent should be error
 		job, err = s.JobById(ctx, "B", nil)
@@ -1521,6 +1538,7 @@ func TestJobComplete(t *testing.T, factory Factory, rf RestartFactory) {
 		require.Equal(ctx.Err(), err)
 
 		// Dependent should be error
+		ctx = context.Background()
 		job, err = s.JobById(ctx, "B", nil)
 		require.NoError(err)
 		require.Equal(pb.Job_ERROR, job.State)
