@@ -1378,7 +1378,7 @@ func (p *Platform) resourceTargetGroupDestroy(
 
 				listeners, err := elbsrv.DescribeListeners(describeListenersInput)
 				if err != nil {
-					return status.Errorf(codes.Internal, "failed to describe listeners for ALB (ARN: %q): %s", lb, err)
+					return status.Errorf(codes.Internal, "failed to describe listeners for ALB (ARN: %q): %s", *lb, err)
 				}
 				for _, listener := range listeners.Listeners {
 					for _, defaultAction := range listener.DefaultActions {
