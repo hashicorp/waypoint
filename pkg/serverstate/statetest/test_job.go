@@ -963,7 +963,7 @@ func TestJobAssign(t *testing.T, factory Factory, rf RestartFactory) {
 		require.Equal(ctx.Err(), err)
 
 		// Create a target
-		require.NoError(s.JobCreate(ctx, serverptypes.TestJobNew(t, &pb.Job{
+		require.NoError(s.JobCreate(context.Background(), serverptypes.TestJobNew(t, &pb.Job{
 			Id: "B",
 			TargetRunner: &pb.Ref_Runner{
 				Target: &pb.Ref_Runner_Id{
@@ -1022,11 +1022,11 @@ func TestJobAssign(t *testing.T, factory Factory, rf RestartFactory) {
 		require.Equal("B", job.Id)
 
 		// Ack it
-		_, err = s.JobAck(ctx, "A", true)
+		_, err = s.JobAck(context.Background(), "A", true)
 		require.NoError(err)
 
 		// Complete it
-		require.NoError(s.JobComplete(ctx, "A", &pb.Job_Result{
+		require.NoError(s.JobComplete(context.Background(), "A", &pb.Job_Result{
 			Build: &pb.Job_BuildResult{},
 		}, nil))
 
@@ -1091,11 +1091,11 @@ func TestJobAssign(t *testing.T, factory Factory, rf RestartFactory) {
 			require.Equal(ctx.Err(), err)
 
 			// Ack it
-			_, err = s.JobAck(ctx, job.Id, true)
+			_, err = s.JobAck(context.Background(), job.Id, true)
 			require.NoError(err)
 
 			// Complete it
-			require.NoError(s.JobComplete(ctx, job.Id, &pb.Job_Result{
+			require.NoError(s.JobComplete(context.Background(), job.Id, &pb.Job_Result{
 				Build: &pb.Job_BuildResult{},
 			}, nil))
 		}
