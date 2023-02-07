@@ -12,8 +12,37 @@ import (
 
 func init() {
 	tests["ui_project"] = []testFunc{
+		TestServiceUI_ListProjects,
 		TestServiceUI_GetProject,
 	}
+}
+
+func TestServiceUI_ListProjects(t *testing.T, factory Factory) {
+	require := require.New(t)
+	ctx := context.Background()
+
+	// Create our server
+	client, _ := factory(t)
+
+	// Create projects
+	for _, name := range []string{"alpha", "beta"} {
+		_, err := client.UpsertProject(ctx, &pb.UpsertProjectRequest{
+			Project: serverptypes.TestProject(t, &pb.Project{
+				Name: name,
+			}),
+		})
+		require.NoError(err)
+	}
+
+	// Call the method
+	result, err := client.UI_ListProjects(ctx, &pb.UI_ListProjectsRequest{
+		Pagination: &pb.PaginationRequest{
+			PageSize: 10,
+		},
+	})
+	require.NoError(err)
+	require.Len(result.ProjectBundles, 2)
+	require.EqualValues(2, result.TotalCount)
 }
 
 func TestServiceUI_GetProject(t *testing.T, factory Factory) {

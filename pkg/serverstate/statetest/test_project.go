@@ -30,6 +30,7 @@ func init() {
 		TestProjectGetSetAllPropertiesSansVariables,
 		TestProjectCanTransitionDataSource,
 		TestProjectPagination,
+		TestProjectCount,
 	}
 }
 
@@ -92,6 +93,13 @@ func TestProject(t *testing.T, factory Factory, restartF RestartFactory) {
 		// List
 		{
 			resp, _, err := s.ProjectList(ctx, &pb.PaginationRequest{})
+			require.NoError(err)
+			require.Len(resp, 2)
+		}
+
+		// ListBundles
+		{
+			resp, _, err := s.ProjectListBundles(ctx, &pb.PaginationRequest{})
 			require.NoError(err)
 			require.Len(resp, 2)
 		}
@@ -1037,4 +1045,19 @@ func TestProjectListWorkspaces(t *testing.T, factory Factory, restartF RestartFa
 			require.NotNil(result[0].Workspace)
 		}
 	})
+}
+
+func TestProjectCount(t *testing.T, factory Factory, restartF RestartFactory) {
+	ctx := context.Background()
+	require := require.New(t)
+
+	s := factory(t)
+	defer s.Close()
+
+	err := s.ProjectPut(ctx, serverptypes.TestProject(t, &pb.Project{}))
+	require.NoError(err)
+
+	actual, err := s.ProjectCount(ctx)
+	require.NoError(err)
+	require.EqualValues(1, actual)
 }

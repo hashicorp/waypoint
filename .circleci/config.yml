@@ -203,7 +203,7 @@ jobs:
   go-test:
     docker:
       - image: *GOLANG_IMAGE
-      - image: docker.mirror.hashicorp.services/localstack/localstack:latest
+      - image: docker.mirror.hashicorp.services/localstack/localstack:1.3
       - image: docker.mirror.hashicorp.services/letsencrypt/pebble
         command: ["pebble"]
         environment:
@@ -494,7 +494,7 @@ jobs:
       - checkout
       - add_ssh_keys:
           fingerprints:
-            - "76:94:15:c8:a0:41:f0:8b:9b:f1:f7:36:4c:d5:7f:57"
+            - "a0:c8:65:ee:ab:2b:1e:cd:cc:b4:64:79:97:38:49:fd"
       - attach_workspace:
           at: .
       - run:

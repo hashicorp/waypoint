@@ -534,6 +534,15 @@ func installRunner(ctx context.Context,
 	}
 
 	config, err := client.GetServerConfig(ctx, &empty.Empty{})
+	if err != nil {
+		ui.Output(
+			"Error getting server config for runner: %s\n\n%s",
+			clierrors.Humanize(err),
+			errInstallRunner,
+			terminal.WithErrorStyle(),
+		)
+		return 1
+	}
 
 	// Build a serverconfig that uses the advertise addr and includes
 	// the token we just requested.

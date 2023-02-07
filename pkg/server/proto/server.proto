@@ -465,6 +465,9 @@ service Waypoint {
   // a combination of calls to non-UI endpoints.
   //----------------------------------------------------------------------
 
+  // List full projects (not just refs)
+  rpc UI_ListProjects(UI.ListProjectsRequest) returns (UI.ListProjectsResponse);
+
   // Get a given project with useful related records.
   rpc UI_GetProject(UI.GetProjectRequest) returns (UI.GetProjectResponse);
 
@@ -482,6 +485,22 @@ service Waypoint {
 * UI
 ********************************************************************/
 message UI {
+  message ListProjectsRequest {
+    PaginationRequest pagination = 1;
+  }
+
+  message ListProjectsResponse {
+    repeated UI.ProjectBundle project_bundles = 1;
+    PaginationResponse pagination = 2;
+    uint64 total_count = 3;
+  }
+
+  message ProjectBundle {
+    Project project = 1;
+    // Future preloaded fields such as latest_init_job and latest_destroy_job
+    // will go here.
+  }
+
   message GetProjectRequest {
     Ref.Project project = 1;
   }
