@@ -10,7 +10,7 @@ description: |-
 https://pkg.go.dev/github.com/hashicorp/waypoint-plugin-sdk/component#ConfigSourcer
 
 `ConfigSourcer` can be implemented to dynamically load configs from external
-sources such as [Vault](/waypoint/plugins/vault#vault-configsourcer) and [Terraform Cloud](/waypoint/plugins/terraform-cloud#terraform-cloud-configsourcer).
+sources such as [Vault](/waypoint/integrations/hashicorp/vault/latest/components/config-sourcer) and [Terraform Cloud](/waypoint/integrations/hashicorp/terraform-cloud/latest/components/config-sourcer).
 Waypoint uses dynamic config sourcers to run alongside the application. The
 plugin interface expects a `ReadFunc()` for reading configuration and a
 `StopFunc()` for stopping configuration sourcing.
