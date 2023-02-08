@@ -636,6 +636,10 @@
             "path": "extending-waypoint/plugin-interfaces/platform"
           },
           {
+            "title": "PlatformReleaser",
+            "path": "extending-waypoint/plugin-interfaces/platform-releaser"
+          },
+          {
             "title": "ReleaseManager",
             "path": "extending-waypoint/plugin-interfaces/release-manager"
           },
