@@ -60,32 +60,10 @@ func Connect(ctx context.Context, opts ...ConnectOption) (*grpc.ClientConn, erro
 		return nil, ErrNoServerConfig
 	}
 
+	grpcOpts := BuildDialOptions()
+
 	ctx, cancel := context.WithTimeout(ctx, cfg.Timeout)
 	defer cancel()
-
-	// Build our options
-	grpcOpts := []grpc.DialOption{
-		grpc.WithBlock(),
-		grpc.WithUnaryInterceptor(protocolversion.UnaryClientInterceptor(protocolversion.Current())),
-		grpc.WithChainStreamInterceptor([]grpc.StreamClientInterceptor{
-			protocolversion.StreamClientInterceptor(protocolversion.Current()),
-
-			// Send and receive keepalive messages along grpc streams.
-			// Some loadbalancers (ALBs) don't respect http2 pings.
-			// (https://stackoverflow.com/questions/66818645/http2-ping-frames-over-aws-alb-grpc-keepalive-ping)
-			// This interceptor keeps low-traffic streams active and not timed out.
-			// NOTE(izaak): long-term, we should ensure that all of our
-			// streaming endpoints are robust to disconnect/resume.
-			inlinekeepalive.KeepaliveClientStreamInterceptor(time.Duration(5) * time.Second),
-		}...),
-		grpc.WithKeepaliveParams(
-			keepalive.ClientParameters{
-				// ping after this amount of time of inactivity
-				Time: 30 * time.Second,
-				// send keepalive pings even if there is no active streams
-				PermitWithoutStream: true,
-			}),
-	}
 
 	if !cfg.Tls {
 		grpcOpts = append(grpcOpts, grpc.WithInsecure())
@@ -198,6 +176,34 @@ func Connect(ctx context.Context, opts ...ConnectOption) (*grpc.ClientConn, erro
 		return nil, fmt.Errorf("error connecting to server: %s", err)
 	}
 	return conn, err
+}
+
+func BuildDialOptions() []grpc.DialOption {
+	// Build our options
+	grpcOpts := []grpc.DialOption{
+		grpc.WithBlock(),
+		grpc.WithUnaryInterceptor(protocolversion.UnaryClientInterceptor(protocolversion.Current())),
+		grpc.WithChainStreamInterceptor([]grpc.StreamClientInterceptor{
+			protocolversion.StreamClientInterceptor(protocolversion.Current()),
+
+			// Send and receive keepalive messages along grpc streams.
+			// Some loadbalancers (ALBs) don't respect http2 pings.
+			// (https://stackoverflow.com/questions/66818645/http2-ping-frames-over-aws-alb-grpc-keepalive-ping)
+			// This interceptor keeps low-traffic streams active and not timed out.
+			// NOTE(izaak): long-term, we should ensure that all of our
+			// streaming endpoints are robust to disconnect/resume.
+			inlinekeepalive.KeepaliveClientStreamInterceptor(time.Duration(5) * time.Second),
+		}...),
+		grpc.WithKeepaliveParams(
+			keepalive.ClientParameters{
+				// ping after this amount of time of inactivity
+				Time: 30 * time.Second,
+				// send keepalive pings even if there is no active streams
+				PermitWithoutStream: true,
+			}),
+	}
+
+	return grpcOpts
 }
 
 // ContextConfig will return the context configuration for the given connection

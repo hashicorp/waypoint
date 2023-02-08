@@ -31,6 +31,11 @@ require (
 	github.com/fsnotify/fsnotify v1.5.4
 	github.com/gliderlabs/ssh v0.3.1
 	github.com/go-git/go-git/v5 v5.2.0
+	github.com/go-openapi/errors v0.20.3
+	github.com/go-openapi/runtime v0.19.24
+	github.com/go-openapi/strfmt v0.21.3
+	github.com/go-openapi/swag v0.19.14
+	github.com/go-openapi/validate v0.20.2
 	github.com/go-ozzo/ozzo-validation/v4 v4.2.1
 	github.com/go-playground/validator v9.31.0+incompatible
 	github.com/gofrs/flock v0.8.0
@@ -190,15 +195,10 @@ require (
 	github.com/go-git/go-billy/v5 v5.0.0 // indirect
 	github.com/go-logr/logr v0.4.0 // indirect
 	github.com/go-openapi/analysis v0.20.0 // indirect
-	github.com/go-openapi/errors v0.20.3 // indirect
 	github.com/go-openapi/jsonpointer v0.19.5 // indirect
 	github.com/go-openapi/jsonreference v0.19.5 // indirect
 	github.com/go-openapi/loads v0.20.2 // indirect
-	github.com/go-openapi/runtime v0.19.24 // indirect
 	github.com/go-openapi/spec v0.20.3 // indirect
-	github.com/go-openapi/strfmt v0.21.3 // indirect
-	github.com/go-openapi/swag v0.19.14 // indirect
-	github.com/go-openapi/validate v0.20.2 // indirect
 	github.com/go-playground/locales v0.13.0 // indirect
 	github.com/go-playground/universal-translator v0.17.0 // indirect
 	github.com/gobwas/glob v0.2.3 // indirect

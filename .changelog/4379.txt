@@ -1,0 +1,3 @@
+```release-note:improvement
+server: Enable gRPC-Gateway on the http port of Waypoint server to add in an HTTP API for interfacing
+```

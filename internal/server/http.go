@@ -2,18 +2,22 @@ package server
 
 import (
 	"context"
+	"crypto/tls"
 	"net"
 	"net/http"
 	"time"
 
 	assetfs "github.com/elazarl/go-bindata-assetfs"
 	"github.com/gorilla/mux"
+	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/hashicorp/go-hclog"
 	"github.com/improbable-eng/grpc-web/go/grpcweb"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 
 	"github.com/hashicorp/waypoint/internal/server/httpapi"
 	"github.com/hashicorp/waypoint/pkg/server/gen"
+	"github.com/hashicorp/waypoint/pkg/serverclient"
 )
 
 type httpServer struct {
@@ -25,7 +29,7 @@ type httpServer struct {
 
 // newHttpServer initializes a new http server.
 // Uses grpc-web to wrap an existing grpc server.
-func newHttpServer(grpcServer *grpc.Server, ln net.Listener, opts *options) *httpServer {
+func newHttpServer(grpcServer *grpc.Server, ln net.Listener, opts *options) (*httpServer, error) {
 	log := opts.Logger.Named("http").With("ln", ln.Addr().String())
 
 	// Wrap the grpc server so that it is grpc-web compatible
@@ -48,11 +52,28 @@ func newHttpServer(grpcServer *grpc.Server, ln net.Listener, opts *options) *htt
 	// gRPC server. This is used by the exec handler.
 	grpcAddr := opts.GRPCListener.Addr().String()
 
+	// Create grpc-gateway muxer
+	grpcHandler := runtime.NewServeMux()
+
+	grpcOpts := serverclient.BuildDialOptions()
+
+	grpcOpts = append(grpcOpts,
+		grpc.WithTransportCredentials(
+			credentials.NewTLS(&tls.Config{InsecureSkipVerify: true}),
+		),
+	)
+
+	err := gen.RegisterWaypointHandlerFromEndpoint(opts.Context, grpcHandler, grpcAddr, grpcOpts)
+	if err != nil {
+		return nil, err
+	}
+
 	// Create our full router
 	r := mux.NewRouter()
 	r.HandleFunc("/v1/exec", httpapi.HandleExec(grpcAddr, true))
 	r.HandleFunc("/v1/trigger/{id:[a-zA-Z0-9]+}", httpapi.HandleTrigger(grpcAddr, true))
 	r.PathPrefix("/grpc").Handler(grpcWrapped)
+	r.PathPrefix("/v1").Handler(grpcHandler)
 	r.PathPrefix("/").Handler(uifs)
 
 	// Create our root handler which is just our router. We then wrap it
@@ -78,7 +99,7 @@ func newHttpServer(grpcServer *grpc.Server, ln net.Listener, opts *options) *htt
 				return opts.Context
 			},
 		},
-	}
+	}, nil
 }
 
 // start starts an http server

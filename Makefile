@@ -113,6 +113,10 @@ gen/server: # Generates server protobuf Go files from server.proto
 	@test -s "thirdparty/proto/api-common-protos/.git" || { echo "git submodules not initialized, run 'git submodule update --init --recursive' and try again"; exit 1; }
 	go generate ./pkg/server
 
+.PHONY: gen/client
+gen/client: # Generates grpc-gateway client from server.swagger.json
+	go generate ./pkg/client
+
 .PHONY: gen/ts
 gen/ts: # Generates frontend typescript files
 	# Clear existing generated files
