@@ -33,6 +33,10 @@
     "title": "Use Cases",
     "routes": [
       {
+        "title": "HCP Stack Quickstart with Terraform, Waypoint, Consul, Vault, and Nomad",
+        "path": "use-cases/hcp-hashistack-quickstart"
+      },
+      {
         "title": "Dynamic App Config with Vault Dynamic Secrets",
         "path": "use-cases/dynamic-config-vault-dynamic-secrets"
       },
