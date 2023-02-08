@@ -252,6 +252,74 @@ func (b *Platform) resourceDeploymentStatus(
 }
 ```
 
+## Dependencies Between Resources
+
+Dependencies between multiple resources can be defined by including the type of
+one resource as an input parameter to another. The resources will be created in
+the appropriate order based on such dependencies. Below is an example of this:
+
+```go
+func (p *Platform) resourceManager(log hclog.Logger, dcr *component.DeclaredResourcesResp, dtr *component.DestroyedResourcesResp) *resource.Manager {
+        return resource.NewManager(
+                resource.WithLogger(log.Named("resource_manager")),
+                resource.WithValueProvider(p.getConnectContext),
+                resource.WithDeclaredResourcesResp(dcr),
+                resource.WithDestroyedResourcesResp(dtr),
+                // Resource 1
+                resource.WithResource(resource.NewResource(
+                        resource.WithName("template_example"), // The name of your resource
+                        resource.WithState(&Resource_Deployment{}), // This is your Resource proto (this is the message we created earlier in this section)
+                        resource.WithCreate(p.resourceDeploymentCreate),
+                        resource.WithDestroy(p.resourceDeploymentDestroy),
+                        resource.WithStatus(p.resourceDeploymentStatus),
+                        resource.WithPlatform("template_platform"), // Update this to match your plugins platform, like Kubernetes
+                        resource.WithCategoryDisplayHint(sdk.ResourceCategoryDisplayHint_INSTANCE_MANAGER), // This is meant for the UI to determine what kind of icon to show
+                )),
+                // Resource 2
+                resource.WithResource(resource.NewResource(
+                        resource.WithName("template_example_2"), // The name of your resource
+                        resource.WithState(&Resource_Service{}), // This is your Resource proto (this is the message we created earlier in this section)
+                        resource.WithCreate(p.resourceServiceCreate),
+                        resource.WithDestroy(p.resourceServiceDestroy),
+                        resource.WithStatus(p.resourceServiceStatus),
+                        resource.WithPlatform("template_platform"), // Update this to match your plugins platform, like Kubernetes
+                )),
+        )
+}
+
+func (b *Platform) resourceDeploymentCreate(
+        ctx context.Context,
+        log hclog.Logger,
+        st terminal.Status,
+        ui terminal.UI,
+        artifact *registry.Artifact,
+        result *Deployment,
+) error {
+        // Create your deployment resource here!
+        // Update `result` with the created deployment
+
+        return nil
+}
+
+func (b *Platform) resourceServiceCreate(
+        ctx context.Context,
+        log hclog.Logger,
+        st terminal.Status,
+        ui terminal.UI,
+        artifact *registry.Artifact,
+        result *Service,
+
+        // Including the parameter below informs the resource manager that
+        // the deployment must be created BEFORE the service
+        deployment *Resource_Deployment,
+) error {
+        // Create your service resource here!
+        // Update `result` with the created service
+
+        return nil
+}
+```
+
 For a more complete picture of what this implementation might look like with
 a real platform plugin, check out how Waypoint handles Resource Manager
 with the Kubernetes plugin for deployments and releases:
