@@ -598,6 +598,10 @@
             "path": "extending-waypoint/plugin-interfaces/status"
           },
           {
+            "title": "TaskLauncher",
+            "path": "extending-waypoint/plugin-interfaces/task-launcher"
+          },
+          {
             "title": "Default Parameters",
             "path": "extending-waypoint/plugin-interfaces/default-parameters"
           }
