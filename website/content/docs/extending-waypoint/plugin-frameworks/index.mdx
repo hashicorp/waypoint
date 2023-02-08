@@ -76,11 +76,12 @@ the `create`, `delete`, and `status` funcs.
 // obtain the defined status for them.
 //
 // ResourceManager can also be implemented for Release as well.
-func (p *Platform) resourceManager(log hclog.Logger, dcr *component.DeclaredResourcesResp) *resource.Manager {
+func (p *Platform) resourceManager(log hclog.Logger, dcr *component.DeclaredResourcesResp, dtr *component.DestroyedResourcesResp) *resource.Manager {
         return resource.NewManager(
                 resource.WithLogger(log.Named("resource_manager")),
                 resource.WithValueProvider(p.getConnectContext),
                 resource.WithDeclaredResourcesResp(dcr),
+                resource.WithDestroyedResourcesResp(dtr),
                 resource.WithResource(resource.NewResource(
                         resource.WithName("template_example"), // The name of your resource
                         resource.WithState(&Resource_Deployment{}), // This is your Resource proto (this is the message we created earlier in this section)
@@ -108,6 +109,7 @@ func (b *Platform) deploy(
         ui terminal.UI,
         log hclog.Logger,
         dcr *component.DeclaredResourcesResp,
+        dtr *component.DestroyedResourcesResp,
         artifact *registry.Artifact,
 ) (*Deployment, error) {
         u := ui.Status()
@@ -117,7 +119,7 @@ func (b *Platform) deploy(
         var result Deployment
 
         // Create our resource manager and create deployment resources
-        rm := b.resourceManager(log, dcr)
+        rm := b.resourceManager(log, dcr, nil)
 
         // NOTE: These params must match exactly to your resourceDeploymentCreate
         // params (or any other additional deployment resource create funcs).
@@ -165,7 +167,7 @@ func (p *Platform) destroy(
         sg := ui.StepGroup()
         defer sg.Wait()
 
-        rm := p.resourceManager(log, nil)
+        rm := p.resourceManager(log, dcr, dtr)
 
         // If we don't have resource state, this state is from an older version
         // and we need to manually recreate it.
