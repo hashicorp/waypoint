@@ -5,8 +5,8 @@ description: |-
   How to implement the TaskLauncher component for a Waypoint plugin
 ---
 
-The TaskLauncher component makes possible launching Waypoint [on-demand runners](https://developer.hashicorp.com/waypoint/docs/runner/on-demand-runner)
-in a given platform, to perform [remote operations](https://developer.hashicorp.com/waypoint/docs/projects/remote).
+The TaskLauncher component makes possible launching Waypoint [on-demand runners](/waypoint/docs/runner/on-demand-runner)
+in a given platform, to perform [remote operations](/waypoint/docs/projects/remote).
 
 https://pkg.go.dev/github.com/hashicorp/waypoint-plugin-sdk/component#TaskLauncher
 
@@ -35,7 +35,7 @@ a function to be called by Waypoint. The function returned by `StartTaskFunc`
 `StopTaskFunc` stops & removes the on-demand runner in the platform. Finally,
 `WatchTaskFunc` returns a function that logs the stream of output from the
 on-demand runner. This is useful for investigating a job by viewing its logs
-with the [`waypoint job get-stream` command](https://developer.hashicorp.com/waypoint/commands/job-get-stream).
+with the [`waypoint job get-stream` command](/waypoint/commands/job-get-stream).
 
 ```go
 type TaskLauncher struct {
