@@ -19,6 +19,79 @@ export namespace UI {
   export type AsObject = {
   }
 
+  export class ListProjectsRequest extends jspb.Message {
+    getPagination(): PaginationRequest | undefined;
+    setPagination(value?: PaginationRequest): ListProjectsRequest;
+    hasPagination(): boolean;
+    clearPagination(): ListProjectsRequest;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): ListProjectsRequest.AsObject;
+    static toObject(includeInstance: boolean, msg: ListProjectsRequest): ListProjectsRequest.AsObject;
+    static serializeBinaryToWriter(message: ListProjectsRequest, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): ListProjectsRequest;
+    static deserializeBinaryFromReader(message: ListProjectsRequest, reader: jspb.BinaryReader): ListProjectsRequest;
+  }
+
+  export namespace ListProjectsRequest {
+    export type AsObject = {
+      pagination?: PaginationRequest.AsObject,
+    }
+  }
+
+
+  export class ListProjectsResponse extends jspb.Message {
+    getProjectBundlesList(): Array<UI.ProjectBundle>;
+    setProjectBundlesList(value: Array<UI.ProjectBundle>): ListProjectsResponse;
+    clearProjectBundlesList(): ListProjectsResponse;
+    addProjectBundles(value?: UI.ProjectBundle, index?: number): UI.ProjectBundle;
+
+    getPagination(): PaginationResponse | undefined;
+    setPagination(value?: PaginationResponse): ListProjectsResponse;
+    hasPagination(): boolean;
+    clearPagination(): ListProjectsResponse;
+
+    getTotalCount(): number;
+    setTotalCount(value: number): ListProjectsResponse;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): ListProjectsResponse.AsObject;
+    static toObject(includeInstance: boolean, msg: ListProjectsResponse): ListProjectsResponse.AsObject;
+    static serializeBinaryToWriter(message: ListProjectsResponse, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): ListProjectsResponse;
+    static deserializeBinaryFromReader(message: ListProjectsResponse, reader: jspb.BinaryReader): ListProjectsResponse;
+  }
+
+  export namespace ListProjectsResponse {
+    export type AsObject = {
+      projectBundlesList: Array<UI.ProjectBundle.AsObject>,
+      pagination?: PaginationResponse.AsObject,
+      totalCount: number,
+    }
+  }
+
+
+  export class ProjectBundle extends jspb.Message {
+    getProject(): Project | undefined;
+    setProject(value?: Project): ProjectBundle;
+    hasProject(): boolean;
+    clearProject(): ProjectBundle;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): ProjectBundle.AsObject;
+    static toObject(includeInstance: boolean, msg: ProjectBundle): ProjectBundle.AsObject;
+    static serializeBinaryToWriter(message: ProjectBundle, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): ProjectBundle;
+    static deserializeBinaryFromReader(message: ProjectBundle, reader: jspb.BinaryReader): ProjectBundle;
+  }
+
+  export namespace ProjectBundle {
+    export type AsObject = {
+      project?: Project.AsObject,
+    }
+  }
+
+
   export class GetProjectRequest extends jspb.Message {
     getProject(): Ref.Project | undefined;
     setProject(value?: Ref.Project): GetProjectRequest;
@@ -3451,6 +3524,9 @@ export namespace Job {
     hasGitRemote(): boolean;
     clearGitRemote(): Remote;
 
+    getDeployOnChange(): boolean;
+    setDeployOnChange(value: boolean): Remote;
+
     serializeBinary(): Uint8Array;
     toObject(includeInstance?: boolean): Remote.AsObject;
     static toObject(includeInstance: boolean, msg: Remote): Remote.AsObject;
@@ -3463,6 +3539,7 @@ export namespace Job {
     export type AsObject = {
       description: string,
       gitRemote?: Job.Git.AsObject,
+      deployOnChange: boolean,
     }
   }
 
@@ -4829,6 +4906,11 @@ export class ListJobsRequest extends jspb.Message {
   clearJobstateList(): ListJobsRequest;
   addJobstate(value: Job.State, index?: number): ListJobsRequest;
 
+  getPagination(): PaginationRequest | undefined;
+  setPagination(value?: PaginationRequest): ListJobsRequest;
+  hasPagination(): boolean;
+  clearPagination(): ListJobsRequest;
+
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): ListJobsRequest.AsObject;
   static toObject(includeInstance: boolean, msg: ListJobsRequest): ListJobsRequest.AsObject;
@@ -4845,6 +4927,7 @@ export namespace ListJobsRequest {
     targetrunner?: Ref.Runner.AsObject,
     pipeline?: Ref.PipelineStep.AsObject,
     jobstateList: Array<Job.State>,
+    pagination?: PaginationRequest.AsObject,
   }
 }
 
@@ -4853,6 +4936,11 @@ export class ListJobsResponse extends jspb.Message {
   setJobsList(value: Array<Job>): ListJobsResponse;
   clearJobsList(): ListJobsResponse;
   addJobs(value?: Job, index?: number): Job;
+
+  getPagination(): PaginationResponse | undefined;
+  setPagination(value?: PaginationResponse): ListJobsResponse;
+  hasPagination(): boolean;
+  clearPagination(): ListJobsResponse;
 
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): ListJobsResponse.AsObject;
@@ -4865,6 +4953,7 @@ export class ListJobsResponse extends jspb.Message {
 export namespace ListJobsResponse {
   export type AsObject = {
     jobsList: Array<Job.AsObject>,
+    pagination?: PaginationResponse.AsObject,
   }
 }
 
@@ -6647,11 +6736,39 @@ export namespace GetProjectResponse {
   }
 }
 
+export class ListProjectsRequest extends jspb.Message {
+  getPagination(): PaginationRequest | undefined;
+  setPagination(value?: PaginationRequest): ListProjectsRequest;
+  hasPagination(): boolean;
+  clearPagination(): ListProjectsRequest;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): ListProjectsRequest.AsObject;
+  static toObject(includeInstance: boolean, msg: ListProjectsRequest): ListProjectsRequest.AsObject;
+  static serializeBinaryToWriter(message: ListProjectsRequest, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): ListProjectsRequest;
+  static deserializeBinaryFromReader(message: ListProjectsRequest, reader: jspb.BinaryReader): ListProjectsRequest;
+}
+
+export namespace ListProjectsRequest {
+  export type AsObject = {
+    pagination?: PaginationRequest.AsObject,
+  }
+}
+
 export class ListProjectsResponse extends jspb.Message {
   getProjectsList(): Array<Ref.Project>;
   setProjectsList(value: Array<Ref.Project>): ListProjectsResponse;
   clearProjectsList(): ListProjectsResponse;
   addProjects(value?: Ref.Project, index?: number): Ref.Project;
+
+  getPagination(): PaginationResponse | undefined;
+  setPagination(value?: PaginationResponse): ListProjectsResponse;
+  hasPagination(): boolean;
+  clearPagination(): ListProjectsResponse;
+
+  getTotalCount(): number;
+  setTotalCount(value: number): ListProjectsResponse;
 
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): ListProjectsResponse.AsObject;
@@ -6664,6 +6781,8 @@ export class ListProjectsResponse extends jspb.Message {
 export namespace ListProjectsResponse {
   export type AsObject = {
     projectsList: Array<Ref.Project.AsObject>,
+    pagination?: PaginationResponse.AsObject,
+    totalCount: number,
   }
 }
 
@@ -9464,6 +9583,21 @@ export class ConfigSource extends jspb.Message {
   hasGlobal(): boolean;
   clearGlobal(): ConfigSource;
 
+  getProject(): Ref.Project | undefined;
+  setProject(value?: Ref.Project): ConfigSource;
+  hasProject(): boolean;
+  clearProject(): ConfigSource;
+
+  getApplication(): Ref.Application | undefined;
+  setApplication(value?: Ref.Application): ConfigSource;
+  hasApplication(): boolean;
+  clearApplication(): ConfigSource;
+
+  getWorkspace(): Ref.Workspace | undefined;
+  setWorkspace(value?: Ref.Workspace): ConfigSource;
+  hasWorkspace(): boolean;
+  clearWorkspace(): ConfigSource;
+
   getType(): string;
   setType(value: string): ConfigSource;
 
@@ -9487,6 +9621,9 @@ export namespace ConfigSource {
   export type AsObject = {
     pb_delete: boolean,
     global?: Ref.Global.AsObject,
+    project?: Ref.Project.AsObject,
+    application?: Ref.Application.AsObject,
+    workspace?: Ref.Workspace.AsObject,
     type: string,
     configMap: Array<[string, string]>,
     hash: number,
@@ -9495,6 +9632,8 @@ export namespace ConfigSource {
   export enum ScopeCase { 
     SCOPE_NOT_SET = 0,
     GLOBAL = 50,
+    PROJECT = 51,
+    APPLICATION = 52,
   }
 }
 
@@ -9524,6 +9663,21 @@ export class GetConfigSourceRequest extends jspb.Message {
   hasGlobal(): boolean;
   clearGlobal(): GetConfigSourceRequest;
 
+  getProject(): Ref.Project | undefined;
+  setProject(value?: Ref.Project): GetConfigSourceRequest;
+  hasProject(): boolean;
+  clearProject(): GetConfigSourceRequest;
+
+  getApplication(): Ref.Application | undefined;
+  setApplication(value?: Ref.Application): GetConfigSourceRequest;
+  hasApplication(): boolean;
+  clearApplication(): GetConfigSourceRequest;
+
+  getWorkspace(): Ref.Workspace | undefined;
+  setWorkspace(value?: Ref.Workspace): GetConfigSourceRequest;
+  hasWorkspace(): boolean;
+  clearWorkspace(): GetConfigSourceRequest;
+
   getType(): string;
   setType(value: string): GetConfigSourceRequest;
 
@@ -9540,12 +9694,17 @@ export class GetConfigSourceRequest extends jspb.Message {
 export namespace GetConfigSourceRequest {
   export type AsObject = {
     global?: Ref.Global.AsObject,
+    project?: Ref.Project.AsObject,
+    application?: Ref.Application.AsObject,
+    workspace?: Ref.Workspace.AsObject,
     type: string,
   }
 
   export enum ScopeCase { 
     SCOPE_NOT_SET = 0,
     GLOBAL = 50,
+    PROJECT = 51,
+    APPLICATION = 52,
   }
 }
 
@@ -11669,6 +11828,54 @@ export class InlineKeepalive extends jspb.Message {
 export namespace InlineKeepalive {
   export type AsObject = {
     signature: string,
+  }
+}
+
+export class PaginationRequest extends jspb.Message {
+  getPageSize(): number;
+  setPageSize(value: number): PaginationRequest;
+
+  getNextPageToken(): string;
+  setNextPageToken(value: string): PaginationRequest;
+
+  getPreviousPageToken(): string;
+  setPreviousPageToken(value: string): PaginationRequest;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): PaginationRequest.AsObject;
+  static toObject(includeInstance: boolean, msg: PaginationRequest): PaginationRequest.AsObject;
+  static serializeBinaryToWriter(message: PaginationRequest, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): PaginationRequest;
+  static deserializeBinaryFromReader(message: PaginationRequest, reader: jspb.BinaryReader): PaginationRequest;
+}
+
+export namespace PaginationRequest {
+  export type AsObject = {
+    pageSize: number,
+    nextPageToken: string,
+    previousPageToken: string,
+  }
+}
+
+export class PaginationResponse extends jspb.Message {
+  getNextPageToken(): string;
+  setNextPageToken(value: string): PaginationResponse;
+
+  getPreviousPageToken(): string;
+  setPreviousPageToken(value: string): PaginationResponse;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): PaginationResponse.AsObject;
+  static toObject(includeInstance: boolean, msg: PaginationResponse): PaginationResponse.AsObject;
+  static serializeBinaryToWriter(message: PaginationResponse, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): PaginationResponse;
+  static deserializeBinaryFromReader(message: PaginationResponse, reader: jspb.BinaryReader): PaginationResponse;
+}
+
+export namespace PaginationResponse {
+  export type AsObject = {
+    nextPageToken: string,
+    previousPageToken: string,
   }
 }
 
