@@ -2,7 +2,7 @@
 layout: docs
 page_title: A Complete Cloud Ecosystem built with Terraform, HCP Waypoint, HCP Vault, HCP Consul, and Nomad
 description: |-
-  Your enterprise application is only a 'terraform apply' and 'waypoint up' away from life on the cloud.
+Your enterprise application is only a 'terraform apply' and 'waypoint up' away from life on the cloud.
 ---
 
 # A Complete Cloud Ecosystem built with Terraform, HCP Waypoint, HCP Vault, HCP Consul, and Nomad
@@ -48,7 +48,7 @@ In this use case, we will configure our infrastructure as code, which Terraform 
 - [AWS Virtual Private Cloud](https://aws.amazon.com/pt/vpc/) and peer it with our [HashiCorp Virtual Network (HVN)](/hcp/docs/hcp/network)
 - [HCP Consul](https://cloud.hashicorp.com/products/consul) service mesh to manage services within the secure private network
 - [HCP Vault](https://cloud.hashicorp.com/products/vault) cluster to securely store credentials
-- [Nomad](/nomad/tutorials/get-started/get-started-intro) cluster on AWS EC2 instance to manage application containers.
+- [HashiCorp Nomad](/nomad/tutorials/get-started/get-started-intro) cluster on AWS EC2 instance to manage application containers
 
 We will write application deployment configurations as code, which [HCP Waypoint](https://cloud.hashicorp.com/products/waypoint)
 will run to build the container image and deploy the application to the infrastructure we set up with Terraform.
@@ -86,8 +86,8 @@ Or, configure the provider with the client ID and secret by copy-pasting the val
 ```terraform
 // Credentials can be set explicitly or via the environment variables HCP_CLIENT_ID and HCP_CLIENT_SECRET
 provider "hcp" {
-client_id     = "service-principal-key-client-id"
-client_secret = "service-principal-key-client-secret"
+  client_id     = "service-principal-key-client-id"
+  client_secret = "service-principal-key-client-secret"
 }
 ```
 
@@ -110,20 +110,20 @@ The Amazon VPC can be managed with the [AWS provider](https://registry.terraform
 
 ```terraform
 provider "aws" {
-   region = var.region
+  region = var.region
 }
 
 module "vpc" {
-  source = "terraform-aws-modules/vpc/aws"
-  name   = var.name
-  cidr   = var.cidr
+  source         = "terraform-aws-modules/vpc/aws"
+  name           = var.name
+  cidr           = var.cidr
   public_subnets = var.public_subnets
   public_subnet_tags = {
     Name = "${var.name}-public"
   }
 
-  azs            = slice(data.aws_availability_zones.available.*.names[0], 0, 3)
-   enable_dns_hostnames            = true
+  azs                             = slice(data.aws_availability_zones.available.*.names[0], 0, 3)
+  enable_dns_hostnames            = true
   enable_ipv6                     = true
   assign_ipv6_address_on_creation = true
   public_subnet_ipv6_prefixes     = [0, 1, 2]
@@ -132,10 +132,6 @@ module "vpc" {
     Terraform = "true"
     Name      = var.name
   }
-}
-
-data "aws_availability_zones" "available" {
-  state = "available"
 }
 ```
 
@@ -150,6 +146,8 @@ Each peering connection requires an HVN route to set its CIDR block.
 Once the VPC is peered with the HVN, the resources deployed inside the VPC will be able to reach each other.
 
 ```terraform
+provider "hcp" {}
+
 resource "hcp_hvn" "xx_2048_hvn" {
   hvn_id         = "xx-2048"
   cloud_provider = "aws"
@@ -183,6 +181,7 @@ resource "aws_route" "hvn-peering" {
   route_table_id            = module.vpc.public_route_table_ids[0]
   destination_cidr_block    = hcp_hvn.xx_2048_hvn.cidr_block
   vpc_peering_connection_id = aws_vpc_peering_connection_accepter.peer.id
+}
 ```
 
 ## Define HCP Consul
@@ -246,8 +245,8 @@ For real production use cases, please properly configure your security group and
 The launch template looks like this:
 
 ```terraform
-resource "aws_launch_template" "nomad-servers" {
-  name = "XX_2048_Nomad_Servers"
+resource "aws_launch_template" "nomad-clients" {
+  name = "XX_2048_Nomad_Clients"
 
   block_device_mappings {
     device_name = "/dev/sda1"
@@ -280,21 +279,19 @@ resource "aws_launch_template" "nomad-servers" {
     resource_type = "instance"
 
     tags = {
-      Name = "Nomad-server"
+      Name = "Nomad-Client"
     }
   }
 
-  user_data = base64encode(templatefile("user-data-server.sh", {
-    nomad_region              = var.region,
-    nomad_datacenter          = var.cluster_name,
-    consul_ca_file            = base64decode(hcp_consul_cluster.xx_2048_consul.consul_ca_file),
-    consul_gossip_encrypt_key = jsondecode(base64decode(hcp_consul_cluster.xx_2048_consul.consul_config_file)).encrypt,
-    consul_acl_token          = hcp_consul_cluster.xx_2048_consul.consul_root_token_secret_id,
+  user_data = base64encode(templatefile("user-data-client.sh", {
+    nomad_region                = var.region,
+    nomad_datacenter            = var.cluster_name,
+    consul_ca_file              = base64decode(hcp_consul_cluster.xx_2048_consul.consul_ca_file),
+    consul_gossip_encrypt_key   = jsondecode(base64decode(hcp_consul_cluster.xx_2048_consul.consul_config_file)).encrypt,
+    consul_acl_token            = hcp_consul_cluster.xx_2048_consul.consul_root_token_secret_id,
     consul_private_endpoint_url = hcp_consul_cluster.xx_2048_consul.consul_private_endpoint_url,
-    vault_endpoint            = hcp_vault_cluster.xx_2048_vault.vault_private_endpoint_url,
-    vault_token               = vault_token.nomad_server.client_token
+    vault_endpoint              = hcp_vault_cluster.xx_2048_vault.vault_private_endpoint_url,
   }))
-
 }
 ```
 
@@ -442,7 +439,7 @@ After our `terraform apply` and `waypoint up`, you should have a full HCP HashiC
 You can find "HashiCorp Virtual Networks" on the left sidebar and see that our HCP Consul and HCP Vault resources have
 been automatically provisioned via Terraform in the same VPC, and associated with the network. Magic!
 
-![HVN UI](img/use-cases/hcp-hashistack-quickstart/hvn.png)
+![HVN UI](/img/use-cases/hcp-hashistack-quickstart/hvn.png)
 
 ### Consul Dashboard
 
@@ -450,7 +447,7 @@ You can access the HCP Consul UI by navigating to the Consul tab in HCP, and cli
 For this use case, we configured a public IP address for the cluster, so you can access Consul with the public address.
 This is not recommended for a production use case.
 
-![Consul UI](img/use-cases/hcp-hashistack-quickstart/consul.png)
+![Consul UI](/img/use-cases/hcp-hashistack-quickstart/consul.png)
 
 As you can see, Consul service mesh keeps track of services in our VPC.
 
@@ -459,7 +456,7 @@ As you can see, Consul service mesh keeps track of services in our VPC.
 Nomad is a workload orchestration program, so services in the HVN are reflected as jobs.
 You can see the Nomad server, client, and Waypoint runner.
 
-![Nomad UI](img/use-cases/hcp-hashistack-quickstart/nomad-ui.png)
+![Nomad UI](/img/use-cases/hcp-hashistack-quickstart/nomad-ui.png)
 
 Have fun exploring! You can find more guidance in the [Nomad UI documentation](/nomad/tutorials/web-ui).
 
@@ -467,7 +464,7 @@ Have fun exploring! You can find more guidance in the [Nomad UI documentation](/
 
 You can find a persistent version of the application we deployed here: [HashiCorp Stack 2048 Game](https://tunzor.github.io/hashi-2048/)
 
-![2048 Game](img/use-cases/hcp-hashistack-quickstart/hcp-2048.png)
+![2048 Game](/img/use-cases/hcp-hashistack-quickstart/hcp-2048.png)
 
 ## Summary
 
