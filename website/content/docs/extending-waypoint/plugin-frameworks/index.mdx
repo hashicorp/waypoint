@@ -76,11 +76,12 @@ the `create`, `delete`, and `status` funcs.
 // obtain the defined status for them.
 //
 // ResourceManager can also be implemented for Release as well.
-func (p *Platform) resourceManager(log hclog.Logger, dcr *component.DeclaredResourcesResp) *resource.Manager {
+func (p *Platform) resourceManager(log hclog.Logger, dcr *component.DeclaredResourcesResp, dtr *component.DestroyedResourcesResp) *resource.Manager {
         return resource.NewManager(
                 resource.WithLogger(log.Named("resource_manager")),
                 resource.WithValueProvider(p.getConnectContext),
                 resource.WithDeclaredResourcesResp(dcr),
+                resource.WithDestroyedResourcesResp(dtr),
                 resource.WithResource(resource.NewResource(
                         resource.WithName("template_example"), // The name of your resource
                         resource.WithState(&Resource_Deployment{}), // This is your Resource proto (this is the message we created earlier in this section)
@@ -108,6 +109,7 @@ func (b *Platform) deploy(
         ui terminal.UI,
         log hclog.Logger,
         dcr *component.DeclaredResourcesResp,
+        dtr *component.DestroyedResourcesResp,
         artifact *registry.Artifact,
 ) (*Deployment, error) {
         u := ui.Status()
@@ -117,7 +119,7 @@ func (b *Platform) deploy(
         var result Deployment
 
         // Create our resource manager and create deployment resources
-        rm := b.resourceManager(log, dcr)
+        rm := b.resourceManager(log, dcr, nil)
 
         // NOTE: These params must match exactly to your resourceDeploymentCreate
         // params (or any other additional deployment resource create funcs).
@@ -165,7 +167,7 @@ func (p *Platform) destroy(
         sg := ui.StepGroup()
         defer sg.Wait()
 
-        rm := p.resourceManager(log, nil)
+        rm := p.resourceManager(log, dcr, dtr)
 
         // If we don't have resource state, this state is from an older version
         // and we need to manually recreate it.
@@ -246,6 +248,74 @@ func (b *Platform) resourceDeploymentStatus(
         artifact *registry.Artifact,
 ) error {
         // Determine health status of "this" resource.
+        return nil
+}
+```
+
+## Dependencies Between Resources
+
+Dependencies between multiple resources can be defined by including the type of
+one resource as an input parameter to another. The resources will be created in
+the appropriate order based on such dependencies. Below is an example of this:
+
+```go
+func (p *Platform) resourceManager(log hclog.Logger, dcr *component.DeclaredResourcesResp, dtr *component.DestroyedResourcesResp) *resource.Manager {
+        return resource.NewManager(
+                resource.WithLogger(log.Named("resource_manager")),
+                resource.WithValueProvider(p.getConnectContext),
+                resource.WithDeclaredResourcesResp(dcr),
+                resource.WithDestroyedResourcesResp(dtr),
+                // Resource 1
+                resource.WithResource(resource.NewResource(
+                        resource.WithName("template_example"), // The name of your resource
+                        resource.WithState(&Resource_Deployment{}), // This is your Resource proto (this is the message we created earlier in this section)
+                        resource.WithCreate(p.resourceDeploymentCreate),
+                        resource.WithDestroy(p.resourceDeploymentDestroy),
+                        resource.WithStatus(p.resourceDeploymentStatus),
+                        resource.WithPlatform("template_platform"), // Update this to match your plugins platform, like Kubernetes
+                        resource.WithCategoryDisplayHint(sdk.ResourceCategoryDisplayHint_INSTANCE_MANAGER), // This is meant for the UI to determine what kind of icon to show
+                )),
+                // Resource 2
+                resource.WithResource(resource.NewResource(
+                        resource.WithName("template_example_2"), // The name of your resource
+                        resource.WithState(&Resource_Service{}), // This is your Resource proto (this is the message we created earlier in this section)
+                        resource.WithCreate(p.resourceServiceCreate),
+                        resource.WithDestroy(p.resourceServiceDestroy),
+                        resource.WithStatus(p.resourceServiceStatus),
+                        resource.WithPlatform("template_platform"), // Update this to match your plugins platform, like Kubernetes
+                )),
+        )
+}
+
+func (b *Platform) resourceDeploymentCreate(
+        ctx context.Context,
+        log hclog.Logger,
+        st terminal.Status,
+        ui terminal.UI,
+        artifact *registry.Artifact,
+        result *Deployment,
+) error {
+        // Create your deployment resource here!
+        // Update `result` with the created deployment
+
+        return nil
+}
+
+func (b *Platform) resourceServiceCreate(
+        ctx context.Context,
+        log hclog.Logger,
+        st terminal.Status,
+        ui terminal.UI,
+        artifact *registry.Artifact,
+        result *Service,
+
+        // Including the parameter below informs the resource manager that
+        // the deployment must be created BEFORE the service
+        deployment *Resource_Deployment,
+) error {
+        // Create your service resource here!
+        // Update `result` with the created service
+
         return nil
 }
 ```
