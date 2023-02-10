@@ -62,18 +62,24 @@ func (p *TaskLauncher) StartTask(
 	ctx context.Context,
 	log hclog.Logger,
 	tli *component.TaskLaunchInfo,
-) (*TaskInfo, error)
+) (*TaskInfo, error) {
+  return nil, nil
+}
 
 func (p *TaskLauncher) StopTask(
 	ctx context.Context,
 	log hclog.Logger,
 	ti *TaskInfo,
-) error
+) error {
+  return nil
+}
 
 func (p *TaskLauncher) WatchTask(
 	ctx context.Context,
 	log hclog.Logger,
 	ui terminal.UI,
 	ti *TaskInfo,
-) (*component.TaskResult, error)
+) (*component.TaskResult, error) {
+  return nil, nil
+}
 ```
