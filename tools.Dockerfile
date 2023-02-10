@@ -14,6 +14,7 @@ RUN wget https://github.com/protocolbuffers/protobuf/releases/download/v${PROTOC
 
 # Copy files required to update tooling
 RUN mkdir -p /tools/tools
+RUN apt-get install -y jq
 COPY ./tools/tools.go /tools/tools
 COPY ./Makefile /tools
 COPY go.mod /tools
