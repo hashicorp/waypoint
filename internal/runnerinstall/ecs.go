@@ -54,6 +54,7 @@ const odrRolePolicy = `{
         "ec2:DeleteSecurityGroup",
         "ec2:DescribeSubnets",
         "ecr:BatchGetImage",
+        "ecr:CreateRepository",
         "ecr:CompleteLayerUpload",
         "ecr:DescribeImages",
         "ecr:DescribeRepositories",
