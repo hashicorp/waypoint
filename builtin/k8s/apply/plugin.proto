@@ -6,5 +6,5 @@ option go_package = "waypoint/builtin/k8s/apply";
 
 message Deployment {
   string prune_label = 1;
-  repeated string prune_whitelist = 2;
+  repeated string prune_allowlist = 2;
 }

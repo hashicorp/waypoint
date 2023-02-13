@@ -1,13 +1,13 @@
 # This file was generated via `make gen/integrations-hcl`
 output {
-  key         = "prune_label"
+  key         = "prune_allowlist"
   description = ""
-  type        = "string"
+  type        = "list of string"
 }
 
 output {
-  key         = "prune_whitelist"
+  key         = "prune_label"
   description = ""
-  type        = "list of string"
+  type        = "string"
 }
 

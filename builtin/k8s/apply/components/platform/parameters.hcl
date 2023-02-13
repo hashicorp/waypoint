@@ -21,16 +21,16 @@ parameter {
 }
 
 parameter {
-  key         = "prune_label"
-  description = "Label selector to prune resources that aren't present in the `path`.\nThis is a label selector that is used to search for any resources that are NOT present in the configured `path` and delete them."
-  type        = "string"
-  required    = true
+  key         = "prune_allowlist"
+  description = ""
+  type        = "list of string"
+  required    = false
 }
 
 parameter {
-  key         = "prune_whitelist"
-  description = ""
-  type        = "list of string"
+  key         = "prune_label"
+  description = "Label selector to prune resources that aren't present in the `path`.\nThis is a label selector that is used to search for any resources that are NOT present in the configured `path` and delete them."
+  type        = "string"
   required    = true
 }
 

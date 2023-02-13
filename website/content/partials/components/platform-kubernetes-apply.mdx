@@ -71,7 +71,7 @@ deploy {
     // build/registry, entrypoint env vars, etc.
     path        = templatedir("${path.app}/k8s")
     prune_label = "app=myapp"
-	prune_whitelist = [
+	prune_allowlist = [
 		"apps/v1/Deployment",
 		"apps/v1/ReplicaSet"
   	]
@@ -130,10 +130,6 @@ This is a label selector that is used to search for any resources that are NOT p
 
 - Type: **string**
 
-#### prune_whitelist
-
-- Type: **list of string**
-
 ### Optional Parameters
 
 These parameters are used in the [`use` stanza](/waypoint/docs/waypoint-hcl/use) for this plugin.
@@ -155,14 +151,19 @@ If this isn't set, the default lookup used by `kubectl` will be used.
 - **Optional**
 - Environment Variable: **KUBECONFIG**
 
+#### prune_allowlist
+
+- Type: **list of string**
+- **Optional**
+
 ### Output Attributes
 
 Output attributes can be used in your `waypoint.hcl` as [variables](/waypoint/docs/waypoint-hcl/variables) via [`artifact`](/waypoint/docs/waypoint-hcl/variables/artifact) or [`deploy`](/waypoint/docs/waypoint-hcl/variables/deploy).
 
+#### prune_allowlist
+
+- Type: **list of string**
+
 #### prune_label
 
 - Type: **string**
-
-#### prune_whitelist
-
-- Type: **list of string**
