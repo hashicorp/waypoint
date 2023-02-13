@@ -28,14 +28,14 @@ jobs:
 
       - name: Set ticket type
         id: set-ticket-type
-        run: |
-          if [[ "${{ contains(github.event.issue.labels.*.name, 'bug') }}" == "true" ]]; then
-            echo "::set-output name=type::Bug"
-          elif [[ "${{ contains(github.event.issue.labels.*.name, 'enhancement') }}" == "true" ]]; then
-            echo "::set-output name=type::Story"
-          else
-            echo "::set-output name=type::Task"
-          fi
+        run: echo "::set-output name=type::GH Issue"
+#         For now, we're making everything a GH Issue; if we wanna use bugs later here it is
+#         run: |
+#           if [[ "${{ contains(github.event.issue.labels.*.name, 'bug') }}" == "true" ]]; then
+#             echo "::set-output name=type::Bug"
+#           else
+#             echo "::set-output name=type::GH Issue"
+#           fi
 
       # Use this to add Jira labels to a ticket based on what labels are present in GitHub
       # bash note: '${#VAR}' returns the length of the variable's value
