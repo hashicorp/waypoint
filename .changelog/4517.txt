@@ -1,0 +1,5 @@
+```release-note:bug
+plugin/k8s-apply: Update the `prune_whitelist` param to match the updated parameter
+in kubectl apply, `prune_allowlist`. It also ensures this param in the plugin
+is optional and not a hard requirement to use the k8s apply plugin.
+```
