@@ -70,7 +70,7 @@ deploy {
     // build/registry, entrypoint env vars, etc.
     path        = templatedir("${path.app}/k8s")
     prune_label = "app=myapp"
-	prune_whitelist = [
+	prune_allowlist = [
 		"apps/v1/Deployment",
 		"apps/v1/ReplicaSet"
   	]
