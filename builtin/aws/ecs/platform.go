@@ -1339,7 +1339,7 @@ func (p *Platform) resourceTargetGroupDestroy(
 		return nil
 	}
 
-	s := sg.Add("Getting target group details", state.Name)
+	s := sg.Add("Getting details for target group %s", state.Name)
 	defer s.Abort()
 
 	elbsrv := elbv2.New(sess)
@@ -1349,63 +1349,62 @@ func (p *Platform) resourceTargetGroupDestroy(
 	})
 	if err != nil {
 		return status.Errorf(codes.Internal, "failed to describe target group %s (ARN: %q): %s", state.Name, state.Arn, err)
+	} else if len(groups.TargetGroups) > 0 {
+		return status.Errorf(codes.FailedPrecondition, "only one target group should be returned for ARN %q, but found %d matching target groups", state.Arn, len(groups.TargetGroups))
 	}
 
 	s.Update("Retrieved target group details")
 	s.Done()
 
-	// There should be only one target group we "loop through" here
-	for _, group := range groups.TargetGroups {
-		s = sg.Add("Checking if target group " + *group.TargetGroupName + " has an active ALB listener")
-		// If there are any load balancers routing to the target group, loop until
-		// the listeners are deleted by resourceAlbListenerDestroy, for a max of
-		// 5 minutes
-		var listenerArns []string
-		describeListenersInput := &elbv2.DescribeListenersInput{}
-		d := time.Now().Add(time.Minute * time.Duration(5))
-		ctx, cancel := context.WithDeadline(ctx, d)
-		defer cancel()
-		ticker := time.NewTicker(5 * time.Second)
-		listenerDeleted := false
-		for !listenerDeleted {
-			for _, lb := range group.LoadBalancerArns {
-			LOOP:
-				if len(listenerArns) > 0 {
-					describeListenersInput.ListenerArns = aws.StringSlice(listenerArns)
-				} else {
-					describeListenersInput.LoadBalancerArn = lb
-				}
+	s = sg.Add("Checking if target group %q has an active ALB listener", *groups.TargetGroups[0].TargetGroupName)
+	// If there are any load balancers routing to the target group, loop until
+	// the listeners are deleted by resourceAlbListenerDestroy, for a max of
+	// 5 minutes
+	var listenerArns []string
+	describeListenersInput := &elbv2.DescribeListenersInput{}
+	d := time.Now().Add(time.Minute * time.Duration(5))
+	ctx, cancel := context.WithDeadline(ctx, d)
+	defer cancel()
+	ticker := time.NewTicker(5 * time.Second)
+	listenerDeleted := false
+	for !listenerDeleted {
+		for _, lb := range groups.TargetGroups[0].LoadBalancerArns {
+		CHECK_LISTENERS:
+			if len(listenerArns) > 0 {
+				describeListenersInput.ListenerArns = aws.StringSlice(listenerArns)
+			} else {
+				describeListenersInput.LoadBalancerArn = lb
+			}
 
-				listeners, err := elbsrv.DescribeListeners(describeListenersInput)
-				if err != nil {
-					return status.Errorf(codes.Internal, "failed to describe listeners for ALB (ARN: %q): %s", *lb, err)
-				}
-				for _, listener := range listeners.Listeners {
-					for _, defaultAction := range listener.DefaultActions {
-						if *defaultAction.TargetGroupArn == state.Arn {
-							s.Update("Found active ALB listener with ARN " + *listener.ListenerArn)
-							// Save the listener ARN to search by it instead of
-							// needlessly looping through all listeners on the
-							// LB again. We hard-assign this to the first index
-							// of the slice because there should be only one.
-							listenerArns[0] = *listener.ListenerArn
-							select {
-							case <-ticker.C: // wait 5 seconds before checking again
-							case <-ctx.Done():
-								return status.Errorf(codes.Aborted, "Context "+
-									"cancelled from timeout checking if listener for "+
-									"target group was deleted: %s", ctx.Err())
-							}
-							goto LOOP
+			listeners, err := elbsrv.DescribeListeners(describeListenersInput)
+			if err != nil {
+				return status.Errorf(codes.Internal, "failed to describe listeners for ALB (ARN: %q): %s", *lb, err)
+			}
+			for _, listener := range listeners.Listeners {
+				for _, defaultAction := range listener.DefaultActions {
+					if *defaultAction.TargetGroupArn == state.Arn {
+						s.Update("Found active ALB listener with ARN " + *listener.ListenerArn)
+						// Save the listener ARN to search by it instead of
+						// needlessly looping through all listeners on the
+						// LB again. We hard-assign this to the first index
+						// of the slice because there should be only one.
+						listenerArns[0] = *listener.ListenerArn
+						select {
+						case <-ticker.C: // wait 5 seconds before checking again
+						case <-ctx.Done():
+							return status.Errorf(codes.Aborted, "Context "+
+								"cancelled from timeout checking if listener for "+
+								"target group was deleted: %s", ctx.Err())
 						}
+						goto CHECK_LISTENERS
 					}
 				}
 			}
-			// We've checked all of the possible permutations of ALBs and
-			// listeners, but none of the DefaultActions point to our target
-			// group - if there was a listener, it's gone now.
-			listenerDeleted = true
 		}
+		// We've checked all of the possible permutations of ALBs and
+		// listeners, but none of the DefaultActions point to our target
+		// group - if there was a listener, it's gone now.
+		listenerDeleted = true
 	}
 
 	s.Update("ALB listener for target group is deleted")
