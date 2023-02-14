@@ -1,0 +1,3 @@
+```release-note:bug
+cli/snapshot: Fix server snapshot when a config source is set.
+```

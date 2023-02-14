@@ -2,7 +2,7 @@ package boltdbstate
 
 import (
 	"context"
-	"encoding/binary"
+	"fmt"
 	"regexp"
 	"sort"
 	"strings"
@@ -335,9 +335,10 @@ func (s *State) configSourceIndexInit(dbTxn *bolt.Tx, memTxn *memdb.Txn) error {
 }
 
 func (s *State) configSourceId(idHash uint64) []byte {
-	configSourceId := make([]byte, 8)
-	binary.LittleEndian.PutUint64(configSourceId, idHash)
-	return configSourceId
+	// Convert uint64 to string before conversion to byte slice. BoltDB
+	// operations are OK with uint64, but server snapshots (a client of BoltDB)
+	// expect that all keys and values are UTF-8 encoded, which uint64 is not.
+	return []byte(fmt.Sprintf("%d", idHash))
 }
 
 func configSourceIndexSchema() *memdb.TableSchema {
