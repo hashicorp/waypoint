@@ -4,7 +4,7 @@ The Azure ACI plugin deploys a container to [Azure Container Instances](https://
 
 ### Components
 
-1. [Platform](/waypoint/integrations/hashicorp/azure/aci/components/platform)
+1. [Platform](/waypoint/integrations/hashicorp/azure-container-instance/latest/components/platform)
 
 ### Related Plugins
 

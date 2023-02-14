@@ -5,7 +5,7 @@ information, the image name and tag, to the Waypoint lifecycle.
 
 ### Components
 
-1. [Builder](/waypoint/integrations/hashicorp/docker/latest/components/builder)
+1. [Builder](/waypoint/integrations/hashicorp/docker-ref/latest/components/builder)
 
 ### Related Plugins
 
