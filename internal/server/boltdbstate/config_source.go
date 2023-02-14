@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"sort"
 	"strings"
+	"unicode/utf8"
 
 	"github.com/hashicorp/go-memdb"
 	"github.com/mitchellh/hashstructure/v2"
@@ -316,7 +317,7 @@ func (s *State) configSourceIndexInit(dbTxn *bolt.Tx, memTxn *memdb.Txn) error {
 		// is the simplest way for users to upgrade since custom config sourcer
 		// plugins aren't yet supported, as of 1/10/2023.
 		key := string(k)
-		if re.MatchString(key) {
+		if re.MatchString(key) || !utf8.Valid(k) {
 			if err := bucket.Delete(k); err != nil {
 				return err
 			}
