@@ -673,6 +673,10 @@
             "path": "extending-waypoint/plugin-frameworks"
           }
         ]
+      },
+      {
+        "title": "API",
+        "path": "extending-waypoint/api"
       }
     ]
   },
