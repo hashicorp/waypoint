@@ -14,7 +14,7 @@ It also launches on-demand runners to do operations remotely.
 
 1. [AWS ECS](/waypoint/integrations/hashicorp/aws-ecs)
 2. [AWS Lambda](/waypoint/integrations/hashicorp/aws-lambda)
-3. [Azure ACI](/waypoint/integrations/hashicorp/azure)
+3. [Azure ACI](/waypoint/integrations/hashicorp/azure-container-instance)
 4. [Docker Pull](/waypoint/integrations/hashicorp/docker-pull)
 5. [Docker Ref](/waypoint/integrations/hashicorp/docker-ref)
 6. [Google Cloud Run](/waypoint/integrations/hashicorp/google-cloud-run)

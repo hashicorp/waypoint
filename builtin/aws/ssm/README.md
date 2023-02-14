@@ -4,4 +4,4 @@ The AWS SSM plugin reads configuration values from the [AWS SSM Parameter Store]
 
 ### Components
 
-1. ConfigSourcer
+1. [ConfigSourcer](/waypoint/integrations/hashicorp/aws-ssm/latest/components/config-sourcer)
