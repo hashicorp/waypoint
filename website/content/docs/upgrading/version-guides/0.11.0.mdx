@@ -18,7 +18,37 @@ compatible. We encourage users to have all components on the same version.
 
 ### Docker
 
-### ECS
+### AWS ECS
+
+The database of a Waypoint server installed to AWS ECS is persisted in a file
+system, provided by the Elastic File System (EFS) service of AWS. To preserve
+the database during the upgrade, a new EFS volume will need to be created. An
+access point will need to be added to this volume as well. This access point's
+path must be set to `/waypointserverdata`. The POSIX user and root directory
+creation permissions should both have their user and group ID set to `100` and
+`1000`, respectively. The access point permissions should be set to `755`.
+
+The data in the old file system must be synchronized to the new one. This may be
+done using [AWS DataSync](https://docs.aws.amazon.com/datasync/latest/userguide/what-is-datasync.html).
+The source location should be configured as your old file system for the
+Waypoint server and the destination should be configured as the file system you
+just created.
+
+Now that there are two file systems in EFS with the in your Waypoint database,
+the next step is to upgrade the Waypoint server container to v0.11.0. To do
+this, the task definition `waypoint-server` in ECS needs a new revision. The
+only setting that must be changed is the image URI, which should be set to
+`hashicorp/waypoint:0.11.0`. After the new revision of the task definition is
+created, the `waypoint-server` service in ECS must be updated to use the
+revision you just created.
+
+If it is necessary to restore the snapshot to Waypoint, then a new revision of
+the ECS task definition `waypoint-server` needs to be created. In this new
+version, the storage configuration must be updated to replace the existing file
+system with the one created as part of this snapshot process. With that updated,
+the `waypoint-server` ECS service needs to be updated once more to use the
+newest revision of the `waypoint-server` task definition. At this point, the
+server should be using the pre-upgrade snapshot of the database.
 
 ### Kubernetes
 
