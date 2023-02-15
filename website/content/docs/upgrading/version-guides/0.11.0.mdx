@@ -75,6 +75,55 @@ server should be using the pre-upgrade snapshot of the database.
 
 ### Nomad
 
+Taking a snapshot of the Waypoint server's database before an upgrade will
+depend on what storage Waypoint was initially setup with. For host mounted
+volumes you will need to make a manual backup of the host volume itself and
+attempt the upgrade with snapshots disabled.
+
+If you previously installed Waypoint using a CSI driver, it is possible to use
+the snapshot feature of the CSI driver to ensure a snapshot of your server is
+taken before upgrading. Run the following steps to take a snapshot.
+
+  1. Stop Waypoint server
+  2. Take a snapshot of the volume Waypoint used for server installation in Nomad
+  3. Verify the snapshot is ready in Nomad before continuing
+  4. Upgrade Waypoint to 0.11.0
+  5. Verify Waypoint server version
+
+```shell-session
+$ nomad job stop waypoint-server
+[...]
+  ✓ Deployment "7a885db5" successful
+
+    2023-02-14T15:44:44-08:00
+    ID          = 7a885db5
+    Job ID      = waypoint-server
+    Job Version = 37
+    Status      = successful
+    Description = Deployment completed successfully
+
+$ nomad volume snapshot create <volume-id> waypoint-0-11-upgrade
+Snapshot ID                        Volume ID    Size    Create Time             Ready?
+<volume-id>@waypoint-0-11-upgrade  <volume-id>  211MiB  2023-02-14-15:45-08:00  true
+
+$ nomad job inspect waypoint-server > waypoint-server-0.10.json
+$ # Make a copy of `waypoint-server.json` and set {"Job": "Stop": false} and the waypoint server image version to "0.11.0" in the "waypoint-server" task group.
+$ # Submit the job to nomad to start again.
+
+$ nomad job run -json waypoint-server-0.11.0.json
+[...]
+  ✓ Deployment "b82dc4a1" successful
+
+    2023-02-14T15:49:12-08:00
+    ID          = b82dc4a1
+    Job ID      = waypoint-server
+    Job Version = 38
+    Status      = successful
+    Description = Deployment completed successfully
+```
+
+If the upgrade fails, stop Waypoint server, revert the Nomad snapshot, and submit the original job to Nomad.
+
 #### Verifying the Server Version with the UI
 
 You can verify the server version by loading the UI and looking at the footer.
