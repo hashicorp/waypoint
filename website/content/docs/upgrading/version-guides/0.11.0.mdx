@@ -73,6 +73,33 @@ server should be using the pre-upgrade snapshot of the database.
 
 ### Kubernetes
 
+Given that volume snapshots are not part of the core API, as a pre-requisite to
+taking a volume snapshot, ensure CRDs are installed first. Once complete, proceed.
+
+Confirm your storage class and add that to the following command to create a
+volume snapshot. Then verify your snapshot was created.
+
+```shell-session
+$ kubectl get storageclass
+
+$ cat <<EOF | kubectl apply -f -
+apiVersion: snapshot.storage.k8s.io/v1
+kind: VolumeSnapshot
+metadata:
+  name: waypoint-snapshot
+spec:
+  volumeSnapshotClassName: <storage-class>
+  source:
+    persistentVolumeClaimName: data-default-waypoint-server-0
+EOF
+
+$ kubectl get volumesnapshot
+NAME                READYTOUSE   SOURCEPVC                        SOURCESNAPSHOTCONTENT   RESTORESIZE   SNAPSHOTCLASS   SNAPSHOTCONTENT   CREATIONTIME   AGE
+waypoint-snapshot                data-default-waypoint-server-0                                         <storage-class>                                              13s
+```
+
+Now run: `waypoint server upgrade -snapshot=false`
+
 ### HashiCorp Nomad
 
 Taking a snapshot of the Waypoint server's database before an upgrade will
