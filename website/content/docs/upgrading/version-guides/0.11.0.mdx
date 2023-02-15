@@ -2,7 +2,7 @@
 layout: docs
 page_title: Version 0.11.0 - Upgrade Guide
 description: |-
-This upgrade guide describes any considerations for upgrading to Waypoint 0.10.0.
+This upgrade guide describes any considerations for upgrading to Waypoint 0.11.0.
 ---
 
 # Upgrading to Waypoint 0.11.0 from 0.10.x
@@ -15,6 +15,27 @@ components (CLI, entrypoint, and server) are forwards and backwards
 compatible. We encourage users to have all components on the same version.
 
 ## Server Snapshot
+
+Waypoint servers at versions 0.10.4 and 0.10.5 have a bug with taking snapshots,
+if there is a dynamic configuration source set, using the `config source-set`
+command. If your server is running at either of these versions and a config
+source is set, then you will not be able to take snapshots using the command
+`server snapshot`. By default, the `server upgrade` command will also take a
+snapshot of the database, and this also fails due to this bug.
+
+There are a few options to upgrade to v0.11.0. If you do not need a snapshot of
+the database before upgrading, then you may run `server upgrade` with the flag
+`-snapshot=false` to proceed without issue.
+
+Another alternative is to delete all config sources in your database using
+`config source-set` with the `-delete` flag, and then running `server upgrade`.
+After the server is upgraded, you can re-create the config sources using
+`config source-set`.
+
+A third approach is to use platform-native persistence solutions to back up the
+file system where the Waypoint database is stored. This includes Docker, AWS
+ECS, Kubernetes, and HashiCorp Nomad. The steps to do this with each of these
+platforms are detailed below.
 
 ### Docker
 
