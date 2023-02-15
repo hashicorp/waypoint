@@ -16,7 +16,7 @@ compatible. We encourage users to have all components on the same version.
 
 ## Server Snapshot
 
-Waypoint servers at versions 0.10.4 and 0.10.5 have a bug with taking snapshots,
+Waypoint servers at versions 0.10.4 and 0.10.5 have a [bug with taking snapshots](https://github.com/hashicorp/waypoint/pull/4523),
 if there is a dynamic configuration source set, using the `config source-set`
 command. If your server is running at either of these versions and a config
 source is set, then you will not be able to take snapshots using the command
@@ -73,7 +73,7 @@ server should be using the pre-upgrade snapshot of the database.
 
 ### Kubernetes
 
-### Nomad
+### HashiCorp Nomad
 
 Taking a snapshot of the Waypoint server's database before an upgrade will
 depend on what storage Waypoint was initially setup with. For host mounted
