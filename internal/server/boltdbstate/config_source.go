@@ -2,10 +2,11 @@ package boltdbstate
 
 import (
 	"context"
-	"encoding/binary"
+	"fmt"
 	"regexp"
 	"sort"
 	"strings"
+	"unicode/utf8"
 
 	"github.com/hashicorp/go-memdb"
 	"github.com/mitchellh/hashstructure/v2"
@@ -316,7 +317,7 @@ func (s *State) configSourceIndexInit(dbTxn *bolt.Tx, memTxn *memdb.Txn) error {
 		// is the simplest way for users to upgrade since custom config sourcer
 		// plugins aren't yet supported, as of 1/10/2023.
 		key := string(k)
-		if re.MatchString(key) {
+		if re.MatchString(key) || !utf8.Valid(k) {
 			if err := bucket.Delete(k); err != nil {
 				return err
 			}
@@ -335,9 +336,10 @@ func (s *State) configSourceIndexInit(dbTxn *bolt.Tx, memTxn *memdb.Txn) error {
 }
 
 func (s *State) configSourceId(idHash uint64) []byte {
-	configSourceId := make([]byte, 8)
-	binary.LittleEndian.PutUint64(configSourceId, idHash)
-	return configSourceId
+	// Convert uint64 to string before conversion to byte slice. BoltDB
+	// operations are OK with uint64, but server snapshots (a client of BoltDB)
+	// expect that all keys and values are UTF-8 encoded, which uint64 is not.
+	return []byte(fmt.Sprintf("%d", idHash))
 }
 
 func configSourceIndexSchema() *memdb.TableSchema {
