@@ -111,11 +111,11 @@ If you previously installed Waypoint using a CSI driver, it is possible to use
 the snapshot feature of the CSI driver to ensure a snapshot of your server is
 taken before upgrading. Run the following steps to take a snapshot.
 
-  1. Stop Waypoint server
-  2. Take a snapshot of the volume Waypoint used for server installation in Nomad
-  3. Verify the snapshot is ready in Nomad before continuing
-  4. Upgrade Waypoint to 0.11.0
-  5. Verify Waypoint server version
+1. Stop Waypoint server
+2. Take a snapshot of the volume Waypoint used for server installation in Nomad
+3. Verify the snapshot is ready in Nomad before continuing
+4. Upgrade Waypoint to 0.11.0
+5. Verify Waypoint server version
 
 ```shell-session
 $ nomad job stop waypoint-server
