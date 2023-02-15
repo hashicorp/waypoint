@@ -1,0 +1,5 @@
+```release-note:improvement
+cli: Update the `waypoint runner profile set` command to accept an argument
+for setting the name. This also removes the behavior where if no name was given,
+it would generate a random one.
+```
