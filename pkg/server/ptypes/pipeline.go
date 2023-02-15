@@ -243,6 +243,16 @@ func ValidateListPipelinesRequest(v *pb.ListPipelinesRequest) error {
 	)
 }
 
+// ValidateUIListPipelinesRequest
+func ValidateUIListPipelinesRequest(v *pb.UI_ListPipelinesRequest) error {
+	return validationext.Error(validation.ValidateStruct(v,
+		validationext.StructField(&v.Pagination, func() []*validation.FieldRules {
+			return ValidatePaginationRequestRules(v.Pagination)
+		}),
+		validation.Field(&v.Project, validation.Required),
+	))
+}
+
 // ValidateListPipelineRunsRequest
 func ValidateListPipelineRunsRequest(v *pb.ListPipelineRunsRequest) error {
 	return validationext.Error(validation.ValidateStruct(v,
