@@ -3070,6 +3070,11 @@ deploy {
 			)
 
 			doc.SetField(
+				"container_ports",
+				"List of container port definitions for the container",
+			)
+
+			doc.SetField(
 				"host_port",
 				"The port number on the host to reserve for the container",
 			)

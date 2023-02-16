@@ -245,6 +245,13 @@ parameter {
 }
 
 parameter {
+  key         = "sidecar.container_ports"
+  description = "List of container port definitions for the container"
+  type        = "list of ecs.ContainerPort"
+  required    = false
+}
+
+parameter {
   key         = "sidecar.health_check"
   description = ""
   type        = "ecs.HealthCheckConfig"

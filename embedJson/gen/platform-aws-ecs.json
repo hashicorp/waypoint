@@ -565,6 +565,18 @@
                "SubFields": null
             },
             {
+               "Field": "container_ports",
+               "Type": "list of ecs.ContainerPort",
+               "Synopsis": "List of container port definitions for the container",
+               "Summary": "",
+               "Optional": true,
+               "Default": "",
+               "EnvVar": "",
+               "Category": false,
+               "Example": "",
+               "SubFields": null
+            },
+            {
                "Field": "health_check",
                "Type": "ecs.HealthCheckConfig",
                "Synopsis": "",
