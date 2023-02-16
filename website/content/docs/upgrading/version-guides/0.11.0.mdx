@@ -15,8 +15,8 @@ There are no breaking changes in the protocol or `waypoint.hcl` configuration fi
 
 Waypoint servers at versions 0.10.4 and 0.10.5 have a [bug that prevents
 snapshots from being taken](https://github.com/hashicorp/waypoint/pull/4523),
-if there is a dynamic configuration source set using the `waypoint config
-source-set` command, like so.
+if there is a dynamic configuration source set using the
+`waypoint config source-set` command.
 
 If your server is running at either of these versions and a config
 source is set, then you will not be able to take snapshots using the command
