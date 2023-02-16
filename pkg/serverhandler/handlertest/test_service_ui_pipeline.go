@@ -23,23 +23,62 @@ func TestServiceUI_ListPipelines(t *testing.T, factory Factory) {
 	// Create our server
 	client, _ := factory(t)
 
-	// Create projects
+	// Create project
+	var project *pb.Project
+	{
+		resp, err := client.UpsertProject(ctx, &pb.UpsertProjectRequest{
+			Project: serverptypes.TestProject(t, &pb.Project{}),
+		})
+		require.NoError(err)
+		project = resp.Project
+	}
+
+	// Create some pipelines in the project
 	for _, name := range []string{"alpha", "beta"} {
-		_, err := client.UpsertProject(ctx, &pb.UpsertProjectRequest{
-			Project: serverptypes.TestProject(t, &pb.Project{
+		_, err := client.UpsertPipeline(ctx, &pb.UpsertPipelineRequest{
+			Pipeline: serverptypes.TestPipeline(t, &pb.Pipeline{
+				Id:   name,
 				Name: name,
+				Owner: &pb.Pipeline_Project{
+					Project: &pb.Ref_Project{
+						Project: project.Name,
+					},
+				},
 			}),
 		})
 		require.NoError(err)
 	}
 
-	// Call the method
-	result, err := client.UI_ListPipelines(ctx, &pb.UI_ListPipelinesRequest{
-		Pagination: &pb.PaginationRequest{
-			PageSize: 10,
-		},
+	t.Run("with no runs", func(t *testing.T) {
+		// Call the method
+		resp, err := client.UI_ListPipelines(ctx, &pb.UI_ListPipelinesRequest{
+			Project: &pb.Ref_Project{
+				Project: project.Name,
+			},
+			Pagination: &pb.PaginationRequest{
+				PageSize: 10,
+			},
+		})
+		require.NoError(err)
+		require.Len(resp.Pipelines, 2)
+		require.Nil(resp.Pipelines[0].LastRun)
+		// TODO: require.EqualValues(2, resp.TotalCount)
 	})
-	require.NoError(err)
-	require.Len(result.PipelineBundles, 2)
-	require.EqualValues(2, result.TotalCount)
+
+	t.Run("with some runs", func(t *testing.T) {
+		// TODO: Add some runs somehow
+
+		// Call the method
+		resp, err := client.UI_ListPipelines(ctx, &pb.UI_ListPipelinesRequest{
+			Project: &pb.Ref_Project{
+				Project: project.Name,
+			},
+			Pagination: &pb.PaginationRequest{
+				PageSize: 10,
+			},
+		})
+		require.NoError(err)
+		require.NotNil(resp.Pipelines[0].LastRun)
+		require.NotNil(resp.Pipelines[1].LastRun)
+	})
 }
