@@ -1,0 +1,8 @@
+```release-note:improvement
+cli: Include job `QueueTime` in output for `waypoint job list` and `waypoint job inspect`.
+```
+
+```release-note:improvement
+cli: Add a `-verbose` flag to `waypoint job list` to improve relevant columns shown to user
+at a glance.
+```
