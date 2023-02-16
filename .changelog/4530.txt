@@ -1,0 +1,3 @@
+```release-note:improvement
+plugin/aws: Allow multiple ports to be specified on ecs sidecar containers
+```
