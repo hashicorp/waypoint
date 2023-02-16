@@ -13,28 +13,30 @@ There are no breaking changes in the protocol or `waypoint.hcl` configuration fi
 
 ## Server Snapshot
 
-Waypoint servers at versions 0.10.4 and 0.10.5 have a [bug that prevents
-snapshots from being taken](https://github.com/hashicorp/waypoint/pull/4523),
-if there is a dynamic configuration source set using the
-`waypoint config source-set` command.
+Waypoint servers at versions 0.10.4 and 0.10.5 have a bug that prevents
+snapshots from being taken if a dynamic configuration source was set using the
+`waypoint config source-set` command. If your server is running at either of
+these versions and a `waypoint config source-set` command was run, then you
+will not be able to take snapshots using the command `waypoint server snapshot`.
 
-If your server is running at either of these versions and a config
-source is set, then you will not be able to take snapshots using the command
-`server snapshot`. By default the `server upgrade` command will attempt to take
-a snapshot of the database before upgrading and this will fail due to this bug.
-
-There are a few options to upgrade to v0.11.0. If you do not need a snapshot of
-the database before upgrading, then you may run `server upgrade` with the flag
-`-snapshot=false` to proceed with upgrading, like so.
+When upgrading to Waypoint 0.11.0, follow your normal upgrade procedures. To
+check if you are affected by the bug in question, run
+`waypoint server snapshot`. If this succeeds, disregard the rest of the below
+remediation steps. You are unaffected by this bug and can use
+`waypoint server upgrade` with no extra steps beyond your normal upgrade
+procedure. If this fails, proceed with the below remediation steps. There are
+three options to upgrade to v0.11.0 if you are unable to create snapshots.
+The first is, you do not need a snapshot of the database before upgrading, then
+run server upgrade with the flag `-snapshot=false` to proceed with upgrading:
 
 ```shell
 $ waypoint server upgrade -snapshot=false
-```
+````
 
-Another alternative is to delete all config sources from Waypoint using
-`config source-set` with the `-delete` flag, and then running `server upgrade`.
-After the server is upgraded, you can re-create the config sources using
-`config source-set`.
+The second alternative is to delete all config sources from Waypoint using
+`waypoint config source-set` with the `-delete` flag, and then run
+`waypoint server upgrade`. After the server is upgraded, you can re-create the
+config sources using `waypoint config source-set`.
 
 ```shell
 # Repeat the command below for each config source that is set; this example
@@ -42,10 +44,10 @@ After the server is upgraded, you can re-create the config sources using
 waypoint config source-set -delete -type=vault -scope=global
 ```
 
-A third approach is to use platform-native persistence solutions to back up the
-file system where the Waypoint database is stored. This includes Docker, AWS
-ECS, Kubernetes, and HashiCorp Nomad. The steps to do this with each of these
-platforms are detailed below.
+The third approach is to use platform-native persistence solutions to back up
+the file system where the Waypoint database is stored. This includes Docker,
+AWS ECS, Kubernetes, and HashiCorp Nomad. The steps to do this with each of
+these platforms are detailed below.
 
 ### Docker
 
