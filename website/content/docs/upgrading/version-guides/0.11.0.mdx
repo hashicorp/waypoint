@@ -39,7 +39,7 @@ After the server is upgraded, you can re-create the config sources using
 ```shell
 # Repeat the command below for each config source that is set; this example
 # deletes the globally-scoped Vault config source
-$ waypoint config source-set -delete -type=vault -scope=global
+waypoint config source-set -delete -type=vault -scope=global
 ```
 
 A third approach is to use platform-native persistence solutions to back up the
@@ -53,7 +53,11 @@ The Waypoint server stores data into a single `data.db` file, in Docker it's
 normally stored in `/data/data.db`. In the server data directory, copy the
 snapshot data and name the file `waypoint-restore.db`.
 
-Now run `waypoint server upgrade -snapshot=false`.
+Now run:
+
+```shell
+waypoint server upgrade -snapshot=false
+```
 
 ### AWS ECS
 
@@ -71,7 +75,11 @@ The source location should be configured as your old file system for the
 Waypoint server and the destination should be configured as the file system you
 just created.
 
-Now run `waypoint server upgrade -snapshot=false`.
+Now run:
+
+```shell
+waypoint server upgrade -snapshot=false
+```
 
 ### Kubernetes
 
@@ -100,7 +108,11 @@ NAME                READYTOUSE   SOURCEPVC                        SOURCESNAPSHOT
 waypoint-snapshot                data-default-waypoint-server-0                                         <storage-class>                                              13s
 ```
 
-Now run: `waypoint server upgrade -snapshot=false`.
+Now run:
+
+```shell
+waypoint server upgrade -snapshot=false
+```
 
 ### HashiCorp Nomad
 
@@ -151,7 +163,11 @@ $ nomad job run -json waypoint-server-0.11.0.json
     Description = Deployment completed successfully
 ```
 
-Now run: `waypoint server upgrade -snapshot=false`.
+Now run:
+
+```shell
+waypoint server upgrade -snapshot=false
+```
 
 #### Verifying the Server Version with the UI
 
