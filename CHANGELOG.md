@@ -2,9 +2,44 @@
 
 FEATURES:
 
+* server: Add pagination protobuffs and stubs for pagination in ListProjects [[GH-4203](https://github.com/hashicorp/waypoint/issues/4203)]
+
 IMPROVEMENTS:
 
+* cli: `waypoint job cancel` now outputs additional insights
+when trying to cancel a running job. [[GH-4294](https://github.com/hashicorp/waypoint/issues/4294)]
+* cli: add socket-path flag to runner install [[GH-4246](https://github.com/hashicorp/waypoint/issues/4246)]
+* core: `waypoint job list` will now retrieve paginated list of jobs to avoid
+grpc data limits per request [[GH-4271](https://github.com/hashicorp/waypoint/issues/4271)]
+* core: improve runner job stream error logging [[GH-3872](https://github.com/hashicorp/waypoint/issues/3872)]
+* install/nomad: Allow mount options to be specified when provisioning a volume with CSI plugins [[GH-4387](https://github.com/hashicorp/waypoint/issues/4387)]
+* plugin/aws: Add CORS configuration to lambda-function-url releaser [[GH-4418](https://github.com/hashicorp/waypoint/issues/4418)]
+* plugin/tfc: Allow non-string tfc outputs to be used as waypoint.hcl dynamic default variables [[GH-4357](https://github.com/hashicorp/waypoint/issues/4357)]
+* plugin/tfc: Allow reading all outputs from a tfc workspace with a single variable stanza [[GH-4357](https://github.com/hashicorp/waypoint/issues/4357)]
+* plugins/k8s: Add `prune_whitelist` option to only prune specific resources [[GH-4345](https://github.com/hashicorp/waypoint/issues/4345)]
+* plugins/k8s: Add `security_context` to the TaskLauncherConfig (on-demand runner configuration) [[GH-4346](https://github.com/hashicorp/waypoint/issues/4346)]
+* server: Add UI_GetDeployment convenience endpoint [[GH-3856](https://github.com/hashicorp/waypoint/issues/3856)]
+* server: Enable gRPC-Gateway on the http port of Waypoint server to add in an HTTP API for interfacing [[GH-4379](https://github.com/hashicorp/waypoint/issues/4379)]
+
 BUG FIXES:
+
+* aws/lambda: fix issue where deployment configuration was not injected in to
+Lambda function environments, preventing waypoint-entrypoint from authenticating
+with the Waypoint server [[GH-4328](https://github.com/hashicorp/waypoint/issues/4328)]
+* cli/snapshot: Fix server snapshot when a config source is set. [[GH-4523](https://github.com/hashicorp/waypoint/issues/4523)]
+* cli: Fix panic in `waypoint pipeline list` and `waypoint pipeline inspect` where
+a pipeline run was given with no jobs. [[GH-4424](https://github.com/hashicorp/waypoint/issues/4424)]
+* cli: Show full command flags when displaying help text for `waypoint runner inspect`. [[GH-4435](https://github.com/hashicorp/waypoint/issues/4435)]
+* install/nomad: Fix connectivity to Waypoint server from the CLI at the end of
+the Nomad server install. [[GH-4363](https://github.com/hashicorp/waypoint/issues/4363)]
+* plugin/aws-ecs: Fix bringing your own alb to ecs deployments. [[GH-4457](https://github.com/hashicorp/waypoint/issues/4457)]
+* plugin/k8s-apply: Update the `prune_whitelist` param to match the updated parameter
+in kubectl apply, `prune_allowlist`. It also ensures this param in the plugin
+is optional and not a hard requirement to use the k8s apply plugin. [[GH-4517](https://github.com/hashicorp/waypoint/issues/4517)]
+* ui: fix safari bug with xterm/webgl rendering [[GH-4054](https://github.com/hashicorp/waypoint/issues/4054)]
+* upgrade: Fixes a bug where pre-v0.10.4 config sources could not be updated or
+deleted. [[GH-4382](https://github.com/hashicorp/waypoint/issues/4382)]
+
 
 ## 0.10.5 (December 15, 2022)
 
