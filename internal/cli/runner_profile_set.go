@@ -49,6 +49,19 @@ func (c *RunnerProfileSetCommand) Run(args []string) int {
 	args = flagSet.Args()
 	ctx := c.Ctx
 
+	// Setup flag name if argument to command is given
+	if c.flagName == "" && len(args) == 0 {
+		c.ui.Output("Must provide a runner profile name either by '-name' or argument.\n\n%s",
+			c.Help(), terminal.WithErrorStyle())
+		return 1
+	} else if c.flagName != "" && len(args) > 0 {
+		c.ui.Output("Cannot set name both via argument and '-name'. Pick one and run the command again.\n\n%s",
+			c.Help(), terminal.WithErrorStyle())
+		return 1
+	} else if c.flagName == "" && len(args) > 0 {
+		c.flagName = args[0]
+	}
+
 	sg := c.ui.StepGroup()
 	defer sg.Wait()
 
@@ -98,7 +111,7 @@ func (c *RunnerProfileSetCommand) Run(args []string) int {
 			}
 		}
 	} else {
-		s = sg.Add("Creating new runner profile")
+		s = sg.Add("Creating new runner profile named %q", c.flagName)
 		od = &pb.OnDemandRunnerConfig{
 			Name: c.flagName,
 		}
@@ -364,7 +377,7 @@ func (c *RunnerProfileSetCommand) Synopsis() string {
 
 func (c *RunnerProfileSetCommand) Help() string {
 	return formatHelp(`
-Usage: waypoint runner profile set [OPTIONS]
+Usage: waypoint runner profile set [OPTIONS] <profile-name>
 
   Create or update a runner profile.
 
