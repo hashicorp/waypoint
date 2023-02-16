@@ -19,7 +19,9 @@ compatible. We encourage users to have all components on the same version.
 Waypoint servers at versions 0.10.4 and 0.10.5 have a [bug that prevents
 snapshots from being taken](https://github.com/hashicorp/waypoint/pull/4523),
 if there is a dynamic configuration source set using the `waypoint config
-source-set` command. If your server is running at either of these versions and a config
+source-set` command, like so.
+
+If your server is running at either of these versions and a config
 source is set, then you will not be able to take snapshots using the command
 `server snapshot`. By default the `server upgrade` command will attempt to take
 a snapshot of the database before upgrading and this will fail due to this bug.
@@ -36,6 +38,12 @@ Another alternative is to delete all config sources from Waypoint using
 `config source-set` with the `-delete` flag, and then running `server upgrade`.
 After the server is upgraded, you can re-create the config sources using
 `config source-set`.
+
+```shell
+# Repeat the command below for each config source that is set; this example
+# deletes the globally-scoped Vault config source
+$ waypoint config source-set -delete -type=vault -scope=global
+````
 
 A third approach is to use platform-native persistence solutions to back up the
 file system where the Waypoint database is stored. This includes Docker, AWS
