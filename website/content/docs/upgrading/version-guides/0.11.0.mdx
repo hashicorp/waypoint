@@ -16,18 +16,23 @@ compatible. We encourage users to have all components on the same version.
 
 ## Server Snapshot
 
-Waypoint servers at versions 0.10.4 and 0.10.5 have a [bug with taking snapshots](https://github.com/hashicorp/waypoint/pull/4523),
-if there is a dynamic configuration source set, using the `config source-set`
-command. If your server is running at either of these versions and a config
+Waypoint servers at versions 0.10.4 and 0.10.5 have a [bug that prevents
+snapshots from being taken](https://github.com/hashicorp/waypoint/pull/4523),
+if there is a dynamic configuration source set using the `waypoint config
+source-set` command. If your server is running at either of these versions and a config
 source is set, then you will not be able to take snapshots using the command
-`server snapshot`. By default, the `server upgrade` command will also take a
-snapshot of the database, and this also fails due to this bug.
+`server snapshot`. By default the `server upgrade` command will attempt to take
+a snapshot of the database before upgrading and this will fail due to this bug.
 
 There are a few options to upgrade to v0.11.0. If you do not need a snapshot of
 the database before upgrading, then you may run `server upgrade` with the flag
-`-snapshot=false` to proceed without issue.
+`-snapshot=false` to proceed with upgrading, like so.
 
-Another alternative is to delete all config sources in your database using
+```shell
+$ waypoint server upgrade -snapshot=false
+```
+
+Another alternative is to delete all config sources from Waypoint using
 `config source-set` with the `-delete` flag, and then running `server upgrade`.
 After the server is upgraded, you can re-create the config sources using
 `config source-set`.
@@ -38,6 +43,12 @@ ECS, Kubernetes, and HashiCorp Nomad. The steps to do this with each of these
 platforms are detailed below.
 
 ### Docker
+
+The Waypoint server stores data into a single `data.db` file, in Docker it's
+normally stored in `/data/data.db`. In the server data directory, copy the
+snapshot data and name the file `waypoint-restore.db`.
+
+Now run `waypoint server upgrade -snapshot=false`.
 
 ### AWS ECS
 
@@ -55,21 +66,7 @@ The source location should be configured as your old file system for the
 Waypoint server and the destination should be configured as the file system you
 just created.
 
-Now that there are two file systems in EFS with the in your Waypoint database,
-the next step is to upgrade the Waypoint server container to v0.11.0. To do
-this, the task definition `waypoint-server` in ECS needs a new revision. The
-only setting that must be changed is the image URI, which should be set to
-`hashicorp/waypoint:0.11.0`. After the new revision of the task definition is
-created, the `waypoint-server` service in ECS must be updated to use the
-revision you just created.
-
-If it is necessary to restore the snapshot to Waypoint, then a new revision of
-the ECS task definition `waypoint-server` needs to be created. In this new
-version, the storage configuration must be updated to replace the existing file
-system with the one created as part of this snapshot process. With that updated,
-the `waypoint-server` ECS service needs to be updated once more to use the
-newest revision of the `waypoint-server` task definition. At this point, the
-server should be using the pre-upgrade snapshot of the database.
+Now run `waypoint server upgrade -snapshot=false`.
 
 ### Kubernetes
 
@@ -98,7 +95,7 @@ NAME                READYTOUSE   SOURCEPVC                        SOURCESNAPSHOT
 waypoint-snapshot                data-default-waypoint-server-0                                         <storage-class>                                              13s
 ```
 
-Now run: `waypoint server upgrade -snapshot=false`
+Now run: `waypoint server upgrade -snapshot=false`.
 
 ### HashiCorp Nomad
 
@@ -149,7 +146,7 @@ $ nomad job run -json waypoint-server-0.11.0.json
     Description = Deployment completed successfully
 ```
 
-If the upgrade fails, stop Waypoint server, revert the Nomad snapshot, and submit the original job to Nomad.
+Now run: `waypoint server upgrade -snapshot=false`.
 
 #### Verifying the Server Version with the UI
 
