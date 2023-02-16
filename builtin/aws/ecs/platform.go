@@ -1454,17 +1454,25 @@ func (p *Platform) resourceTaskDefinitionCreate(
 			})
 		}
 
+		var portMappings []*ecs.PortMapping
+		portMappings = append(portMappings, &ecs.PortMapping{
+			ContainerPort: aws.Int64(int64(container.ContainerPort)),
+			HostPort:      aws.Int64(int64(container.HostPort)),
+			Protocol:      aws.String(container.Protocol),
+		})
+		for _, portMapping := range container.ContainerPorts {
+			portMappings = append(portMappings, &ecs.PortMapping{
+				ContainerPort: aws.Int64(int64(portMapping.ContainerPort)),
+				HostPort:      aws.Int64(int64(portMapping.HostPort)),
+				Protocol:      aws.String(portMapping.Protocol),
+			})
+		}
+
 		c := &ecs.ContainerDefinition{
-			Essential: aws.Bool(false),
-			Name:      aws.String(container.Name),
-			Image:     aws.String(container.Image),
-			PortMappings: []*ecs.PortMapping{
-				{
-					ContainerPort: aws.Int64(int64(container.ContainerPort)),
-					HostPort:      aws.Int64(int64(container.HostPort)),
-					Protocol:      aws.String(container.Protocol),
-				},
-			},
+			Essential:         aws.Bool(false),
+			Name:              aws.String(container.Name),
+			Image:             aws.String(container.Image),
+			PortMappings:      portMappings,
 			Secrets:           secrets,
 			Environment:       env,
 			Memory:            utils.OptionalInt64(int64(container.Memory)),
@@ -2674,6 +2682,17 @@ type Logging struct {
 	MaxBufferSize string `hcl:"max_buffer_size,optional"`
 }
 
+type ContainerPort struct {
+	// The port number on the container
+	ContainerPort int `hcl:"container_port,optional"`
+
+	// The port number on the container instance to reserve for your container
+	HostPort int `hcl:"host_port,optional"`
+
+	// The protocol used for the port mapping
+	Protocol string `hcl:"protocol,optional"`
+}
+
 type ContainerConfig struct {
 	// The name of a container
 	Name string `hcl:"name"`
@@ -2695,6 +2714,9 @@ type ContainerConfig struct {
 
 	// The protocol used for the port mapping
 	Protocol string `hcl:"protocol,optional"`
+
+	// The ports to map on the container if multiple ports need to be defined
+	ContainerPorts []*ContainerPort `hcl:"container_ports,block"`
 
 	// The container health check command
 	HealthCheck *HealthCheckConfig `hcl:"health_check,block"`
