@@ -179,6 +179,9 @@ gen/doc: # generates the server proto docs
 		--doc_out=./doc --doc_opt=html,index.html \
 		./pkg/server/proto/server.proto
 
+.PHONY: gen/website-docs
+gen/website-docs: gen/website-mdx gen/integrations-hcl
+
 .PHONY: gen/integrations-hcl
 gen/integrations-hcl: # Generates the HCL docs for integrations
 	go run ./cmd/waypoint docs -hcl
