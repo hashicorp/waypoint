@@ -209,7 +209,7 @@ func (c *JobListCommand) Run(args []string) int {
 
 	c.ui.Output("Waypoint Jobs", terminal.WithHeaderStyle())
 
-	tblHeaders := []string{"ID", "Operation", "State", "Time Completed", "Target Runner", "Workspace", "Project", "Application", "Pipeline"}
+	tblHeaders := []string{"ID", "Operation", "State", "Time Queued", "Time Completed", "Target Runner", "Workspace", "Project", "Application", "Pipeline"}
 	tbl := terminal.NewTable(tblHeaders...)
 
 	for _, j := range jobs {
@@ -289,6 +289,11 @@ func (c *JobListCommand) Run(args []string) int {
 			targetRunner = target.Id.Id
 		}
 
+		var queueTime string
+		if j.QueueTime != nil {
+			queueTime = humanize.Time(j.QueueTime.AsTime())
+		}
+
 		var completeTime string
 		if j.CompleteTime != nil {
 			completeTime = humanize.Time(j.CompleteTime.AsTime())
@@ -303,6 +308,7 @@ func (c *JobListCommand) Run(args []string) int {
 			j.Id,
 			op,
 			jobState,
+			queueTime,
 			completeTime,
 			targetRunner,
 			j.Workspace.Workspace,

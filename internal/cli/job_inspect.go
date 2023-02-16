@@ -145,6 +145,11 @@ func (c *JobInspectCommand) Run(args []string) int {
 		targetRunner = target.Id.Id
 	}
 
+	var queueTime string
+	if resp.QueueTime != nil {
+		queueTime = humanize.Time(resp.QueueTime.AsTime())
+	}
+
 	var completeTime string
 	if resp.CompleteTime != nil {
 		completeTime = humanize.Time(resp.CompleteTime.AsTime())
@@ -207,6 +212,9 @@ func (c *JobInspectCommand) Run(args []string) int {
 	c.ui.NamedValues([]terminal.NamedValue{
 		{
 			Name: "State", Value: jobState,
+		},
+		{
+			Name: "Queue Time", Value: queueTime,
 		},
 		{
 			Name: "Complete Time", Value: completeTime,
