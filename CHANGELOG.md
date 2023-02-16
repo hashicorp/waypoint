@@ -30,7 +30,7 @@ with the Waypoint server [[GH-4328](https://github.com/hashicorp/waypoint/issues
 * cli: Fix panic in `waypoint pipeline list` and `waypoint pipeline inspect` where
 a pipeline run was given with no jobs. [[GH-4424](https://github.com/hashicorp/waypoint/issues/4424)]
 * cli: Show full command flags when displaying help text for `waypoint runner inspect`. [[GH-4435](https://github.com/hashicorp/waypoint/issues/4435)]
-* install/nomad: Fix connectivity to Waypoint server from the CLi at the end of
+* install/nomad: Fix connectivity to Waypoint server from the CLI at the end of
 the Nomad server install. [[GH-4363](https://github.com/hashicorp/waypoint/issues/4363)]
 * plugin/aws-ecs: Fix bringing your own alb to ecs deployments. [[GH-4457](https://github.com/hashicorp/waypoint/issues/4457)]
 * plugin/k8s-apply: Update the `prune_whitelist` param to match the updated parameter
