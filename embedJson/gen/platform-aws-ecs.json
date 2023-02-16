@@ -572,9 +572,46 @@
                "Optional": true,
                "Default": "",
                "EnvVar": "",
-               "Category": false,
+               "Category": true,
                "Example": "",
-               "SubFields": null
+               "SubFields": [
+                  {
+                     "Field": "container_port",
+                     "Type": "",
+                     "Synopsis": "The port number for the container",
+                     "Summary": "",
+                     "Optional": false,
+                     "Default": "",
+                     "EnvVar": "",
+                     "Category": false,
+                     "Example": "",
+                     "SubFields": null
+                  },
+                  {
+                     "Field": "host_port",
+                     "Type": "",
+                     "Synopsis": "The port number for the container instance to reserve for your container",
+                     "Summary": "",
+                     "Optional": false,
+                     "Default": "",
+                     "EnvVar": "",
+                     "Category": false,
+                     "Example": "",
+                     "SubFields": null
+                  },
+                  {
+                     "Field": "protocol",
+                     "Type": "",
+                     "Synopsis": "The protocol used for the port mapping",
+                     "Summary": "",
+                     "Optional": false,
+                     "Default": "",
+                     "EnvVar": "",
+                     "Category": false,
+                     "Example": "",
+                     "SubFields": null
+                  }
+               ]
             },
             {
                "Field": "health_check",

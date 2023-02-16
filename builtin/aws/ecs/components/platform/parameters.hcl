@@ -247,8 +247,29 @@ parameter {
 parameter {
   key         = "sidecar.container_ports"
   description = "List of container port definitions for the container"
-  type        = "list of ecs.ContainerPort"
+  type        = "category"
   required    = false
+}
+
+parameter {
+  key         = "sidecar.container_ports.container_port"
+  description = "The port number for the container"
+  type        = ""
+  required    = true
+}
+
+parameter {
+  key         = "sidecar.container_ports.host_port"
+  description = "The port number for the container instance to reserve for your container"
+  type        = ""
+  required    = true
+}
+
+parameter {
+  key         = "sidecar.container_ports.protocol"
+  description = "The protocol used for the port mapping"
+  type        = ""
+  required    = true
 }
 
 parameter {

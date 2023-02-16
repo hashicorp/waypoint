@@ -172,12 +172,23 @@ The port number for the container.
 - Type: **int**
 - **Optional**
 
-##### sidecar.container_ports
+##### sidecar.container_ports (category)
 
 List of container port definitions for the container.
 
-- Type: **list of ecs.ContainerPort**
 - **Optional**
+
+###### sidecar.container_ports.container_port
+
+The port number for the container.
+
+###### sidecar.container_ports.host_port
+
+The port number for the container instance to reserve for your container.
+
+###### sidecar.container_ports.protocol
+
+The protocol used for the port mapping.
 
 ##### sidecar.health_check
 

@@ -3072,6 +3072,22 @@ deploy {
 			doc.SetField(
 				"container_ports",
 				"List of container port definitions for the container",
+				docs.SubFields(func(doc *docs.SubFieldDoc) {
+					doc.SetField(
+						"container_port",
+						"The port number for the container",
+					)
+
+					doc.SetField(
+						"host_port",
+						"The port number for the container instance to reserve for your container",
+					)
+
+					doc.SetField(
+						"protocol",
+						"The protocol used for the port mapping",
+					)
+				}),
 			)
 
 			doc.SetField(
