@@ -39,7 +39,6 @@ jobs:
           - "waypoint/hashicorp/nomad-jobspec-canary"
           - "waypoint/hashicorp/nomad-jobspec"
           - "waypoint/hashicorp/nomad"
-          - "waypoint/hashicorp/null"
           - "waypoint/hashicorp/pack"
           - "waypoint/hashicorp/packer"
           - "waypoint/hashicorp/terraform-cloud"
