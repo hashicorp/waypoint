@@ -9,7 +9,8 @@ description: |-
 
 Waypoint 0.10.x can be upgraded to Waypoint 0.11.0 using a [standard upgrade](/waypoint/docs/upgrading#standard-upgrade).
 There are some considerations depending on what platform your server is installed on.
-There are no breaking changes in the protocol or `waypoint.hcl` configuration file. However, there was a bug related to the usage of dynamic configuration which will require attention during the upgrade. Those details are below.
+There are no breaking changes in the protocol or `waypoint.hcl` configuration file. 
+However, there was a bug related to the usage of dynamic configuration which will require attention during the upgrade. Those details are below.
 
 ## Server Snapshot
 
@@ -19,15 +20,18 @@ snapshots from being taken if a dynamic configuration source was set using the
 these versions and a `waypoint config source-set` command was run, then you
 will not be able to take snapshots using the command `waypoint server snapshot`.
 
-When upgrading to Waypoint 0.11.0, follow your normal upgrade procedures. To
+To
 check if you are affected by the bug in question, run
 `waypoint server snapshot`. If this succeeds, disregard the rest of the below
 remediation steps. You are unaffected by this bug and can use
 `waypoint server upgrade` with no extra steps beyond your normal upgrade
-procedure. If this fails, proceed with the below remediation steps. There are
+procedure.
+
+If this fails, proceed with the below remediation steps. There are
 three options to upgrade to v0.11.0 if you are unable to create snapshots.
-The first is, you do not need a snapshot of the database before upgrading, then
-run server upgrade with the flag `-snapshot=false` to proceed with upgrading:
+
+The first is, if you do not need a snapshot of the database before upgrading, then
+run the server upgrade with the flag `-snapshot=false` to proceed with upgrading:
 
 ```shell
 $ waypoint server upgrade -snapshot=false
@@ -51,8 +55,8 @@ these platforms are detailed below.
 
 ### Docker
 
-The Waypoint server stores data into a single `data.db` file, in Docker it's
-normally stored in `/data/data.db`. In the server data directory, copy the
+The Waypoint server stores data in a single `data.db` file, and in Docker its
+default location is `/data/data.db`. In the server data directory, copy the
 snapshot data and name the file `waypoint-restore.db`.
 
 Now run:
