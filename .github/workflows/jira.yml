@@ -3,13 +3,11 @@ on:
     # `labeled` is for copying GH Issue -> Jira; other states are for updating the created Jira issue when the GH Issue has a change
     types: [labeled, closed, deleted, reopened]
   # On Waypoint, we don't put PRs into Jira at this time
-  # pull_request_target:
-  #   types: [opened, closed, reopened]
+  pull_request_target:
+    types: [labeled, opened, closed, reopened]
   issue_comment:
     # Allows the copying of GitHub Issue comments to the corresponding Jira ticket (1-way only, GH->Jira)
     types: [created]
-  
-  workflow_dispatch:
 
 name: Jira Sync
 
@@ -39,7 +37,7 @@ jobs:
         id: set-ticket-labels
         run: |
           LABELS="["
-          if [[ "${{ contains(github.event.issue.labels.*.name, 'documentation') }}" == "true" ]]; then LABELS+="\"documentation\", "; fi
+          if [[ "${{ contains(github.event.issue.labels.*.name, 'documentation') }}" == "true" ]]; then LABELS+="\"engineering\", "; fi
           if [[ "${{ contains(github.event.issue.labels.*.name, 'ui') }}" == "true" ]]; then LABELS+="\"experiences\", "; else LABELS+="\"foundations\", "; fi
           if [[ ${#LABELS} != 1 ]]; then LABELS=${LABELS::-2}"]"; else LABELS+="]"; fi
           echo "::set-output name=labels::${LABELS}"
