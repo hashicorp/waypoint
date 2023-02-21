@@ -73,10 +73,7 @@ func (s *Service) UI_ListPipelines(
 
 	// Return the array
 	return &pb.UI_ListPipelinesResponse{
-		Pipelines: allPipelines,
-		Pagination: &pb.PaginationResponse{
-			NextPageToken:     req.Pagination.NextPageToken,
-			PreviousPageToken: req.Pagination.PreviousPageToken,
-		},
+		Pipelines:  allPipelines,
+		Pagination: &pb.PaginationResponse{},
 	}, nil
 }
