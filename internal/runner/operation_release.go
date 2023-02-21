@@ -155,6 +155,9 @@ func (r *Runner) executeReleaseOp(
 			Application: app.Ref(),
 			Workspace:   project.WorkspaceRef(),
 		})
+		if err != nil {
+			return nil, err
+		}
 
 		var rs []*pb.Release
 		for _, release := range rl.Releases {
