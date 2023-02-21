@@ -23,15 +23,10 @@ func TestServiceUI_ListPipelines(t *testing.T, factory Factory) {
 	// Create our server
 	client, _ := factory(t)
 
-	// Create project
-	var project *pb.Project
-	{
-		resp, err := client.UpsertProject(ctx, &pb.UpsertProjectRequest{
-			Project: serverptypes.TestProject(t, &pb.Project{}),
-		})
-		require.NoError(err)
-		project = resp.Project
-	}
+	// Create project with application
+	jobTemplate := serverptypes.TestJobNew(t, nil)
+	appRef := jobTemplate.Application
+	TestApp(t, client, appRef)
 
 	// Create some pipelines in the project
 	for _, name := range []string{"alpha", "beta"} {
@@ -41,7 +36,7 @@ func TestServiceUI_ListPipelines(t *testing.T, factory Factory) {
 				Name: name,
 				Owner: &pb.Pipeline_Project{
 					Project: &pb.Ref_Project{
-						Project: project.Name,
+						Project: appRef.Project,
 					},
 				},
 			}),
@@ -50,10 +45,9 @@ func TestServiceUI_ListPipelines(t *testing.T, factory Factory) {
 	}
 
 	t.Run("with no runs", func(t *testing.T) {
-		// Call the method
 		resp, err := client.UI_ListPipelines(ctx, &pb.UI_ListPipelinesRequest{
 			Project: &pb.Ref_Project{
-				Project: project.Name,
+				Project: appRef.Project,
 			},
 			Pagination: &pb.PaginationRequest{
 				PageSize: 10,
@@ -62,16 +56,32 @@ func TestServiceUI_ListPipelines(t *testing.T, factory Factory) {
 		require.NoError(err)
 		require.Len(resp.Pipelines, 2)
 		require.Nil(resp.Pipelines[0].LastRun)
-		// TODO: require.EqualValues(2, resp.TotalCount)
+		require.EqualValues(0, resp.Pipelines[0].TotalRuns)
 	})
 
 	t.Run("with some runs", func(t *testing.T) {
-		// TODO: Add some runs somehow
+		// Add some runs
+		client.RunPipeline(ctx, &pb.RunPipelineRequest{
+			Pipeline: &pb.Ref_Pipeline{
+				Ref: &pb.Ref_Pipeline_Id{
+					Id: "alpha",
+				},
+			},
+			JobTemplate: jobTemplate,
+		})
+		client.RunPipeline(ctx, &pb.RunPipelineRequest{
+			Pipeline: &pb.Ref_Pipeline{
+				Ref: &pb.Ref_Pipeline_Id{
+					Id: "beta",
+				},
+			},
+			JobTemplate: jobTemplate,
+		})
 
 		// Call the method
 		resp, err := client.UI_ListPipelines(ctx, &pb.UI_ListPipelinesRequest{
 			Project: &pb.Ref_Project{
-				Project: project.Name,
+				Project: appRef.Project,
 			},
 			Pagination: &pb.PaginationRequest{
 				PageSize: 10,
@@ -80,5 +90,6 @@ func TestServiceUI_ListPipelines(t *testing.T, factory Factory) {
 		require.NoError(err)
 		require.NotNil(resp.Pipelines[0].LastRun)
 		require.NotNil(resp.Pipelines[1].LastRun)
+		require.EqualValues(1, resp.Pipelines[0].TotalRuns)
 	})
 }
