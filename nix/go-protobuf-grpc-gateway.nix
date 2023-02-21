@@ -11,8 +11,8 @@ buildGoModule rec {
     sha256 = "sha256-8eBBBYJ+tBjB2fgPMX/ZlbN3eeS75e8TAZYOKXs6hcg=";
   };
 
-  modSha256 = "sha256-8XbFKsgmMcf363W/F1Ffh1eEh/M3NGg0zzLCZ4b5Dho=";
-  vendorSha256 = "sha256-8XbFKsgmMcf363W/F1Ffh1eEh/M3NGg0zzLCZ4b5Dho=";
+  modSha256 = "sha256-AW2Gn/mlZyLMwF+NpK59eiOmQrYWW/9HPjbunYc9Ij4=";
+  vendorSha256 = "sha256-AW2Gn/mlZyLMwF+NpK59eiOmQrYWW/9HPjbunYc9Ij4=";
 
   subPackages = [ "protoc-gen-grpc-gateway" ];
 }

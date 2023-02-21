@@ -4,9 +4,6 @@ final: prev: {
 
   devShell = final.callPackage ./waypoint.nix { };
 
-  # Need to manually do this since 1.16 is still the default
-  go = final.go_1_17;
-
   go-protobuf = prev.callPackage ./go-protobuf.nix { };
 
   go-protobuf-grpc = prev.callPackage ./go-protobuf-grpc.nix { };
