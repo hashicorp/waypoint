@@ -23,7 +23,7 @@ func (s *Service) UI_ListPipelines(
 	// Create uninitialized array of pipeline bundles
 	var allPipelines []*pb.UI_PipelineBundle
 
-	// get list of all pipelines
+	// Get list of all pipelines
 	pipelineListResponse, err := s.state(ctx).PipelineList(ctx, req.Project)
 	if err != nil {
 		return nil, hcerr.Externalize(
@@ -33,9 +33,7 @@ func (s *Service) UI_ListPipelines(
 		)
 	}
 
-	// we will put this in a state function- right now its new db query every time. if i did it in a db function- could do it once.
-	// see line 30 in service_ui_project
-	// do this after i get it running
+	// Create bundles
 	for _, pipeline := range pipelineListResponse {
 		ref := &pb.Ref_Pipeline{
 			Ref: &pb.Ref_Pipeline_Id{
