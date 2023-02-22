@@ -1308,45 +1308,51 @@ func (p *Platform) resourceTargetGroupCreate(
 
 	state.Port = p.config.ServicePort
 
-	if p.config.HealthCheck.Protocol == "" {
-		p.config.HealthCheck.Protocol = "HTTP"
-	}
-
 	createTargetGroupInput := &elbv2.CreateTargetGroupInput{
 		HealthCheckEnabled: aws.Bool(true),
 		Name:               &targetGroupName,
 		Port:               &state.Port,
-		Protocol:           aws.String(p.config.HealthCheck.Protocol),
+		Protocol:           aws.String("HTTP"),
 		TargetType:         aws.String("ip"),
 		VpcId:              &subnets.Subnets.VpcId,
 	}
 
-	if p.config.HealthCheck.Path != "" {
-		createTargetGroupInput.HealthCheckPath = aws.String(p.config.HealthCheck.Path)
-	}
+	if p.config.HealthCheck != nil {
+		if p.config.HealthCheck.Protocol != "" {
+			createTargetGroupInput.Protocol = aws.String(p.config.HealthCheck.Protocol)
+		}
 
-	if p.config.HealthCheck.Timeout != 0 {
-		createTargetGroupInput.HealthCheckTimeoutSeconds = aws.Int64(p.config.HealthCheck.Timeout)
-	}
+		if p.config.HealthCheck.Path != "" {
+			createTargetGroupInput.HealthCheckPath = aws.String(p.config.HealthCheck.Path)
+		}
 
-	if p.config.HealthCheck.Interval != 0 {
-		createTargetGroupInput.HealthCheckIntervalSeconds = aws.Int64(p.config.HealthCheck.Interval)
-	}
+		if p.config.HealthCheck.Timeout != 0 {
+			createTargetGroupInput.HealthCheckTimeoutSeconds = aws.Int64(p.config.HealthCheck.Timeout)
+		}
 
-	if p.config.HealthCheck.HealthyThresholdCount != 0 {
-		createTargetGroupInput.HealthyThresholdCount = aws.Int64(p.config.HealthCheck.HealthyThresholdCount)
-	}
+		if p.config.HealthCheck.Interval != 0 {
+			createTargetGroupInput.HealthCheckIntervalSeconds = aws.Int64(p.config.HealthCheck.Interval)
+		}
 
-	if p.config.HealthCheck.UnhealthyThresholdCount != 0 {
-		createTargetGroupInput.UnhealthyThresholdCount = aws.Int64(p.config.HealthCheck.UnhealthyThresholdCount)
-	}
+		if p.config.HealthCheck.HealthyThresholdCount != 0 {
+			createTargetGroupInput.HealthyThresholdCount = aws.Int64(p.config.HealthCheck.HealthyThresholdCount)
+		} else {
+			createTargetGroupInput.HealthyThresholdCount = aws.Int64(5)
+		}
 
-	if p.config.HealthCheck.GRPCCode != "" {
-		createTargetGroupInput.Matcher.GrpcCode = aws.String(p.config.HealthCheck.GRPCCode)
-	}
+		if p.config.HealthCheck.UnhealthyThresholdCount != 0 {
+			createTargetGroupInput.UnhealthyThresholdCount = aws.Int64(p.config.HealthCheck.UnhealthyThresholdCount)
+		} else {
+			createTargetGroupInput.UnhealthyThresholdCount = aws.Int64(2)
+		}
 
-	if p.config.HealthCheck.HTTPCode != "" {
-		createTargetGroupInput.Matcher.HttpCode = aws.String(p.config.HealthCheck.HTTPCode)
+		if p.config.HealthCheck.GRPCCode != "" {
+			createTargetGroupInput.Matcher.GrpcCode = aws.String(p.config.HealthCheck.GRPCCode)
+		}
+
+		if p.config.HealthCheck.HTTPCode != "" {
+			createTargetGroupInput.Matcher.HttpCode = aws.String(p.config.HealthCheck.HTTPCode)
+		}
 	}
 
 	ctg, err := elbsrv.CreateTargetGroupWithContext(ctx, createTargetGroupInput)
@@ -3156,7 +3162,8 @@ deploy {
 		"Health check settings for the app.",
 		docs.SubFields(func(doc *docs.SubFieldDoc) {
 			doc.SetField("protocol",
-				"The protocol for the health check to use.")
+				"The protocol for the health check to use.",
+				docs.Default("HTTP"))
 
 			doc.SetField("path",
 				"The destination of the ping path for the target health check.")
