@@ -1,0 +1,3 @@
+```release-note:improvement
+plugin/ecs: Update ECS releaser to verify deployment health before releasing.
+```

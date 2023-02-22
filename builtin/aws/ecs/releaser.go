@@ -130,7 +130,29 @@ func (r *Releaser) Release(
 		}
 	}
 
-	s.Update("Modifying load balancer to introduce new target group %q", target.TargetGroupArn)
+	s = sg.Add("Checking that all targets are healthy...")
+	targetHealth, err := elbsrv.DescribeTargetHealthWithContext(ctx, &elbv2.DescribeTargetHealthInput{
+		TargetGroupArn: aws.String(target.TargetGroupArn),
+	})
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to describe health of target group with ARN %q", target.TargetGroupArn)
+	}
+
+	// Check each target to see if any one of them isn't healthy, before we
+	// route 100% of traffic to it!
+	for _, targetHealth := range targetHealth.TargetHealthDescriptions {
+		// Possible states are: initial, healthy, unhealthy, unused, draining,
+		// and unavailable.
+		if *targetHealth.TargetHealth.State != "healthy" {
+			return nil, errors.Errorf("target (id: %s) is not healthy - will "+
+				"only release when all targets in group (ARN: %q) are healthy",
+				*targetHealth.Target.Id, target.TargetGroupArn)
+		}
+	}
+	s.Update("All targets are healthy!")
+	s.Done()
+
+	s = sg.Add("Modifying load balancer to introduce new target group %q", target.TargetGroupArn)
 	log.Debug("modifying load balancer", "tgs", len(tgs))
 	_, err = elbsrv.ModifyListener(&elbv2.ModifyListenerInput{
 		ListenerArn: aws.String(target.ListenerArn),
