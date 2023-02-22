@@ -509,7 +509,7 @@
                "Synopsis": "The protocol for the health check to use.",
                "Summary": "",
                "Optional": true,
-               "Default": "",
+               "Default": "HTTP",
                "EnvVar": "",
                "Category": false,
                "Example": "",
