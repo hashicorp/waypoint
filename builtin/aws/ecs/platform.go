@@ -691,7 +691,7 @@ func (p *Platform) resourceServiceCreate(
 	deploymentId DeploymentId,
 	state *Resource_Service,
 
-// Outputs of other resource creation processes
+	// Outputs of other resource creation processes
 	taskDefinition *Resource_TaskDefinition,
 	cluster *Resource_Cluster,
 	targetGroup *Resource_TargetGroup,
@@ -1339,21 +1339,88 @@ func (p *Platform) resourceTargetGroupDestroy(
 		return nil
 	}
 
-	s := sg.Add("Deleting target group %s", state.Name)
+	s := sg.Add("Getting details for target group %s", state.Name)
 	defer s.Abort()
 
 	elbsrv := elbv2.New(sess)
 
+	groups, err := elbsrv.DescribeTargetGroups(&elbv2.DescribeTargetGroupsInput{
+		TargetGroupArns: aws.StringSlice([]string{state.Arn}),
+	})
+	if err != nil {
+		return status.Errorf(codes.Internal, "failed to describe target group %s (ARN: %q): %s", state.Name, state.Arn, err)
+	} else if len(groups.TargetGroups) > 0 {
+		return status.Errorf(codes.FailedPrecondition, "only one target group should be returned for ARN %q, but found %d matching target groups", state.Arn, len(groups.TargetGroups))
+	}
+
+	s.Update("Retrieved target group details")
+	s.Done()
+
+	s = sg.Add("Checking if target group %q has an active ALB listener", *groups.TargetGroups[0].TargetGroupName)
+	// If there are any load balancers routing to the target group, loop until
+	// the listeners are deleted by resourceAlbListenerDestroy, for a max of
+	// 5 minutes
+	var listenerArns []string
+	describeListenersInput := &elbv2.DescribeListenersInput{}
+	d := time.Now().Add(time.Minute * time.Duration(5))
+	ctx, cancel := context.WithDeadline(ctx, d)
+	defer cancel()
+	ticker := time.NewTicker(5 * time.Second)
+	listenerDeleted := false
+	for !listenerDeleted {
+		for _, lb := range groups.TargetGroups[0].LoadBalancerArns {
+		CHECK_LISTENERS:
+			if len(listenerArns) > 0 {
+				describeListenersInput.ListenerArns = aws.StringSlice(listenerArns)
+			} else {
+				describeListenersInput.LoadBalancerArn = lb
+			}
+
+			listeners, err := elbsrv.DescribeListeners(describeListenersInput)
+			if err != nil {
+				return status.Errorf(codes.Internal, "failed to describe listeners for ALB (ARN: %q): %s", *lb, err)
+			}
+			for _, listener := range listeners.Listeners {
+				for _, defaultAction := range listener.DefaultActions {
+					if *defaultAction.TargetGroupArn == state.Arn {
+						s.Update("Found active ALB listener with ARN " + *listener.ListenerArn)
+						// Save the listener ARN to search by it instead of
+						// needlessly looping through all listeners on the
+						// LB again. We hard-assign this to the first index
+						// of the slice because there should be only one.
+						listenerArns[0] = *listener.ListenerArn
+						select {
+						case <-ticker.C: // wait 5 seconds before checking again
+						case <-ctx.Done():
+							return status.Errorf(codes.Aborted, "Context "+
+								"cancelled from timeout checking if listener for "+
+								"target group was deleted: %s", ctx.Err())
+						}
+						goto CHECK_LISTENERS
+					}
+				}
+			}
+		}
+		// We've checked all of the possible permutations of ALBs and
+		// listeners, but none of the DefaultActions point to our target
+		// group - if there was a listener, it's gone now.
+		listenerDeleted = true
+	}
+
+	s.Update("ALB listener for target group is deleted")
+	s.Done()
+
+	s = sg.Add("Deleting target group...")
 	// Destroying the listener earlier should have deregistered this target group, so it should be safe
 	// to just delete
-	_, err := elbsrv.DeleteTargetGroupWithContext(ctx, &elbv2.DeleteTargetGroupInput{
+	_, err = elbsrv.DeleteTargetGroupWithContext(ctx, &elbv2.DeleteTargetGroupInput{
 		TargetGroupArn: &state.Arn,
 	})
 	if err != nil {
 		// This doesn't seem to return an error if the target group does not exist.
 		return status.Errorf(codes.Internal, "failed to delete target group %s (ARN: %q): %s", state.Name, state.Arn, err)
 	}
-
+	s.Update("Target group deleted")
 	s.Done()
 	return nil
 }
@@ -1368,7 +1435,7 @@ func (p *Platform) resourceTaskDefinitionCreate(
 	deployConfig *component.DeploymentConfig,
 	state *Resource_TaskDefinition,
 
-// Outputs of other resource creation processes
+	// Outputs of other resource creation processes
 	executionRole *Resource_ExecutionRole,
 	taskRole *Resource_TaskRole,
 	logGroup *Resource_LogGroup,
