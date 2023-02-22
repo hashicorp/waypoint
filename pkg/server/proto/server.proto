@@ -4926,8 +4926,17 @@ message PipelineRun {
   // The full list of jobs that are associated with this run.
   repeated Ref.Job jobs = 4;
 
-  // The current state of this pipeline run,
+  // The current state of this pipeline run.
   State state = 5;
+
+  // The timestamp of the run.
+  google.protobuf.Timestamp queue_time = 6;
+
+  // The application associated with this run.
+  Ref.Application application = 7;
+
+  // The last non-local ref that was used for this pipeline run.
+  Job.DataSource.Ref data_source_ref = 8; 
 
   enum State {
     UNKNOWN = 0; // no state defined, the default
