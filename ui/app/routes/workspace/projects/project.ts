@@ -4,6 +4,7 @@ import ApiService from 'waypoint/services/api';
 import { UI, Project, Ref, Job } from 'waypoint-pb';
 import PollModelService from 'waypoint/services/poll-model';
 import { Breadcrumb } from 'waypoint/services/breadcrumbs';
+import ProjectService from 'waypoint/services/project';
 
 export type Params = { project_id: string };
 export type Model = Project.AsObject & {
@@ -13,6 +14,7 @@ export type Model = Project.AsObject & {
 export default class ProjectDetail extends Route {
   @service api!: ApiService;
   @service pollModel!: PollModelService;
+  @service declare project: ProjectService;
 
   breadcrumbs: Breadcrumb[] = [
     {
@@ -46,7 +48,8 @@ export default class ProjectDetail extends Route {
     return result;
   }
 
-  afterModel(): void {
+  afterModel(model: Model): void {
     this.pollModel.setup(this);
+    this.project.current = model;
   }
 }
