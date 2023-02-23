@@ -58,11 +58,15 @@ func (s *Service) UI_ListPipelines(
 				"failed to find latest pipeline run",
 			)
 		}
+		var lastRunBundle *pb.UI_PipelineRunBundle
+		if pipelineLastRun != nil {
+			lastRunBundle = &pb.UI_PipelineRunBundle{PipelineRun: pipelineLastRun}
+		}
 
 		pipelineBundle := &pb.UI_PipelineBundle{
 			Pipeline:  pipeline,
 			TotalRuns: uint64(len(pipelineRunListResponse)),
-			LastRun:   pipelineLastRun,
+			LastRun:   lastRunBundle,
 		}
 		// Add pipeline bundle to uninitialized array
 		allPipelines = append(allPipelines, pipelineBundle)
