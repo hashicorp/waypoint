@@ -526,8 +526,15 @@ message UI {
 
   message PipelineBundle {
     Pipeline pipeline = 1;
-    PipelineRun last_run = 2;
+    PipelineRunBundle last_run = 2;
     uint64 total_runs = 3;
+  }
+
+  message PipelineRunBundle {
+    PipelineRun pipeline_run = 1;
+    google.protobuf.Timestamp queue_time = 2;
+    Ref.Application application = 3;
+    Job.DataSource.Ref data_source_ref = 4;
   }
 
   message ListDeploymentsRequest {
