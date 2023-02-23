@@ -1,0 +1,3 @@
+```release-note:bug
+ui: Only show health-check “Re-run” button if project has a data source.
+```
