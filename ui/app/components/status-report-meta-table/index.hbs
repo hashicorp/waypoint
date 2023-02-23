@@ -25,15 +25,17 @@
         <td>
           <div class="status-indicator">
             <StatusReportIndicator @statusReport={{@model.statusReport}} /> &nbsp;
-            <Pds::Button
-              @variant="ghost"
-              @iconStart="refresh-default"
-              class="refresh-health-check-button"
-              disabled={{this.isRefreshRunning}}
-              {{on "click" this.refreshHealthCheck}}
-            >
-              {{t "page.artifact.overview.re-run-health-check"}}
-            </Pds::Button>
+            {{#if this.projectHasDataSource}}
+              <Pds::Button
+                @variant="ghost"
+                @iconStart="refresh-default"
+                class="refresh-health-check-button"
+                disabled={{this.isRefreshRunning}}
+                {{on "click" this.refreshHealthCheck}}
+              >
+                {{t "page.artifact.overview.re-run-health-check"}}
+              </Pds::Button>
+            {{/if}}
           </div>
         </td>
       </tr>
