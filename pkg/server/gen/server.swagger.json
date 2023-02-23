@@ -11965,11 +11965,29 @@
           "$ref": "#/definitions/hashicorp.waypoint.Pipeline"
         },
         "last_run": {
-          "$ref": "#/definitions/hashicorp.waypoint.PipelineRun"
+          "$ref": "#/definitions/hashicorp.waypoint.UI.PipelineRunBundle"
         },
         "total_runs": {
           "type": "string",
           "format": "uint64"
+        }
+      }
+    },
+    "hashicorp.waypoint.UI.PipelineRunBundle": {
+      "type": "object",
+      "properties": {
+        "pipeline_run": {
+          "$ref": "#/definitions/hashicorp.waypoint.PipelineRun"
+        },
+        "queue_time": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "application": {
+          "$ref": "#/definitions/hashicorp.waypoint.Ref.Application"
+        },
+        "data_source_ref": {
+          "$ref": "#/definitions/hashicorp.waypoint.Job.DataSource.Ref"
         }
       }
     },
