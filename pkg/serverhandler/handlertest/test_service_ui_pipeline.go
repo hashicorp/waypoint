@@ -44,7 +44,7 @@ func TestServiceUI_ListPipelines(t *testing.T, factory Factory) {
 		require.NoError(err)
 	}
 
-	t.Run("with no runs", func(t *testing.T) {
+	t.Run("list", func(t *testing.T) {
 		resp, err := client.UI_ListPipelines(ctx, &pb.UI_ListPipelinesRequest{
 			Project: &pb.Ref_Project{
 				Project: appRef.Project,
@@ -55,6 +55,18 @@ func TestServiceUI_ListPipelines(t *testing.T, factory Factory) {
 		})
 		require.NoError(err)
 		require.Len(resp.Pipelines, 2)
+	})
+
+	t.Run("with no runs", func(t *testing.T) {
+		resp, err := client.UI_ListPipelines(ctx, &pb.UI_ListPipelinesRequest{
+			Project: &pb.Ref_Project{
+				Project: appRef.Project,
+			},
+			Pagination: &pb.PaginationRequest{
+				PageSize: 10,
+			},
+		})
+		require.NoError(err)
 		require.Nil(resp.Pipelines[0].LastRun)
 		require.EqualValues(0, resp.Pipelines[0].TotalRuns)
 	})
