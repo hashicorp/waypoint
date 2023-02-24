@@ -52,4 +52,12 @@ export default class ProjectDetail extends Route {
     this.pollModel.setup(this);
     this.project.current = model;
   }
+
+  deactivate() {
+    this.project.current = undefined;
+  }
+
+  willDestroy() {
+    this.project.current = undefined;
+  }
 }
