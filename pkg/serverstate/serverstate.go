@@ -118,6 +118,10 @@ type Interface interface {
 	GetFileChangeSignal(context.Context, *pb.Ref_Application) (string, error)
 
 	//---------------------------------------------------------------
+	// Events
+	EventListBundles(ctx context.Context, request *pb.PaginationRequest) ([]*pb.UI_EventBundle, *pb.PaginationResponse, error)
+
+	//---------------------------------------------------------------
 	// Operations
 
 	ArtifactPut(context.Context, bool, *pb.PushedArtifact) error

@@ -485,6 +485,8 @@ service Waypoint {
 
   // List releases for a given application.
   rpc UI_ListReleases(UI.ListReleasesRequest) returns (UI.ListReleasesResponse);
+
+  rpc UI_ListEvents(UI.ListEventsRequest) returns (UI.ListEventsResponse);
 }
 
 /********************************************************************
@@ -651,6 +653,36 @@ message UI {
 
     // The most recent status report generated for this release.
     StatusReport latest_status_report = 2;
+  }
+
+  message ListEventsRequest {
+    // Application that the events belong to.
+    Ref.Application application = 1;
+
+    // Workspace that the events belong to.
+    // If undefined, events from all workspaces will be listed.
+    Ref.Workspace workspace = 2;
+
+    PaginationRequest pagination = 3;
+
+    //    OperationOrder order = 4;
+    //TODO: Add sorting from andrew here
+  }
+
+  message ListEventsResponse {
+    // The list of events with related messages prefetched.
+    repeated UI.EventBundle events = 1;
+
+    PaginationResponse pagination = 2;
+  }
+
+  // An event packaged alongside prefetched related messages.
+  message EventBundle {
+    google.protobuf.Timestamp timestamp = 1;
+    Build build = 2;
+    UI.DeploymentBundle deployment = 3;
+    UI.ReleaseBundle release = 4;
+    PipelineRun pipeline_run = 5;
   }
 }
 
