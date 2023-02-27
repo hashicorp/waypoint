@@ -5,6 +5,7 @@ import (
 	"github.com/hashicorp/go-memdb"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 )
+
 // EventListBundles returns the list of events
 func (s *State) EventListBundles(ctx context.Context, paginationRequest *pb.PaginationRequest) ([]*pb.UI_EventBundle, *pb.PaginationResponse, error) {
 	memTxn := s.inmem.Txn(false)
