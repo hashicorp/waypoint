@@ -1,4 +1,5 @@
 package singleprocess
+
 import (
 	"context"
 	"github.com/hashicorp/go-hclog"
