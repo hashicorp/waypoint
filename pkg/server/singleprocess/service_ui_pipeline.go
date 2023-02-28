@@ -12,10 +12,15 @@ import (
 	serverptypes "github.com/hashicorp/waypoint/pkg/server/ptypes"
 )
 
+// UI_ListPipelines returns pipelines for a given project. While paginating is
+// part of the request, this doesn't yet support pagination and will return
+// everything every time.
 func (s *Service) UI_ListPipelines(
 	ctx context.Context,
 	req *pb.UI_ListPipelinesRequest,
 ) (*pb.UI_ListPipelinesResponse, error) {
+	log := hclog.FromContext(ctx)
+
 	if err := serverptypes.ValidateUIListPipelinesRequest(req); err != nil {
 		return nil, err
 	}
@@ -27,7 +32,7 @@ func (s *Service) UI_ListPipelines(
 	pipelineListResponse, err := s.state(ctx).PipelineList(ctx, req.Project)
 	if err != nil {
 		return nil, hcerr.Externalize(
-			hclog.FromContext(ctx),
+			log,
 			err,
 			"error listing piplines",
 		)
@@ -44,7 +49,7 @@ func (s *Service) UI_ListPipelines(
 		pipelineRunListResponse, err := s.state(ctx).PipelineRunList(ctx, ref)
 		if err != nil {
 			return nil, hcerr.Externalize(
-				hclog.FromContext(ctx),
+				log,
 				err,
 				"failed to count pipeline runs",
 			)
@@ -53,7 +58,7 @@ func (s *Service) UI_ListPipelines(
 		pipelineLastRun, err := s.state(ctx).PipelineRunGetLatest(ctx, pipeline.Id)
 		if err != nil && status.Code(err) != codes.NotFound {
 			return nil, hcerr.Externalize(
-				hclog.FromContext(ctx),
+				log,
 				err,
 				"failed to find latest pipeline run",
 			)
