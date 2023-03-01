@@ -2688,6 +2688,36 @@ func (_m *WaypointClient) UI_ListDeployments(ctx context.Context, in *gen.UI_Lis
 	return r0, r1
 }
 
+// UI_ListPipelines provides a mock function with given fields: ctx, in, opts
+func (_m *WaypointClient) UI_ListPipelines(ctx context.Context, in *gen.UI_ListPipelinesRequest, opts ...grpc.CallOption) (*gen.UI_ListPipelinesResponse, error) {
+	_va := make([]interface{}, len(opts))
+	for _i := range opts {
+		_va[_i] = opts[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx, in)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
+
+	var r0 *gen.UI_ListPipelinesResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.UI_ListPipelinesRequest, ...grpc.CallOption) *gen.UI_ListPipelinesResponse); ok {
+		r0 = rf(ctx, in, opts...)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gen.UI_ListPipelinesResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.UI_ListPipelinesRequest, ...grpc.CallOption) error); ok {
+		r1 = rf(ctx, in, opts...)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // UI_ListProjects provides a mock function with given fields: ctx, in, opts
 func (_m *WaypointClient) UI_ListProjects(ctx context.Context, in *gen.UI_ListProjectsRequest, opts ...grpc.CallOption) (*gen.UI_ListProjectsResponse, error) {
 	_va := make([]interface{}, len(opts))

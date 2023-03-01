@@ -323,6 +323,8 @@ type WaypointClient interface {
 	UI_ListProjects(ctx context.Context, in *UI_ListProjectsRequest, opts ...grpc.CallOption) (*UI_ListProjectsResponse, error)
 	// Get a given project with useful related records.
 	UI_GetProject(ctx context.Context, in *UI_GetProjectRequest, opts ...grpc.CallOption) (*UI_GetProjectResponse, error)
+	// List pipelines with last run for each for a given project.
+	UI_ListPipelines(ctx context.Context, in *UI_ListPipelinesRequest, opts ...grpc.CallOption) (*UI_ListPipelinesResponse, error)
 	// List deployments for a given application.
 	UI_ListDeployments(ctx context.Context, in *UI_ListDeploymentsRequest, opts ...grpc.CallOption) (*UI_ListDeploymentsResponse, error)
 	// GetDeployment returns a deployment
@@ -1496,6 +1498,15 @@ func (c *waypointClient) UI_GetProject(ctx context.Context, in *UI_GetProjectReq
 	return out, nil
 }
 
+func (c *waypointClient) UI_ListPipelines(ctx context.Context, in *UI_ListPipelinesRequest, opts ...grpc.CallOption) (*UI_ListPipelinesResponse, error) {
+	out := new(UI_ListPipelinesResponse)
+	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/UI_ListPipelines", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *waypointClient) UI_ListDeployments(ctx context.Context, in *UI_ListDeploymentsRequest, opts ...grpc.CallOption) (*UI_ListDeploymentsResponse, error) {
 	out := new(UI_ListDeploymentsResponse)
 	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/UI_ListDeployments", in, out, opts...)
@@ -1827,6 +1838,8 @@ type WaypointServer interface {
 	UI_ListProjects(context.Context, *UI_ListProjectsRequest) (*UI_ListProjectsResponse, error)
 	// Get a given project with useful related records.
 	UI_GetProject(context.Context, *UI_GetProjectRequest) (*UI_GetProjectResponse, error)
+	// List pipelines with last run for each for a given project.
+	UI_ListPipelines(context.Context, *UI_ListPipelinesRequest) (*UI_ListPipelinesResponse, error)
 	// List deployments for a given application.
 	UI_ListDeployments(context.Context, *UI_ListDeploymentsRequest) (*UI_ListDeploymentsResponse, error)
 	// GetDeployment returns a deployment
@@ -2148,6 +2161,9 @@ func (UnimplementedWaypointServer) UI_ListProjects(context.Context, *UI_ListProj
 }
 func (UnimplementedWaypointServer) UI_GetProject(context.Context, *UI_GetProjectRequest) (*UI_GetProjectResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UI_GetProject not implemented")
+}
+func (UnimplementedWaypointServer) UI_ListPipelines(context.Context, *UI_ListPipelinesRequest) (*UI_ListPipelinesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UI_ListPipelines not implemented")
 }
 func (UnimplementedWaypointServer) UI_ListDeployments(context.Context, *UI_ListDeploymentsRequest) (*UI_ListDeploymentsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UI_ListDeployments not implemented")
@@ -4085,6 +4101,24 @@ func _Waypoint_UI_GetProject_Handler(srv interface{}, ctx context.Context, dec f
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Waypoint_UI_ListPipelines_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UI_ListPipelinesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(WaypointServer).UI_ListPipelines(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/hashicorp.waypoint.Waypoint/UI_ListPipelines",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(WaypointServer).UI_ListPipelines(ctx, req.(*UI_ListPipelinesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Waypoint_UI_ListDeployments_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(UI_ListDeploymentsRequest)
 	if err := dec(in); err != nil {
@@ -4517,6 +4551,10 @@ var Waypoint_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UI_GetProject",
 			Handler:    _Waypoint_UI_GetProject_Handler,
+		},
+		{
+			MethodName: "UI_ListPipelines",
+			Handler:    _Waypoint_UI_ListPipelines_Handler,
 		},
 		{
 			MethodName: "UI_ListDeployments",

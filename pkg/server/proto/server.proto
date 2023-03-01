@@ -471,6 +471,9 @@ service Waypoint {
   // Get a given project with useful related records.
   rpc UI_GetProject(UI.GetProjectRequest) returns (UI.GetProjectResponse);
 
+  // List pipelines with last run for each for a given project.
+  rpc UI_ListPipelines(UI.ListPipelinesRequest) returns (UI.ListPipelinesResponse);
+
   // List deployments for a given application.
   rpc UI_ListDeployments(UI.ListDeploymentsRequest) returns (UI.ListDeploymentsResponse);
 
@@ -508,6 +511,30 @@ message UI {
   message GetProjectResponse {
     Project project = 1;
     Job latest_init_job = 2;
+  }
+
+  message ListPipelinesRequest {
+    Ref.Project project = 1;
+    PaginationRequest pagination = 2;
+    // TODO: SortingRequest sorting = 3;
+  }
+
+  message ListPipelinesResponse {
+    repeated UI.PipelineBundle pipelines = 1;
+    PaginationResponse pagination = 2;
+  }
+
+  message PipelineBundle {
+    Pipeline pipeline = 1;
+    PipelineRunBundle last_run = 2;
+    uint64 total_runs = 3;
+  }
+
+  message PipelineRunBundle {
+    PipelineRun pipeline_run = 1;
+    google.protobuf.Timestamp queue_time = 2;
+    Ref.Application application = 3;
+    Job.DataSource.Ref data_source_ref = 4;
   }
 
   message ListDeploymentsRequest {
