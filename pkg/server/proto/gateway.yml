@@ -508,3 +508,6 @@ http:
   - selector: hashicorp.waypoint.Waypoint.UI_ListReleases
     get: /ui/releases/state/{physical_state}
 
+    # Pipelines
+  - selector: hashicorp.waypoint.Waypoint.UI_ListPipelines
+    get: /ui/project/{project.project}/pipelines
