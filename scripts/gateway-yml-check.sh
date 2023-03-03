@@ -18,7 +18,6 @@ skip=$(cat<<-EOF
   UpsertStatusReport
   DeleteTrigger
   UpsertPipeline
-  UI_GetDeployment
 EOF
 )
 

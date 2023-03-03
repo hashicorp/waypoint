@@ -495,6 +495,12 @@ http:
   - selector: hashicorp.waypoint.Waypoint.UI_ListDeployments
     get: /ui/deployments/state/{physical_state}
 
+  - selector: hashicorp.waypoint.Waypoint.UI_GetDeployment
+    get: /ui/deployment/{ref.id}
+
+  - selector: hashicorp.waypoint.Waypoint.UI_GetDeployment
+    get: /ui/project/{ref.sequence.application.project}/application/{ref.sequence.application.application}/deployment/{ref.sequence.number}
+
     # Releases
   - selector: hashicorp.waypoint.Waypoint.UI_ListReleases
     get: /ui/releases/workspace/{workspace.workspace}
