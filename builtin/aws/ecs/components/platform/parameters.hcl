@@ -122,6 +122,79 @@ parameter {
 }
 
 parameter {
+  key         = "health_check"
+  description = "Health check settings for the app."
+  type        = "category"
+  required    = false
+}
+
+parameter {
+  key         = "health_check.grpc_code"
+  description = ""
+  type        = "string"
+  required    = false
+}
+
+parameter {
+  key           = "health_check.healthy_threshold_count"
+  description   = "The number of consecutive successful health checks required toconsider a target healthy."
+  type          = "int64"
+  required      = false
+  default_value = "5"
+}
+
+parameter {
+  key         = "health_check.http_code"
+  description = ""
+  type        = "string"
+  required    = false
+}
+
+parameter {
+  key         = "health_check.interval"
+  description = "The amount of time, in seconds, between health checks."
+  type        = "int64"
+  required    = false
+}
+
+parameter {
+  key         = "health_check.matcher"
+  description = "The range of HTTP codes to use when checking for a successful response fromthe target."
+  type        = ""
+  required    = true
+}
+
+parameter {
+  key         = "health_check.path"
+  description = "The destination of the ping path for the target health check."
+  type        = "string"
+  required    = false
+}
+
+parameter {
+  key           = "health_check.protocol"
+  description   = "The protocol for the health check to use."
+  type          = "string"
+  required      = false
+  default_value = "HTTP"
+}
+
+parameter {
+  key         = "health_check.timeout"
+  description = "The amount of time, in seconds, for which no target response means a failure."
+  type        = "int64"
+  required    = false
+}
+
+parameter {
+  key           = "health_check.unhealthy_threshold_count"
+  description   = "The number of consecutive failed health checks required to consider a target unhealthy."
+  type          = "int64"
+  required      = false
+  default_value = "2"
+}
+
+parameter {
   key           = "log_group"
   description   = "the CloudWatchLogs log group to store container logs into"
   type          = "string"

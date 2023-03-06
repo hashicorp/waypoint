@@ -90,6 +90,71 @@ Set along with alb.domain_name to have DNS automatically setup for the ALB.
 - Type: **string**
 - **Optional**
 
+#### health_check (category)
+
+Health check settings for the app.
+
+- **Optional**
+
+##### health_check.grpc_code
+
+- Type: **string**
+- **Optional**
+
+##### health_check.healthy_threshold_count
+
+The number of consecutive successful health checks required toconsider a target healthy.
+
+- Type: **int64**
+- **Optional**
+- Default: 5
+
+##### health_check.http_code
+
+- Type: **string**
+- **Optional**
+
+##### health_check.interval
+
+The amount of time, in seconds, between health checks.
+
+- Type: **int64**
+- **Optional**
+
+##### health_check.matcher
+
+The range of HTTP codes to use when checking for a successful response fromthe target.
+
+##### health_check.path
+
+The destination of the ping path for the target health check.
+
+- Type: **string**
+- **Optional**
+
+##### health_check.protocol
+
+The protocol for the health check to use.
+
+- Type: **string**
+- **Optional**
+- Default: HTTP
+
+##### health_check.timeout
+
+The amount of time, in seconds, for which no target response means a failure.
+
+- Type: **int64**
+- **Optional**
+
+##### health_check.unhealthy_threshold_count
+
+The number of consecutive failed health checks required to consider a target unhealthy.
+
+- Type: **int64**
+- **Optional**
+- Default: 2
+
 #### logging (category)
 
 Provides additional configuration for logging flags for ECS.
