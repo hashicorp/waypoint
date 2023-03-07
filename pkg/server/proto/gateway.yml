@@ -477,7 +477,7 @@ http:
 
     # Projects
   - selector: hashicorp.waypoint.Waypoint.UI_ListProjects
-    get: /v1/ui/projects
+    get: /ui/projects
 
   - selector: hashicorp.waypoint.Waypoint.UI_GetProject
     get: /ui/project/{project.project}
