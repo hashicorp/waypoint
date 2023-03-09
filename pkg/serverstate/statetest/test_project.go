@@ -15,7 +15,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	"github.com/hashicorp/waypoint/internal/pkg/jsonpb"
-	"github.com/hashicorp/waypoint/pkg/pagination"
+	pagination "github.com/hashicorp/waypoint/pkg/pagination_old"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	serverptypes "github.com/hashicorp/waypoint/pkg/server/ptypes"
 )

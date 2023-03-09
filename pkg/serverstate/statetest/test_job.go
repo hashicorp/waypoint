@@ -14,7 +14,9 @@ import (
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	"github.com/hashicorp/waypoint/pkg/pagination"
+	"github.com/hashicorp/go-memdb"
+
+	pagination "github.com/hashicorp/waypoint/pkg/pagination_old"
 	"github.com/hashicorp/waypoint/pkg/serverstate"
 
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
