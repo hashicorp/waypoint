@@ -6,9 +6,10 @@ It also launches on-demand runners to do operations remotely.
 
 ### Components
 
-1. [Builder](/waypoint/integrations/hashicorp/docker/latest/components/builder)
-2. [Registry](/waypoint/integrations/hashicorp/docker/latest/components/registry)
-3. [Platform](/waypoint/integrations/hashicorp/docker/latest/components/platform)
+1. [Builder](/waypoint/integrations/hashicorp/docker/latest/components/builder/docker-builder)
+2. [Registry](/waypoint/integrations/hashicorp/docker/latest/components/registry/docker-registry)
+3. [Platform](/waypoint/integrations/hashicorp/docker/latest/components/platform/docker-platform)
+4. [Task](/waypoint/integrations/hashicorp/docker/latest/components/task/docker-task)
 
 ### Related Plugins
 
