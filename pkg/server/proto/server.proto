@@ -2521,15 +2521,11 @@ message ListJobsRequest {
   Ref.Runner targetRunner = 4;
   Ref.PipelineStep pipeline = 5;
   repeated Job.State jobState = 6;
-<<<<<<< HEAD
-  PaginationRequest pagination = 7;
-=======
   PaginationRequest deprecated_pagination = 7;
   SortingRequest deprecated_sorting = 8;
 
   PaginationRequest pagination = 9;
   SortingRequest sorting = 10;
->>>>>>> 27bcc122b (Add copied pagination files from cloud-sdk)
 }
 
 message ListJobsResponse {
