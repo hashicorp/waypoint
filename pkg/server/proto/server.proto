@@ -2566,7 +2566,15 @@ message ListJobsRequest {
   Ref.Runner targetRunner = 4;
   Ref.PipelineStep pipeline = 5;
   repeated Job.State jobState = 6;
+<<<<<<< HEAD
   PaginationRequest pagination = 7;
+=======
+  PaginationRequest deprecated_pagination = 7;
+  SortingRequest deprecated_sorting = 8;
+
+  PaginationRequest pagination = 9;
+  SortingRequest sorting = 10;
+>>>>>>> 27bcc122b (Add copied pagination files from cloud-sdk)
 }
 
 message ListJobsResponse {
@@ -5542,8 +5550,8 @@ message PaginationRequest {
   string previous_page_token = 3 [json_name="previous_page_token"];
 }
 
-// PaginationResponse is the response holding the page tokens for a paginated
-// list response.
+// // PaginationResponse is the response holding the page tokens for a paginated
+// // list response.
 message PaginationResponse {
   // This token allows you to get the next page of results for list requests.
   // If the number of results is larger than `page_size`, use the
@@ -5557,4 +5565,42 @@ message PaginationResponse {
   // `previous_page_token` in the next request. The value will become empty when
   // there are no more pages.
   string previous_page_token = 2 [json_name="previous_page_token"];
+}
+
+// https://github.com/hashicorp/cloud-api/blob/master/hashicorp/cloud/common/sorting.proto
+// SortingRequest are the parameters for a sorted list request.
+message SortingRequest {
+  // Specifies the list of per field ordering that should be used for sorting.
+  // The order matters as rows are sorted in order by fields and when the field
+  // matches, the next field is used to tie break the ordering.
+  // The per field default ordering is ascending.
+  //
+  // The fields should be immutable, unique, and orderable. If the field is
+  // not unique, more than one sort fields should be passed.
+  //
+  // Example: order_by=name,age desc,created_at asc
+  // In that case, 'name' will get the default 'ascending' order.
+  repeated string order_by = 1 [json_name="order_by"];
+}
+
+// PaginationCursor holds the cursor state that can be used to generate a next and
+// previous page token.
+message PaginationCursor {
+  // Cursor stores information for cursor. By storing the cursor
+  // as its own message, it allows use to change the implementation of cursors
+  // over time.
+  message Cursor {
+    // Value is a one of that holds the type of cursor.
+    oneof Value {
+      // gorm_pagination is the cursor returned by the
+      // "https://github.com/pilagod/gorm-cursor-paginator" package.
+      string gorm_pagination = 1;
+    }
+  }
+
+  // NextCursor stores the next cursor.
+  Cursor next = 1;
+
+  // PreviousCursor stores the previous cursor.
+  Cursor previous = 2;
 }
