@@ -6,7 +6,7 @@ to an [ALB](https://docs.aws.amazon.com/elasticloadbalancing/latest/application/
 
 ### Components
 
-1. [ReleaseManager](/waypoint/integrations/hashicorp/aws-alb/latest/components/release-manager)
+1. [ReleaseManager](/waypoint/integrations/hashicorp/aws-alb/latest/components/release-manager/aws-alb-release-manager)
 
 ### Related Plugins
 
