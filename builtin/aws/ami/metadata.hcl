@@ -7,4 +7,9 @@ integration {
     type = "MPL-2.0"
     url  = "https://github.com/hashicorp/waypoint/blob/main/LICENSE"
   }
+  component {
+    type = "builder"
+    name = "AWS AMI Builder"
+    slug = "aws-ami-builder"
+  }
 }
