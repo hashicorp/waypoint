@@ -5,7 +5,7 @@ job specification file.
 
 ### Components
 
-1. [Platform](/waypoint/integrations/hashicorp/nomad-jobspec/latest/components/platform)
+1. [Platform](/waypoint/integrations/hashicorp/nomad-jobspec/latest/components/platform/nomad-jobspec-platform)
 
 ### Related Plugins
 

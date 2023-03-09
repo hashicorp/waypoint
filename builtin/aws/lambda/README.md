@@ -4,7 +4,7 @@ The AWS Lambda plugin deploys OCI images as functions to [AWS Lambda](https://aw
 
 ### Components
 
-1. [Platform](/waypoint/integrations/hashicorp/aws-lambda/latest/components/platform)
+1. [Platform](/waypoint/integrations/hashicorp/aws-lambda/latest/components/platform/aws-lambda-platform)
 
 ### Related Plugins
 

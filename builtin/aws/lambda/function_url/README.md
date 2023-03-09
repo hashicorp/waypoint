@@ -5,7 +5,7 @@ Lambda plugin by creating a [Lambda function URL](https://docs.aws.amazon.com/la
 
 ### Components
 
-1.[ReleaseManager](/waypoint/integrations/hashicorp/lambda-function-url/latest/components/release-manager)
+1.[ReleaseManager](/waypoint/integrations/hashicorp/lambda-function-url/latest/components/release-manager/lambda-function-url-release-manager)
 
 ### Related Plugins
 

@@ -5,7 +5,7 @@ of pre-existing deployment tools.
 
 ### Components
 
-1. [Platform](/waypoint/integrations/hashicorp/exec/latest/components/platform)
+1. [Platform](/waypoint/integrations/hashicorp/exec/latest/components/platform/exec-platform)
 
 ### Related Plugins
 

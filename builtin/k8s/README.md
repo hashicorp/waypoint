@@ -7,10 +7,10 @@ operations remotely.
 
 ### Components
 
-1. [Platform](/waypoint/integrations/hashicorp/kubernetes/latest/components/platform)
-2. [ReleaseManager](/waypoint/integrations/hashicorp/kubernetes/latest/components/release-manager)
-3. [ConfigSourcer](/waypoint/integrations/hashicorp/kubernetes/latest/components/config-sourcer)
-4. [TaskLauncher](/waypoint/integrations/hashicorp/kubernetes/latest/components/task)
+1. [Platform](/waypoint/integrations/hashicorp/kubernetes/latest/components/platform/kubernetes-platform)
+2. [ReleaseManager](/waypoint/integrations/hashicorp/kubernetes/latest/components/release-manager/kubernetes-release-manager)
+3. [ConfigSourcer](/waypoint/integrations/hashicorp/kubernetes/latest/components/config-sourcer/kubernetes-config-sourcer)
+4. [TaskLauncher](/waypoint/integrations/hashicorp/kubernetes/latest/components/task/kubernetes-task)
 
 ### Related Plugins
 

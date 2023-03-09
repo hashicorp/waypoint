@@ -5,8 +5,8 @@ It also launches on-demand runners to do operations remotely.
 
 ### Components
 
-1. [Platform](/waypoint/integrations/hashicorp/aws-ecs/latest/components/platform)
-2. [TaskLauncher](/waypoint/integrations/hashicorp/aws-ecs/latest/components/task)
+1. [Platform](/waypoint/integrations/hashicorp/aws-ecs/latest/components/platform/aws-ecs-platform)
+2. [TaskLauncher](/waypoint/integrations/hashicorp/aws-ecs/latest/components/task/aws-ecs-task)
 
 ### Related Plugins
 

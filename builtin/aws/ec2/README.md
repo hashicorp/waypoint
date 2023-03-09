@@ -4,7 +4,7 @@ The AWS EC2 plugin deploys an AWS AMI as a virtual machine, running on AWS EC2.
 
 ### Components
 
-1. [Platform](/waypoint/integrations/hashicorp/aws-ec2/latest/components/platform)
+1. [Platform](/waypoint/integrations/hashicorp/aws-ec2/latest/components/platform/aws-ec2-platform)
 
 ### Related Plugins
 
