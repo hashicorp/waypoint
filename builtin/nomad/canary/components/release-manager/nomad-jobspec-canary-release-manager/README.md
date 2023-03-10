@@ -1,5 +1,4 @@
-## nomad-jobspec-canary (releasemanager)
-
+<!-- This file was generated via `make gen/integrations-hcl` -->
 Promotes a Nomad canary deployment initiated by a Nomad jobspec deployment.
 
 If your Nomad deployment is configured to use canaries, this releaser plugin lets
@@ -10,7 +9,7 @@ deployment.
 -> **Note:** Using the `-prune=false` flag is recommended for this releaser. By default,
 Waypoint prunes and destroys all unreleased deployments and keeps only one previous
 deployment. Therefore, if `-prune=false` is not set, Waypoint may delete
-your job via "pruning" a previous version. See [deployment pruning](/docs/lifecycle/release#deployment-pruning)
+your job via "pruning" a previous version. See [deployment pruning](/waypoint/docs/lifecycle/release#deployment-pruning)
 for more information.
 
 ### Release URL
@@ -21,6 +20,8 @@ value specified in this meta field will be published as the release URL for your
 application. In the future, this may source from Consul.
 
 ### Interface
+
+- Input: **jobspec.Deployment**
 
 ### Examples
 
@@ -119,3 +120,4 @@ job "web" {
   }
 }
 ```
+
