@@ -407,6 +407,9 @@ DeleteFileSystem:
 	describeMountTargetsResp, err := efsSvc.DescribeMountTargets(&efs.DescribeMountTargetsInput{
 		FileSystemId: fileSystemId,
 	})
+	if err != nil {
+		return err
+	}
 	for _, mountTarget := range describeMountTargetsResp.MountTargets {
 		_, err = efsSvc.DeleteMountTarget(&efs.DeleteMountTargetInput{MountTargetId: mountTarget.MountTargetId})
 		if err != nil {
