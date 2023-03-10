@@ -6172,6 +6172,58 @@
         ]
       }
     },
+    "/ui/pipeline/{pipeline.id}/run/{sequence}": {
+      "get": {
+        "summary": "Get a pipline run with additional computed data.",
+        "operationId": "Waypoint_UI_GetPipelineRun",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/hashicorp.waypoint.UI.GetPipelineRunResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/grpc.gateway.runtime.Error"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "pipeline.id",
+            "description": "Reference a single pipeline by ID.",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "sequence",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "uint64"
+          },
+          {
+            "name": "pipeline.owner.project.project",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "pipeline.owner.pipeline_name",
+            "description": "the name of the defined pipeline config.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "Waypoint"
+        ]
+      }
+    },
     "/ui/project/{application.project}/application/{application.application}/deployments": {
       "get": {
         "summary": "List deployments for a given application.",
@@ -6485,6 +6537,58 @@
               "type": "string"
             },
             "collectionFormat": "multi"
+          }
+        ],
+        "tags": [
+          "Waypoint"
+        ]
+      }
+    },
+    "/ui/project/{pipeline.owner.project.project}/pipeline/{pipeline.owner.pipeline_name}/run/{sequence}": {
+      "get": {
+        "summary": "Get a pipline run with additional computed data.",
+        "operationId": "Waypoint_UI_GetPipelineRun2",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/hashicorp.waypoint.UI.GetPipelineRunResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/grpc.gateway.runtime.Error"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "pipeline.owner.project.project",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "pipeline.owner.pipeline_name",
+            "description": "the name of the defined pipeline config",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "sequence",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "uint64"
+          },
+          {
+            "name": "pipeline.id",
+            "description": "Reference a single pipeline by ID.",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -12334,6 +12438,17 @@
         }
       }
     },
+    "hashicorp.waypoint.UI.GetPipelineRunResponse": {
+      "type": "object",
+      "properties": {
+        "pipeline_run": {
+          "$ref": "#/definitions/hashicorp.waypoint.PipelineRun"
+        },
+        "root_tree_node": {
+          "$ref": "#/definitions/hashicorp.waypoint.UI.PipelineRunTreeNode"
+        }
+      }
+    },
     "hashicorp.waypoint.UI.GetProjectResponse": {
       "type": "object",
       "properties": {
@@ -12476,6 +12591,78 @@
           "$ref": "#/definitions/hashicorp.waypoint.Job.DataSource.Ref"
         }
       }
+    },
+    "hashicorp.waypoint.UI.PipelineRunTreeNode": {
+      "type": "object",
+      "properties": {
+        "step": {
+          "$ref": "#/definitions/hashicorp.waypoint.Pipeline.Step",
+          "description": "If step is absent then the node is “virtual” — it represents a set of\nconcurrent steps/jobs."
+        },
+        "state": {
+          "$ref": "#/definitions/hashicorp.waypoint.UI.PipelineRunTreeNode.State"
+        },
+        "start_time": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "complete_time": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "application": {
+          "$ref": "#/definitions/hashicorp.waypoint.Ref.Application"
+        },
+        "workspace": {
+          "$ref": "#/definitions/hashicorp.waypoint.Ref.Workspace"
+        },
+        "job": {
+          "$ref": "#/definitions/hashicorp.waypoint.Ref.Job"
+        },
+        "result": {
+          "$ref": "#/definitions/hashicorp.waypoint.Job.Result"
+        },
+        "latest_status_report": {
+          "$ref": "#/definitions/hashicorp.waypoint.StatusReport"
+        },
+        "children": {
+          "$ref": "#/definitions/hashicorp.waypoint.UI.PipelineRunTreeNode.Children"
+        }
+      }
+    },
+    "hashicorp.waypoint.UI.PipelineRunTreeNode.Children": {
+      "type": "object",
+      "properties": {
+        "mode": {
+          "$ref": "#/definitions/hashicorp.waypoint.UI.PipelineRunTreeNode.Children.Mode"
+        },
+        "nodes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/hashicorp.waypoint.UI.PipelineRunTreeNode"
+          }
+        }
+      }
+    },
+    "hashicorp.waypoint.UI.PipelineRunTreeNode.Children.Mode": {
+      "type": "string",
+      "enum": [
+        "SERIAL",
+        "PARALLEL"
+      ],
+      "default": "SERIAL"
+    },
+    "hashicorp.waypoint.UI.PipelineRunTreeNode.State": {
+      "type": "string",
+      "enum": [
+        "UNKNOWN",
+        "QUEUED",
+        "RUNNING",
+        "ERROR",
+        "CANCELLED",
+        "SUCCESS"
+      ],
+      "default": "UNKNOWN"
     },
     "hashicorp.waypoint.UI.ProjectBundle": {
       "type": "object",
