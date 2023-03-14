@@ -5,7 +5,7 @@ canary deployment initiated by a Nomad jobspec deployment.
 
 ### Components
 
-1. [ReleaseManager](/waypoint/integrations/hashicorp/nomad-jobspec-canary/latest/components/release-manager)
+1. [ReleaseManager](/waypoint/integrations/hashicorp/nomad-jobspec-canary/latest/components/release-manager/nomad-jobspec-canary-release-manager)
 
 ### Related Plugins
 

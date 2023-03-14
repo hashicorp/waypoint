@@ -5,7 +5,7 @@ a local path or a chart in a repository.
 
 ### Components
 
-1. [Platform](/waypoint/integrations/hashicorp/helm/latest/components/platform)
+1. [Platform](/waypoint/integrations/hashicorp/helm/latest/components/platform/helm-platform)
 
 ### Related Plugins
 

@@ -5,7 +5,7 @@ on AWS.
 
 ### Components
 
-1. [Registry](/waypoint/integrations/hashicorp/aws-ecr/latest/components/registry)
+1. [Registry](/waypoint/integrations/hashicorp/aws-ecr/latest/components/registry/aws-ecr-registry)
 
 ### Related Plugins
 

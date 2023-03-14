@@ -477,7 +477,7 @@ func (c *AppDocsCommand) hclFormat(name, ct string, doc *docs.Documentation) {
 		"kubernetes-apply":         "k8s/apply",
 		"nomad":                    "nomad",
 		"nomad-jobspec":            "nomad/jobspec",
-		"nomad-jobspec-canary":     "k8s/canary",
+		"nomad-jobspec-canary":     "nomad/canary",
 		"null":                     "null",
 		"pack":                     "pack",
 		"packer":                   "packer",
@@ -495,13 +495,15 @@ func (c *AppDocsCommand) hclFormat(name, ct string, doc *docs.Documentation) {
 	}
 
 	dets := doc.Details()
+	componentPath := fmt.Sprintf("./builtin/%s/components/%s/%s", pluginPath, componentSlug, name+"-"+componentSlug)
+
 	// If no description, don't generate docs
 	if c.humanize(dets.Description) != "" {
 		// make component folder
-		os.MkdirAll(fmt.Sprintf("./builtin/%s/components/%s", pluginPath, componentSlug), os.ModePerm)
+		os.MkdirAll(componentPath, os.ModePerm)
 
 		// populate README.md
-		readme, err := os.Create(fmt.Sprintf("./builtin/%s/components/%s/README.md", pluginPath, componentSlug))
+		readme, err := os.Create(fmt.Sprintf("%s/README.md", componentPath))
 		if err != nil {
 			panic(err)
 		}
@@ -565,7 +567,7 @@ func (c *AppDocsCommand) hclFormat(name, ct string, doc *docs.Documentation) {
 		// 	 required = true
 		// 	 default_value = "something"
 		// }
-		parameters, err := os.Create(fmt.Sprintf("./builtin/%s/components/%s/parameters.hcl", pluginPath, componentSlug))
+		parameters, err := os.Create(fmt.Sprintf("%s/parameters.hcl", componentPath))
 		if err != nil {
 			panic(err)
 		}
@@ -638,7 +640,7 @@ func (c *AppDocsCommand) hclFormat(name, ct string, doc *docs.Documentation) {
 
 	// Only create outputs.hcl if there are output fields
 	if fields := doc.TemplateFields(); len(fields) > 0 {
-		outputs, err := os.Create(fmt.Sprintf("./builtin/%s/components/%s/outputs.hcl", pluginPath, componentSlug))
+		outputs, err := os.Create(fmt.Sprintf("%s/outputs.hcl", componentPath))
 		if err != nil {
 			panic(err)
 		}

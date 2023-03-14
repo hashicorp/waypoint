@@ -4,8 +4,8 @@ The Google Cloud Run plugin deploys a container to [Google Cloud Run](https://cl
 
 ### Components
 
-1. [Platform](/waypoint/integrations/hashicorp/google-cloud-run/latest/components/platform)
-2. [ReleaseManager](/waypoint/integrations/hashicorp/google-cloud-run/latest/components/release-manager)
+1. [Platform](/waypoint/integrations/hashicorp/google-cloud-run/latest/components/platform/google-cloud-run-platform)
+2. [ReleaseManager](/waypoint/integrations/hashicorp/google-cloud-run/latest/components/release-manager/google-cloud-run-release-manager)
 
 ### Related Plugins
 

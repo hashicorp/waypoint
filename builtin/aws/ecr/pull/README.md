@@ -7,7 +7,7 @@ deployed to [AWS ECS](https://aws.amazon.com/ecs/getting-started/).
 
 ### Components
 
-1. [Builder](/waypoint/integrations/hashicorp/aws-ecr-pull/latest/components/builder)
+1. [Builder](/waypoint/integrations/hashicorp/aws-ecr-pull/latest/components/builder/aws-ecr-pull-builder)
 
 ### Related Plugins
 

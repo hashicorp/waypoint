@@ -5,7 +5,7 @@ to be deployed as an [EC2](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/c
 
 ### Components
 
-1. [Builder](/waypoint/integrations/hashicorp/aws-ami/latest/components/builder)
+1. [Builder](/waypoint/integrations/hashicorp/aws-ami/latest/components/builder/aws-ami-builder)
 
 ### Related Plugins
 

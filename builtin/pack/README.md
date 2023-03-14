@@ -4,7 +4,7 @@ The Pack plugin creates a Docker image using [CloudNative Buildpacks](https://bu
 
 ### Components
 
-1. [Builder](/waypoint/integrations/hashicorp/pack/latest/components/builder)
+1. [Builder](/waypoint/integrations/hashicorp/pack/latest/components/builder/cloudnative-buildpacks-builder)
 
 ### Related Plugins
 

@@ -7,4 +7,4 @@ channel, with a matching cloud provider and region.
 
 ### Components
 
-1. [ConfigSourcer](/waypoint/integrations/hashicorp/packer/latest/components/config-sourcer)
+1. [ConfigSourcer](/waypoint/integrations/hashicorp/packer/latest/components/config-sourcer/packer-config-sourcer)

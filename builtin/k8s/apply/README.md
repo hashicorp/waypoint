@@ -5,7 +5,7 @@ file or a directory of YAML or JSON files.
 
 ### Components
 
-1. [Platform](/waypoint/integrations/hashicorp/kubernetes-apply/latest/components/platform)
+1. [Platform](/waypoint/integrations/hashicorp/kubernetes-apply/latest/components/platform/kubernetes-apply-platform)
 
 ### Related Plugins
 
