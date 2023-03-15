@@ -5838,6 +5838,28 @@
         ]
       }
     },
+    "/ui/activityfeed/schemas": {
+      "get": {
+        "operationId": "Waypoint_ListActivityFeedSchemas",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/hashicorp.waypoint.ListActivityFeedSchemasResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/grpc.gateway.runtime.Error"
+            }
+          }
+        },
+        "tags": [
+          "Waypoint"
+        ]
+      }
+    },
     "/ui/deployment/{ref.id}": {
       "get": {
         "summary": "GetDeployment returns a deployment",
@@ -7185,6 +7207,17 @@
           "items": {
             "$ref": "#/definitions/google.protobuf.Any"
           }
+        }
+      }
+    },
+    "hashicorp.waypoint.ActivityFeedDeployment": {
+      "type": "object",
+      "properties": {
+        "deploymentID": {
+          "type": "string"
+        },
+        "buildID": {
+          "type": "string"
         }
       }
     },
@@ -9868,6 +9901,14 @@
         "exit_code": {
           "type": "integer",
           "format": "int32"
+        }
+      }
+    },
+    "hashicorp.waypoint.ListActivityFeedSchemasResponse": {
+      "type": "object",
+      "properties": {
+        "deploymentSchema": {
+          "$ref": "#/definitions/hashicorp.waypoint.ActivityFeedDeployment"
         }
       }
     },

@@ -331,6 +331,7 @@ type WaypointClient interface {
 	UI_GetDeployment(ctx context.Context, in *UI_GetDeploymentRequest, opts ...grpc.CallOption) (*UI_GetDeploymentResponse, error)
 	// List releases for a given application.
 	UI_ListReleases(ctx context.Context, in *UI_ListReleasesRequest, opts ...grpc.CallOption) (*UI_ListReleasesResponse, error)
+	ListActivityFeedSchemas(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*ListActivityFeedSchemasResponse, error)
 }
 
 type waypointClient struct {
@@ -1534,6 +1535,15 @@ func (c *waypointClient) UI_ListReleases(ctx context.Context, in *UI_ListRelease
 	return out, nil
 }
 
+func (c *waypointClient) ListActivityFeedSchemas(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*ListActivityFeedSchemasResponse, error) {
+	out := new(ListActivityFeedSchemasResponse)
+	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/ListActivityFeedSchemas", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // WaypointServer is the server API for Waypoint service.
 // All implementations must embed UnimplementedWaypointServer
 // for forward compatibility
@@ -1846,6 +1856,7 @@ type WaypointServer interface {
 	UI_GetDeployment(context.Context, *UI_GetDeploymentRequest) (*UI_GetDeploymentResponse, error)
 	// List releases for a given application.
 	UI_ListReleases(context.Context, *UI_ListReleasesRequest) (*UI_ListReleasesResponse, error)
+	ListActivityFeedSchemas(context.Context, *emptypb.Empty) (*ListActivityFeedSchemasResponse, error)
 	mustEmbedUnimplementedWaypointServer()
 }
 
@@ -2173,6 +2184,9 @@ func (UnimplementedWaypointServer) UI_GetDeployment(context.Context, *UI_GetDepl
 }
 func (UnimplementedWaypointServer) UI_ListReleases(context.Context, *UI_ListReleasesRequest) (*UI_ListReleasesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UI_ListReleases not implemented")
+}
+func (UnimplementedWaypointServer) ListActivityFeedSchemas(context.Context, *emptypb.Empty) (*ListActivityFeedSchemasResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListActivityFeedSchemas not implemented")
 }
 func (UnimplementedWaypointServer) mustEmbedUnimplementedWaypointServer() {}
 
@@ -4173,6 +4187,24 @@ func _Waypoint_UI_ListReleases_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Waypoint_ListActivityFeedSchemas_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(emptypb.Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(WaypointServer).ListActivityFeedSchemas(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/hashicorp.waypoint.Waypoint/ListActivityFeedSchemas",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(WaypointServer).ListActivityFeedSchemas(ctx, req.(*emptypb.Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Waypoint_ServiceDesc is the grpc.ServiceDesc for Waypoint service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -4567,6 +4599,10 @@ var Waypoint_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UI_ListReleases",
 			Handler:    _Waypoint_UI_ListReleases_Handler,
+		},
+		{
+			MethodName: "ListActivityFeedSchemas",
+			Handler:    _Waypoint_ListActivityFeedSchemas_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{
