@@ -517,3 +517,7 @@ http:
     # Pipelines
   - selector: hashicorp.waypoint.Waypoint.UI_ListPipelines
     get: /ui/project/{project.project}/pipelines
+
+    # Activity Feed Schemas
+  - selector: hashicorp.waypoint.Waypoint.ListActivityFeedSchemas
+    get: /ui/activityfeed/schemas
