@@ -94,10 +94,16 @@ func TestServiceUI_ListPipelines(t *testing.T, factory Factory) {
 			},
 		})
 		require.NoError(err)
-		require.NotNil(resp.Pipelines[0].LastRun)
-		require.NotNil(resp.Pipelines[1].LastRun)
-		require.EqualValues(3, resp.Pipelines[0].TotalRuns)
-		require.EqualValues(3, resp.Pipelines[1].TotalRuns)
+
+		require.Len(resp.Pipelines, 2)
+
+		for _, p := range resp.Pipelines {
+			require.NotNil(p.LastRun)
+			require.NotNil(p.LastRun.QueueTime)
+			require.EqualValues(appRef.Application, p.LastRun.Application.Application)
+			// TODO: DataSourceRef
+			require.EqualValues(3, p.TotalRuns)
+		}
 	})
 
 	t.Run("with page size request", func(t *testing.T) {
