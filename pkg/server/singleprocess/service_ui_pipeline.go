@@ -65,17 +65,20 @@ func (s *Service) UI_ListPipelines(
 		}
 		var lastRunBundle *pb.UI_PipelineRunBundle
 		if pipelineLastRun != nil {
-			job, err := s.GetJob(ctx, &pb.GetJobRequest{
-				JobId: pipelineLastRun.Jobs[0].Id,
-			})
-			if err != nil {
-				return nil, err
+			if len(pipelineLastRun.Jobs) != 0 {
+				job, err := s.GetJob(ctx, &pb.GetJobRequest{
+					JobId: pipelineLastRun.Jobs[0].Id,
+				})
+				if err != nil {
+					return nil, err
+				}
+				lastRunBundle = &pb.UI_PipelineRunBundle{
+					PipelineRun: pipelineLastRun,
+					QueueTime:   job.QueueTime,
+					Application: job.Application,
+				}
 			}
-			lastRunBundle = &pb.UI_PipelineRunBundle{
-				PipelineRun: pipelineLastRun,
-				QueueTime:   job.QueueTime,
-				Application: job.Application,
-			}
+
 		}
 
 		pipelineBundle := &pb.UI_PipelineBundle{
