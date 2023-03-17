@@ -474,6 +474,9 @@ service Waypoint {
   // List pipelines with last run for each for a given project.
   rpc UI_ListPipelines(UI.ListPipelinesRequest) returns (UI.ListPipelinesResponse);
 
+  // List pipeline runs with pagination for a given pipeline
+  rpc UI_ListPipelineRuns(UI.ListPipelineRunsRequest) returns (UI.ListPipelineRunsResponse);
+ 
   // List deployments for a given application.
   rpc UI_ListDeployments(UI.ListDeploymentsRequest) returns (UI.ListDeploymentsResponse);
 
@@ -521,6 +524,17 @@ message UI {
 
   message ListPipelinesResponse {
     repeated UI.PipelineBundle pipelines = 1;
+    PaginationResponse pagination = 2;
+  }
+  
+  message ListPipelineRunsRequest {
+    Ref.Pipeline pipeline = 1;
+    PaginationRequest pagination = 2;
+    // TODO: SortingRequest sorting = 3;
+  }
+
+  message ListPipelineRunsResponse {
+    repeated PipelineRunBundle pipeline_run_bundles = 1;
     PaginationResponse pagination = 2;
   }
 
