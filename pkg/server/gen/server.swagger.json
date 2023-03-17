@@ -12093,6 +12093,20 @@
         }
       }
     },
+    "hashicorp.waypoint.UI.ListPipelineRunsResponse": {
+      "type": "object",
+      "properties": {
+        "pipeline_run_bundles": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/hashicorp.waypoint.UI.PipelineRunBundle"
+          }
+        },
+        "pagination": {
+          "$ref": "#/definitions/hashicorp.waypoint.PaginationResponse"
+        }
+      }
+    },
     "hashicorp.waypoint.UI.ListPipelinesResponse": {
       "type": "object",
       "properties": {
