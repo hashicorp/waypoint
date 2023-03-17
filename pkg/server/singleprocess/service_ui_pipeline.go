@@ -70,7 +70,11 @@ func (s *Service) UI_ListPipelines(
 					JobId: pipelineLastRun.Jobs[0].Id,
 				})
 				if err != nil {
-					return nil, err
+					return nil, hcerr.Externalize(
+						log,
+						err,
+						"failed to get first job for latest pipeline run",
+					)
 				}
 				lastRunBundle = &pb.UI_PipelineRunBundle{
 					PipelineRun: pipelineLastRun,
