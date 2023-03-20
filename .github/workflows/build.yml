@@ -6,6 +6,7 @@ on:
     branches:
       - main
       - release/*
+      # FIXME: Remove this branch before merging
       - releng/*
 
 env:
@@ -42,7 +43,7 @@ jobs:
       - name: Report chosen version number
         run: |
           [ -n "${{steps.get-product-version.outputs.product-version}}" ]
-          echo "::notice title=Terraform CLI Version::${{ steps.get-product-version.outputs.product-version }}"
+          echo "::notice title=Waypoint Version::${{ steps.get-product-version.outputs.product-version }}"
 
   get-go-version:
     name: "Determine Go toolchain version"
