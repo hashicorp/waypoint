@@ -1,14 +1,14 @@
 schema = "1"
 
-project "terraform" {
+project "waypoint" {
   // the team key is not used by CRT currently
-  team = "terraform"
+  team = "waypoint"
   slack {
-    notification_channel = "C011WJ112MD"
+    notification_channel = "C01AMV217D4"
   }
   github {
     organization = "hashicorp"
-    repository = "terraform"
+    repository = "waypoint"
 
     release_branches = [
       "main",
