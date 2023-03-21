@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	"google.golang.org/protobuf/proto"
 
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	serverptypes "github.com/hashicorp/waypoint/pkg/server/ptypes"
@@ -26,6 +27,7 @@ func TestServiceUI_ListPipelineRuns(t *testing.T, factory Factory) {
 	// Create project with application
 	jobTemplate := serverptypes.TestJobNew(t, nil)
 	appRef := jobTemplate.Application
+	dataSourceRef := jobTemplate.DataSourceRef
 	TestApp(t, client, appRef)
 
 	// Create a pipeline in the project
@@ -76,6 +78,8 @@ func TestServiceUI_ListPipelineRuns(t *testing.T, factory Factory) {
 		require.NoError(err)
 		for i := 1; i < len(resp.PipelineRunBundles); i++ {
 			require.NotNil(resp.PipelineRunBundles[i].QueueTime)
+			require.Equal(appRef.Application, resp.PipelineRunBundles[i].Application.Application)
+			require.Truef(proto.Equal(dataSourceRef, resp.PipelineRunBundles[i].DataSourceRef), "expected %#v to equal %#v", dataSourceRef, resp.PipelineRunBundles[i].DataSourceRef)
 		}
 		require.Len(resp.PipelineRunBundles, 3)
 	})
