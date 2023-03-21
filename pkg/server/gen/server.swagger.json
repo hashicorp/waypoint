@@ -6236,7 +6236,7 @@
         ]
       }
     },
-    "/ui/project/{pipeline.owner.project.project}/pipelines/{pipeline.owner.pipeline_name}": {
+    "/ui/project/{pipeline.owner.project.project}/pipelines/{pipeline.owner.pipeline_name}/runs": {
       "get": {
         "summary": "List pipeline runs with pagination for a given pipeline",
         "operationId": "Waypoint_UI_ListPipelineRuns",

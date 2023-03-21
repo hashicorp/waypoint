@@ -12860,7 +12860,7 @@ func RegisterWaypointHandlerServer(ctx context.Context, mux *runtime.ServeMux, s
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
-		ctx, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/UI_ListPipelineRuns", runtime.WithHTTPPathPattern("/ui/project/{pipeline.owner.project.project}/pipelines/{pipeline.owner.pipeline_name}"))
+		ctx, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/UI_ListPipelineRuns", runtime.WithHTTPPathPattern("/ui/project/{pipeline.owner.project.project}/pipelines/{pipeline.owner.pipeline_name}/runs"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -15872,7 +15872,7 @@ func RegisterWaypointHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
-		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/UI_ListPipelineRuns", runtime.WithHTTPPathPattern("/ui/project/{pipeline.owner.project.project}/pipelines/{pipeline.owner.pipeline_name}"))
+		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/UI_ListPipelineRuns", runtime.WithHTTPPathPattern("/ui/project/{pipeline.owner.project.project}/pipelines/{pipeline.owner.pipeline_name}/runs"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -16360,7 +16360,7 @@ var (
 
 	pattern_Waypoint_UI_ListPipelines_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"ui", "project", "project.project", "pipelines"}, ""))
 
-	pattern_Waypoint_UI_ListPipelineRuns_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"ui", "project", "pipeline.owner.project.project", "pipelines", "pipeline.owner.pipeline_name"}, ""))
+	pattern_Waypoint_UI_ListPipelineRuns_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"ui", "project", "pipeline.owner.project.project", "pipelines", "pipeline.owner.pipeline_name", "runs"}, ""))
 
 	pattern_Waypoint_UI_ListDeployments_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"ui", "deployments", "workspace", "workspace.workspace"}, ""))
 
