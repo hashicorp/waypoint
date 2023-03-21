@@ -519,4 +519,4 @@ http:
     get: /ui/project/{project.project}/pipelines
 
   - selector: hashicorp.waypoint.Waypoint.UI_ListPipelineRuns
-    get: /ui/project/{pipeline.owner.project.project}/pipelines/{pipeline.owner.pipeline_name}
+    get: /ui/project/{pipeline.owner.project.project}/pipelines/{pipeline.owner.pipeline_name}/runs
