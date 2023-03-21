@@ -14,7 +14,7 @@ project "waypoint" {
       "main",
       "release/**",
       # FIXME: remove reference to this branch
-      "releng/",
+      "releng/**",
     ]
   }
 }
