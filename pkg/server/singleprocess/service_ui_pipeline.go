@@ -2,6 +2,7 @@ package singleprocess
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/hashicorp/go-hclog"
 	"google.golang.org/grpc/codes"
@@ -34,7 +35,7 @@ func (s *Service) UI_ListPipelines(
 		return nil, hcerr.Externalize(
 			log,
 			err,
-			"error listing piplines",
+			"error listing pipelines",
 		)
 	}
 
@@ -65,7 +66,31 @@ func (s *Service) UI_ListPipelines(
 		}
 		var lastRunBundle *pb.UI_PipelineRunBundle
 		if pipelineLastRun != nil {
-			lastRunBundle = &pb.UI_PipelineRunBundle{PipelineRun: pipelineLastRun}
+			if len(pipelineLastRun.Jobs) != 0 {
+				job, err := s.GetJob(ctx, &pb.GetJobRequest{
+					JobId: pipelineLastRun.Jobs[0].Id,
+				})
+				if err != nil {
+					return nil, hcerr.Externalize(
+						log,
+						err,
+						"failed to get first job for latest pipeline run",
+					)
+				}
+				lastRunBundle = &pb.UI_PipelineRunBundle{
+					PipelineRun: pipelineLastRun,
+					QueueTime:   job.QueueTime,
+					Application: job.Application,
+				}
+			} else {
+				return nil, hcerr.Externalize(
+					log,
+					fmt.Errorf("pipeline run sequence %q contained no jobs", pipelineLastRun.Sequence),
+					"pipeline run has no jobs",
+					"pipeline run sequence", pipelineLastRun.Sequence,
+				)
+			}
+
 		}
 
 		pipelineBundle := &pb.UI_PipelineBundle{
