@@ -84,11 +84,11 @@ func (s *Service) UI_ListPipelines(
 				}
 			} else {
 				return nil, hcerr.Externalize(
-						log,
-						fmt.Errorf("pipeline run sequence %v contained no jobs", pipelineLastRun.Sequence),
-						"pipeline run has no jobs",
-						"pipeline run sequence", pipelineLastRun.Sequence,
-					)
+					log,
+					fmt.Errorf("pipeline run sequence %v contained no jobs", pipelineLastRun.Sequence),
+					"pipeline run has no jobs",
+					"pipeline run sequence", pipelineLastRun.Sequence,
+				)
 			}
 
 		}
