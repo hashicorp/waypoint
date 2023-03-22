@@ -2,6 +2,7 @@ package singleprocess
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/hashicorp/go-hclog"
 	"google.golang.org/grpc/codes"
@@ -34,7 +35,7 @@ func (s *Service) UI_ListPipelines(
 		return nil, hcerr.Externalize(
 			log,
 			err,
-			"error listing piplines",
+			"error listing pipelines",
 		)
 	}
 
@@ -81,6 +82,13 @@ func (s *Service) UI_ListPipelines(
 					QueueTime:   job.QueueTime,
 					Application: job.Application,
 				}
+			} else {
+				return nil, hcerr.Externalize(
+						log,
+						fmt.Errorf("pipeline run sequence %v contained no jobs", pipelineLastRun.Sequence),
+						"pipeline run has no jobs",
+						"pipeline run sequence", pipelineLastRun.Sequence,
+					)
 			}
 
 		}
