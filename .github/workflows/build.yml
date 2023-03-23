@@ -126,6 +126,7 @@ jobs:
           enableCrossOsArchive: true
       - name: Build assets
         run: |
+          make tools
           make static-assets
       - name: Save assets to cache
         uses: actions/cache/save@v3
