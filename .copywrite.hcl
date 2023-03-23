@@ -18,6 +18,8 @@ project {
   # Default: []
   header_ignore = [
     "**_test.go",
+    "**/testdata/**",
+    "test-e2e/**",
     "ui/tests/**",
     "ui/mirage/**",
     ".circleci/**",
@@ -29,6 +31,7 @@ project {
     "builtin/**/outputs.hcl",
     "**/node_modules/**",
     "website/scripts/**",
+    "thirdparty/**",
   ]
 }
 
