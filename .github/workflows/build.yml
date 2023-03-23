@@ -216,7 +216,7 @@ jobs:
         with:
           version: ${{ env.version }}
           zip_artifact_name: |
-            waypoint_${{env.version}}.zip
+            waypoint_${{env.version}}_linux_${{ matrix.arch }}.zip
             waypoint-entrypoint_${{ env.version }}_linux_${{ matrix.arch }}.zip
           target: odr-crt
           arch: ${{matrix.arch}}
