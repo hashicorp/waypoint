@@ -32,6 +32,10 @@ project {
     "**/node_modules/**",
     "website/scripts/**",
     "thirdparty/**",
+    "website/.next/**",
+    "website/.vscode/**",
+    "website/scripts/**",
+    "website/website-preview**",
   ]
 }
 
