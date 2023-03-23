@@ -48,7 +48,7 @@ jobs:
             internal/assets
             ui/dist
             pkg
-          key: ui_assets_${{ github.sha }}
+          key: build_assets_${{ github.sha }}
           fail-on-cache-miss: true
           enableCrossOsArchive: true
       - name: Restore build assets
