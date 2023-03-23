@@ -146,7 +146,6 @@ jobs:
         pkg-name: [ "waypoint", "waypoint-entrypoint" ]
         goos: [ linux ]
         goarch: [ "386", "amd64", "arm", "arm64" ]
-        # FIXME: can we confirm which os/arch combos we require for this pipeline?
         include:
           - {goos: "windows", goarch: "386", pkg-name: "waypoint" }
           - {goos: "windows", goarch: "amd64", pkg-name: "waypoint"}
@@ -213,12 +212,12 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Build Docker image
-        uses: hashicorp/actions-docker-build@v1
+        uses: hashicorp/actions-docker-build@v1.3.5
         with:
-          pkg_name: "waypoint_${{env.version}}"
-          #pkg_name: "waypoint-entrypoint_${{env.version}}"
           version: ${{ env.version }}
-          bin_name: ${{ env.repo }}
+          zip_artifact_name: |
+            waypoint_${{env.version}}.zip
+            waypoint-entrypoint_${{ env.version }}_linux_${{ matrix.arch }}.zip
           target: odr-crt
           arch: ${{matrix.arch}}
           tags: |
