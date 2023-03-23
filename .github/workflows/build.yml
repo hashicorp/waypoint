@@ -126,7 +126,7 @@ jobs:
           enableCrossOsArchive: true
       - name: Build assets
         run: |
-          make tools
+          go install github.com/kevinburke/go-bindata/go-bindata@v3.24.0+incompatible
           make static-assets
       - name: Save assets to cache
         uses: actions/cache/save@v3
