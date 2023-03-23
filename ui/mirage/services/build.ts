@@ -1,3 +1,8 @@
+/**
+ * Copyright (c) HashiCorp, Inc.
+ * SPDX-License-Identifier: MPL-2.0
+ */
+
 import { ListBuildsRequest, ListBuildsResponse, GetBuildRequest } from 'waypoint-pb';
 import { Request, Response } from 'miragejs';
 import { RouteHandler } from '../types';

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 // Package finalcontext is used by Waypoint to create a "final" context
 // that we'll use after the real context has been cancelled. This lets us
 // do some last minute cleanup that may require a context.

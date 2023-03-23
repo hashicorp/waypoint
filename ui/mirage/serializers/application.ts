@@ -1,3 +1,8 @@
+/**
+ * Copyright (c) HashiCorp, Inc.
+ * SPDX-License-Identifier: MPL-2.0
+ */
+
 import { Serializer } from 'ember-cli-mirage';
 import * as jspb from 'google-protobuf';
 import { Response } from 'miragejs';

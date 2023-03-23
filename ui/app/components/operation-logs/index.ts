@@ -1,3 +1,8 @@
+/**
+ * Copyright (c) HashiCorp, Inc.
+ * SPDX-License-Identifier: MPL-2.0
+ */
+
 import * as AnsiColors from 'ansi-colors';
 
 import { GetJobStreamRequest, GetJobStreamResponse } from 'waypoint-pb';

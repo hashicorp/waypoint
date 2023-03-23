@@ -1,3 +1,8 @@
+/**
+ * Copyright (c) HashiCorp, Inc.
+ * SPDX-License-Identifier: MPL-2.0
+ */
+
 import FakeXMLHttpRequest from 'fake-xml-http-request';
 import faker from './faker';
 import { Component } from 'waypoint-pb';

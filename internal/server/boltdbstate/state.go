@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 // Package state manages the state that the singleprocess server has, providing
 // operations to mutate that state safely as needed.
 package boltdbstate

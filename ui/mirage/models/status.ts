@@ -1,3 +1,8 @@
+/**
+ * Copyright (c) HashiCorp, Inc.
+ * SPDX-License-Identifier: MPL-2.0
+ */
+
 import { Model, belongsTo } from 'ember-cli-mirage';
 import { Status } from 'waypoint-pb';
 import { dateToTimestamp } from '../utils';

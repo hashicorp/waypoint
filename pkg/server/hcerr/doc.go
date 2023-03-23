@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 // Package hcerr contains helpers to format and sanitize errors before returning
 // them to clients as grpc status errors.
 //

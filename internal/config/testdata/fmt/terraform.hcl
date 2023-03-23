@@ -1,3 +1,6 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
 # Why do we have a "Terraform" case in Waypoint? We copied much of the
 # formatting logic and this test verifies a lot of it.
 #

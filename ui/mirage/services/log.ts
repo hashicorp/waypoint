@@ -1,3 +1,8 @@
+/**
+ * Copyright (c) HashiCorp, Inc.
+ * SPDX-License-Identifier: MPL-2.0
+ */
+
 import { LogBatch } from 'waypoint-pb';
 import { Timestamp } from 'google-protobuf/google/protobuf/timestamp_pb';
 import { Response } from 'miragejs';

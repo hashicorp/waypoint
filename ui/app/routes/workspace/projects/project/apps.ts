@@ -1,3 +1,8 @@
+/**
+ * Copyright (c) HashiCorp, Inc.
+ * SPDX-License-Identifier: MPL-2.0
+ */
+
 import Route from '@ember/routing/route';
 import { Breadcrumb } from 'waypoint/services/breadcrumbs';
 import { Model as ProjectRouteModel } from 'waypoint/routes/workspace/projects/project';

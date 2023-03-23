@@ -1,3 +1,8 @@
+/**
+ * Copyright (c) HashiCorp, Inc.
+ * SPDX-License-Identifier: MPL-2.0
+ */
+
 /*! ie11CustomProperties.js v3.1.0 | MIT License | https://git.io/fjXMN */
 !(function () {
   'use strict'

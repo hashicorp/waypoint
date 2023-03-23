@@ -1,3 +1,6 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
 integration {
   name        = "AWS AMI"
   description = "The AWS AMI plugin searches for and returns an existing AMI, to be deployed as an EC2."

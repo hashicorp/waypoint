@@ -1,3 +1,8 @@
+/**
+ * Copyright (c) HashiCorp, Inc.
+ * SPDX-License-Identifier: MPL-2.0
+ */
+
 import { clickable, collection, create, visitable } from 'ember-cli-page-object';
 import { currentURL, findAll } from '@ember/test-helpers';
 import { module, test } from 'qunit';

@@ -1,3 +1,8 @@
+/**
+ * Copyright (c) HashiCorp, Inc.
+ * SPDX-License-Identifier: MPL-2.0
+ */
+
 import { Request, Response } from 'miragejs';
 import { RouteHandler } from '../types';
 import {

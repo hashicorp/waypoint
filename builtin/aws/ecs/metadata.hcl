@@ -1,3 +1,6 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
 integration {
   name        = "AWS ECS"
   description = "The AWS ECS plugin deploys an application image to an AWS ECS cluster. It also launches on-demand runners to do operations remotely."

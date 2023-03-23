@@ -1,3 +1,8 @@
+/**
+ * Copyright (c) HashiCorp, Inc.
+ * SPDX-License-Identifier: MPL-2.0
+ */
+
 import { Hcl, Project, Ref } from 'waypoint-pb';
 import { Model, belongsTo, hasMany } from 'ember-cli-mirage';
 

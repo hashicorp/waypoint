@@ -1,3 +1,8 @@
+/**
+ * Copyright (c) HashiCorp, Inc.
+ * SPDX-License-Identifier: MPL-2.0
+ */
+
 import faker from 'faker';
 
 // We want consistent fake data in development for easy page reloads etc.

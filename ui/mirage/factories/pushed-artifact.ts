@@ -1,3 +1,8 @@
+/**
+ * Copyright (c) HashiCorp, Inc.
+ * SPDX-License-Identifier: MPL-2.0
+ */
+
 import { Factory, association, trait } from 'ember-cli-mirage';
 import { fakeId } from '../utils';
 

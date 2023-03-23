@@ -1,3 +1,8 @@
+/**
+ * Copyright (c) HashiCorp, Inc.
+ * SPDX-License-Identifier: MPL-2.0
+ */
+
 declare module 'ember-cli-mirage/test-support' {
   export function setupMirage(hooks: NestedHooks): void;
 }

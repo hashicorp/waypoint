@@ -1,3 +1,6 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
 integration {
   name        = "Google Cloud Run"
   description = "The Google Cloud Run plugin deploys a container to Google Cloud Run."

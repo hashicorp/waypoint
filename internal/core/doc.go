@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 // Package core exposes a high-level API for the expected operations of
 // the project. This can be consumed by the CLI, web APIs, etc. This is the
 // safest set of APIs to use.

@@ -1,3 +1,8 @@
+/**
+ * Copyright (c) HashiCorp, Inc.
+ * SPDX-License-Identifier: MPL-2.0
+ */
+
 import { triggerEvent, triggerKeyEvent, focus } from '@ember/test-helpers';
 
 // At the time of writing, xterm.js only implements the Macintosh “select all”

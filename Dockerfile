@@ -1,4 +1,7 @@
 # syntax = docker.mirror.hashicorp.services/docker/dockerfile:experimental
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
 
 #--------------------------------------------------------------------
 # builder builds the Waypoint binaries

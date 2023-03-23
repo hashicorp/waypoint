@@ -1,3 +1,8 @@
+/**
+ * Copyright (c) HashiCorp, Inc.
+ * SPDX-License-Identifier: MPL-2.0
+ */
+
 import { Model, belongsTo, hasMany } from 'miragejs';
 import { StatusReport } from 'waypoint-pb';
 import MirageDeployment from './deployment';

@@ -1,3 +1,8 @@
+/**
+ * Copyright (c) HashiCorp, Inc.
+ * SPDX-License-Identifier: MPL-2.0
+ */
+
 import { ContextObject, RunOptions } from 'axe-core';
 import {
   setupGlobalA11yHooks,

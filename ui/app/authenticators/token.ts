@@ -1,3 +1,8 @@
+/**
+ * Copyright (c) HashiCorp, Inc.
+ * SPDX-License-Identifier: MPL-2.0
+ */
+
 import { reject, resolve } from 'rsvp';
 
 import BaseAuthenticator from 'ember-simple-auth/authenticators/base';

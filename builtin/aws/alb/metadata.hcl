@@ -1,3 +1,6 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
 integration {
   name        = "AWS Application Load Balancer"
   description = "The AWS ALB plugin releases applications deployed to AWS by attaching target groups to an ALB."

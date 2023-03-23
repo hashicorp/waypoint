@@ -1,3 +1,6 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
 integration {
   name        = "Lambda Function URL"
   description = "The AWS Lambda Function URL plugin releases a function deployed with the AWS Lambda plugin."

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 // Package clisnapshot provides access for our CLI commands to create and
 // restore snapshots
 package clisnapshot

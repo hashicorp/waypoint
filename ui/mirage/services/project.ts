@@ -1,3 +1,8 @@
+/**
+ * Copyright (c) HashiCorp, Inc.
+ * SPDX-License-Identifier: MPL-2.0
+ */
+
 import { ListProjectsResponse, GetProjectResponse, UpsertProjectResponse } from 'waypoint-pb';
 import { decode } from '../helpers/protobufs';
 import { UI, GetProjectRequest, UpsertProjectRequest, Job, Project } from 'waypoint-pb';

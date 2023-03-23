@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package function_url
 
 import "github.com/hashicorp/waypoint-plugin-sdk/component"

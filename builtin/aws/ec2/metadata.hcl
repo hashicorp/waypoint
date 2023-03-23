@@ -1,3 +1,6 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
 integration {
   name        = "AWS EC2"
   description = "The AWS EC2 plugin deploys an AWS AMI as a virtual machine, running on AWS EC2."

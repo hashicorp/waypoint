@@ -1,3 +1,6 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
 integration {
   name        = "Files"
   description = "The Files plugin generates a value representing a path on disk, and can copy them to a specific directory."

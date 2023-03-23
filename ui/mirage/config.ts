@@ -1,3 +1,8 @@
+/**
+ * Copyright (c) HashiCorp, Inc.
+ * SPDX-License-Identifier: MPL-2.0
+ */
+
 import * as OIDCAuthMethods from './services/oidc-auth-methods';
 import * as build from './services/build';
 import * as config from './services/config';
