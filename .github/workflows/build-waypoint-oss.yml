@@ -51,13 +51,6 @@ jobs:
           key: build_assets_${{ github.sha }}
           fail-on-cache-miss: true
           enableCrossOsArchive: true
-      - name: Restore build assets
-        uses: actions/cache/restore@v3
-        with:
-          path: internal/assets
-          key: build_assets_${{ github.sha }}
-          fail-on-cache-miss: true
-          enableCrossOsArchive: true
       - name: Determine binary name
         id: get-bin-name
         run: |
