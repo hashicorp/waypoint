@@ -102,7 +102,7 @@ jobs:
       - name: Save assets to cache
         uses: actions/cache/save@v3
         with:
-          path: ui/dist/assets
+          path: .
           key: ui_assets_${{ github.sha }}
 
   build-assets:
@@ -120,19 +120,17 @@ jobs:
       - name: Restore ui assets
         uses: actions/cache/restore@v3
         with:
-          path: ui/dist/assets
+          path: .
           key: ui_assets_${{ github.sha }}
           fail-on-cache-miss: true
           enableCrossOsArchive: true
       - name: Build assets
         run: |
-          make tools
-          go install github.com/kevinburke/go-bindata/go-bindata@v3.24.0+incompatible
-          make bin/crt-assets
+          make static-assets
       - name: Save assets to cache
         uses: actions/cache/save@v3
         with:
-          path: internal/assets
+          path: .
           key: build_assets_${{ github.sha }}
 
   build-waypoint:

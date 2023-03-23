@@ -40,11 +40,10 @@ jobs:
       bin-name: ${{ steps.get-bin-name.outputs.bin-name }}
     name: Build ${{ inputs.package-name }} ${{ inputs.goos }} ${{ inputs.goarch }} v${{ inputs.waypoint-version }}
     steps:
-      - uses: actions/checkout@v3
-      - name: Restore ui assets
+      - name: Restore assets
         uses: actions/cache/restore@v3
         with:
-          path: ui/dist/assets
+          path: .
           key: ui_assets_${{ github.sha }}
           fail-on-cache-miss: true
           enableCrossOsArchive: true
