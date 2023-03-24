@@ -138,7 +138,7 @@ jobs:
         with:
           path: |
             ~/.cache/go-build
-            ~/go/pkg/mod
+            /home/runner/go/pkg/mod
           key: golang_mods_${{ github.sha }}
 
   build-waypoint:

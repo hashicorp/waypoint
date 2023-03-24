@@ -56,11 +56,11 @@ jobs:
           fail-on-cache-miss: true
           enableCrossOsArchive: true
       - name: Restore Golang mods to cache
-        uses: actions/cache/save@v3
+        uses: actions/cache/restore@v3
         with:
           path: |
             ~/.cache/go-build
-            ~/go/pkg/mod
+            /home/runner/go/pkg/mod
           key: golang_mods_${{ github.sha }}
           fail-on-cache-miss: true
           enableCrossOsArchive: true
