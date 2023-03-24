@@ -32,6 +32,9 @@ on:
       waypoint-metadata:
         type: string
         required: true
+      go-mod-path:
+        type: string
+        required: true
 
 jobs:
   build:
@@ -58,7 +61,7 @@ jobs:
       - name: Restore Golang mods to cache
         uses: actions/cache/restore@v3
         with:
-          path: ${{ needs.go-cache-paths.outputs.go-mod }}
+          path: ${{ inputs.go-mod-path }}
           key: golang_mods_${{ github.sha }}
           fail-on-cache-miss: true
           enableCrossOsArchive: true
