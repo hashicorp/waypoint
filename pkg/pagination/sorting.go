@@ -2,6 +2,8 @@ package pagination
 
 import (
 	"errors"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"strings"
 
 	validation "github.com/go-ozzo/ozzo-validation"
@@ -142,4 +144,20 @@ func (c *SortingConfig) GormPaginator(req RequestWithSort) (GormPaginator, error
 		return nil, err
 	}
 	return c.newGormPaginator(rc)
+}
+
+// GormPaginator is a helper that wraps FromRequest and returns a paginator that
+// implements the GormPaginator interface. If the paginator selected by
+// FromRequest doesn't implement GormPaginator an error is returned.
+func (c *SortingConfig) GormV2Paginator(req RequestWithSort) (GormV2Paginator, error) {
+	rc, err := c.FromRequest(req)
+	if err != nil {
+		return nil, err
+	}
+	switch rc.Paginator {
+	case PaginatorGormCursor:
+		return NewGormV2CursorPaginator(rc)
+	default:
+		return nil, status.Errorf(codes.Internal, "selected paginator %q doesn't support Gorm based pagination", rc.Paginator)
+	}
 }

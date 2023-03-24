@@ -2,6 +2,7 @@ package pagination
 
 import (
 	"fmt"
+	gormV2 "gorm.io/gorm"
 	"testing"
 	"time"
 
@@ -256,6 +257,21 @@ func TestGormCursorPaginator_PageBackWithQuery(t *testing.T) {
 }
 
 func newOrders(t *testing.T, db *gorm.DB, n int) []order {
+	orders := make([]order, n)
+	for i := 0; i < n; i++ {
+		price := 456
+		if i <= n/2 {
+			price = 123
+		}
+		orders[i] = order{ID: i + 1, Name: fmt.Sprintf("order_%d", i), Price: price}
+		if err := db.Create(&orders[i]).Error; err != nil {
+			t.Fatal(err.Error())
+		}
+	}
+	return orders
+}
+
+func newOrdersGormV2(t *testing.T, db *gormV2.DB, n int) []order {
 	orders := make([]order, n)
 	for i := 0; i < n; i++ {
 		price := 456
