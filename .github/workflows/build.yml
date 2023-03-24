@@ -80,8 +80,6 @@ jobs:
     needs:
       - get-product-version
       - get-go-version
-      - build-assets
-      - build-ui
     strategy:
       matrix:
         pkg-name: [ "waypoint-entrypoint" ]
