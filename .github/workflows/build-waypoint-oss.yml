@@ -58,9 +58,7 @@ jobs:
       - name: Restore Golang mods to cache
         uses: actions/cache/restore@v3
         with:
-          path: |
-            ~/.cache/go-build
-            /home/runner/go/pkg/mod
+          path: ${{ needs.go-cache-paths.outputs.go-mod }}
           key: golang_mods_${{ github.sha }}
           fail-on-cache-miss: true
           enableCrossOsArchive: true

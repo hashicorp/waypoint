@@ -107,6 +107,8 @@ jobs:
   build-assets:
     # FIXME: can releases be tagged as per CRT standards (ie at the end of the pipeline)?
     runs-on: ubuntu-latest
+    outputs:
+      go-mod: ${{ steps.go-cache-paths.outputs.go-mod }}
     name: Build Assets
     needs:
       - get-go-version
@@ -116,6 +118,10 @@ jobs:
       - uses: actions/setup-go@v3
         with:
           go-version: ${{ needs.get-go-version.outputs.go-version }}
+      - name: Set up go mod cache path
+        id: go-cache-paths
+        run: |
+          echo "::set-output name=go-mod::$(go env GOMODCACHE)"
       - name: Restore ui assets
         uses: actions/cache/restore@v3
         with:
@@ -136,9 +142,7 @@ jobs:
       - name: Save Golang mods to cache
         uses: actions/cache/save@v3
         with:
-          path: |
-            ~/.cache/go-build
-            /home/runner/go/pkg/mod
+          path: ${{ steps.go-cache-paths.outputs.go-mod }}
           key: golang_mods_${{ github.sha }}
 
   build-waypoint:
