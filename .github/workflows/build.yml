@@ -174,7 +174,7 @@ jobs:
       package-name: ${{ matrix.pkg-name }}
       waypoint-version: ${{ needs.get-product-version.outputs.product-version }}
       waypoint-metadata: ${{ needs.get-product-version.outputs.pkg-metadata }}
-      go-mod-path: ${{ needs.go-cache-paths.outputs.go-mod }}
+      go-mod-path: ${{ needs.build-assets.outputs.go-mod }}
     secrets: inherit
 
   package-docker-waypoint-server:
