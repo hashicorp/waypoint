@@ -719,7 +719,7 @@ message UI {
     // Supported EventTypes
     enum EventType {
       BUILD = 0;
-      DEPLOY = 1;
+      DEPLOYMENT = 1;
       RELEASE = 2;
     }
     //generic so looser contract for activity feed between backend and UI
