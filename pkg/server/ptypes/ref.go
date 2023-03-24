@@ -14,7 +14,7 @@ import (
 // ValidateRefWorkspaceRules
 func ValidateRefWorkspaceRules(v *pb.Ref_Workspace) []*validation.FieldRules {
 	return []*validation.FieldRules{
-		validation.Field(&v.Workspace, validation.Required),
+		validation.Field(&v.Workspace, validation.Required, validation.By(validatePathToken)),
 	}
 }
 
