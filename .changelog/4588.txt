@@ -1,0 +1,3 @@
+```release-note:bug
+core: Ensure project and workspaces cannot be created with malformed names
+```
