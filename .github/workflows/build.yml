@@ -76,83 +76,6 @@ jobs:
         with:
           name: metadata.json
           path: ${{ steps.generate-metadata-file.outputs.filepath }}
-  entrypoint-build:
-    needs:
-      - get-product-version
-      - get-go-version
-    strategy:
-      matrix:
-        pkg-name: [ "waypoint-entrypoint" ]
-        goos: [ linux ]
-        goarch: [ "386", "amd64", "arm", "arm64" ]
-        include:
-          - { goos: "darwin", goarch: "arm64", pkg-name: "waypoint-entrypoint" }
-          - { goos: "darwin", goarch: "amd64", pkg-name: "waypoint-entrypoint" }
-    runs-on: ubuntu-latest
-    outputs:
-      bin-name: ${{ steps.get-bin-name.outputs.bin-name }}
-    name: Build ${{ inputs.package-name }} ${{ inputs.goos }} ${{ inputs.goarch }} v${{ inputs.waypoint-version }}
-    steps:
-      - uses: actions/checkout@v3
-      - name: Determine binary name
-        id: get-bin-name
-        run: |
-          bin_name="${{ inputs.package-name }}"
-          if [ "${{ inputs.goos }}" == "windows" ];then
-               bin_name="${bin_name}.exe"
-          fi
-          echo "bin-name=waypoint-entrypoint" | tee -a "${GITHUB_OUTPUT}"
-      - name: Build binary
-        env:
-          GOOS: ${{ inputs.goos }}
-          GOARCH: ${{ inputs.goarch }}
-          WAYPOINT_GOOS: ${{ inputs.goos }}
-          WAYPOINT_GOARCH: ${{ inputs.goarch }}
-          GO_LDFLAGS: ${{ inputs.ld-flags }}
-          ACTIONSOS: ${{ inputs.runson }}
-          CGO_ENABLED: ${{ inputs.cgo-enabled }}
-          CRT_BIN_NAME: ${{ steps.get-bin-name.outputs.bin-name }}
-        uses: hashicorp/actions-go-build@v0.1.7
-        with:
-          product_name: ${{ inputs.package-name }}
-          product_version: ${{ inputs.waypoint-version }}
-          go_version: ${{ inputs.go-version }}
-          os: ${{ inputs.goos }}
-          arch: ${{ inputs.goarch }}
-          reproducible: report
-          instructions: |
-            make bin/crt-waypoint-entrypoint
-      - name: Linux packaging
-        if: ${{ (inputs.goos == 'linux') && (inputs.package-name == 'waypoint') && (inputs.goarch != '386') }}
-        uses: hashicorp/actions-packaging-linux@v1
-        with:
-          name: ${{ inputs.package-name }}
-          description: ${{ inputs.package-name }}
-          arch: ${{ inputs.goarch }}
-          version: ${{ inputs.waypoint-version }}+${{ inputs.waypoint-metadata }}
-          maintainer: "HashiCorp"
-          homepage: "https://github.com/hashicorp/waypoint"
-          license: "MPL-2.0"
-          binary: "dist/${{ inputs.package-name }}"
-          deb_depends: "git"
-          rpm_depends: "git"
-      - name: Set Package Names
-        if: ${{ inputs.goos == 'linux' }}
-        run: |
-          echo "RPM_PACKAGE=$(basename out/*.rpm)" >> $GITHUB_ENV
-          echo "DEB_PACKAGE=$(basename out/*.deb)" >> $GITHUB_ENV
-
-      - uses: actions/upload-artifact@v2
-        if: ${{ inputs.goos == 'linux' }}
-        with:
-          name: ${{ env.RPM_PACKAGE }}
-          path: out/${{ env.RPM_PACKAGE }}
-
-      - uses: actions/upload-artifact@v2
-        if: ${{ inputs.goos == 'linux' }}
-        with:
-          name: ${{ env.DEB_PACKAGE }}
-          path: out/${{ env.DEB_PACKAGE }}
   build-ui:
     runs-on: ubuntu-latest
     name: Build UI
@@ -210,6 +133,13 @@ jobs:
         with:
           path: internal/assets
           key: build_assets_${{ github.sha }}
+      - name: Save Golang mods to cache
+        uses: actions/cache/save@v3
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: golang_mods_${{ github.sha }}
 
   build-waypoint:
     needs:

@@ -55,6 +55,15 @@ jobs:
           key: build_assets_${{ github.sha }}
           fail-on-cache-miss: true
           enableCrossOsArchive: true
+      - name: Restore Golang mods to cache
+        uses: actions/cache/save@v3
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: golang_mods_${{ github.sha }}
+          fail-on-cache-miss: true
+          enableCrossOsArchive: true
       - name: Determine binary name
         id: get-bin-name
         run: |
