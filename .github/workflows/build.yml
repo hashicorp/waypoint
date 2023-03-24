@@ -224,18 +224,11 @@ jobs:
           key: build_assets_${{ github.sha }}
           fail-on-cache-miss: true
           enableCrossOsArchive: true
-      - name: Restore Golang mods to cache
-        uses: actions/cache/restore@v3
-        with:
-          path: ${{ inputs.go-mod-path }}
-          key: golang_mods_${{ github.sha }}
-          fail-on-cache-miss: true
-          enableCrossOsArchive: true
       - name: Determine binary name
         id: get-bin-name
         run: |
           bin_name="${{ matrix.pkg-name }}"
-          if [ "${{ inputs.goos }}" == "windows" ];then
+          if [ "${{ matrix.goos }}" == "windows" ];then
                bin_name="${bin_name}.exe"
           fi
           echo "bin-name=${bin_name}" | tee -a "${GITHUB_OUTPUT}"
