@@ -1,12 +1,12 @@
 package pagination
 
 import (
+	"github.com/hashicorp/waypoint/pkg/pagination/database/testsql"
 	"testing"
 
 	validation "github.com/go-ozzo/ozzo-validation"
-	publicpb "github.com/hashicorp/cloud-api-grpc-go/hashicorp/cloud/common"
 	pb "github.com/hashicorp/cloud-sdk/api/pagination/proto/go"
-	"github.com/hashicorp/cloud-sdk/database/testsql"
+	publicpb "github.com/hashicorp/waypoint/pkg/server/gen"
 	"github.com/stretchr/testify/require"
 )
 
@@ -394,7 +394,7 @@ func TestSortingConfig_GormPaginator(t *testing.T) {
 }
 
 func TestSortedGormPaginator_Valid(t *testing.T) {
-	db := testsql.TestPostgresDBWithOpts(t, "paginator", &testsql.TestDBOptions{
+	db := testsql.TestPostgresDBWithOpts(*t, "paginator", &testsql.TestDBOptions{
 		SkipMigration: true,
 	})
 	db.AutoMigrate(&order{})
@@ -484,6 +484,127 @@ func TestSortedGormPaginator_Valid(t *testing.T) {
 	// Page back
 	req = newRequestWithSort(9, "", resp3.PreviousPageToken, []string{"created_at desc", "id"})
 	p, err = config.GormPaginator(req)
+	r.NoError(err)
+
+	var out4 []*order
+	result = p.Paginate(db, &out4)
+	r.NoError(result.Error)
+	r.Len(out4, 9)
+	r.True(out4[0].CreatedAt.After(out4[1].CreatedAt))
+
+	// Get the cursor
+	c4 := p.Cursor()
+	r.NotNil(c4)
+	r.NotNil(c4.Next)
+	r.NotNil(c4.Previous)
+
+	// Get the response
+	resp4 := p.PaginationResponse()
+	r.NotNil(resp4)
+	r.NotEmpty(resp4.NextPageToken)
+	r.NotEmpty(resp4.PreviousPageToken)
+}
+
+func TestSortingConfig_GormV2Paginator(t *testing.T) {
+	r := require.New(t)
+	c := mockSortingConfig()
+	req := newRequestWithSort(0, "", "", []string{})
+	_, err := c.GormV2Paginator(req)
+	r.NoError(err)
+}
+
+func TestSortedGormV2Paginator_Valid(t *testing.T) {
+	db := testsql.TestPostgresDBWithOptsGormV2(*t, "paginator", &testsql.TestDBOptions{
+		SkipMigration: true,
+	})
+	r := require.New(t)
+	r.NoError(db.AutoMigrate(&order{}))
+	// Insert some orders
+	newOrdersGormV2(t, db, 22)
+
+	// r := require.New(t)
+	config := mockSortingConfig()
+	config.AllowedSortFields = map[string]string{"created_at": "CreatedAt", "id": "ID"}
+	config.DefaultSortedFields = []SortedField{
+		{Field: "CreatedAt"}, // Defaults to ascending
+		{Field: "UUID"},
+	}
+	config.PageSizeDefault = 10
+	req := newRequestWithSort(9, "", "", []string{"created_at desc", "id"})
+
+	p, err := config.GormV2Paginator(req)
+	r.NoError(err)
+	r.NotNil(p)
+	r.EqualValues(PaginatorGormCursor, p.Type())
+
+	// Paginate
+	var out []*order
+	result := p.Paginate(db, &out)
+	r.NoError(result.Error)
+	r.Len(out, 9)
+	r.True(out[0].CreatedAt.After(out[1].CreatedAt))
+
+	// Get the cursor
+	c := p.Cursor()
+	r.NotNil(c)
+	r.NotNil(c.Next)
+	r.Nil(c.Previous)
+
+	// Get the response
+	resp := p.PaginationResponse()
+	r.NotNil(resp)
+	r.NotEmpty(resp.NextPageToken)
+	r.Empty(resp.PreviousPageToken)
+
+	// Page again
+	req = newRequestWithSort(9, resp.NextPageToken, "", []string{"created_at desc", "id"})
+	p, err = config.GormV2Paginator(req)
+	r.NoError(err)
+
+	var out2 []*order
+	result = p.Paginate(db, &out2)
+	r.NoError(result.Error)
+	r.Len(out2, 9)
+	r.True(out2[0].CreatedAt.After(out2[1].CreatedAt))
+
+	// Get the cursor
+	c2 := p.Cursor()
+	r.NotNil(c2)
+	r.NotNil(c2.Next)
+	r.NotNil(c2.Previous)
+
+	// Get the response
+	resp2 := p.PaginationResponse()
+	r.NotNil(resp2)
+	r.NotEmpty(resp2.NextPageToken)
+	r.NotEmpty(resp2.PreviousPageToken)
+
+	// Page again and clear the previous token
+	req = newRequestWithSort(9, resp2.NextPageToken, "", []string{"created_at desc", "id"})
+	p, err = config.GormV2Paginator(req)
+	r.NoError(err)
+
+	var out3 []*order
+	result = p.Paginate(db, &out3)
+	r.NoError(result.Error)
+	r.Len(out3, 4)
+	r.True(out3[0].CreatedAt.After(out3[1].CreatedAt))
+
+	// Get the cursor
+	c3 := p.Cursor()
+	r.NotNil(c3)
+	r.Nil(c3.Next)
+	r.NotNil(c3.Previous)
+
+	// Get the response
+	resp3 := p.PaginationResponse()
+	r.NotNil(resp3)
+	r.Empty(resp3.NextPageToken)
+	r.NotEmpty(resp3.PreviousPageToken)
+
+	// Page back
+	req = newRequestWithSort(9, "", resp3.PreviousPageToken, []string{"created_at desc", "id"})
+	p, err = config.GormV2Paginator(req)
 	r.NoError(err)
 
 	var out4 []*order

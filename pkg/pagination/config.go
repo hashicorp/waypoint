@@ -72,6 +72,8 @@ type Config struct {
 
 	// SupportedPaginators are all the paginators that are supported.
 	SupportedPaginators []PaginatorType
+
+	Rule
 }
 
 // Validate validates the pagination configuration is valid.

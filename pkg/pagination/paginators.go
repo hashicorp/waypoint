@@ -65,3 +65,34 @@ type GormV2Paginator interface {
 	//   if result.Error != nil { ... } // Or result.GetErrors() for an error list
 	Paginate(stmt *gormV2.DB, out interface{}) *gormV2.DB
 }
+
+// Paginate paginates data
+//func (p *Paginator) Paginate(db *gorm.DB, dest interface{}) (result *gorm.DB, c Cursor, err error) {
+//	if err = p.validate(dest); err != nil {
+//		return
+//	}
+//	p.setup(db, dest)
+//	fields, err := p.decodeCursor(dest)
+//	if err != nil {
+//		return
+//	}
+//	if result = p.appendPagingQuery(db, fields).Find(dest); result.Error != nil {
+//		return
+//	}
+//	// dest must be a pointer type or gorm will panic above
+//	elems := reflect.ValueOf(dest).Elem()
+//	// only encode next cursor when elems is not empty slice
+//	if elems.Kind() == reflect.Slice && elems.Len() > 0 {
+//		hasMore := elems.Len() > p.limit
+//		if hasMore {
+//			elems.Set(elems.Slice(0, elems.Len()-1))
+//		}
+//		if p.isBackward() {
+//			elems.Set(reverse(elems))
+//		}
+//		if c, err = p.encodeCursor(elems, hasMore); err != nil {
+//			return
+//		}
+//	}
+//	return
+//}

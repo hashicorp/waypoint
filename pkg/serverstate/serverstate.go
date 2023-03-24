@@ -5,6 +5,7 @@ package serverstate
 
 import (
 	"context"
+	"google.golang.org/protobuf/proto"
 	"io"
 	"time"
 
@@ -122,7 +123,8 @@ type Interface interface {
 
 	//---------------------------------------------------------------
 	// Events
-	EventListBundles(ctx context.Context, request *pb.PaginationRequest) ([]*pb.UI_EventBundle, *pb.PaginationResponse, error)
+	EventListBundles(context.Context, *pb.UI_ListEventsRequest) ([]*pb.UI_EventBundle, *pb.PaginationResponse, error)
+	EventPut(context.Context, proto.Message) error
 
 	//---------------------------------------------------------------
 	// Operations
