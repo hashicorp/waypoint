@@ -55,6 +55,23 @@ func TestServiceProject(t *testing.T, factory Factory) {
 		}
 	})
 
+	t.Run("create with invalid name", func(t *testing.T) {
+		require := require.New(t)
+
+		project := ptypes.TestProject(t, &pb.Project{
+			Name: ".",
+		})
+
+		// Fails to create a project with a bad name
+		{
+			_, err := client.UpsertProject(ctx, &pb.UpsertProjectRequest{
+				Project: project,
+			})
+
+			require.Error(err)
+		}
+	})
+
 	t.Run("get", func(t *testing.T) {
 		require := require.New(t)
 
