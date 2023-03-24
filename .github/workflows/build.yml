@@ -133,7 +133,7 @@ jobs:
         run: |
           make tools
           go install github.com/kevinburke/go-bindata/go-bindata@v3.24.0+incompatible
-          make bin/crt-assets
+          make static-assets
       - name: Save assets to cache
         uses: actions/cache/save@v3
         with:
@@ -144,8 +144,49 @@ jobs:
         with:
           path: ${{ steps.go-cache-paths.outputs.go-mod }}
           key: golang_mods_${{ github.sha }}
+#  build-assets:
+#    # FIXME: can releases be tagged as per CRT standards (ie at the end of the pipeline)?
+#    runs-on: ubuntu-latest
+#    outputs:
+#      go-mod: ${{ steps.go-cache-paths.outputs.go-mod }}
+#    name: Build Assets
+#    needs:
+#      - get-go-version
+#      - build-ui
+#    steps:
+#      - uses: actions/checkout@v3
+#      - uses: actions/setup-go@v3
+#        with:
+#          go-version: ${{ needs.get-go-version.outputs.go-version }}
+#      - name: Set up go mod cache path
+#        id: go-cache-paths
+#        run: |
+#          echo "::set-output name=go-mod::$(go env GOMODCACHE)"
+#      - name: Restore ui assets
+#        uses: actions/cache/restore@v3
+#        with:
+#          path: ui/dist/assets
+#          key: ui_assets_${{ github.sha }}
+#          fail-on-cache-miss: true
+#          enableCrossOsArchive: true
+#      - name: Build assets
+#        run: |
+#          make tools
+#          go install github.com/kevinburke/go-bindata/go-bindata@v3.24.0+incompatible
+#          make bin/crt-assets
+#      - name: Save assets to cache
+#        uses: actions/cache/save@v3
+#        with:
+#          path: internal/assets
+#          key: build_assets_${{ github.sha }}
+#      - name: Save Golang mods to cache
+#        uses: actions/cache/save@v3
+#        with:
+#          path: ${{ steps.go-cache-paths.outputs.go-mod }}
+#          key: golang_mods_${{ github.sha }}
 
   build-waypoint:
+    runs-on: ubuntu-latest
     needs:
       - get-product-version
       - get-go-version
@@ -164,18 +205,75 @@ jobs:
           - { goos: "darwin", goarch: "arm64", pkg-name: "waypoint-entrypoint" }
           - { goos: "darwin", goarch: "amd64", pkg-name: "waypoint-entrypoint" }
     name: Go ${{ matrix.go }} ${{ matrix.goos }} ${{ matrix.goarch }} build
-    uses: ./.github/workflows/build-waypoint-oss.yml
-    with:
-      create-packages: false
-      goarch: ${{ matrix.goarch }}
-      goos: ${{ matrix.goos }}
-      go-tags: ui
-      go-version: ${{ needs.get-go-version.outputs.go-version }}
-      package-name: ${{ matrix.pkg-name }}
-      waypoint-version: ${{ needs.get-product-version.outputs.product-version }}
-      waypoint-metadata: ${{ needs.get-product-version.outputs.pkg-metadata }}
-      go-mod-path: ${{ needs.build-assets.outputs.go-mod }}
-    secrets: inherit
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v3
+        with:
+          go-version: ${{ needs.get-go-version.outputs.go-version }}
+      - name: Restore ui assets
+        uses: actions/cache/restore@v3
+        with:
+          path: ui/dist/assets
+          key: ui_assets_${{ github.sha }}
+          fail-on-cache-miss: true
+          enableCrossOsArchive: true
+      - name: Restore build assets
+        uses: actions/cache/restore@v3
+        with:
+          path: internal/assets
+          key: build_assets_${{ github.sha }}
+          fail-on-cache-miss: true
+          enableCrossOsArchive: true
+      - name: Restore Golang mods to cache
+        uses: actions/cache/restore@v3
+        with:
+          path: ${{ inputs.go-mod-path }}
+          key: golang_mods_${{ github.sha }}
+          fail-on-cache-miss: true
+          enableCrossOsArchive: true
+      - name: Determine binary name
+        id: get-bin-name
+        run: |
+          bin_name="${{ matrix.pkg-name }}"
+          if [ "${{ inputs.goos }}" == "windows" ];then
+               bin_name="${bin_name}.exe"
+          fi
+          echo "bin-name=${bin_name}" | tee -a "${GITHUB_OUTPUT}"
+      - name: Build binary
+        shell: bash
+        run: .github/scripts/build.sh build_pkg_local $(pwd) "${{ matrix.goos }}" "${{ matrix.goarch }}"
+
+#  build-waypoint:
+#    needs:
+#      - get-product-version
+#      - get-go-version
+#      - build-assets
+#      - build-ui
+#    strategy:
+#      matrix:
+#        pkg-name: [ "waypoint", "waypoint-entrypoint" ]
+#        goos: [ linux ]
+#        goarch: [ "386", "amd64", "arm", "arm64" ]
+#        include:
+#          - {goos: "windows", goarch: "386", pkg-name: "waypoint" }
+#          - {goos: "windows", goarch: "amd64", pkg-name: "waypoint"}
+#          - {goos: "darwin", goarch: "arm64", pkg-name: "waypoint"}
+#          - {goos: "darwin", goarch: "amd64", pkg-name: "waypoint"}
+#          - { goos: "darwin", goarch: "arm64", pkg-name: "waypoint-entrypoint" }
+#          - { goos: "darwin", goarch: "amd64", pkg-name: "waypoint-entrypoint" }
+#    name: Go ${{ matrix.go }} ${{ matrix.goos }} ${{ matrix.goarch }} build
+#    uses: ./.github/workflows/build-waypoint-oss.yml
+#    with:
+#      create-packages: false
+#      goarch: ${{ matrix.goarch }}
+#      goos: ${{ matrix.goos }}
+#      go-tags: ui
+#      go-version: ${{ needs.get-go-version.outputs.go-version }}
+#      package-name: ${{ matrix.pkg-name }}
+#      waypoint-version: ${{ needs.get-product-version.outputs.product-version }}
+#      waypoint-metadata: ${{ needs.get-product-version.outputs.pkg-metadata }}
+#      go-mod-path: ${{ needs.build-assets.outputs.go-mod }}
+#    secrets: inherit
 
   package-docker-waypoint-server:
     name: Build Docker Server image for linux_${{ matrix.arch }}
