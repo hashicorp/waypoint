@@ -44,24 +44,18 @@ func (c *RunnerProfileEditCommand) Run(args []string) int {
 		c.flagName = args[0]
 	}
 
-	sg := c.ui.StepGroup()
-	defer sg.Wait()
-
-	var s terminal.Step
-
-	defer func() {
-		if s != nil {
-			s.Abort()
-		}
-	}()
-
 	var (
 		od      *pb.OnDemandRunnerConfig
 		updated bool
 	)
 
+	// NOTE(briancain): !!! IMPORTANT !!!
+	// Don't use StepGroups for this CLI package. It will overwrite lines in
+	// the terminal editor making it really difficult to read what you are typing.
+	// We default to the classic Output class instead so there's no hanging text.
+
 	if c.flagName != "" {
-		s = sg.Add("Checking for an existing runner profile: %s", c.flagName)
+		c.ui.Output("Checking for an existing runner profile: %s", c.flagName)
 		// Check for an existing project of the same name.
 		resp, err := c.project.Client().GetOnDemandRunnerConfig(ctx, &pb.GetOnDemandRunnerConfigRequest{
 			Config: &pb.Ref_OnDemandRunnerConfig{
@@ -84,16 +78,16 @@ func (c *RunnerProfileEditCommand) Run(args []string) int {
 
 		if resp != nil {
 			od = resp.Config
-			s.Update("Updating runner profile %q (%q)...", od.Name, od.Id)
+			c.ui.Output("Updating runner profile %q (%q)...", od.Name, od.Id)
 			updated = true
 		} else {
-			s.Update("No existing runner profile found for id %q...command will create a new profile", c.flagName)
+			c.ui.Output("No existing runner profile found for id %q...command will create a new profile", c.flagName)
 			od = &pb.OnDemandRunnerConfig{
 				Name: c.flagName,
 			}
 		}
 	} else {
-		s = sg.Add("Creating new runner profile named %q", c.flagName)
+		c.ui.Output("Creating new runner profile named %q", c.flagName)
 		od = &pb.OnDemandRunnerConfig{
 			Name: c.flagName,
 		}
@@ -123,11 +117,10 @@ func (c *RunnerProfileEditCommand) Run(args []string) int {
 	}
 
 	if updated {
-		s.Update("Runner profile %q updated", resp.Config.Name)
+		c.ui.Output("Runner profile %q updated", resp.Config.Name, terminal.WithSuccessStyle())
 	} else {
-		s.Update("Runner profile %q created", resp.Config.Name)
+		c.ui.Output("Runner profile %q created", resp.Config.Name, terminal.WithSuccessStyle())
 	}
-	s.Done()
 
 	return 0
 }
