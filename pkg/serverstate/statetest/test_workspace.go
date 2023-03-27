@@ -116,6 +116,55 @@ func TestWorkspacePut(t *testing.T, factory Factory, _ RestartFactory) {
 		}
 	})
 
+	t.Run("Only 1 workspace per name", func(t *testing.T) {
+		require := require.New(t)
+
+		s := factory(t)
+		defer s.Close()
+
+		{
+			workspace, err := s.WorkspaceGet(ctx, "default")
+			require.Equal(codes.NotFound, status.Code(err))
+			require.Error(err)
+			require.Nil(workspace)
+		}
+
+		// Put
+		err := s.WorkspacePut(ctx, serverptypes.TestWorkspace(t, &pb.Workspace{
+			Name: "default",
+		}))
+		require.NoError(err)
+
+		{
+			workspace, err := s.WorkspaceGet(ctx, "default")
+			require.NoError(err)
+			require.NotNil(workspace)
+			require.Equal(workspace.Name, "default")
+		}
+
+		// Only 1
+		{
+			workspace, err := s.WorkspaceList(ctx)
+			require.NoError(err)
+			require.NotNil(workspace)
+			require.Len(workspace, 1)
+		}
+
+		// Put
+		err = s.WorkspacePut(ctx, serverptypes.TestWorkspace(t, &pb.Workspace{
+			Name: "default",
+		}))
+		require.NoError(err)
+
+		// Only 1
+		{
+			workspace, err := s.WorkspaceList(ctx)
+			require.NoError(err)
+			require.NotNil(workspace)
+			require.Len(workspace, 1)
+		}
+	})
+
 	t.Run("No spaces in name", func(t *testing.T) {
 		require := require.New(t)
 
