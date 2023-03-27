@@ -234,7 +234,7 @@ jobs:
           echo "bin-name=${bin_name}" | tee -a "${GITHUB_OUTPUT}"
       - name: Build binary
         shell: bash
-        run: .github/scripts/build.sh build_pkg_local $(pwd) "${{ matrix.goos }}" "${{ matrix.goarch }}"
+        run: sudo .github/scripts/build.sh build_pkg_local $(pwd) "${{ matrix.goos }}" "${{ matrix.goarch }}"
 
 #  build-waypoint:
 #    needs:
