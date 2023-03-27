@@ -30,6 +30,17 @@ func NewEditor(args []string) (*Editor, error) {
 	}, nil
 }
 
+func setupDefaultEditorArgs() ([]string, error) {
+	shell := os.Getenv("SHELL")
+	if len(shell) == 0 {
+		shell = defaultShell
+	}
+
+	args := append([]string{shell, "-c"}, defaultEnvEditor...)
+
+	return args, nil
+}
+
 // Run will launch a editor to use a system defined editor such as vim to edit
 // configs in place. It saves that content to a temp file for use as well as
 // returning the raw bytes from the edit. It can optionally take an original
@@ -47,7 +58,17 @@ func Run(o []byte) ([]byte, string, error) {
 		original = o
 	}
 
-	edit, err := NewEditor(defaultEnvEditor)
+	shell := os.Getenv("SHELL")
+	if len(shell) == 0 {
+		shell = defaultShell
+	}
+
+	// TODO(briancain): We might have to massage a users shell path to properly
+	// launch the edtitor. For now we simply launch it with the default editor
+	// assuming its available on the path
+	//args := append([]string{shell, "-c"}, defaultEnvEditor...)
+
+	edit, err := NewEditor([]string{defaultEditor})
 	if err != nil {
 		return nil, "", err
 	}
