@@ -8,9 +8,6 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
-
-	"github.com/hashicorp/hcl/v2"
-	"github.com/hashicorp/hcl/v2/hclsyntax"
 )
 
 const (
@@ -69,11 +66,14 @@ func Run(o []byte) ([]byte, string, error) {
 		return nil, "", fmt.Errorf("edited file matches original content")
 	}
 
-	// Validate that the edited content can be parsed
-	_, diag := hclsyntax.ParseConfig(edited, "<waypoint-hcl>", hcl.Pos{})
-	if diag.HasErrors() {
-		return nil, "", fmt.Errorf("the edited file has errors: %s", diag)
-	}
+	// TODO(briancain): Get this working properly with json and hcl
+	/*
+		// Validate that the edited content can be parsed
+		_, diag := hclsyntax.ParseConfig(edited, "<waypoint-hcl>", hcl.Pos{})
+		if diag.HasErrors() {
+			return nil, "", fmt.Errorf("the edited file has errors: %s", diag)
+		}
+	*/
 
 	return edited, filePath, nil
 }
