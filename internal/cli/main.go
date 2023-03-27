@@ -521,6 +521,11 @@ func Commands(
 				HelpText:     helpText["runner-profile"][1],
 			}, nil
 		},
+		"runner profile edit": func() (cli.Command, error) {
+			return &RunnerProfileEditCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
 		"runner profile set": func() (cli.Command, error) {
 			return &RunnerProfileSetCommand{
 				baseCommand: baseCommand,
