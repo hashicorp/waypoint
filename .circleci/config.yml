@@ -45,7 +45,8 @@ jobs:
               --timeout 10m \
               --enable gofmt \
               --enable gosimple \
-              --enable govet
+              --enable govet \
+              --enable errcheck
       - notify_main_failure
 
   # checks vendor directory is correct
