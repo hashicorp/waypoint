@@ -58,13 +58,8 @@ func Run(o []byte) ([]byte, string, error) {
 		original = o
 	}
 
-	shell := os.Getenv("SHELL")
-	if len(shell) == 0 {
-		shell = defaultShell
-	}
-
 	// TODO(briancain): We might have to massage a users shell path to properly
-	// launch the edtitor. For now we simply launch it with the default editor
+	// launch the editor. For now we simply launch it with the default editor
 	// assuming its available on the path
 	//args := append([]string{shell, "-c"}, defaultEnvEditor...)
 
