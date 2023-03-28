@@ -743,19 +743,25 @@ func (s *Service) RunnerJobStream(
 	go func() {
 		for {
 			ws := memdb.NewWatchSet()
-			job, err = s.state(ctx).JobById(ctx, jobId, ws)
+			checkJob, err := s.state(ctx).JobById(ctx, jobId, ws)
 			if err != nil {
+				// if the context was canceled, we're all good, we're supposed to just exit.
+				// It's critically important we don't put something on errCh here because
+				// it can cause a job that finished fine to error out mistakenly.
+				if err == context.Canceled {
+					return
+				}
 				errCh <- errors.Wrapf(err, "error getting job by id from state %q", jobId)
 				return
 			}
-			if job == nil {
+			if checkJob == nil {
 				errCh <- status.Errorf(codes.Internal, "failed to find job for id %q", jobId)
 				return
 			}
 
 			// Send the job
 			select {
-			case jobCh <- job:
+			case jobCh <- checkJob:
 			case <-ctx.Done():
 				return
 			}
@@ -836,49 +842,26 @@ func (s *Service) RunnerJobStream(
 			return hcerr.Externalize(log, err, "err from err channel")
 
 		case req := <-eventCh:
-			if job == nil {
-				select {
-				case err := <-errCh:
-					// NOTE(briancain): In this case, it means we've received an event from
-					// the event channel, however `job` was nil, and `err` was not. This
-					// means we received an error trying to retrieve a job by Id and need
-					// to properly handle that.
-					log.Error("Job disappeared and there was an error while processing job event", "error", err, "event", req)
-
-					// Attempt to complete job with original jobId so that the original
-					// job Id isn't left hanging in a Running state. We also send through
-					// the error to give to the job details for why it's Errored.
-					if err := s.state(ctx).JobComplete(ctx, jobId, nil, err); err != nil {
-						return hcerr.Externalize(log, err,
-							"failed to complete job while failing to process job event",
-							"id", jobId,
-							"event_request", req)
-					}
-
-					return hcerr.Externalize(log, err, "failed to process job event", "event_request", req)
-				default:
-				}
-			}
 			if err := s.handleJobStreamRequest(log, job, server, req, logStreamWriter); err != nil {
 				return hcerr.Externalize(log, err, "error handling job stream request", "req", req)
 			}
 
-		case job := <-jobCh:
-			if lastJob == job.Job {
+		case updatedJob := <-jobCh:
+			if lastJob == updatedJob.Job {
 				continue
 			}
 
 			// If the job is canceled, send that event. We send this each time
 			// the cancel time changes. The cancel time only changes if multiple
 			// cancel requests are made.
-			if job.CancelTime != nil &&
-				(lastJob == nil || !lastJob.CancelTime.AsTime().Equal(job.CancelTime.AsTime())) {
+			if updatedJob.CancelTime != nil &&
+				(lastJob == nil || !lastJob.CancelTime.AsTime().Equal(updatedJob.CancelTime.AsTime())) {
 				log.Trace("job cancellation request received")
 
 				// The job is forced if we're in an error state. This must be true
 				// because we would've already exited the loop if we naturally
 				// got a terminal event.
-				force := job.State == pb.Job_ERROR
+				force := updatedJob.State == pb.Job_ERROR
 
 				err := server.Send(&pb.RunnerJobStreamResponse{
 					Event: &pb.RunnerJobStreamResponse_Cancel{
@@ -897,8 +880,8 @@ func (s *Service) RunnerJobStream(
 				}
 			}
 
-			log.Trace("updating job from state store", "last_job", lastJob, "job", job.Job)
-			lastJob = job.Job
+			log.Trace("updating job from state store", "last_job", lastJob, "job", updatedJob.Job)
+			lastJob = updatedJob.Job
 		}
 	}
 }
