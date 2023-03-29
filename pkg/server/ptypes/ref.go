@@ -2,6 +2,8 @@ package ptypes
 
 import (
 	"errors"
+	"fmt"
+	"regexp"
 	"strings"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
@@ -12,7 +14,7 @@ import (
 // ValidateRefWorkspaceRules
 func ValidateRefWorkspaceRules(v *pb.Ref_Workspace) []*validation.FieldRules {
 	return []*validation.FieldRules{
-		validation.Field(&v.Workspace, validation.Required),
+		validation.Field(&v.Workspace, validation.Required, validation.By(validatePathToken)),
 	}
 }
 
@@ -32,6 +34,8 @@ func validatePathToken(pathToken interface{}) error {
 	// as a path traversal.
 	if strings.Contains(s, "../") {
 		return errors.New("name cannot contain '../'")
+	} else if !regexp.MustCompile(`^[a-zA-Z0-9_-]*$`).MatchString(s) {
+		return fmt.Errorf("name %q must be alpha numeric", s)
 	}
 	return nil
 }

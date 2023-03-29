@@ -27,7 +27,7 @@ func Test_remoteOpPreferred(t *testing.T) {
 	}
 
 	_, err := client.UpsertProject(ctx, &pb.UpsertProjectRequest{Project: project})
-	require.Nil(err)
+	require.NoError(err)
 
 	t.Run("Choose local if remote enabled is false for the project.", func(t *testing.T) {
 		project = &pb.Project{
@@ -35,10 +35,10 @@ func Test_remoteOpPreferred(t *testing.T) {
 			RemoteEnabled: false,
 		}
 		_, err := client.UpsertProject(ctx, &pb.UpsertProjectRequest{Project: project})
-		require.Nil(err)
+		require.NoError(err)
 
 		remote, err := remoteOpPreferred(ctx, client, project, nil, log)
-		require.Nil(err)
+		require.NoError(err)
 		require.False(remote)
 	})
 
@@ -51,10 +51,10 @@ func Test_remoteOpPreferred(t *testing.T) {
 			},
 		}
 		_, err := client.UpsertProject(ctx, &pb.UpsertProjectRequest{Project: project})
-		require.Nil(err)
+		require.NoError(err)
 
 		remote, err := remoteOpPreferred(ctx, client, project, nil, log)
-		require.Nil(err)
+		require.NoError(err)
 		require.False(remote)
 	})
 
@@ -74,7 +74,7 @@ func Test_remoteOpPreferred(t *testing.T) {
 	defer remoteRunnerClose()
 
 	// Register a non-default runner profile
-	odrProfileName := "project-specific ODR profile"
+	odrProfileName := "project-specific-ODR-profile"
 	_, err = client.UpsertOnDemandRunnerConfig(ctx, &pb.UpsertOnDemandRunnerConfigRequest{
 		Config: &pb.OnDemandRunnerConfig{
 			Name:       odrProfileName,
@@ -82,7 +82,7 @@ func Test_remoteOpPreferred(t *testing.T) {
 			Default:    false,
 		},
 	})
-	require.Nil(err)
+	require.NoError(err)
 
 	t.Run("Choose remote if the datasource is good, a remote runner exists, and a runner profile is set for the project", func(t *testing.T) {
 		project = &pb.Project{
@@ -91,12 +91,12 @@ func Test_remoteOpPreferred(t *testing.T) {
 			DataSource:    remoteCapableDataSource,
 		}
 		_, err := client.UpsertProject(ctx, &pb.UpsertProjectRequest{Project: project})
-		require.Nil(err)
+		require.NoError(err)
 
 		runnerCfgs := []*configpkg.Runner{{Profile: "test"}}
 
 		remote, err := remoteOpPreferred(ctx, client, project, runnerCfgs, log)
-		require.Nil(err)
+		require.NoError(err)
 		require.True(remote)
 	})
 
@@ -110,12 +110,12 @@ func Test_remoteOpPreferred(t *testing.T) {
 			}},
 		}
 		_, err := client.UpsertProject(ctx, &pb.UpsertProjectRequest{Project: project})
-		require.Nil(err)
+		require.NoError(err)
 
 		runnerCfgs := []*configpkg.Runner{{Profile: "test"}}
 
 		remote, err := remoteOpPreferred(ctx, client, project, runnerCfgs, log)
-		require.Nil(err)
+		require.NoError(err)
 		require.True(remote)
 	})
 
@@ -126,10 +126,10 @@ func Test_remoteOpPreferred(t *testing.T) {
 			DataSource:    remoteCapableDataSource,
 		}
 		_, err := client.UpsertProject(ctx, &pb.UpsertProjectRequest{Project: project})
-		require.Nil(err)
+		require.NoError(err)
 
 		remote, err := remoteOpPreferred(ctx, client, project, nil, log)
-		require.Nil(err)
+		require.NoError(err)
 		require.False(remote)
 	})
 
@@ -137,12 +137,12 @@ func Test_remoteOpPreferred(t *testing.T) {
 		// Register a default runner profile
 		_, err = client.UpsertOnDemandRunnerConfig(ctx, &pb.UpsertOnDemandRunnerConfigRequest{
 			Config: &pb.OnDemandRunnerConfig{
-				Name:       "the default",
+				Name:       "the-default",
 				PluginType: "docker",
 				Default:    true,
 			},
 		})
-		require.Nil(err)
+		require.NoError(err)
 
 		project = &pb.Project{
 			Name:          "test",
@@ -150,10 +150,10 @@ func Test_remoteOpPreferred(t *testing.T) {
 			DataSource:    remoteCapableDataSource,
 		}
 		_, err := client.UpsertProject(ctx, &pb.UpsertProjectRequest{Project: project})
-		require.Nil(err)
+		require.NoError(err)
 
 		remote, err := remoteOpPreferred(ctx, client, project, nil, log)
-		require.Nil(err)
+		require.NoError(err)
 		require.True(remote)
 	})
 }
