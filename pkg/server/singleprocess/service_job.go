@@ -700,6 +700,8 @@ func (s *Service) GetJobStream(
 	}
 	log = log.With("job_id", job.Id)
 
+	log.Info("beginning job stream")
+
 	// We always send the open message as confirmation the job was found.
 	if err := server.Send(&pb.GetJobStreamResponse{
 		Event: &pb.GetJobStreamResponse_Open_{
@@ -785,6 +787,8 @@ func (s *Service) GetJobStream(
 
 				lastState = job.State
 				cancelSent = canceling
+
+				log.Info("job status changed", "status", lastState.String(), "canceling", cancelSent)
 			}
 
 			// If we have a data source ref set, then we need to send the download event.
@@ -868,6 +872,8 @@ func (s *Service) GetJobStream(
 			switch job.State {
 
 			case pb.Job_SUCCESS, pb.Job_ERROR:
+				log.Info("job complete", "status", job.State.String())
+
 				// TODO(mitchellh): we should drain the output buffer
 
 				// Job is done. For success, error will be nil, so this

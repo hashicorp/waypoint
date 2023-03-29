@@ -332,14 +332,19 @@ func (s *Service) RunnerConfig(
 	// Create our record
 	log = log.With("runner_id", record.Id)
 	log.Trace("registering runner")
+
 	if err := s.state(ctx).RunnerCreate(ctx, record); err != nil {
 		return hcerr.Externalize(log, err, "failed to create runner", "id", record.Id)
 	}
 
+	state := s.state(ctx)
 	// Mark the runner as offline if they disconnect from the config stream loop.
 	defer func() {
 		log.Trace("marking runner as offline")
-		if err := s.state(ctx).RunnerOffline(ctx, record.Id); err != nil {
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+
+		if err := state.RunnerOffline(ctx, record.Id); err != nil {
 			log.Error("failed to mark runner as offline. This should not happen.", "err", err)
 		}
 	}()
@@ -368,7 +373,7 @@ func (s *Service) RunnerConfig(
 		for {
 			_, err := srv.Recv()
 			if err != nil {
-				if err != io.EOF {
+				if err != io.EOF && err != context.Canceled {
 					log.Warn("unknown error from recvmsg", "err", err)
 				}
 
@@ -505,6 +510,21 @@ func (s *Service) RunnerConfig(
 	}
 }
 
+func runnerKind(runner *pb.Runner) string {
+	switch runner.Kind.(type) {
+	case *pb.Runner_Remote_:
+		return "remote"
+	case *pb.Runner_Local_:
+		return "local"
+	case *pb.Runner_Odr:
+		return "odr"
+	case *pb.Runner_DeprecatedIsOdr:
+		return "deprecated-is-odr"
+	default:
+		return "unknown"
+	}
+}
+
 func (s *Service) RunnerJobStream(
 	server pb.Waypoint_RunnerJobStreamServer,
 ) error {
@@ -538,7 +558,7 @@ func (s *Service) RunnerJobStream(
 	if err != nil {
 		return hcerr.Externalize(log, err, "failed to get this runner", "id", runnerId)
 	}
-	log = log.With("runner_id", reqEvent.Request.RunnerId)
+	log = log.With("runner_id", reqEvent.Request.RunnerId, "runner_type", runnerKind(runner))
 
 	// The runner must be adopted to get a job.
 	if runner.AdoptionState != pb.Runner_ADOPTED &&
@@ -608,6 +628,8 @@ func (s *Service) RunnerJobStream(
 		log.Info("waiting for job assignment")
 		job, err = s.state(ctx).JobAssignForRunner(ctx, runner)
 		if err != nil {
+			// TODO don't report this as an error in the logs if ctx is canceled, because
+			// we stopped looking for a job when the context is canceled.
 			return hcerr.Externalize(log, err, "failed to get job assignment for runner")
 		}
 		jobId = job.Id
@@ -616,6 +638,14 @@ func (s *Service) RunnerJobStream(
 		panic("job is nil, should never be nil at this point")
 	}
 	log = log.With("job_id", jobId)
+
+	operation := operationString(job.Job)
+	defer func(start time.Time) {
+		metrics.MeasureOperation(ctx, start, operation)
+	}(time.Now())
+	metrics.CountOperation(ctx, operation)
+
+	log.Info("received job", "operation", operation)
 
 	// Load config sourcers to send along with the job assignment
 	cfgSrcs, err := s.state(ctx).ConfigSourceGetWatch(ctx, &pb.GetConfigSourceRequest{
@@ -630,12 +660,6 @@ func (s *Service) RunnerJobStream(
 	log.Trace("loaded config sources for job", "total_sourcers", len(cfgSrcs))
 
 	log.Debug("sending job assignment to runner")
-
-	operation := operationString(job.Job)
-	defer func(start time.Time) {
-		metrics.MeasureOperation(ctx, start, operation)
-	}(time.Now())
-	metrics.CountOperation(ctx, operation)
 	// Send the job assignment.
 	//
 	// If this has an error, we continue to accumulate the error until
@@ -718,7 +742,11 @@ func (s *Service) RunnerJobStream(
 	if err != nil {
 		return hcerr.Externalize(log, err, "failed to ack the job or the job was cancelled", "id", jobId)
 	}
-	if !ack {
+
+	if ack {
+		log.Info("runner as acknowledge the job")
+	} else {
+		log.Info("runner rejected the job")
 		// If runners don't ack the job, this means close the stream
 		return nil
 	}
@@ -821,69 +849,82 @@ func (s *Service) RunnerJobStream(
 		}
 	}()
 
-	// Recv events in a loop
-	var lastJob *pb.Job
-	for {
-		select {
-		case <-ctx.Done():
-			// We need to drain the event channel
-			for {
-				select {
-				case req := <-eventCh:
-					if err := s.handleJobStreamRequest(log, job, server, req, logStreamWriter); err != nil {
-						return hcerr.Externalize(log, err, "error handling job stream request during drain", "req", req)
+	// This is wrapped in a closure so that we can easily capture the error return value
+	err = func() error {
+
+		// Recv events in a loop
+		var lastJob *pb.Job
+
+		for {
+			select {
+			case <-ctx.Done():
+				// We need to drain the event channel
+				for {
+					select {
+					case req := <-eventCh:
+						if err := s.handleJobStreamRequest(log, job, server, req, logStreamWriter); err != nil {
+							return hcerr.Externalize(log, err, "error handling job stream request during drain", "req", req)
+						}
+					default:
+						return nil
 					}
-				default:
-					return nil
 				}
-			}
 
-		case err := <-errCh:
-			return hcerr.Externalize(log, err, "err from err channel")
+			case err := <-errCh:
+				return hcerr.Externalize(log, err, "err from err channel")
 
-		case req := <-eventCh:
-			if err := s.handleJobStreamRequest(log, job, server, req, logStreamWriter); err != nil {
-				return hcerr.Externalize(log, err, "error handling job stream request", "req", req)
-			}
+			case req := <-eventCh:
+				if err := s.handleJobStreamRequest(log, job, server, req, logStreamWriter); err != nil {
+					return hcerr.Externalize(log, err, "error handling job stream request", "req", req)
+				}
 
-		case updatedJob := <-jobCh:
-			if lastJob == updatedJob.Job {
-				continue
-			}
+			case updatedJob := <-jobCh:
+				if lastJob == updatedJob.Job {
+					continue
+				}
 
-			// If the job is canceled, send that event. We send this each time
-			// the cancel time changes. The cancel time only changes if multiple
-			// cancel requests are made.
-			if updatedJob.CancelTime != nil &&
-				(lastJob == nil || !lastJob.CancelTime.AsTime().Equal(updatedJob.CancelTime.AsTime())) {
-				log.Trace("job cancellation request received")
+				// If the job is canceled, send that event. We send this each time
+				// the cancel time changes. The cancel time only changes if multiple
+				// cancel requests are made.
+				if updatedJob.CancelTime != nil &&
+					(lastJob == nil || !lastJob.CancelTime.AsTime().Equal(updatedJob.CancelTime.AsTime())) {
+					log.Trace("job cancellation request received")
 
-				// The job is forced if we're in an error state. This must be true
-				// because we would've already exited the loop if we naturally
-				// got a terminal event.
-				force := updatedJob.State == pb.Job_ERROR
+					// The job is forced if we're in an error state. This must be true
+					// because we would've already exited the loop if we naturally
+					// got a terminal event.
+					force := updatedJob.State == pb.Job_ERROR
 
-				err := server.Send(&pb.RunnerJobStreamResponse{
-					Event: &pb.RunnerJobStreamResponse_Cancel{
-						Cancel: &pb.RunnerJobStreamResponse_JobCancel{
-							Force: force,
+					err := server.Send(&pb.RunnerJobStreamResponse{
+						Event: &pb.RunnerJobStreamResponse_Cancel{
+							Cancel: &pb.RunnerJobStreamResponse_JobCancel{
+								Force: force,
+							},
 						},
-					},
-				})
-				if err != nil {
-					return hcerr.Externalize(log, err, "error sending job cancel event to runner")
+					})
+					if err != nil {
+						return hcerr.Externalize(log, err, "error sending job cancel event to runner")
+					}
+
+					// On force we exit immediately.
+					if force {
+						return nil
+					}
 				}
 
-				// On force we exit immediately.
-				if force {
-					return nil
-				}
+				log.Trace("updating job from state store", "last_job", lastJob, "job", updatedJob.Job)
+				lastJob = updatedJob.Job
 			}
-
-			log.Trace("updating job from state store", "last_job", lastJob, "job", updatedJob.Job)
-			lastJob = updatedJob.Job
 		}
+	}()
+
+	if err != nil {
+		log.Info("job processing complete with error")
+	} else {
+		log.Info("job processing complete")
 	}
+
+	return err
 }
 
 func (s *Service) handleJobStreamRequest(
@@ -904,6 +945,7 @@ func (s *Service) handleJobStreamRequest(
 		if err := s.state(ctx).JobComplete(ctx, job.Id, event.Complete.Result, nil); err != nil {
 			return hcerr.Externalize(log, err, "failed to complete job", "id", job.Id)
 		}
+		log.Info("job completed properly")
 	case *pb.RunnerJobStreamRequest_Error_:
 		var remoteError error
 
@@ -917,6 +959,7 @@ func (s *Service) handleJobStreamRequest(
 		if err := s.state(ctx).JobComplete(ctx, job.Id, nil, remoteError); err != nil {
 			return hcerr.Externalize(log, err, "failed to complete job", "id", job.Id)
 		}
+		log.Info("job completed with error", "error", remoteError)
 	case *pb.RunnerJobStreamRequest_Heartbeat_:
 		if err := s.state(ctx).JobHeartbeat(ctx, job.Id); err != nil {
 			return hcerr.Externalize(log, err, "job heartbeat failed", "id", job.Id)
