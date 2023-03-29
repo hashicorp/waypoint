@@ -6,6 +6,7 @@ import (
 	"io"
 	"strings"
 	"sync/atomic"
+	"time"
 
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-memdb"
@@ -78,6 +79,9 @@ func (s *Service) EntrypointConfig(
 		iexec = nil
 	}
 
+	// Save the state to use in the defer
+	state := s.state(ctx)
+
 	// Defer deleting this.
 	// TODO(mitchellh): this is too aggressive and we want to have some grace
 	// period for reconnecting clients. We should clean this up.
@@ -85,9 +89,14 @@ func (s *Service) EntrypointConfig(
 		// We want to close all our readers at the end of this
 		defer record.LogBuffer.Close()
 
+		// We make a new context to process the instance delete since the parent
+		// context can be canceled and we still want to run this code.
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+
 		// Delete the entrypoint first
 		log.Trace("deleting entrypoint")
-		if err := s.state(ctx).InstanceDelete(ctx, record.Id); err != nil {
+		if err := state.InstanceDelete(ctx, record.Id); err != nil {
 			log.Error("failed to delete instance data. This should not happen.", "err", err)
 		}
 
