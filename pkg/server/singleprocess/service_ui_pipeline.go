@@ -41,20 +41,6 @@ func (s *Service) UI_ListPipelines(
 
 	// Create bundles
 	for _, pipeline := range pipelineListResponse {
-		ref := &pb.Ref_Pipeline{
-			Ref: &pb.Ref_Pipeline_Id{
-				Id: pipeline.Id,
-			},
-		}
-		// Get total runs for the pipeline
-		pipelineRunListResponse, err := s.state(ctx).PipelineRunList(ctx, ref)
-		if err != nil {
-			return nil, hcerr.Externalize(
-				log,
-				err,
-				"failed to count pipeline runs",
-			)
-		}
 		// Get the last run
 		pipelineLastRun, err := s.state(ctx).PipelineRunGetLatest(ctx, pipeline.Id)
 		if err != nil && status.Code(err) != codes.NotFound {
@@ -95,7 +81,6 @@ func (s *Service) UI_ListPipelines(
 
 		pipelineBundle := &pb.UI_PipelineBundle{
 			Pipeline:  pipeline,
-			TotalRuns: uint64(len(pipelineRunListResponse)),
 			LastRun:   lastRunBundle,
 		}
 		// Add pipeline bundle to uninitialized array
