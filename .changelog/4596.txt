@@ -1,3 +1,3 @@
 ```release-note:bug
-server: Fix intermident issue with finished jobs reporting they errored
+server: Fix intermittent issue with finished jobs reporting they errored
 ```
