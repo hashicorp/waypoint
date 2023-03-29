@@ -12226,10 +12226,6 @@
         },
         "last_run": {
           "$ref": "#/definitions/hashicorp.waypoint.UI.PipelineRunBundle"
-        },
-        "total_runs": {
-          "type": "string",
-          "format": "uint64"
         }
       }
     },
