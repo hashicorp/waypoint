@@ -80,8 +80,8 @@ func (s *Service) UI_ListPipelines(
 		}
 
 		pipelineBundle := &pb.UI_PipelineBundle{
-			Pipeline:  pipeline,
-			LastRun:   lastRunBundle,
+			Pipeline: pipeline,
+			LastRun:  lastRunBundle,
 		}
 		// Add pipeline bundle to uninitialized array
 		allPipelines = append(allPipelines, pipelineBundle)
