@@ -541,7 +541,6 @@ message UI {
   message PipelineBundle {
     Pipeline pipeline = 1;
     PipelineRunBundle last_run = 2;
-    uint64 total_runs = 3;
   }
 
   message PipelineRunBundle {

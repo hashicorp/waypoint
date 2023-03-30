@@ -65,7 +65,6 @@ func TestServiceUI_ListPipelines(t *testing.T, factory Factory) {
 		})
 		require.NoError(err)
 		require.Nil(resp.Pipelines[0].LastRun)
-		require.EqualValues(0, resp.Pipelines[0].TotalRuns)
 	})
 
 	t.Run("with some runs", func(t *testing.T) {
@@ -104,7 +103,6 @@ func TestServiceUI_ListPipelines(t *testing.T, factory Factory) {
 			require.NotNil(p.LastRun.QueueTime)
 			require.Equal(appRef.Application, p.LastRun.Application.Application)
 			require.Truef(proto.Equal(dataSourceRef, p.LastRun.DataSourceRef), "expected %#v to equal %#v", dataSourceRef, p.LastRun.DataSourceRef)
-			require.EqualValues(3, p.TotalRuns)
 		}
 	})
 
