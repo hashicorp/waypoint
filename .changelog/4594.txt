@@ -1,0 +1,4 @@
+```release-note:improvement
+cli: Introduce `waypoint runner profile edit` to edit a runners plugin config
+directly in your configured terminal editor
+```
