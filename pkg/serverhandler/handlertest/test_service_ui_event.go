@@ -6,6 +6,7 @@ import (
 	serverptypes "github.com/hashicorp/waypoint/pkg/server/ptypes"
 	"github.com/stretchr/testify/require"
 	"testing"
+	"time"
 )
 
 func init() {
@@ -19,7 +20,7 @@ func TestEvent(t *testing.T, factory Factory) {
 	// Create our server
 	client, _ := factory(t)
 
-	t.Run("paginate events, resource count less than page size", func(t *testing.T) {
+	t.Run("paginate events", func(t *testing.T) {
 		require := require.New(t)
 
 		proj := &pb.Project{
@@ -40,33 +41,7 @@ func TestEvent(t *testing.T, factory Factory) {
 		// Create build, deployment, release
 		createEvents(client, ctx, t)
 
-		eventResp, err := client.UI_ListEvents(ctx, &pb.UI_ListEventsRequest{
-			Application: &pb.Ref_Application{
-				Application: "a_test",
-				Project:     "p_test",
-			},
-			Workspace: &pb.Ref_Workspace{Workspace: "default"},
-			Pagination: &pb.PaginationRequest{
-				PageSize:          5,
-				NextPageToken:     "",
-				PreviousPageToken: "",
-			},
-			Sorting: &pb.SortingRequest{OrderBy: []string{"event_timestamp desc"}},
-		})
-		require.NoError(err)
-		require.NotNil(eventResp)
-		// Only have 3 resources, 1: build, 1: deployment, 1: release
-		require.Len(eventResp.Events, 3)
-	})
-
-	t.Run("paginate events, resource count equal page size", func(t *testing.T) {
-		require := require.New(t)
-
-		// Initialize our app
-		TestApp(t, client, &pb.Ref_Application{
-			Application: "a_test",
-			Project:     "p_test",
-		})
+		time.Sleep(250 * time.Millisecond)
 
 		// Create build, deployment, release
 		createEvents(client, ctx, t)
@@ -78,7 +53,7 @@ func TestEvent(t *testing.T, factory Factory) {
 			},
 			Workspace: &pb.Ref_Workspace{Workspace: "default"},
 			Pagination: &pb.PaginationRequest{
-				PageSize:          3,
+				PageSize:          6,
 				NextPageToken:     "",
 				PreviousPageToken: "",
 			},
@@ -87,41 +62,50 @@ func TestEvent(t *testing.T, factory Factory) {
 		require.NoError(err)
 		require.NotNil(eventResp)
 		// Only have 3 resources, 1: build, 1: deployment, 1: release
-		require.Len(eventResp.Events, 3)
-	})
-	t.Run("paginate events, resource count more than page size", func(t *testing.T) {
-		require := require.New(t)
+		require.Len(eventResp.Events, 6)
 
-		// Initialize our app
-		TestApp(t, client, &pb.Ref_Application{
-			Application: "a_test",
-			Project:     "p_test",
+		var nextPageToken string
+		t.Run("paginate events, test get first page", func(t *testing.T) {
+			//first page, and next page
+			eventResp, err := client.UI_ListEvents(ctx, &pb.UI_ListEventsRequest{
+				Application: &pb.Ref_Application{
+					Application: "a_test",
+					Project:     "p_test",
+				},
+				Workspace: &pb.Ref_Workspace{Workspace: "default"},
+				Pagination: &pb.PaginationRequest{
+					PageSize:          5,
+					NextPageToken:     "",
+					PreviousPageToken: "",
+				},
+				Sorting: &pb.SortingRequest{OrderBy: []string{"event_timestamp desc"}},
+			})
+			nextPageToken = eventResp.Pagination.NextPageToken
+
+			require.NoError(err)
+			require.NotNil(eventResp)
 		})
 
-		// Create 2 of all: build, deployment, release
-		createEvents(client, ctx, t)
-		//time.Sleep(2 * time.Second)
-		//createEvents(client, ctx, t)
-		eventResp, err := client.UI_ListEvents(ctx, &pb.UI_ListEventsRequest{
-			Application: &pb.Ref_Application{
-				Application: "a_test",
-				Project:     "p_test",
-			},
-			Workspace: &pb.Ref_Workspace{Workspace: "default"},
-			Pagination: &pb.PaginationRequest{
-				PageSize:          2,
-				NextPageToken:     "",
-				PreviousPageToken: "",
-			},
-			Sorting: &pb.SortingRequest{OrderBy: []string{"event_timestamp desc"}},
+		t.Run("paginate events, test next page token", func(t *testing.T) {
+			//first page, and next page
+			eventResp, err := client.UI_ListEvents(ctx, &pb.UI_ListEventsRequest{
+				Application: &pb.Ref_Application{
+					Application: "a_test",
+					Project:     "p_test",
+				},
+				Workspace: &pb.Ref_Workspace{Workspace: "default"},
+				Pagination: &pb.PaginationRequest{
+					PageSize:          5,
+					NextPageToken:     nextPageToken,
+					PreviousPageToken: "",
+				},
+				Sorting: &pb.SortingRequest{OrderBy: []string{"event_timestamp desc"}},
+			})
+			require.NoError(err)
+			require.NotNil(eventResp)
+			require.Len(eventResp.Events, 1) //there is only 1 resource left
 		})
-		require.NoError(err)
-		require.NotNil(eventResp)
-		// Only have 6 resources, 2: build, 2: deployment, 2: release
-		require.Len(eventResp.Events, 2)
 	})
-
-	//TODO: add more tests
 }
 
 // create simple build, deployment, release for eventListBundling to be cleaner
@@ -150,9 +134,6 @@ func createEvents(client pb.WaypointClient, ctx context.Context, t *testing.T) {
 	// Create Deployment, should get an ID back
 	deploymentResp, err := client.UpsertDeployment(ctx, &pb.UpsertDeploymentRequest{
 		Deployment: serverptypes.TestValidDeployment(t, &pb.Deployment{
-			//Component: &pb.Component{
-			//	Name: "testapp",
-			//},
 			Application: &pb.Ref_Application{
 				Application: "a_test",
 				Project:     "p_test",
