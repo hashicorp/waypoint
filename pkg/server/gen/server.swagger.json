@@ -7822,6 +7822,9 @@
         }
       }
     },
+    "hashicorp.waypoint.DeleteProjectTemplateResponse": {
+      "type": "object"
+    },
     "hashicorp.waypoint.Deployment": {
       "type": "object",
       "properties": {
@@ -8829,6 +8832,14 @@
             "$ref": "#/definitions/hashicorp.waypoint.Workspace.Project"
           },
           "description": "The list of workspaces that this project is part of."
+        }
+      }
+    },
+    "hashicorp.waypoint.GetProjectTemplateResponse": {
+      "type": "object",
+      "properties": {
+        "project_template": {
+          "$ref": "#/definitions/hashicorp.waypoint.ProjectTemplate"
         }
       }
     },
@@ -10068,6 +10079,24 @@
         }
       }
     },
+    "hashicorp.waypoint.ListProjectTemplatesResponse": {
+      "type": "object",
+      "properties": {
+        "project_templates": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/hashicorp.waypoint.ProjectTemplate"
+          }
+        },
+        "pagination": {
+          "$ref": "#/definitions/hashicorp.waypoint.PaginationResponse"
+        },
+        "total_count": {
+          "type": "string",
+          "format": "uint64"
+        }
+      }
+    },
     "hashicorp.waypoint.ListProjectsResponse": {
       "type": "object",
       "properties": {
@@ -10670,6 +10699,58 @@
       "default": "ACTIVE",
       "description": "ProjectState is set to active when the project is created and throughout its lifetime.\nWhen a project destroy operation begins, the state is set to destroying."
     },
+    "hashicorp.waypoint.ProjectTemplate": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "summary": {
+          "type": "string"
+        },
+        "expanded_summary": {
+          "type": "string"
+        },
+        "readme_template": {
+          "type": "string"
+        },
+        "waypoint_project": {
+          "$ref": "#/definitions/hashicorp.waypoint.ProjectTemplate.WaypointProject"
+        },
+        "terraform_nocode_module": {
+          "$ref": "#/definitions/hashicorp.waypoint.ProjectTemplate.TerraformNocodeModule"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "hashicorp.waypoint.ProjectTemplate.TerraformNocodeModule": {
+      "type": "object",
+      "properties": {
+        "source": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        }
+      }
+    },
+    "hashicorp.waypoint.ProjectTemplate.WaypointProject": {
+      "type": "object",
+      "properties": {
+        "waypoint_hcl_template": {
+          "type": "string",
+          "format": "byte"
+        }
+      }
+    },
     "hashicorp.waypoint.PushedArtifact": {
       "type": "object",
       "properties": {
@@ -10924,6 +11005,17 @@
         }
       },
       "description": "Project references a project."
+    },
+    "hashicorp.waypoint.Ref.ProjectTemplate": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        }
+      }
     },
     "hashicorp.waypoint.Ref.Runner": {
       "type": "object",
@@ -12395,6 +12487,14 @@
       "properties": {
         "project": {
           "$ref": "#/definitions/hashicorp.waypoint.Project"
+        }
+      }
+    },
+    "hashicorp.waypoint.UpsertProjectTemplateResponse": {
+      "type": "object",
+      "properties": {
+        "project_template": {
+          "$ref": "#/definitions/hashicorp.waypoint.ProjectTemplate"
         }
       }
     },
