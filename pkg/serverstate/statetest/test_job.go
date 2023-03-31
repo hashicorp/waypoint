@@ -14,9 +14,9 @@ import (
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	"github.com/hashicorp/waypoint/pkg/pagination"
 	"github.com/hashicorp/waypoint/pkg/serverstate"
 
+	oldPagination "github.com/hashicorp/waypoint/pkg/old-pagination"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	serverptypes "github.com/hashicorp/waypoint/pkg/server/ptypes"
 )
@@ -324,8 +324,8 @@ func TestJobListPagination(t *testing.T, factory Factory, rf RestartFactory) {
 	})
 
 	t.Run("returns 400 Bad Request if both nextPageToken and prevPageToken are set", func(t *testing.T) {
-		nextPageToken, _ := pagination.EncodeAndSerializePageToken("key", "lol")
-		prevPageToken, _ := pagination.EncodeAndSerializePageToken("key", "lol")
+		nextPageToken, _ := oldPagination.EncodeAndSerializePageToken("key", "lol")
+		prevPageToken, _ := oldPagination.EncodeAndSerializePageToken("key", "lol")
 		_, _, err := s.JobList(
 			ctx,
 			&pb.ListJobsRequest{
@@ -379,13 +379,13 @@ func TestJobListPagination(t *testing.T, factory Factory, rf RestartFactory) {
 		)
 		require.NoError(err)
 		require.Len(jobs, 5)
-		expectedPageToken, _ := pagination.EncodeAndSerializePageToken("external_id", "e")
+		expectedPageToken, _ := oldPagination.EncodeAndSerializePageToken("external_id", "e")
 		require.Equal(expectedPageToken, paginationResponse.NextPageToken)
 		require.Empty(paginationResponse.PreviousPageToken)
 	})
 
 	t.Run("returns page 2/3 (5 results: f-j) with correct nextPageToken & previousPageToken", func(t *testing.T) {
-		nextPageToken, _ := pagination.EncodeAndSerializePageToken("external_id", "e")
+		nextPageToken, _ := oldPagination.EncodeAndSerializePageToken("external_id", "e")
 		resp, paginationResponse, err := s.JobList(
 			ctx,
 			&pb.ListJobsRequest{
@@ -394,14 +394,14 @@ func TestJobListPagination(t *testing.T, factory Factory, rf RestartFactory) {
 		)
 		require.NoError(err)
 		require.Len(resp, 5)
-		expectedPrevPageToken, _ := pagination.EncodeAndSerializePageToken("external_id", "f")
+		expectedPrevPageToken, _ := oldPagination.EncodeAndSerializePageToken("external_id", "f")
 		require.Equal(expectedPrevPageToken, paginationResponse.PreviousPageToken)
-		expectedNextPageToken, _ := pagination.EncodeAndSerializePageToken("external_id", "j")
+		expectedNextPageToken, _ := oldPagination.EncodeAndSerializePageToken("external_id", "j")
 		require.Equal(expectedNextPageToken, paginationResponse.NextPageToken)
 	})
 
 	t.Run("returns page 3/3 (3 results: k-m) + previousPageToken, without nextPageToken", func(t *testing.T) {
-		nextPageToken, _ := pagination.EncodeAndSerializePageToken("external_id", "j")
+		nextPageToken, _ := oldPagination.EncodeAndSerializePageToken("external_id", "j")
 		resp, paginationResponse, err := s.JobList(
 			ctx,
 			&pb.ListJobsRequest{
@@ -410,13 +410,13 @@ func TestJobListPagination(t *testing.T, factory Factory, rf RestartFactory) {
 		)
 		require.NoError(err)
 		require.Len(resp, 3)
-		expectedPrevPageToken, _ := pagination.EncodeAndSerializePageToken("external_id", "k")
+		expectedPrevPageToken, _ := oldPagination.EncodeAndSerializePageToken("external_id", "k")
 		require.Equal(expectedPrevPageToken, paginationResponse.PreviousPageToken)
 		require.Empty(paginationResponse.NextPageToken)
 	})
 
 	t.Run("returns page 2/3 (5 results: f-j) with correct previousPageToken & nextPageToken", func(t *testing.T) {
-		prevPageToken, _ := pagination.EncodeAndSerializePageToken("external_id", "k")
+		prevPageToken, _ := oldPagination.EncodeAndSerializePageToken("external_id", "k")
 		resp, paginationResponse, err := s.JobList(
 			ctx,
 			&pb.ListJobsRequest{
@@ -425,9 +425,9 @@ func TestJobListPagination(t *testing.T, factory Factory, rf RestartFactory) {
 		)
 		require.NoError(err)
 		require.Len(resp, 5)
-		expectedPrevPageToken, _ := pagination.EncodeAndSerializePageToken("external_id", "f")
+		expectedPrevPageToken, _ := oldPagination.EncodeAndSerializePageToken("external_id", "f")
 		require.Equal(expectedPrevPageToken, paginationResponse.PreviousPageToken)
-		expectedNextPageToken, _ := pagination.EncodeAndSerializePageToken("external_id", "j")
+		expectedNextPageToken, _ := oldPagination.EncodeAndSerializePageToken("external_id", "j")
 		require.Equal(expectedNextPageToken, paginationResponse.NextPageToken)
 	})
 }
