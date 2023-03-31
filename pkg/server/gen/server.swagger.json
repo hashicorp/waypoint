@@ -11955,6 +11955,19 @@
         }
       }
     },
+    "hashicorp.waypoint.SortingRequest": {
+      "type": "object",
+      "properties": {
+        "order_by": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Specifies the list of per field ordering that should be used for sorting.\nThe order matters as rows are sorted in order by fields and when the field\nmatches, the next field is used to tie break the ordering.\nThe per field default ordering is ascending.\n\nThe fields should be immutable, unique, and orderable. If the field is\nnot unique, more than one sort fields should be passed.\n\nExample: order_by=name,age desc,created_at asc\nIn that case, 'name' will get the default 'ascending' order."
+        }
+      },
+      "description": "https://github.com/hashicorp/cloud-api/blob/master/hashicorp/cloud/common/sorting.proto\nSortingRequest are the parameters for a sorted list request."
+    },
     "hashicorp.waypoint.Status": {
       "type": "object",
       "properties": {
@@ -12534,6 +12547,108 @@
       },
       "description": "A deployment packaged alongside prefetched related messages."
     },
+    "hashicorp.waypoint.UI.EventBuild": {
+      "type": "object",
+      "properties": {
+        "build_id": {
+          "type": "string"
+        },
+        "sequence": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "component": {
+          "$ref": "#/definitions/hashicorp.waypoint.Component"
+        },
+        "workspace": {
+          "$ref": "#/definitions/hashicorp.waypoint.Ref.Workspace"
+        },
+        "status": {
+          "$ref": "#/definitions/hashicorp.waypoint.Status"
+        },
+        "commit": {
+          "type": "string",
+          "title": "commit is the full commit hash"
+        }
+      }
+    },
+    "hashicorp.waypoint.UI.EventBundle": {
+      "type": "object",
+      "properties": {
+        "timestamp": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "eventType": {
+          "$ref": "#/definitions/hashicorp.waypoint.UI.EventBundle.EventType"
+        },
+        "eventData": {
+          "type": "string",
+          "format": "byte"
+        }
+      },
+      "description": "An event packaged alongside prefetched related messages."
+    },
+    "hashicorp.waypoint.UI.EventBundle.EventType": {
+      "type": "string",
+      "enum": [
+        "BUILD",
+        "DEPLOYMENT",
+        "RELEASE"
+      ],
+      "default": "BUILD",
+      "title": "Supported EventTypes"
+    },
+    "hashicorp.waypoint.UI.EventDeployment": {
+      "type": "object",
+      "properties": {
+        "deployment_id": {
+          "type": "string"
+        },
+        "sequence": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "component": {
+          "$ref": "#/definitions/hashicorp.waypoint.Component"
+        },
+        "workspace": {
+          "$ref": "#/definitions/hashicorp.waypoint.Ref.Workspace"
+        },
+        "status": {
+          "$ref": "#/definitions/hashicorp.waypoint.Status"
+        },
+        "build_sequence": {
+          "type": "string",
+          "format": "uint64"
+        }
+      }
+    },
+    "hashicorp.waypoint.UI.EventRelease": {
+      "type": "object",
+      "properties": {
+        "release_id": {
+          "type": "string"
+        },
+        "sequence": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "component": {
+          "$ref": "#/definitions/hashicorp.waypoint.Component"
+        },
+        "workspace": {
+          "$ref": "#/definitions/hashicorp.waypoint.Ref.Workspace"
+        },
+        "status": {
+          "$ref": "#/definitions/hashicorp.waypoint.Status"
+        },
+        "deployment_sequence": {
+          "type": "string",
+          "format": "uint64"
+        }
+      }
+    },
     "hashicorp.waypoint.UI.GetDeploymentResponse": {
       "type": "object",
       "properties": {
@@ -12566,6 +12681,36 @@
             "$ref": "#/definitions/hashicorp.waypoint.UI.DeploymentBundle"
           },
           "description": "The list of deployments with related messages prefetched."
+        }
+      }
+    },
+    "hashicorp.waypoint.UI.ListEventSchemasResponse": {
+      "type": "object",
+      "properties": {
+        "eventBuildSchema": {
+          "$ref": "#/definitions/hashicorp.waypoint.UI.EventBuild"
+        },
+        "eventDeployment": {
+          "$ref": "#/definitions/hashicorp.waypoint.UI.EventDeployment"
+        },
+        "eventRelease": {
+          "$ref": "#/definitions/hashicorp.waypoint.UI.EventRelease"
+        }
+      },
+      "title": "NOTE(Cassie): This should be implemented once pipeline_runs are app scoped\nmessage EventPipelineRun {\nstring pipelineRun_id = 1;\nuint64 sequence = 2;\n//    Component component = 3; //aka platform\n//    Ref.Workspace workspace = 4;\n}"
+    },
+    "hashicorp.waypoint.UI.ListEventsResponse": {
+      "type": "object",
+      "properties": {
+        "events": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/hashicorp.waypoint.UI.EventBundle"
+          },
+          "description": "The list of events with related messages prefetched."
+        },
+        "pagination": {
+          "$ref": "#/definitions/hashicorp.waypoint.PaginationResponse"
         }
       }
     },
