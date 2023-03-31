@@ -8,9 +8,8 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	publicpb "github.com/hashicorp/waypoint/pkg/server/gen"
-	// publicpb "github.com/hashicorp/cloud-api-grpc-go/hashicorp/cloud/common"
 	pb "github.com/hashicorp/cloud-sdk/api/pagination/proto/go"
+	publicpb "github.com/hashicorp/waypoint/pkg/server/gen"
 )
 
 // decodeToken takes a page_token and returns the internal pagination
