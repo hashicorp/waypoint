@@ -731,6 +731,8 @@ message UI {
     Component component = 3; //aka platform
     Ref.Workspace workspace = 4;
     Status status = 5;
+    // commit is the full commit hash
+    string commit = 6;
   }
 
   message EventDeployment {
@@ -738,8 +740,8 @@ message UI {
     uint64 sequence = 2;
     Component component = 3; //aka platform
     Ref.Workspace workspace = 4;
-    string build_id = 5;
-    Status status = 6;
+    Status status = 5;
+    uint64 build_sequence = 6;
   }
 
   message EventRelease {
@@ -747,8 +749,8 @@ message UI {
     uint64 sequence = 2;
     Component component = 3; //aka platform
     Ref.Workspace workspace = 4;
-    string deployment_id = 6;
-    Status status = 7;
+    Status status = 5;
+    uint64 deployment_sequence = 6;
   }
 /* NOTE(Cassie): This should be implemented once pipeline_runs are app scoped
   message EventPipelineRun {
