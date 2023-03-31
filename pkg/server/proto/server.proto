@@ -462,6 +462,18 @@ service Waypoint {
   rpc ConfigSyncPipeline(ConfigSyncPipelineRequest) returns (ConfigSyncPipelineResponse);
 
   //----------------------------------------------------------------------
+  // ProjectTemplate endpoints
+  //----------------------------------------------------------------------
+
+  rpc UpsertProjectTemplate(UpsertProjectTemplateRequest) returns (UpsertProjectTemplateResponse);
+
+  rpc GetProjectTemplate(GetProjectTemplateRequest) returns (GetProjectTemplateResponse);
+
+  rpc DeleteProjectTemplate(DeleteProjectTemplateRequest) returns (DeleteProjectTemplateResponse);
+
+  rpc ListProjectTemplates(ListProjectTemplatesRequest) returns (ListProjectTemplatesResponse);
+
+  //----------------------------------------------------------------------
   // UI endpoints. The endpoints below are convenience methods for Waypoint's
   // various UIs (web GUI and CLI). They contain no unique functionality, i.e.
   // anything achievable through these endpoints should also be achievable through
@@ -488,6 +500,7 @@ service Waypoint {
 
   // List releases for a given application.
   rpc UI_ListReleases(UI.ListReleasesRequest) returns (UI.ListReleasesResponse);
+
 }
 
 /********************************************************************
@@ -1176,6 +1189,13 @@ message Ref {
 
     // Pipeline run sequence
     uint64 run_sequence = 4;
+  }
+
+  message ProjectTemplate {
+    oneof ref {
+      string id = 1;
+      string name = 2;
+    }
   }
 }
 
@@ -5095,6 +5115,62 @@ message ConfigSyncPipelineResponse {
   // synced_pipelines is a map of Pipeline Name Keys to Pipeline ID Refs for
   // each pipeline that was synced in the config sync request.
   map<string, Ref.Pipeline> synced_pipelines = 1;
+}
+
+/********************************************************************
+* ProjectTemplate
+********************************************************************/
+
+message GetProjectTemplateRequest {
+  Ref.ProjectTemplate project_template = 1;
+}
+
+message GetProjectTemplateResponse {
+  ProjectTemplate project_template = 1;
+}
+
+message ListProjectTemplatesRequest {
+  PaginationRequest pagination = 1;
+}
+
+message ListProjectTemplatesResponse {
+  repeated ProjectTemplate project_templates = 1;
+  PaginationResponse pagination = 2;
+  uint64 total_count = 3;
+}
+
+message UpsertProjectTemplateRequest {
+  ProjectTemplate project_template = 1;
+}
+
+message UpsertProjectTemplateResponse {
+  ProjectTemplate project_template = 1;
+}
+
+message DeleteProjectTemplateRequest {
+  Ref.ProjectTemplate project_template = 1;
+}
+
+message DeleteProjectTemplateResponse {
+}
+
+message ProjectTemplate {
+  string id = 1; // Unique ID
+  string name = 2; // Unique Name
+  string summary = 3;
+  string expanded_summary = 4;
+  string readme_template = 5;
+  WaypointProject waypoint_project = 6;
+  TerraformNocodeModule terraform_nocode_module = 7;
+  repeated string tags = 8;
+
+  message WaypointProject {
+    bytes waypoint_hcl_template = 1;
+  }
+  message TerraformNocodeModule {
+    string source = 1;
+    string version = 2;
+  }
 }
 
 /********************************************************************
