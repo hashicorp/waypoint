@@ -520,3 +520,17 @@ http:
 
   - selector: hashicorp.waypoint.Waypoint.UI_ListPipelineRuns
     get: /ui/project/{pipeline.owner.project.project}/pipelines/{pipeline.owner.pipeline_name}/runs
+
+    # Project Templates
+  - selector: hashicorp.waypoint.Waypoint.UpsertProjectTemplate
+    post: /ui/projecttemplate/{project_template}
+    body: "*"
+
+  - selector: hashicorp.waypoint.Waypoint.GetProjectTemplate
+    get: /ui/projecttemplate/{project_template}
+
+  - selector: hashicorp.waypoint.Waypoint.DeleteProjectTemplate
+    delete: /ui/projecttemplate/{project_template}
+
+  - selector: hashicorp.waypoint.Waypoint.ListProjectTemplates
+    get: /ui/projecttemplates
