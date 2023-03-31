@@ -8,8 +8,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	pb "github.com/hashicorp/cloud-sdk/api/pagination/proto/go"
-	publicpb "github.com/hashicorp/waypoint/pkg/server/gen"
+	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 )
 
 // decodeToken takes a page_token and returns the internal pagination
@@ -45,8 +44,8 @@ func decodeToken(token string) (*pb.PaginationCursor_Cursor, PaginatorType, erro
 
 // createResponse takes an internal cursor and converts it to our public
 // pagination response type.
-func createResponse(c *pb.PaginationCursor) (*publicpb.PaginationResponse, error) {
-	resp := &publicpb.PaginationResponse{}
+func createResponse(c *pb.PaginationCursor) (*pb.PaginationResponse, error) {
+	resp := &pb.PaginationResponse{}
 
 	// Nothing to do
 	if c == nil || c.Next == nil && c.Previous == nil {

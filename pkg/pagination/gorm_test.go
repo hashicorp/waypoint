@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	pb "github.com/hashicorp/cloud-sdk/api/pagination/proto/go"
-	"github.com/hashicorp/cloud-sdk/database/testsql"
+	"github.com/hashicorp/waypoint/pkg/pagination/database/testsql"
+	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	"github.com/jinzhu/gorm"
 	"github.com/stretchr/testify/require"
 )

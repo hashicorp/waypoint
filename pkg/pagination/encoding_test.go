@@ -3,7 +3,7 @@ package pagination
 import (
 	"testing"
 
-	pb "github.com/hashicorp/cloud-sdk/api/pagination/proto/go"
+	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	"github.com/stretchr/testify/require"
 )
 

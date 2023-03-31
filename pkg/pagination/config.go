@@ -3,12 +3,10 @@ package pagination
 import (
 	"errors"
 	"fmt"
-
 	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/go-ozzo/ozzo-validation/v4/is"
 
-	pb "github.com/hashicorp/cloud-sdk/api/pagination/proto/go"
-	publicpb "github.com/hashicorp/waypoint/pkg/server/gen"
+	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -105,7 +103,7 @@ func (c *Config) Validate() error {
 //		}),
 //	))
 //	if err != nil { ... }
-func (c *Config) RequestValidation(req *publicpb.PaginationRequest) []*validation.FieldRules {
+func (c *Config) RequestValidation(req *pb.PaginationRequest) []*validation.FieldRules {
 	oneOf := func(v interface{}) error {
 		return fmt.Errorf("only one of next and previous page token may be set")
 	}
@@ -132,7 +130,7 @@ func (c *Config) RequestValidation(req *publicpb.PaginationRequest) []*validatio
 
 // Request is an interface which can be used to retrieve a paginated request.
 type Request interface {
-	GetPagination() *publicpb.PaginationRequest
+	GetPagination() *pb.PaginationRequest
 }
 
 // RequestContext holds values related to pagination for a given request.
