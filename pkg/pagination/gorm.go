@@ -4,9 +4,8 @@ import (
 	"errors"
 	"fmt"
 
-	pb "github.com/hashicorp/cloud-sdk/api/pagination/proto/go"
 	"github.com/hashicorp/gorm-cursor-paginator/paginator"
-	publicpb "github.com/hashicorp/waypoint/pkg/server/gen"
+	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	"github.com/jinzhu/gorm"
 )
 
@@ -93,7 +92,7 @@ func (gc *GormCursorPaginator) Cursor() *pb.PaginationCursor {
 
 // PaginationResponse returns the public pagination response. It is only valid
 // after Paginate has been called.
-func (gc *GormCursorPaginator) PaginationResponse() *publicpb.PaginationResponse {
+func (gc *GormCursorPaginator) PaginationResponse() *pb.PaginationResponse {
 	resp, err := createResponse(gc.Cursor())
 	if err != nil {
 		panic(fmt.Sprintf("impossible error: %v", err))

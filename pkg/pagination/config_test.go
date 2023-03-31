@@ -4,8 +4,7 @@ import (
 	"testing"
 
 	validation "github.com/go-ozzo/ozzo-validation"
-	publicpb "github.com/hashicorp/cloud-api-grpc-go/hashicorp/cloud/common"
-	pb "github.com/hashicorp/cloud-sdk/api/pagination/proto/go"
+	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	"github.com/stretchr/testify/require"
 )
 
@@ -91,20 +90,20 @@ func TestPaginationConfig_RequestValidation(t *testing.T) {
 	cases := []struct {
 		Name       string
 		Config     *Config
-		Req        *publicpb.PaginationRequest
+		Req        *pb.PaginationRequest
 		Fail       bool
 		ErrMessage string
 	}{
 		{
 			Name:   "empty",
 			Config: &Config{PageSizeLimit: 10},
-			Req:    &publicpb.PaginationRequest{},
+			Req:    &pb.PaginationRequest{},
 			Fail:   false,
 		},
 		{
 			Name:   "out of bounds",
 			Config: &Config{PageSizeLimit: 10},
-			Req: &publicpb.PaginationRequest{
+			Req: &pb.PaginationRequest{
 				PageSize: 20,
 			},
 			Fail:       true,
@@ -113,7 +112,7 @@ func TestPaginationConfig_RequestValidation(t *testing.T) {
 		{
 			Name:   "not base64",
 			Config: &Config{PageSizeLimit: 10},
-			Req: &publicpb.PaginationRequest{
+			Req: &pb.PaginationRequest{
 				PageSize:      2,
 				NextPageToken: "lol%",
 			},
@@ -123,7 +122,7 @@ func TestPaginationConfig_RequestValidation(t *testing.T) {
 		{
 			Name:   "one of page token",
 			Config: &Config{PageSizeLimit: 10},
-			Req: &publicpb.PaginationRequest{
+			Req: &pb.PaginationRequest{
 				PageSize:          4,
 				NextPageToken:     "abc",
 				PreviousPageToken: "abc",
@@ -134,7 +133,7 @@ func TestPaginationConfig_RequestValidation(t *testing.T) {
 		{
 			Name:   "valid",
 			Config: &Config{PageSizeLimit: 10},
-			Req: &publicpb.PaginationRequest{
+			Req: &pb.PaginationRequest{
 				PageSize:      2,
 				NextPageToken: "aGVsbG8K",
 			},
@@ -170,12 +169,12 @@ func mockConfig() *Config {
 }
 
 type request struct {
-	*publicpb.PaginationRequest
+	*pb.PaginationRequest
 }
 
 func newRequest(pageSize uint32, next, previous string) *request {
 	return &request{
-		PaginationRequest: &publicpb.PaginationRequest{
+		PaginationRequest: &pb.PaginationRequest{
 			PageSize:          pageSize,
 			NextPageToken:     next,
 			PreviousPageToken: previous,
@@ -183,7 +182,7 @@ func newRequest(pageSize uint32, next, previous string) *request {
 	}
 }
 
-func (r *request) GetPagination() *publicpb.PaginationRequest {
+func (r *request) GetPagination() *pb.PaginationRequest {
 	return r.PaginationRequest
 }
 

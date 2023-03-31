@@ -1,8 +1,7 @@
 package pagination
 
 import (
-	pb "github.com/hashicorp/cloud-sdk/api/pagination/proto/go"
-	publicpb "github.com/hashicorp/waypoint/pkg/server/gen"
+	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	"github.com/jinzhu/gorm"
 	gormV2 "gorm.io/gorm"
 )
@@ -18,7 +17,7 @@ type Paginator interface {
 
 	// PaginationResponse returns the public pagination response. Behavior is
 	// only defined once a pagination has occurred.
-	PaginationResponse() *publicpb.PaginationResponse
+	PaginationResponse() *pb.PaginationResponse
 }
 
 // GormPaginator is the interface for a paginator that supports operating on a

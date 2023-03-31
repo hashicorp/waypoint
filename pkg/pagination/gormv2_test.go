@@ -2,11 +2,11 @@ package pagination
 
 import (
 	"fmt"
+	"github.com/hashicorp/waypoint/pkg/pagination/database/testsql"
 	"testing"
 
-	pb "github.com/hashicorp/cloud-sdk/api/pagination/proto/go"
-	gormV2 "github.com/hashicorp/cloud-sdk/database/gorm"
-	"github.com/hashicorp/cloud-sdk/database/testsql"
+	gormV2 "github.com/hashicorp/waypoint/pkg/pagination/database/gorm"
+	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	"github.com/stretchr/testify/require"
 	"gorm.io/gorm"
 )

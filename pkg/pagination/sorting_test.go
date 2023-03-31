@@ -5,32 +5,31 @@ import (
 	"testing"
 
 	validation "github.com/go-ozzo/ozzo-validation"
-	pb "github.com/hashicorp/cloud-sdk/api/pagination/proto/go"
-	publicpb "github.com/hashicorp/waypoint/pkg/server/gen"
+	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	"github.com/stretchr/testify/require"
 )
 
 type requestWithSorting struct {
-	*publicpb.PaginationRequest
-	*publicpb.SortingRequest
+	*pb.PaginationRequest
+	*pb.SortingRequest
 }
 
-func (r *requestWithSorting) GetPagination() *publicpb.PaginationRequest {
+func (r *requestWithSorting) GetPagination() *pb.PaginationRequest {
 	return r.PaginationRequest
 }
 
-func (r *requestWithSorting) GetSorting() *publicpb.SortingRequest {
+func (r *requestWithSorting) GetSorting() *pb.SortingRequest {
 	return r.SortingRequest
 }
 
 func newRequestWithSort(pageSize uint32, next, previous string, fields []string) *requestWithSorting {
 	return &requestWithSorting{
-		PaginationRequest: &publicpb.PaginationRequest{
+		PaginationRequest: &pb.PaginationRequest{
 			PageSize:          pageSize,
 			NextPageToken:     next,
 			PreviousPageToken: previous,
 		},
-		SortingRequest: &publicpb.SortingRequest{
+		SortingRequest: &pb.SortingRequest{
 			OrderBy: fields,
 		},
 	}
@@ -191,8 +190,8 @@ func TestSortingConfig_RequestValidation(t *testing.T) {
 				AllowedSortFields: map[string]string{"name": "name"},
 				Config:            Config{PageSizeLimit: 10}},
 			Req: &requestWithSorting{
-				PaginationRequest: &publicpb.PaginationRequest{},
-				SortingRequest: &publicpb.SortingRequest{
+				PaginationRequest: &pb.PaginationRequest{},
+				SortingRequest: &pb.SortingRequest{
 					OrderBy: []string{"name invalid"},
 				},
 			},
@@ -205,8 +204,8 @@ func TestSortingConfig_RequestValidation(t *testing.T) {
 				AllowedSortFields: map[string]string{"name": "name"},
 				Config:            Config{PageSizeLimit: 10}},
 			Req: &requestWithSorting{
-				PaginationRequest: &publicpb.PaginationRequest{},
-				SortingRequest: &publicpb.SortingRequest{
+				PaginationRequest: &pb.PaginationRequest{},
+				SortingRequest: &pb.SortingRequest{
 					OrderBy: []string{"title asc"},
 				},
 			},
@@ -219,8 +218,8 @@ func TestSortingConfig_RequestValidation(t *testing.T) {
 				AllowedSortFields: map[string]string{"name": "name"},
 				Config:            Config{PageSizeLimit: 10}},
 			Req: &requestWithSorting{
-				PaginationRequest: &publicpb.PaginationRequest{},
-				SortingRequest: &publicpb.SortingRequest{
+				PaginationRequest: &pb.PaginationRequest{},
+				SortingRequest: &pb.SortingRequest{
 					OrderBy: []string{"nme asc"},
 				},
 			},
@@ -309,7 +308,7 @@ func TestSortingConfig_FromRequestWithSorting(t *testing.T) {
 		c := mockSortingConfig()
 
 		req := &requestWithSorting{
-			SortingRequest: &publicpb.SortingRequest{},
+			SortingRequest: &pb.SortingRequest{},
 		}
 		reqCtx, err := c.FromRequest(req)
 		r.NoError(err)
@@ -321,7 +320,7 @@ func TestSortingConfig_FromRequestWithSorting(t *testing.T) {
 		c.DefaultSortedFields = nil
 
 		req = &requestWithSorting{
-			SortingRequest: &publicpb.SortingRequest{},
+			SortingRequest: &pb.SortingRequest{},
 		}
 		reqCtx, err = c.FromRequest(req)
 		r.NoError(err)
@@ -394,7 +393,7 @@ func TestSortingConfig_GormPaginator(t *testing.T) {
 }
 
 func TestSortedGormPaginator_Valid(t *testing.T) {
-	db := testsql.TestPostgresDBWithOpts(*t, "paginator", &testsql.TestDBOptions{
+	db := testsql.TestPostgresDBWithOpts(t, "paginator", &testsql.TestDBOptions{
 		SkipMigration: true,
 	})
 	db.AutoMigrate(&order{})
@@ -514,7 +513,7 @@ func TestSortingConfig_GormV2Paginator(t *testing.T) {
 }
 
 func TestSortedGormV2Paginator_Valid(t *testing.T) {
-	db := testsql.TestPostgresDBWithOptsGormV2(*t, "paginator", &testsql.TestDBOptions{
+	db := testsql.TestPostgresDBWithOptsGormV2(t, "paginator", &testsql.TestDBOptions{
 		SkipMigration: true,
 	})
 	r := require.New(t)
