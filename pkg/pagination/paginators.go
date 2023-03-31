@@ -1,7 +1,6 @@
 package pagination
 
 import (
-	// publicpb "github.com/hashicorp/cloud-api-grpc-go/hashicorp/cloud/common"
 	pb "github.com/hashicorp/cloud-sdk/api/pagination/proto/go"
 	publicpb "github.com/hashicorp/waypoint/pkg/server/gen"
 	"github.com/jinzhu/gorm"

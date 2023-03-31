@@ -7,7 +7,6 @@ import (
 	"strings"
 
 	validation "github.com/go-ozzo/ozzo-validation"
-	// publicpb "github.com/hashicorp/cloud-api-grpc-go/hashicorp/cloud/common"
 	publicpb "github.com/hashicorp/waypoint/pkg/server/gen"
 )
 

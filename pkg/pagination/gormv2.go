@@ -4,9 +4,8 @@ import (
 	"errors"
 	"fmt"
 
-	publicpb "github.com/hashicorp/waypoint/pkg/server/gen"
-	// publicpb "github.com/hashicorp/cloud-api-grpc-go/hashicorp/cloud/common"
 	pb "github.com/hashicorp/cloud-sdk/api/pagination/proto/go"
+	publicpb "github.com/hashicorp/waypoint/pkg/server/gen"
 	paginatorV2 "github.com/pilagod/gorm-cursor-paginator/v2/paginator"
 	gormV2 "gorm.io/gorm"
 )
