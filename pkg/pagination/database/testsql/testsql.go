@@ -32,13 +32,12 @@ import (
 // the global flags package. This flag will turn on verbose output that logs
 // all SQL statements.
 
-
 // These variables control the database created for tests. They should not
 // be modified while any active tests are running. These generally don't need
 // to be modified at all.
 var (
 	FamilyPostgreSQL = "postgres"
-	FamilyMySQL = "mysql"
+	FamilyMySQL      = "mysql"
 	// DefaultDBName is the default name of the database to create for tests.
 	DefaultDBName = "hcp_test"
 
@@ -231,7 +230,7 @@ func TestPostgresDBWithOpts(t testing.T, dbName string, opts *TestDBOptions) *go
 	return TestDBConnect(t, FamilyPostgreSQL, dbName)
 }
 
-//TestPostgresDBWithOptsGormV2 sets up the test DB and returns a GormV2 connection.
+// TestPostgresDBWithOptsGormV2 sets up the test DB and returns a GormV2 connection.
 func TestPostgresDBWithOptsGormV2(t testing.T, dbName string, opts *TestDBOptions) *gormV2.DB {
 	t.Helper()
 	// wrapping TestPostgresDBWithOpts to reuse the logic to set up the test DB using Gorm V1.
@@ -240,14 +239,14 @@ func TestPostgresDBWithOptsGormV2(t testing.T, dbName string, opts *TestDBOption
 	return TestDBConnectGormV2(t, FamilyPostgreSQL, dbName)
 }
 
-//TestPostgresDB sets up the test DB to use, including running any migrations.
+// TestPostgresDB sets up the test DB to use, including running any migrations.
 //
-//This expects a local Postgres to be running with default "postgres/postgres"
-//superuser credentials.
+// This expects a local Postgres to be running with default "postgres/postgres"
+// superuser credentials.
 //
-//This also expects that at this or some parent directory, there is the
-//path represented by MigrationsDir where the migration files can be found.
-//If no migrations are found, then an error is raised.
+// This also expects that at this or some parent directory, there is the
+// path represented by MigrationsDir where the migration files can be found.
+// If no migrations are found, then an error is raised.
 func TestPostgresDB(t testing.T, dbName string) *gorm.DB {
 	return TestPostgresDBWithOpts(t, dbName, &TestDBOptions{})
 }
