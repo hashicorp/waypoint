@@ -275,6 +275,10 @@
     "path": "runner-profile-set"
   },
   {
+    "title": "runner profile edit",
+    "path": "runner-profile-edit"
+  },
+  {
     "title": "server bootstrap",
     "path": "server-bootstrap"
   },
