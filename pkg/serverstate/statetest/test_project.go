@@ -15,7 +15,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	"github.com/hashicorp/waypoint/internal/pkg/jsonpb"
-	oldPagination "github.com/hashicorp/waypoint/pkg/old-pagination"
+	"github.com/hashicorp/waypoint/pkg/pagination"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	serverptypes "github.com/hashicorp/waypoint/pkg/server/ptypes"
 )
@@ -243,8 +243,8 @@ func TestProjectPagination(t *testing.T, factory Factory, restartF RestartFactor
 		})
 
 		t.Run("returns 400 Bad Request if both nextPageToken and prevPageToken are set", func(t *testing.T) {
-			nextPageToken, _ := oldPagination.EncodeAndSerializePageToken("key", "lol")
-			prevPageToken, _ := oldPagination.EncodeAndSerializePageToken("key", "lol")
+			nextPageToken, _ := pagination.EncodeAndSerializePageToken("key", "lol")
+			prevPageToken, _ := pagination.EncodeAndSerializePageToken("key", "lol")
 			_, _, err := s.ProjectList(
 				ctx,
 				serverptypes.TestPaginationRequest(t, &pb.PaginationRequest{
@@ -286,13 +286,13 @@ func TestProjectPagination(t *testing.T, factory Factory, restartF RestartFactor
 			require.Len(resp, 5)
 			require.Equal("a", resp[0].Project)
 			require.Equal("e", resp[len(resp)-1].Project)
-			expectedPageToken, _ := oldPagination.EncodeAndSerializePageToken("name", "e")
+			expectedPageToken, _ := pagination.EncodeAndSerializePageToken("name", "e")
 			require.Equal(expectedPageToken, paginationResponse.NextPageToken)
 			require.Empty(paginationResponse.PreviousPageToken)
 		})
 
 		t.Run("returns page 2/3 (5 results: f-j) with correct nextPageToken & previousPageToken", func(t *testing.T) {
-			nextPageToken, _ := oldPagination.EncodeAndSerializePageToken("name", "e")
+			nextPageToken, _ := pagination.EncodeAndSerializePageToken("name", "e")
 			resp, paginationResponse, err := s.ProjectList(
 				ctx,
 				serverptypes.TestPaginationRequest(t, &pb.PaginationRequest{PageSize: 5, NextPageToken: nextPageToken}),
@@ -301,14 +301,14 @@ func TestProjectPagination(t *testing.T, factory Factory, restartF RestartFactor
 			require.Len(resp, 5)
 			require.Equal("f", resp[0].Project)
 			require.Equal("j", resp[len(resp)-1].Project)
-			expectedPrevPageToken, _ := oldPagination.EncodeAndSerializePageToken("name", "f")
+			expectedPrevPageToken, _ := pagination.EncodeAndSerializePageToken("name", "f")
 			require.Equal(expectedPrevPageToken, paginationResponse.PreviousPageToken)
-			expectedNextPageToken, _ := oldPagination.EncodeAndSerializePageToken("name", "j")
+			expectedNextPageToken, _ := pagination.EncodeAndSerializePageToken("name", "j")
 			require.Equal(expectedNextPageToken, paginationResponse.NextPageToken)
 		})
 
 		t.Run("returns page 3/3 (3 results: k-m) + previousPageToken, without nextPageToken", func(t *testing.T) {
-			nextPageToken, _ := oldPagination.EncodeAndSerializePageToken("name", "j")
+			nextPageToken, _ := pagination.EncodeAndSerializePageToken("name", "j")
 			resp, paginationResponse, err := s.ProjectList(
 				ctx,
 				serverptypes.TestPaginationRequest(t, &pb.PaginationRequest{PageSize: 5, NextPageToken: nextPageToken}),
@@ -317,13 +317,13 @@ func TestProjectPagination(t *testing.T, factory Factory, restartF RestartFactor
 			require.Len(resp, 3)
 			require.Equal("k", resp[0].Project)
 			require.Equal("m", resp[len(resp)-1].Project)
-			expectedPrevPageToken, _ := oldPagination.EncodeAndSerializePageToken("name", "k")
+			expectedPrevPageToken, _ := pagination.EncodeAndSerializePageToken("name", "k")
 			require.Equal(expectedPrevPageToken, paginationResponse.PreviousPageToken)
 			require.Empty(paginationResponse.NextPageToken)
 		})
 
 		t.Run("returns page 2/3 (5 results: f-j) with correct previousPageToken & nextPageToken", func(t *testing.T) {
-			prevPageToken, _ := oldPagination.EncodeAndSerializePageToken("name", "k")
+			prevPageToken, _ := pagination.EncodeAndSerializePageToken("name", "k")
 			resp, paginationResponse, err := s.ProjectList(
 				ctx,
 				serverptypes.TestPaginationRequest(t, &pb.PaginationRequest{PageSize: 5, PreviousPageToken: prevPageToken}),
@@ -332,9 +332,9 @@ func TestProjectPagination(t *testing.T, factory Factory, restartF RestartFactor
 			require.Len(resp, 5)
 			require.Equal("f", resp[0].Project)
 			require.Equal("j", resp[len(resp)-1].Project)
-			expectedPrevPageToken, _ := oldPagination.EncodeAndSerializePageToken("name", "f")
+			expectedPrevPageToken, _ := pagination.EncodeAndSerializePageToken("name", "f")
 			require.Equal(expectedPrevPageToken, paginationResponse.PreviousPageToken)
-			expectedNextPageToken, _ := oldPagination.EncodeAndSerializePageToken("name", "j")
+			expectedNextPageToken, _ := pagination.EncodeAndSerializePageToken("name", "j")
 			require.Equal(expectedNextPageToken, paginationResponse.NextPageToken)
 		})
 
@@ -350,7 +350,7 @@ func TestProjectPagination(t *testing.T, factory Factory, restartF RestartFactor
 			// o p q r  s
 			// t u v w  x
 			// y z
-			prevPageToken, _ := oldPagination.EncodeAndSerializePageToken("name", "k")
+			prevPageToken, _ := pagination.EncodeAndSerializePageToken("name", "k")
 			resp, paginationResponse, err := s.ProjectList(
 				ctx,
 				serverptypes.TestPaginationRequest(t, &pb.PaginationRequest{PageSize: 5, PreviousPageToken: prevPageToken}),
@@ -359,9 +359,9 @@ func TestProjectPagination(t *testing.T, factory Factory, restartF RestartFactor
 			require.Len(resp, 5)
 			require.Equal("g", resp[0].Project)
 			require.Equal("j", resp[len(resp)-1].Project)
-			expectedPrevPageToken, _ := oldPagination.EncodeAndSerializePageToken("name", "g")
+			expectedPrevPageToken, _ := pagination.EncodeAndSerializePageToken("name", "g")
 			require.Equal(expectedPrevPageToken, paginationResponse.PreviousPageToken)
-			expectedNextPageToken, _ := oldPagination.EncodeAndSerializePageToken("name", "j")
+			expectedNextPageToken, _ := pagination.EncodeAndSerializePageToken("name", "j")
 			require.Equal(expectedNextPageToken, paginationResponse.NextPageToken)
 
 			err = s.ProjectDelete(ctx, &pb.Ref_Project{Project: insertedProjectName})
@@ -383,7 +383,7 @@ func TestProjectPagination(t *testing.T, factory Factory, restartF RestartFactor
 			// t u  v w  x
 			// y z
 
-			prevPageToken, _ := oldPagination.EncodeAndSerializePageToken("name", "k")
+			prevPageToken, _ := pagination.EncodeAndSerializePageToken("name", "k")
 			resp, paginationResponse, err := s.ProjectList(
 				ctx,
 				serverptypes.TestPaginationRequest(t, &pb.PaginationRequest{PageSize: 5, PreviousPageToken: prevPageToken}),
@@ -392,9 +392,9 @@ func TestProjectPagination(t *testing.T, factory Factory, restartF RestartFactor
 			require.Len(resp, 5)
 			require.Equal("f", resp[0].Project)
 			require.Equal("j", resp[len(resp)-1].Project)
-			expectedPrevPageToken, _ := oldPagination.EncodeAndSerializePageToken("name", "f")
+			expectedPrevPageToken, _ := pagination.EncodeAndSerializePageToken("name", "f")
 			require.Equal(expectedPrevPageToken, paginationResponse.PreviousPageToken)
-			expectedNextPageToken, _ := oldPagination.EncodeAndSerializePageToken("name", "j")
+			expectedNextPageToken, _ := pagination.EncodeAndSerializePageToken("name", "j")
 			require.Equal(expectedNextPageToken, paginationResponse.NextPageToken)
 
 			err = s.ProjectDelete(ctx, &pb.Ref_Project{Project: insertedProjectName})
@@ -411,7 +411,7 @@ func TestProjectPagination(t *testing.T, factory Factory, restartF RestartFactor
 				require.NoError(err)
 			}
 
-			nextPageToken, _ := oldPagination.EncodeAndSerializePageToken("name", "e")
+			nextPageToken, _ := pagination.EncodeAndSerializePageToken("name", "e")
 			resp, paginationResponse, err := s.ProjectList(
 				ctx,
 				serverptypes.TestPaginationRequest(t, &pb.PaginationRequest{PageSize: 5, NextPageToken: nextPageToken}),
@@ -420,7 +420,7 @@ func TestProjectPagination(t *testing.T, factory Factory, restartF RestartFactor
 			require.Len(resp, 5)
 			require.Equal("f", resp[0].Project)
 			require.Equal("j", resp[len(resp)-1].Project)
-			expectedPrevPageToken, _ := oldPagination.EncodeAndSerializePageToken("name", "f")
+			expectedPrevPageToken, _ := pagination.EncodeAndSerializePageToken("name", "f")
 			require.Equal(expectedPrevPageToken, paginationResponse.PreviousPageToken)
 			require.Empty(paginationResponse.NextPageToken)
 		})
