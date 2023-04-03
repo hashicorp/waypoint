@@ -1,5 +1,3 @@
-## AWS ECR Pull
-
 The AWS ECR Pull plugin references an existing image, if found, in an AWS
 [Elastic Container Registry](https://aws.amazon.com/ecr/getting-started/).
 The image information can be used to push an image to a new registry, or be

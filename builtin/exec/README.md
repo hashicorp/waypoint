@@ -1,5 +1,3 @@
-## Exec
-
 The Exec plugin executes any command to perform a deploy. This enables the use
 of pre-existing deployment tools.
 

@@ -1,5 +1,3 @@
-## Helm
-
 The Helm plugin deploys to Kubernetes from a Helm chart. The Helm chart can be
 a local path or a chart in a repository.
 

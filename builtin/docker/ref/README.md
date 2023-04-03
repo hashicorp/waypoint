@@ -1,5 +1,3 @@
-## Docker Ref
-
 The Docker Ref plugin refers to an existing Docker image, passing its image
 information, the image name and tag, to the Waypoint lifecycle.
 

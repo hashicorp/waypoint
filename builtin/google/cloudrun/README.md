@@ -1,5 +1,3 @@
-## Google Cloud Run
-
 The Google Cloud Run plugin deploys a container to [Google Cloud Run](https://cloud.google.com/run).
 
 ### Components

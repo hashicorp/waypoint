@@ -1,5 +1,3 @@
-## Nomad Jobspec Canary
-
 The Nomad Jobspec Canary plugin promotes a [Nomad](https://www.nomadproject.io/)
 canary deployment initiated by a Nomad jobspec deployment.
 
