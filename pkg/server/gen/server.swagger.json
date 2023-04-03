@@ -11966,7 +11966,7 @@
           "description": "Specifies the list of per field ordering that should be used for sorting.\nThe order matters as rows are sorted in order by fields and when the field\nmatches, the next field is used to tie break the ordering.\nThe per field default ordering is ascending.\n\nThe fields should be immutable, unique, and orderable. If the field is\nnot unique, more than one sort fields should be passed.\n\nExample: order_by=name,age desc,created_at asc\nIn that case, 'name' will get the default 'ascending' order."
         }
       },
-      "description": "https://github.com/hashicorp/cloud-api/blob/master/hashicorp/cloud/common/sorting.proto\nSortingRequest are the parameters for a sorted list request."
+      "description": "SortingRequest are the parameters for a sorted list request."
     },
     "hashicorp.waypoint.Status": {
       "type": "object",
