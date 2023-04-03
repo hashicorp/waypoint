@@ -462,12 +462,17 @@ service Waypoint {
   // ProjectTemplate endpoints
   //----------------------------------------------------------------------
 
+  // UpsertProjectTemplate updates or inserts a projecttemplate.
   rpc UpsertProjectTemplate(UpsertProjectTemplateRequest) returns (UpsertProjectTemplateResponse);
 
+  // GetProjectTemplate returns a projecttemplate by the projecttemplate name or id
   rpc GetProjectTemplate(GetProjectTemplateRequest) returns (GetProjectTemplateResponse);
 
+  // DeleteProjectTemplate deletes a projecttemplate by the projecttemplate name or id
   rpc DeleteProjectTemplate(DeleteProjectTemplateRequest) returns (DeleteProjectTemplateResponse);
 
+  // ListProjectTemplates returns a list of all projecttemplates known.
+  // (Pagination is currently ignored on this request)
   rpc ListProjectTemplates(ListProjectTemplatesRequest) returns (ListProjectTemplatesResponse);
 
   //----------------------------------------------------------------------
@@ -1190,7 +1195,10 @@ message Ref {
 
   message ProjectTemplate {
     oneof ref {
+      // ID of the ProjectTemplate
       string id = 1;
+
+      // Name of the ProjectTemplate
       string name = 2;
     }
   }
@@ -5123,6 +5131,7 @@ message GetProjectTemplateRequest {
 }
 
 message GetProjectTemplateResponse {
+  // A single projecttemplate
   ProjectTemplate project_template = 1;
 }
 
@@ -5131,6 +5140,7 @@ message ListProjectTemplatesRequest {
 }
 
 message ListProjectTemplatesResponse {
+  // The full list of projecttemplates
   repeated ProjectTemplate project_templates = 1;
   PaginationResponse pagination = 2;
   uint64 total_count = 3;
@@ -5152,20 +5162,45 @@ message DeleteProjectTemplateResponse {
 }
 
 message ProjectTemplate {
-  string id = 1; // Unique ID
-  string name = 2; // Unique Name
+  // Unique ID of the ProjectTemplate
+  string id = 1;
+
+  // Unique name of the ProjectTemplate
+  string name = 2;
+
+  // A brief summary for use by platform engineers to distinguish between
+  // multiple templates
   string summary = 3;
+
+  // A long summary of what the ProjectTemplate is to be used for. This summary
+  // is shared between platform engineers and application developers.
   string expanded_summary = 4;
+
+  // The template which is rendered when a Project is created from a
+  // ProjectTemplate to be shown to application developers.
   string readme_template = 5;
+
+  // Settings for the Waypoint project that should be set when a project is
+  // created from a ProjectTemplate.
   WaypointProject waypoint_project = 6;
+
+  // The Terraform No-Code Module which should be used to provision
+  // infrastructure that is used by the project created from a ProjectTemplate.
   TerraformNocodeModule terraform_nocode_module = 7;
+
+  // A list of descriptive strings that can be applied to the ProjectTemplate.
   repeated string tags = 8;
 
   message WaypointProject {
+    // The templated waypoint.hcl file stored as HCL.
     bytes waypoint_hcl_template = 1;
   }
+
   message TerraformNocodeModule {
+    // The module name for the Terraform no-code module.
     string source = 1;
+
+    // The version of the Terraform no-code module.
     string version = 2;
   }
 }
