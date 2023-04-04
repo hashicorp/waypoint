@@ -106,7 +106,6 @@ jobs:
           key: ui_assets_${{ github.sha }}
 
   build-assets:
-    # FIXME: can releases be tagged as per CRT standards (ie at the end of the pipeline)?
     runs-on: ubuntu-latest
     name: Build Assets
     needs:
