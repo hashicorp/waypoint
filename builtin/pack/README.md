@@ -1,5 +1,3 @@
-## Pack
-
 The Pack plugin creates a Docker image using [CloudNative Buildpacks](https://buildpacks.io/).
 
 ### Components

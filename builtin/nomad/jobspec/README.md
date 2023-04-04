@@ -1,5 +1,3 @@
-## Nomad Jobspec
-
 The Nomad Jobspec plugin deploys to a Nomad cluster from a pre-existing [Nomad](https://www.nomadproject.io/)
 job specification file.
 

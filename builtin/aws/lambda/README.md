@@ -1,5 +1,3 @@
-## AWS Lambda
-
 The AWS Lambda plugin deploys OCI images as functions to [AWS Lambda](https://aws.amazon.com/lambda/getting-started/).
 
 ### Components

@@ -1,5 +1,3 @@
-## AWS ALB
-
 The AWS ALB plugin releases applications deployed to AWS by attaching [target
 groups](https://docs.aws.amazon.com/elasticloadbalancing/latest/application/load-balancer-target-groups.html)
 to an [ALB](https://docs.aws.amazon.com/elasticloadbalancing/latest/application/introduction.html).

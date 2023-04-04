@@ -1,5 +1,3 @@
-## AWS ECR
-
 The AWS ECR plugin pushes a Docker image to an [Elastic Container Registry](https://aws.amazon.com/ecr/getting-started/)
 on AWS.
 

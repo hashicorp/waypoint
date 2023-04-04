@@ -1,5 +1,3 @@
-## Docker Pull
-
 The Docker Pull plugin pulls a Docker image from an existing Docker repository,
 and wraps the existing image entrypoint with the Waypoint entrypoint.
 

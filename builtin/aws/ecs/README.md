@@ -1,5 +1,3 @@
-## AWS ECS
-
 The AWS ECS plugin deploys an application image to an AWS [ECS cluster](https://aws.amazon.com/ecs/getting-started/).
 It also launches on-demand runners to do operations remotely.
 

@@ -1,5 +1,3 @@
-## Packer
-
 The Packer plugin retrieves the image ID of an image whose metadata is pushed
 to an [HCP Packer](https://cloud.hashicorp.com/products/packer) registry. The
 image ID is that of the HCP Packer bucket iteration assigned to the configured

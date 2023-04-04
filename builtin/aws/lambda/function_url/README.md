@@ -1,5 +1,3 @@
-## AWS Lambda Function URL
-
 The AWS Lambda Function URL plugin releases a function deployed with the AWS
 Lambda plugin by creating a [Lambda function URL](https://docs.aws.amazon.com/lambda/latest/dg/lambda-urls.html).
 

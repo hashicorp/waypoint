@@ -1,5 +1,3 @@
-## Nomad
-
 The Nomad plugin deploys a Docker container to a [Nomad](https://www.nomadproject.io/)
 cluster. It also launches on-demand runners to do operations remotely.
 

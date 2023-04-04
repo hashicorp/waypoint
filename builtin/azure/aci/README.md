@@ -1,5 +1,3 @@
-## Azure ACI
-
 The Azure ACI plugin deploys a container to [Azure Container Instances](https://azure.microsoft.com/en-us/products/container-instances#layout-container-uid0a01).
 
 ### Components
