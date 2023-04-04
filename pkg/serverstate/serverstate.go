@@ -204,10 +204,10 @@ type Interface interface {
 
 	//---------------------------------------------------------------
 	// Templates
-	ProjectTemplatePut(context.Context, *pb.ProjectTemplate) error
-	ProjectTemplateGet(context.Context, *pb.Ref_ProjectTemplate) (*pb.ProjectTemplate, error)
-	ProjectTemplateDelete(context.Context, *pb.Ref_ProjectTemplate) error
-	ProjectTemplateList(context.Context, *pb.ListProjectTemplatesRequest) ([]*pb.ProjectTemplate, error)
+	UpsertProjectTemplate(context.Context, *pb.ProjectTemplate) (*pb.ProjectTemplate, error)
+	GetProjectTemplate(context.Context, *pb.Ref_ProjectTemplate) (*pb.ProjectTemplate, error)
+	DeleteProjectTemplate(context.Context, *pb.Ref_ProjectTemplate) error
+	ListProjectTemplates(context.Context, *pb.ListProjectTemplatesRequest) ([]*pb.ProjectTemplate, error)
 }
 
 // Pruner is implemented by state storage implementations that require
