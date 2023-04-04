@@ -523,14 +523,14 @@ http:
 
     # Project Templates
   - selector: hashicorp.waypoint.Waypoint.UpsertProjectTemplate
-    post: /ui/projecttemplate/{project_template}
+    post: /ui/projecttemplate/{project_template.id}
     body: "*"
 
   - selector: hashicorp.waypoint.Waypoint.GetProjectTemplate
-    get: /ui/projecttemplate/{project_template}
+    get: /ui/projecttemplate/{project_template.id}
 
   - selector: hashicorp.waypoint.Waypoint.DeleteProjectTemplate
-    delete: /ui/projecttemplate/{project_template}
+    delete: /ui/projecttemplate/{project_template.id}
 
   - selector: hashicorp.waypoint.Waypoint.ListProjectTemplates
     get: /ui/projecttemplates
