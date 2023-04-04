@@ -23,7 +23,7 @@ bin: # Creates the binaries for Waypoint for the current platform
 
 .PHONY: bin/crt-waypoint
 bin/crt-waypoint: # Creates the binaries for Waypoint for the current platform
-	CGO_ENABLED=$(CGO_ENABLED) GOOS=$(WAYPOINT_GOOS) GOARCH=$(WAYPOINT_GOARCH) go build -ldflags $(GOLDFLAGS) -tags assetsembedded -o dist/$(CRT_BIN_NAME) ./cmd/waypoint
+	CGO_ENABLED=$(CGO_ENABLED) GOOS=$(WAYPOINT_GOOS) GOARCH=$(WAYPOINT_GOARCH) go build -ldflags $(CRT_GOLDFLAGS) -tags assetsembedded -o dist/$(CRT_BIN_NAME) ./cmd/waypoint
 
 # bin/cli-only only recompiles waypoint, and doesn't recompile or embed the ceb.
 # You can use the binary it produces as a server, runner, or CLI, but it won't contain the CEB, so
@@ -58,7 +58,7 @@ bin/entrypoint: # Create the entrypoint for the current platform
 
 .PHONY: bin/crt-waypoint-entrypoint
 bin/crt-waypoint-entrypoint: # Create the entrypoint for the current platform
-		CGO_ENABLED=0 go build -ldflags $(GOLDFLAGS) -tags assetsembedded -o dist/waypoint-entrypoint ./cmd/waypoint-entrypoint
+		CGO_ENABLED=0 go build -ldflags $(CRT_GOLDFLAGS) -tags assetsembedded -o dist/waypoint-entrypoint ./cmd/waypoint-entrypoint
 
 .PHONY: install
 install: bin # Build and copy binaries to $GOPATH/bin/waypoint

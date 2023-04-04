@@ -23,6 +23,8 @@ on:
         type: string
       go-version:
         type: string
+      ld-flags:
+        type: string
       package-name:
         type: string
         required: true
@@ -69,7 +71,7 @@ jobs:
           GOARCH: ${{ inputs.goarch }}
           WAYPOINT_GOOS: ${{ inputs.goos }}
           WAYPOINT_GOARCH: ${{ inputs.goarch }}
-          GO_LDFLAGS: ${{ inputs.ld-flags }}
+          CRT_GOLDFLAGS: ${{ inputs.ld-flags }}
           ACTIONSOS: ${{ inputs.runson }}
           CGO_ENABLED: ${{ inputs.cgo-enabled }}
           CRT_BIN_NAME: ${{ steps.get-bin-name.outputs.bin-name }}
@@ -83,7 +85,6 @@ jobs:
           reproducible: report
           instructions: |
             make bin/crt-${{ inputs.package-name }}
-        # FIXME: are we still only publishing linux amd64 packages?
       - name: Linux packaging
         if: ${{ (inputs.goos == 'linux') && (inputs.package-name == 'waypoint') && (inputs.goarch != '386') }}
         uses: hashicorp/actions-packaging-linux@v1
