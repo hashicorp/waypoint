@@ -15901,6 +15901,7 @@ type GetProjectTemplateResponse struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
+	// A single projecttemplate
 	ProjectTemplate *ProjectTemplate `protobuf:"bytes,1,opt,name=project_template,json=projectTemplate,proto3" json:"project_template,omitempty"`
 }
 
@@ -15995,6 +15996,7 @@ type ListProjectTemplatesResponse struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
+	// The full list of projecttemplates
 	ProjectTemplates []*ProjectTemplate  `protobuf:"bytes,1,rep,name=project_templates,json=projectTemplates,proto3" json:"project_templates,omitempty"`
 	Pagination       *PaginationResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 	TotalCount       uint64              `protobuf:"varint,3,opt,name=total_count,json=totalCount,proto3" json:"total_count,omitempty"`
@@ -16237,14 +16239,27 @@ type ProjectTemplate struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Id                    string                                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`     // Unique ID
-	Name                  string                                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"` // Unique Name
-	Summary               string                                 `protobuf:"bytes,3,opt,name=summary,proto3" json:"summary,omitempty"`
-	ExpandedSummary       string                                 `protobuf:"bytes,4,opt,name=expanded_summary,json=expandedSummary,proto3" json:"expanded_summary,omitempty"`
-	ReadmeTemplate        string                                 `protobuf:"bytes,5,opt,name=readme_template,json=readmeTemplate,proto3" json:"readme_template,omitempty"`
-	WaypointProject       *ProjectTemplate_WaypointProject       `protobuf:"bytes,6,opt,name=waypoint_project,json=waypointProject,proto3" json:"waypoint_project,omitempty"`
+	// Unique ID of the ProjectTemplate
+	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	// Unique name of the ProjectTemplate
+	Name string `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	// A brief summary for use by platform engineers to distinguish between
+	// multiple templates
+	Summary string `protobuf:"bytes,3,opt,name=summary,proto3" json:"summary,omitempty"`
+	// A long summary of what the ProjectTemplate is to be used for. This summary
+	// is shared between platform engineers and application developers.
+	ExpandedSummary string `protobuf:"bytes,4,opt,name=expanded_summary,json=expandedSummary,proto3" json:"expanded_summary,omitempty"`
+	// The template which is rendered when a Project is created from a
+	// ProjectTemplate to be shown to application developers.
+	ReadmeTemplate string `protobuf:"bytes,5,opt,name=readme_template,json=readmeTemplate,proto3" json:"readme_template,omitempty"`
+	// Settings for the Waypoint project that should be set when a project is
+	// created from a ProjectTemplate.
+	WaypointProject *ProjectTemplate_WaypointProject `protobuf:"bytes,6,opt,name=waypoint_project,json=waypointProject,proto3" json:"waypoint_project,omitempty"`
+	// The Terraform No-Code Module which should be used to provision
+	// infrastructure that is used by the project created from a ProjectTemplate.
 	TerraformNocodeModule *ProjectTemplate_TerraformNocodeModule `protobuf:"bytes,7,opt,name=terraform_nocode_module,json=terraformNocodeModule,proto3" json:"terraform_nocode_module,omitempty"`
-	Tags                  []string                               `protobuf:"bytes,8,rep,name=tags,proto3" json:"tags,omitempty"`
+	// A list of descriptive strings that can be applied to the ProjectTemplate.
+	Tags []string `protobuf:"bytes,8,rep,name=tags,proto3" json:"tags,omitempty"`
 }
 
 func (x *ProjectTemplate) Reset() {
@@ -21250,10 +21265,12 @@ type isRef_ProjectTemplate_Ref interface {
 }
 
 type Ref_ProjectTemplate_Id struct {
+	// ID of the ProjectTemplate
 	Id string `protobuf:"bytes,1,opt,name=id,proto3,oneof"`
 }
 
 type Ref_ProjectTemplate_Name struct {
+	// Name of the ProjectTemplate
 	Name string `protobuf:"bytes,2,opt,name=name,proto3,oneof"`
 }
 
@@ -29232,6 +29249,7 @@ type ProjectTemplate_WaypointProject struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
+	// The templated waypoint.hcl file stored as HCL.
 	WaypointHclTemplate []byte `protobuf:"bytes,1,opt,name=waypoint_hcl_template,json=waypointHclTemplate,proto3" json:"waypoint_hcl_template,omitempty"`
 }
 
@@ -29279,7 +29297,9 @@ type ProjectTemplate_TerraformNocodeModule struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Source  string `protobuf:"bytes,1,opt,name=source,proto3" json:"source,omitempty"`
+	// The module name for the Terraform no-code module.
+	Source string `protobuf:"bytes,1,opt,name=source,proto3" json:"source,omitempty"`
+	// The version of the Terraform no-code module.
 	Version string `protobuf:"bytes,2,opt,name=version,proto3" json:"version,omitempty"`
 }
 
