@@ -172,7 +172,7 @@ jobs:
       goos: ${{ matrix.goos }}
       go-tags: ui
       go-version: ${{ needs.get-go-version.outputs.go-version }}
-      ld-flags: ${{ needs.get-ld-flags.outputs.ld-flags }}
+      ld-flags: ${{ needs.get-product-version.outputs.ld-flags }}
       package-name: ${{ matrix.pkg-name }}
       waypoint-version: ${{ needs.get-product-version.outputs.product-version }}
       waypoint-metadata: ${{ needs.get-product-version.outputs.pkg-metadata }}
@@ -221,7 +221,7 @@ jobs:
           workdir: ${{ steps.prepare-zips.outputs.working-dir }}
           target: crt
           arch: ${{matrix.arch}}
-          smoke_test: .github/scripts/verify_docker.sh ${{ needs.get-product-version.outputs.base-product-version }} ${{ needs.get-ld-flags.outputs.sha-short }}
+          smoke_test: .github/scripts/verify_docker.sh ${{ needs.get-product-version.outputs.base-product-version }} ${{ needs.get-product-version.outputs.sha-short }}
           tags: |
             docker.io/hashicorp/${{env.repo}}:${{env.version}}
             public.ecr.aws/hashicorp/${{env.repo}}:${{env.version}}
@@ -252,7 +252,7 @@ jobs:
           bin_name: ${{ env.repo }}
           target: odr-crt
           arch: ${{matrix.arch}}
-          smoke_test: .github/scripts/verify_docker.sh ${{ needs.get-product-version.outputs.base-product-version }} ${{ needs.get-ld-flags.outputs.sha-short }}
+          smoke_test: .github/scripts/verify_docker.sh ${{ needs.get-product-version.outputs.base-product-version }} ${{ needs.get-product-version.outputs.sha-short }}
           tags: |
             docker.io/hashicorp/${{env.repo}}-odr:${{env.version}}
             public.ecr.aws/hashicorp/${{env.repo}}-odr:${{env.version}}
