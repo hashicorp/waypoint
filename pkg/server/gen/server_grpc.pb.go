@@ -319,9 +319,14 @@ type WaypointClient interface {
 	// ConfigSyncPipeline takes a request for a given project and syncs the current
 	// project config to the Waypoint database.
 	ConfigSyncPipeline(ctx context.Context, in *ConfigSyncPipelineRequest, opts ...grpc.CallOption) (*ConfigSyncPipelineResponse, error)
+	// UpsertProjectTemplate updates or inserts a projecttemplate.
 	UpsertProjectTemplate(ctx context.Context, in *UpsertProjectTemplateRequest, opts ...grpc.CallOption) (*UpsertProjectTemplateResponse, error)
+	// GetProjectTemplate returns a projecttemplate by the projecttemplate name or id
 	GetProjectTemplate(ctx context.Context, in *GetProjectTemplateRequest, opts ...grpc.CallOption) (*GetProjectTemplateResponse, error)
+	// DeleteProjectTemplate deletes a projecttemplate by the projecttemplate name or id
 	DeleteProjectTemplate(ctx context.Context, in *DeleteProjectTemplateRequest, opts ...grpc.CallOption) (*DeleteProjectTemplateResponse, error)
+	// ListProjectTemplates returns a list of all projecttemplates known.
+	// (Pagination is currently ignored on this request)
 	ListProjectTemplates(ctx context.Context, in *ListProjectTemplatesRequest, opts ...grpc.CallOption) (*ListProjectTemplatesResponse, error)
 	// List full projects (not just refs)
 	UI_ListProjects(ctx context.Context, in *UI_ListProjectsRequest, opts ...grpc.CallOption) (*UI_ListProjectsResponse, error)
@@ -1885,9 +1890,14 @@ type WaypointServer interface {
 	// ConfigSyncPipeline takes a request for a given project and syncs the current
 	// project config to the Waypoint database.
 	ConfigSyncPipeline(context.Context, *ConfigSyncPipelineRequest) (*ConfigSyncPipelineResponse, error)
+	// UpsertProjectTemplate updates or inserts a projecttemplate.
 	UpsertProjectTemplate(context.Context, *UpsertProjectTemplateRequest) (*UpsertProjectTemplateResponse, error)
+	// GetProjectTemplate returns a projecttemplate by the projecttemplate name or id
 	GetProjectTemplate(context.Context, *GetProjectTemplateRequest) (*GetProjectTemplateResponse, error)
+	// DeleteProjectTemplate deletes a projecttemplate by the projecttemplate name or id
 	DeleteProjectTemplate(context.Context, *DeleteProjectTemplateRequest) (*DeleteProjectTemplateResponse, error)
+	// ListProjectTemplates returns a list of all projecttemplates known.
+	// (Pagination is currently ignored on this request)
 	ListProjectTemplates(context.Context, *ListProjectTemplatesRequest) (*ListProjectTemplatesResponse, error)
 	// List full projects (not just refs)
 	UI_ListProjects(context.Context, *UI_ListProjectsRequest) (*UI_ListProjectsResponse, error)
