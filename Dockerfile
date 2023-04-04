@@ -107,6 +107,9 @@ LABEL name="Waypoint" \
 # git is for gitrefpretty() and other calls for Waypoint
 RUN apk add --no-cache git
 
+COPY waypoint /usr/bin/waypoint
+COPY waypoint-entrypoint /usr/bin/waypoint-entrypoint
+
 VOLUME ["/data"]
 
 # NOTE: userid must be 100 here. Otherwise upgrades will fail due to user not
@@ -150,7 +153,7 @@ LABEL name="Waypoint" \
       version=$PRODUCT_VERSION \
       release=$PRODUCT_VERSION
 
-COPY /dist/$TARGETOS/$TARGETARCH/waypoint /kaniko/waypoint
+COPY dist/$TARGETOS/$TARGETARCH/waypoint /kaniko/waypoint
 COPY --from=busybox /bin/busybox /kaniko/busybox
 COPY --from=busybox /tmp /kaniko/tmp
 

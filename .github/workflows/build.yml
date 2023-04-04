@@ -174,7 +174,6 @@ jobs:
       - build-waypoint
     strategy:
       matrix:
-        # FIXME: are we still only publishing arm64 and amd64?
         arch: [ "amd64", "arm64" ]
       fail-fast: false
     env:
@@ -182,23 +181,44 @@ jobs:
       version: ${{ needs.get-product-version.outputs.product-version }}
     steps:
       - uses: actions/checkout@v3
+      - name: Download Waypoint
+        uses: actions/download-artifact@v3
+        with:
+          path: archive
+          name: waypoint_${{env.version}}_linux_${{ matrix.arch }}.zip
+      - name: Download Entrypoint
+        uses: actions/download-artifact@v3
+        with:
+          path: archive
+          name: waypoint-entrypoint_${{ env.version }}_linux_${{ matrix.arch }}.zip
+      - name: Prepare zipped binaries to build Docker image
+        id: prepare-zips
+        run: |
+          DIR=$(mktemp -d)
+          echo "working-dir=$DIR" >> $GITHUB_OUTPUT
+          cp -v Dockerfile $DIR/Dockerfile
+          unzip -j archive/waypoint_${{env.version}}_linux_${{ matrix.arch }}.zip -d $DIR
+          unzip -j archive/waypoint-entrypoint_${{env.version}}_linux_${{ matrix.arch }}.zip -d $DIR
       - name: Build Docker image
-        uses: hashicorp/actions-docker-build@v1
+        uses: hashicorp/actions-docker-build@d960286e523e71dec7d9571a52a5a0c6b9ffdee7
         with:
           pkg_name: "waypoint_${{env.version}}"
-          # FIXME: wait for actions-docker-build change to add pkg_name: "waypoint-entrypoint_${{env.version}}"
           version: ${{ env.version }}
           bin_name: ${{ env.repo }}
+          do_zip_extract_step: false
+          workdir: ${{ steps.prepare-zips.outputs.working-dir }}
           target: crt
           arch: ${{matrix.arch}}
           tags: |
             docker.io/hashicorp/${{env.repo}}:${{env.version}}
-            986891699432.dkr.ecr.us-east-1.amazonaws.com/hashicorp/${{env.repo}}:${{env.version}}
+            public.ecr.aws/hashicorp/${{env.repo}}:${{env.version}}
 
 
   package-docker-waypoint-odr:
     name: Build Docker ODR image for linux_${{ matrix.arch }}
     runs-on: ubuntu-latest
+    outputs:
+      product-version: ${{ steps.prepare-zips.outputs.working-dir }}
     needs:
       - get-product-version
       - build-waypoint
@@ -212,15 +232,14 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Build Docker image
-        uses: hashicorp/actions-docker-build@v1.3.5
+        uses: hashicorp/actions-docker-build@v1
         with:
+          pkg_name: "waypoint_${{env.version}}"
           version: ${{ env.version }}
-          zip_artifact_name: |
-            waypoint_${{env.version}}.zip
-            waypoint-entrypoint_${{ env.version }}_linux_${{ matrix.arch }}.zip
+          bin_name: ${{ env.repo }}
           target: odr-crt
           arch: ${{matrix.arch}}
           tags: |
-            docker.io/hashicorp/${{env.repo}}:${{env.version}}
-            986891699432.dkr.ecr.us-east-1.amazonaws.com/hashicorp/${{env.repo}}:${{env.version}}
+            docker.io/hashicorp/${{env.repo}}-odr:${{env.version}}
+            public.ecr.aws/hashicorp/${{env.repo}}-odr:${{env.version}}
 
