@@ -53,7 +53,7 @@ jobs:
           version="${{steps.get-product-version.outputs.base-product-version}}"
           prerelease="${{steps.get-product-version.outputs.prerelease-product-version}}"
           git_import="github.com/hashicorp/waypoint/internal/version"
-          goldflags="-s -w -X $(git_import).GitCommit=$(git_commit)$(git_dirty) -X $(git_import).GitDescribe=$(git_describe) -X $(git_import).Version=$(version) -X $(git_import).VersionPrerelease=$(prerelease)"
+          goldflags="-s -w -X ${git_import}.GitCommit=${git_commit}${git_dirty} -X ${git_import}.GitDescribe=${git_describe} -X ${git_import}.Version=${version} -X ${git_import}.VersionPrerelease=${prerelease}"
           echo "sha-short=${git_commit}" | tee -a "${GITHUB_OUTPUT}"
           echo "ld-flags=${goldflags}" | tee -a "${GITHUB_OUTPUT}"
 
