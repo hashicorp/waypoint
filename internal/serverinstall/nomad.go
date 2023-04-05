@@ -41,9 +41,12 @@ type nomadConfig struct {
 	namespace          string            `hcl:"namespace,optional"`
 	serviceAnnotations map[string]string `hcl:"service_annotations,optional"`
 
-	serviceProvider          string   `hcl:"service_provider,optional"`
-	serviceUITags            []string `hcl:"service_ui_tags:optional"`
-	serviceBackendTags       []string `hcl:"service_backend_tags:optional"`
+	serviceProvider    string   `hcl:"service_provider,optional"`
+	serviceUITags      []string `hcl:"service_ui_tags:optional"`
+	serviceBackendTags []string `hcl:"service_backend_tags:optional"`
+	serviceAddress     string   `hcl:"service_address,optional"`
+	networkMode        string   `hcl:"network_mode,optional"`
+
 	consulService            bool     `hcl:"consul_service,optional"`
 	consulServiceUITags      []string `hcl:"consul_service_ui_tags:optional"`
 	consulServiceBackendTags []string `hcl:"consul_service_backend_tags:optional"`
@@ -819,6 +822,17 @@ func (i *NomadInstaller) waitForEvaluation(
 	}
 }
 
+func dockerNetworkMode(nomadNetworkMode string) string {
+	// if explicit network{mode="host"} then docker config needs network_mode="host"
+	// if network{} or network{mode="bridge"} then docker needs not to have anything
+	// default to empty.
+	switch nomadNetworkMode {
+	case "host":
+		return "host"
+	}
+	return ""
+}
+
 // waypointNomadJob takes in a nomadConfig and returns a Nomad Job per the
 // Nomad API
 func waypointNomadJob(c nomadConfig, rawRunFlags []string, upgrade bool) *api.Job {
@@ -858,12 +872,14 @@ func waypointNomadJob(c nomadConfig, rawRunFlags []string, upgrade bool) *api.Jo
 		services = []*api.Service{
 			{
 				Name:      waypointUIServiceName,
+				Address:   c.serviceAddress,
 				PortLabel: "ui",
 				Tags:      uiTags,
 				Provider:  "consul",
 			},
 			{
 				Name:      waypointBackendServiceName,
+				Address:   c.serviceAddress,
 				PortLabel: "server",
 				Tags:      backendTags,
 				Provider:  "consul",
@@ -873,12 +889,14 @@ func waypointNomadJob(c nomadConfig, rawRunFlags []string, upgrade bool) *api.Jo
 		services = []*api.Service{
 			{
 				Name:      waypointUIServiceName,
+				Address:   c.serviceAddress,
 				PortLabel: "ui",
 				Tags:      c.serviceUITags,
 				Provider:  "nomad",
 			},
 			{
 				Name:      waypointBackendServiceName,
+				Address:   c.serviceAddress,
 				PortLabel: "server",
 				Tags:      c.serviceBackendTags,
 				Provider:  "nomad",
@@ -889,7 +907,7 @@ func waypointNomadJob(c nomadConfig, rawRunFlags []string, upgrade bool) *api.Jo
 
 	tg.Networks = []*api.NetworkResource{
 		{
-			Mode: "host",
+			Mode: c.networkMode,
 			// currently set to static; when ui command can be dynamic - update this
 			ReservedPorts: []api.Port{
 				{
@@ -950,6 +968,7 @@ func waypointNomadJob(c nomadConfig, rawRunFlags []string, upgrade bool) *api.Jo
 		"ports":          []string{"server", "ui"},
 		"args":           ras,
 		"auth_soft_fail": c.authSoftFail,
+		"network_mode":   dockerNetworkMode(c.networkMode),
 	}
 	task.Env = map[string]string{
 		"PORT": defaultGrpcPort,
@@ -983,7 +1002,7 @@ func waypointRunnerNomadJob(c nomadConfig, opts *InstallRunnerOpts) *api.Job {
 	tg.Networks = []*api.NetworkResource{
 		{
 			// Host mode so we can communicate to our server.
-			Mode: "host",
+			Mode: c.networkMode,
 		},
 	}
 	job.AddTaskGroup(tg)
@@ -997,6 +1016,7 @@ func waypointRunnerNomadJob(c nomadConfig, opts *InstallRunnerOpts) *api.Job {
 			"-vv",
 		},
 		"auth_soft_fail": c.authSoftFail,
+		"network_mode":   dockerNetworkMode(c.networkMode),
 	}
 
 	cpu := defaultResourcesCPU
@@ -1149,6 +1169,13 @@ func (i *NomadInstaller) InstallFlags(set *flag.Set) {
 	})
 
 	set.StringVar(&flag.StringVar{
+		Name:    "nomad-network-mode",
+		Target:  &i.config.networkMode,
+		Usage:   "Nomad task group network mode.",
+		Default: "host",
+	})
+
+	set.StringVar(&flag.StringVar{
 		Name:   "nomad-odr-image",
 		Target: &i.config.odrImage,
 		Usage: "Docker image for the on-demand runners. If not specified, it " +
@@ -1181,6 +1208,12 @@ func (i *NomadInstaller) InstallFlags(set *flag.Set) {
 		Target:  &i.config.serverResourcesMemory,
 		Usage:   "MB of Memory to allocate to the Server job task.",
 		Default: strconv.Itoa(defaultResourcesMemory),
+	})
+
+	set.StringVar(&flag.StringVar{
+		Name:   "nomad-service-address",
+		Target: &i.config.serviceAddress,
+		Usage:  "Address for the Nomad services.",
 	})
 
 	set.StringVar(&flag.StringVar{
