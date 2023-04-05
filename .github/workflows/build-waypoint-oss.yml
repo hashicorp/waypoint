@@ -71,7 +71,7 @@ jobs:
           GOARCH: ${{ inputs.goarch }}
           WAYPOINT_GOOS: ${{ inputs.goos }}
           WAYPOINT_GOARCH: ${{ inputs.goarch }}
-          CRT_GOLDFLAGS: ${{ inputs.ld-flags }}
+          VERSION: ${{ inputs.waypoint-version }}
           ACTIONSOS: ${{ inputs.runson }}
           CGO_ENABLED: ${{ inputs.cgo-enabled }}
           CRT_BIN_NAME: ${{ steps.get-bin-name.outputs.bin-name }}

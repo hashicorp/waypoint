@@ -5,6 +5,7 @@ GIT_DIRTY=$$(test -n "`git status --porcelain`" && echo "+CHANGES" || true)
 GIT_DESCRIBE=$$(git describe --tags --always --match "v*")
 GIT_IMPORT="github.com/hashicorp/waypoint/internal/version"
 GOLDFLAGS="-s -w -X $(GIT_IMPORT).GitCommit=$(GIT_COMMIT)$(GIT_DIRTY) -X $(GIT_IMPORT).GitDescribe=$(GIT_DESCRIBE)"
+CRT_GOLDFLAGS="-s -w -X $(GIT_IMPORT).GitCommit=$(GIT_COMMIT)$(GIT_DIRTY) -X $(GIT_IMPORT).GitDescribe=$(GIT_DESCRIBE) -X $(GIT_IMPORT).Version=$(VERSION) -X $(GIT_IMPORT).Prerelease=$(PRERELEASE)"
 GO_CMD?=go
 WP_SERVER_PLATFORM?="linux/amd64"
 
@@ -23,7 +24,7 @@ bin: # Creates the binaries for Waypoint for the current platform
 
 .PHONY: bin/crt-waypoint
 bin/crt-waypoint: # Creates the binaries for Waypoint for the current platform
-	CGO_ENABLED=$(CGO_ENABLED) GOOS=$(WAYPOINT_GOOS) GOARCH=$(WAYPOINT_GOARCH) go build -ldflags "$(CRT_GOLDFLAGS)" -tags assetsembedded -o dist/$(CRT_BIN_NAME) ./cmd/waypoint
+	CGO_ENABLED=$(CGO_ENABLED) GOOS=$(WAYPOINT_GOOS) GOARCH=$(WAYPOINT_GOARCH) go build -ldflags $(CRT_GOLDFLAGS) -tags assetsembedded -o dist/$(CRT_BIN_NAME) ./cmd/waypoint
 
 # bin/cli-only only recompiles waypoint, and doesn't recompile or embed the ceb.
 # You can use the binary it produces as a server, runner, or CLI, but it won't contain the CEB, so
