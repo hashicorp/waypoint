@@ -27,7 +27,6 @@ jobs:
       prerelease-product-version: ${{ steps.get-product-version.outputs.prerelease-product-version }}
       pkg-name: ${{ steps.get-pkg-env-vars.outputs.pkg-name }}
       pkg-metadata: ${{ steps.get-pkg-env-vars.outputs.pkg-metadata }}
-      sha-short: ${{ steps.get-commit.outputs.sha-short }}
     steps:
       - uses: actions/checkout@v3
       - name: Get package environment variables
@@ -44,11 +43,6 @@ jobs:
         run: |
           [ -n "${{steps.get-product-version.outputs.product-version}}" ]
           echo "::notice title=Waypoint Version::${{ steps.get-product-version.outputs.product-version }}"
-      - name: Get Commit
-        id: get-commit
-        run: |
-          git_commit=$(git rev-parse --short HEAD)
-          echo "sha-short=${git_commit}" | tee -a "${GITHUB_OUTPUT}"
 
   get-go-version:
     name: "Determine Go toolchain version"
@@ -129,6 +123,9 @@ jobs:
           fail-on-cache-miss: true
           enableCrossOsArchive: true
       - name: Build assets
+        env:
+          BASE_VERSION: ${{ needs.get-go-version.outputs.base-product-version }}
+          PRERELEASE: ${{ needs.get-go-version.outputs.prerelease-product-version }}
         run: |
           make tools
           go install github.com/kevinburke/go-bindata/go-bindata@v3.24.0+incompatible
@@ -215,7 +212,7 @@ jobs:
           workdir: ${{ steps.prepare-zips.outputs.working-dir }}
           target: crt
           arch: ${{matrix.arch}}
-          smoke_test: .github/scripts/verify_docker.sh ${{ needs.get-product-version.outputs.base-product-version }} ${{ needs.get-product-version.outputs.sha-short }}
+          smoke_test: .github/scripts/verify_docker.sh ${{ needs.get-product-version.outputs.base-product-version }}
           tags: |
             docker.io/hashicorp/${{env.repo}}:${{env.version}}
             public.ecr.aws/hashicorp/${{env.repo}}:${{env.version}}
@@ -246,7 +243,7 @@ jobs:
           bin_name: ${{ env.repo }}
           target: odr-crt
           arch: ${{matrix.arch}}
-          smoke_test: .github/scripts/verify_docker.sh ${{ needs.get-product-version.outputs.base-product-version }} ${{ needs.get-product-version.outputs.sha-short }}
+          smoke_test: .github/scripts/verify_docker.sh ${{ needs.get-product-version.outputs.base-product-version }}
           tags: |
             docker.io/hashicorp/${{env.repo}}-odr:${{env.version}}
             public.ecr.aws/hashicorp/${{env.repo}}-odr:${{env.version}}
