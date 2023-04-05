@@ -3,6 +3,7 @@
     "title": "What is Waypoint?",
     "routes": [
       {
+				"title": "Overview",
         "path": "intro"
       },
       {
