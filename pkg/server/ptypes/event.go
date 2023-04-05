@@ -11,7 +11,6 @@ import (
 func ValidateUIListEventsRequest(v *pb.UI_ListEventsRequest) error {
 	return validationext.Error(validation.ValidateStruct(v,
 		validation.Field(&v.Application, validation.Required),
-		validation.Field(&v.Workspace, validation.Required),
 		validationext.StructField(&v.Pagination, func() []*validation.FieldRules {
 			return ValidatePaginationRequestRules(v.Pagination)
 		}),

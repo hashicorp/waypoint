@@ -61,7 +61,6 @@ func TestEvent(t *testing.T, factory Factory) {
 		})
 		require.NoError(err)
 		require.NotNil(eventResp)
-		// Only have 3 resources, 1: build, 1: deployment, 1: release
 		require.Len(eventResp.Events, 6)
 
 		var nextPageToken string
