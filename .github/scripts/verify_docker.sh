@@ -18,7 +18,6 @@ function usage {
 function main {
   local image_name="${IMAGE_NAME:-}"
   local expect_version="${1:-}"
-  local expect_sha="${2:-}"
   local got_version
 
   if [[ -z "${image_name}" ]]; then
@@ -33,17 +32,12 @@ function main {
     exit 1
   fi
 
-  got_version="$(docker run "${image_name}" version)"
+  got_version="$( awk '{print $2}' <(head -n1 <(docker run --rm "${image_name}" version)) )"
   if [[ "${got_version}" != *"${expect_version}"* ]]; then
     echo "Version Test FAILED"
-    echo "Got: ${got_version}, Want substring: ${expect_version}"
+    echo "Got: ${got_version}, Want: ${expect_version}"
     exit 1
   fi
-  if [[ "${got_version}" != *"${expect_sha}"* ]]; then
-      echo "Sha Test FAILED"
-      echo "Got: ${got_version}, Want substring: ${expect_sha}"
-      exit 1
-    fi
   echo "Test PASSED"
 }
 

@@ -49,8 +49,8 @@ bin/windows: # Create windows binaries
 
 .PHONY: bin/crt-assets
 bin/crt-assets: # Create assets for caching in CRT
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o ./internal/assets/ceb/ceb ./cmd/waypoint-entrypoint
-	CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -o ./internal/assets/ceb/ceb-arm64 ./cmd/waypoint-entrypoint
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags $(CRT_GOLDFLAGS) -o ./internal/assets/ceb/ceb ./cmd/waypoint-entrypoint
+	CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -ldflags $(CRT_GOLDFLAGS) -o ./internal/assets/ceb/ceb-arm64 ./cmd/waypoint-entrypoint
 	cd internal/assets && go-bindata -pkg assets -o prod.go -tags assetsembedded ./ceb && cd ../..
 
 .PHONY: bin/entrypoint
