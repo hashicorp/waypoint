@@ -22,9 +22,7 @@ on:
       go-tags:
         type: string
       go-version:
-        type: string
-      ld-flags:
-        type: string
+        type: stringƒ
       package-name:
         type: string
         required: true

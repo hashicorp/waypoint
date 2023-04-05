@@ -23,8 +23,8 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       product-version: ${{ steps.get-product-version.outputs.product-version }}
-      product-version-base: ${{ steps.get-product-version.outputs.base-product-version }}
-      product-version-pre: ${{ steps.get-product-version.outputs.prerelease-product-version }}
+      base-product-version: ${{ steps.get-product-version.outputs.base-product-version }}
+      prerelease-product-version: ${{ steps.get-product-version.outputs.prerelease-product-version }}
       pkg-name: ${{ steps.get-pkg-env-vars.outputs.pkg-name }}
       pkg-metadata: ${{ steps.get-pkg-env-vars.outputs.pkg-metadata }}
       sha-short: ${{ steps.get-commit.outputs.sha-short }}
@@ -167,7 +167,7 @@ jobs:
       go-version: ${{ needs.get-go-version.outputs.go-version }}
       package-name: ${{ matrix.pkg-name }}
       waypoint-version: ${{ needs.get-product-version.outputs.product-version }}
-      waypoint-base-version: ${{ needs.get-product-version.outputs.base-product-version-base }}
+      waypoint-base-version: ${{ needs.get-product-version.outputs.base-product-version }}
       waypoint-prerelease: ${{ needs.get-product-version.outputs.prerelease-product-version }}
       waypoint-metadata: ${{ needs.get-product-version.outputs.pkg-metadata }}
     secrets: inherit
