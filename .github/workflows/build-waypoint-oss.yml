@@ -22,7 +22,7 @@ on:
       go-tags:
         type: string
       go-version:
-        type: stringƒ
+        type: string
       package-name:
         type: string
         required: true
