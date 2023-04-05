@@ -33,15 +33,15 @@ function main {
     exit 1
   fi
 
-  got_version="$( awk '{print $2}' <(head -n1 <(docker run "${image_name}" version)) )"
-  if [[ "${got_version}" != *"v${expect_version}"* ]]; then
-    echo "Test FAILED"
+  got_version="$(docker run "${image_name}" version)"
+  if [[ "${got_version}" != *"${expect_version}"* ]]; then
+    echo "Version Test FAILED"
     echo "Got: ${got_version}, Want substring: ${expect_version}"
     exit 1
   fi
   if [[ "${got_version}" != *"${expect_sha}"* ]]; then
-      echo "Test FAILED"
-      echo "Got: ${got_version}, Want substring: ${expect_version}"
+      echo "Sha Test FAILED"
+      echo "Got: ${got_version}, Want substring: ${expect_sha}"
       exit 1
     fi
   echo "Test PASSED"

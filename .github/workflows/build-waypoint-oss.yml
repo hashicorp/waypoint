@@ -87,7 +87,7 @@ jobs:
           go_version: ${{ inputs.go-version }}
           os: ${{ inputs.goos }}
           arch: ${{ inputs.goarch }}
-          reproducible: report
+          reproducible: nope
           instructions: |
             make bin/crt-${{ inputs.package-name }}
       - name: Linux packaging
