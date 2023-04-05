@@ -125,8 +125,8 @@ jobs:
           enableCrossOsArchive: true
       - name: Build assets
         env:
-          BASE_VERSION: ${{ needs.get-go-version.outputs.base-product-version }}
-          PRERELEASE: ${{ needs.get-go-version.outputs.prerelease-product-version }}
+          BASE_VERSION: ${{ needs.get-product-version.outputs.base-product-version }}
+          PRERELEASE: ${{ needs.get-product-version.outputs.prerelease-product-version }}
         run: |
           make tools
           go install github.com/kevinburke/go-bindata/go-bindata@v3.24.0+incompatible
