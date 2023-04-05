@@ -31,6 +31,12 @@ on:
       waypoint-version:
         type: string
         required: true
+      waypoint-base-version:
+        type: string
+        required: true
+      waypoint-prerelease:
+        type: string
+        required: true
       waypoint-metadata:
         type: string
         required: true
@@ -71,7 +77,8 @@ jobs:
           GOARCH: ${{ inputs.goarch }}
           WAYPOINT_GOOS: ${{ inputs.goos }}
           WAYPOINT_GOARCH: ${{ inputs.goarch }}
-          VERSION: ${{ inputs.waypoint-version }}
+          BASE_VERSION: ${{ inputs.waypoint-base-version }}
+          PRERELEASE: ${{ inputs.waypoint-prerelease }}
           ACTIONSOS: ${{ inputs.runson }}
           CGO_ENABLED: ${{ inputs.cgo-enabled }}
           CRT_BIN_NAME: ${{ steps.get-bin-name.outputs.bin-name }}

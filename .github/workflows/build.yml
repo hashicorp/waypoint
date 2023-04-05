@@ -23,11 +23,11 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       product-version: ${{ steps.get-product-version.outputs.product-version }}
-      product-version-base: ${{ steps.get-product-version.outputs.product-version-base }}
-      product-version-pre: ${{ steps.get-product-version.outputs.product-version-pre }}
+      product-version-base: ${{ steps.get-product-version.outputs.base-product-version }}
+      product-version-pre: ${{ steps.get-product-version.outputs.prerelease-product-version }}
       pkg-name: ${{ steps.get-pkg-env-vars.outputs.pkg-name }}
       pkg-metadata: ${{ steps.get-pkg-env-vars.outputs.pkg-metadata }}
-      ld-flags: ${{ steps.get-ld-flags.outputs.ld-flags }}
+      sha-short: ${{ steps.get-commit.outputs.sha-short }}
     steps:
       - uses: actions/checkout@v3
       - name: Get package environment variables
@@ -44,18 +44,11 @@ jobs:
         run: |
           [ -n "${{steps.get-product-version.outputs.product-version}}" ]
           echo "::notice title=Waypoint Version::${{ steps.get-product-version.outputs.product-version }}"
-      - name: Get Go ldflags
-        id: get-ld-flags
+      - name: Get Commit
+        id: get-commit
         run: |
           git_commit=$(git rev-parse --short HEAD)
-          git_dirty=$(test -n "`git status --porcelain`" && echo "+CHANGES" || true)
-          git_describe=$(git describe --tags --always --match "v*")
-          version="${{steps.get-product-version.outputs.base-product-version}}"
-          prerelease="${{steps.get-product-version.outputs.prerelease-product-version}}"
-          git_import="github.com/hashicorp/waypoint/internal/version"
-          goldflags="-s -w -X ${git_import}.GitCommit=${git_commit}${git_dirty} -X ${git_import}.GitDescribe=${git_describe} -X ${git_import}.Version=${version} -X ${git_import}.VersionPrerelease=${prerelease}"
           echo "sha-short=${git_commit}" | tee -a "${GITHUB_OUTPUT}"
-          echo "ld-flags=${goldflags}" | tee -a "${GITHUB_OUTPUT}"
 
   get-go-version:
     name: "Determine Go toolchain version"
@@ -172,9 +165,10 @@ jobs:
       goos: ${{ matrix.goos }}
       go-tags: ui
       go-version: ${{ needs.get-go-version.outputs.go-version }}
-      ld-flags: ${{ needs.get-product-version.outputs.ld-flags }}
       package-name: ${{ matrix.pkg-name }}
       waypoint-version: ${{ needs.get-product-version.outputs.product-version }}
+      waypoint-base-version: ${{ needs.get-product-version.outputs.base-product-version-base }}
+      waypoint-prerelease: ${{ needs.get-product-version.outputs.prerelease-product-version }}
       waypoint-metadata: ${{ needs.get-product-version.outputs.pkg-metadata }}
     secrets: inherit
 
