@@ -36,6 +36,14 @@ project {
     "website/.vscode/**",
     "website/scripts/**",
     "website/website-preview**",
+    // packages copied from other sources
+    "internal/pkg/spinner/**",
+    "ui/lib/api-common-protos/**",
+    "ui/lib/grpc-web/**",
+    "internal/pkg/jsonpb/**",
+    "internal/pkg/defaults/**",
+    "internal/pkg/copy/**", 
+    "website/public/ie-custom-properties.js",
   ]
 }
 
