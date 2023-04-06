@@ -522,8 +522,12 @@ http:
     get: /ui/project/{pipeline.owner.project.project}/pipelines/{pipeline.owner.pipeline_name}/runs
 
     # Project Templates
-  - selector: hashicorp.waypoint.Waypoint.UpsertProjectTemplate
-    post: /ui/projecttemplate/{project_template.id}
+  - selector: hashicorp.waypoint.Waypoint.CreateProjectTemplate
+    post: /ui/projecttemplate
+    body: "*"
+
+  - selector: hashicorp.waypoint.Waypoint.UpdateProjectTemplate
+    put: /ui/projecttemplate/{project_template.id}
     body: "*"
 
   - selector: hashicorp.waypoint.Waypoint.GetProjectTemplate
