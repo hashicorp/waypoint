@@ -1,6 +1,3 @@
-# Copyright (c) HashiCorp, Inc.
-# SPDX-License-Identifier: MPL-2.0
-
 type: google.api.Service
 config_version: 3
 
@@ -547,3 +544,10 @@ http:
 
   - selector: hashicorp.waypoint.Waypoint.GetTFCRunStatus
     get: /project/{project.project}/tfcrunstatus
+
+    # Events
+  - selector: hashicorp.waypoint.Waypoint.UI_ListEvents
+    get: /ui/events/application/{application.application}
+
+  - selector: hashicorp.waypoint.Waypoint.UI_ListEventSchemas
+    get: /ui/events/event-schemas
