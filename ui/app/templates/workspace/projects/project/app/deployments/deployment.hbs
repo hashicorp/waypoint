@@ -1,3 +1,8 @@
+{{!
+  Copyright (c) HashiCorp, Inc.
+  SPDX-License-Identifier: MPL-2.0
+}}
+
 {{page-title (concat "Deployment" " v" @model.sequence)}}
 {{#if (not-eq this.target.currentRouteName "workspace.projects.project.app.deployments.deployment.resource")}}
   <PanelHeader @artifact="deployment" @sequence={{@model.sequence}}>

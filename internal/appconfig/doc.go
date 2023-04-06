@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 // Package appconfig provides the logic for watching and reading application
 // configuration values. Application configuration values may be static
 // or they may be dynamically loaded from external systems such as Vault,

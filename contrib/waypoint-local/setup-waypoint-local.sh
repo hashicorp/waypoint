@@ -1,4 +1,7 @@
 #!/bin/bash
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
 
 LOGDIR="${WP_LOG_DIR:-"/tmp"}"
 DBDIR="${WP_DB_DIR:-"."}"

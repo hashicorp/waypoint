@@ -1,3 +1,8 @@
+{{!
+  Copyright (c) HashiCorp, Inc.
+  SPDX-License-Identifier: MPL-2.0
+}}
+
 <OperationStatusIndicator @operation={{@operation}} @isDetailed={{true}}>
   <:status-text>
     {{if (eq @operation.status.state 1) 'Releasing' 'Released'}} on

@@ -1,3 +1,8 @@
+/**
+ * Copyright (c) HashiCorp, Inc.
+ * SPDX-License-Identifier: MPL-2.0
+ */
+
 import { getOwner } from '@ember/application';
 import Service, { inject as service } from '@ember/service';
 import { computed } from '@ember/object';

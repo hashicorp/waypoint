@@ -1,3 +1,8 @@
+/**
+ * Copyright (c) HashiCorp, Inc.
+ * SPDX-License-Identifier: MPL-2.0
+ */
+
 import Ember from 'ember';
 import Service from '@ember/service';
 import Route from '@ember/routing/route';

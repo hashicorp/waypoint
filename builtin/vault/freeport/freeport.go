@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 // Package freeport provides a helper for allocating free ports across multiple
 // processes on the same machine.
 package freeport

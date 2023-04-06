@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 //go:generate go-bindata -dev -pkg assets -o dev_assets.go -tags !assetsembedded ceb
 
 //go:build !assetsembedded

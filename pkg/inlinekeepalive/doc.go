@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 // inlinekeepalive is a package that sends "keepalive" messages over
 // existing grpc streams.
 

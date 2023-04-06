@@ -1,3 +1,6 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
 integration {
   name        = "CloudNative Buildpacks"
   description = "The Pack plugin creates a Docker image using CloudNative Buildpacks."

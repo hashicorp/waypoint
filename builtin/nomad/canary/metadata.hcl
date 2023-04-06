@@ -1,3 +1,6 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
 integration {
   name        = "Nomad Jobspec Canary"
   description = "The Nomad Jobspec Canary plugin promotes a Nomad canary deployment initiated by a Nomad jobspec deployment."

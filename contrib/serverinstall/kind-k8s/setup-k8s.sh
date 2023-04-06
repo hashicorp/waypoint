@@ -1,4 +1,7 @@
 #!/bin/bash
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
 
 # NOTE(briancain): This script uses 'kind' to automatically bring up a local
 # kubernetes cluster. It includes optional support for configuring an

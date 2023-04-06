@@ -1,3 +1,8 @@
+/**
+ * Copyright (c) HashiCorp, Inc.
+ * SPDX-License-Identifier: MPL-2.0
+ */
+
 import Component from '@glimmer/component';
 import RouterService from '@ember/routing/router-service';
 import SessionService from 'ember-simple-auth/services/session';

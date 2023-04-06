@@ -1,3 +1,6 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
 integration {
   name        = "Vault"
   description = "The Vault plugin reads configuration values from Vault."

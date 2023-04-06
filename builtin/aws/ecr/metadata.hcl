@@ -1,3 +1,6 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
 integration {
   name        = "AWS ECR"
   description = "The AWS ECR plugin pushes a Docker image to an Elastic Container Registry on AWS."

@@ -1,3 +1,6 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
 integration {
   name        = "Terraform Cloud"
   description = "The Terraform Cloud plugin reads Terraform state outputs from Terraform Cloud."

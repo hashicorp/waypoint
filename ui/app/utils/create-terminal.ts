@@ -1,3 +1,8 @@
+/**
+ * Copyright (c) HashiCorp, Inc.
+ * SPDX-License-Identifier: MPL-2.0
+ */
+
 import { ITerminalOptions, Terminal } from 'xterm';
 
 import terminalTheme from 'waypoint/utils/terminal-theme';

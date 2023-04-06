@@ -1,3 +1,6 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
 integration {
   name        = "Null"
   description = "The Null plugin is used for testing and experimentation with the different plugin components."

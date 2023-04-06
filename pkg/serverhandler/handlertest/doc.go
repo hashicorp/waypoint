@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 // Package handlertest has a test suite for validating implementations of the
 // pb.WaypointService interface. This must only be imported in "_test.go"
 // files in other packages.
