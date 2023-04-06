@@ -35,9 +35,9 @@ function main {
   full_version=$(docker run --rm "${image_name}" version)
   echo "Full version: ${full_version}"
   got_version="$( awk '{print $2}' <(head -n1 <(docker run --rm "${image_name}" version)) )"
-  if [[ "${got_version}" != "${expect_version}" ]]; then
+  if [[ "${got_version}" != "v${expect_version}" ]]; then
     echo "Version Test FAILED"
-    echo "Got: ${got_version}, Want: ${expect_version}"
+    echo "Got: ${got_version}, Want: v${expect_version}"
     exit 1
   fi
   echo "Test PASSED"
