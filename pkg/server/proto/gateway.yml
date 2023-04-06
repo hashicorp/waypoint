@@ -520,3 +520,10 @@ http:
 
   - selector: hashicorp.waypoint.Waypoint.UI_ListPipelineRuns
     get: /ui/project/{pipeline.owner.project.project}/pipelines/{pipeline.owner.pipeline_name}/runs
+
+    # Events
+  - selector: hashicorp.waypoint.Waypoint.UI_ListEvents
+    get: /ui/events/application/{application.application}
+
+  - selector: hashicorp.waypoint.Waypoint.UI_ListEventSchemas
+    get: /ui/events/event-schemas

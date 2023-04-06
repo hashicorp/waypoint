@@ -36,11 +36,9 @@ require (
 	github.com/go-openapi/strfmt v0.21.3
 	github.com/go-openapi/swag v0.19.14
 	github.com/go-openapi/validate v0.20.2
-	github.com/go-ozzo/ozzo-validation v3.6.0+incompatible
 	github.com/go-ozzo/ozzo-validation/v4 v4.3.0
 	github.com/go-playground/validator v9.31.0+incompatible
 	github.com/gofrs/flock v0.8.0
-	github.com/golang-migrate/migrate/v4 v4.10.0
 	github.com/golang/protobuf v1.5.2
 	github.com/google/go-cmp v0.5.9
 	github.com/google/go-containerregistry v0.5.1
@@ -67,7 +65,6 @@ require (
 	github.com/hashicorp/go-secure-stdlib/awsutil v0.1.6
 	github.com/hashicorp/go-uuid v1.0.2
 	github.com/hashicorp/go-version v1.6.0
-	github.com/hashicorp/gorm-cursor-paginator v1.3.1-0.20210706213607-df0c7e7f0142
 	github.com/hashicorp/hcl/v2 v2.10.1-0.20210621220818-327f3ce2570e
 	github.com/hashicorp/hcp-sdk-go v0.27.0
 	github.com/hashicorp/horizon v0.0.0-20210317214650-d2053943be04
@@ -77,7 +74,6 @@ require (
 	github.com/hashicorp/waypoint-hzn v0.0.0-20201008221232-97cd4d9120b9
 	github.com/imdario/mergo v0.3.12
 	github.com/improbable-eng/grpc-web v0.13.0
-	github.com/jinzhu/gorm v1.9.16
 	github.com/kevinburke/go-bindata v3.23.0+incompatible
 	github.com/kr/text v0.2.0
 	github.com/mitchellh/cli v1.1.2
@@ -100,7 +96,6 @@ require (
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/opencontainers/go-digest v1.0.0
 	github.com/opencontainers/image-spec v1.0.2
-	github.com/pilagod/gorm-cursor-paginator/v2 v2.3.1
 	github.com/pkg/errors v0.9.1
 	github.com/posener/complete v1.2.3
 	github.com/r3labs/diff v1.1.0
@@ -122,9 +117,6 @@ require (
 	google.golang.org/grpc v1.50.1
 	google.golang.org/protobuf v1.28.1
 	gopkg.in/yaml.v3 v3.0.1
-	gorm.io/driver/mysql v1.3.6
-	gorm.io/driver/postgres v1.3.9
-	gorm.io/gorm v1.24.6
 	helm.sh/helm/v3 v3.7.0
 	k8s.io/api v0.22.1
 	k8s.io/apimachinery v0.22.1
@@ -213,6 +205,7 @@ require (
 	github.com/go-sql-driver/mysql v1.6.0 // indirect
 	github.com/gobwas/glob v0.2.3 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
+	github.com/golang-migrate/migrate/v4 v4.10.0 // indirect
 	github.com/golang-sql/civil v0.0.0-20220223132316-b832511892a9 // indirect
 	github.com/golang/gddo v0.0.0-20180823221919-9d8ff1c67be5 // indirect
 	github.com/golang/glog v1.0.0 // indirect
@@ -250,15 +243,8 @@ require (
 	github.com/huandu/xstrings v1.3.2 // indirect
 	github.com/iancoleman/strcase v0.2.0 // indirect
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
-	github.com/jackc/chunkreader/v2 v2.0.1 // indirect
-	github.com/jackc/pgconn v1.12.1 // indirect
-	github.com/jackc/pgio v1.0.0 // indirect
-	github.com/jackc/pgpassfile v1.0.0 // indirect
-	github.com/jackc/pgproto3/v2 v2.3.0 // indirect
-	github.com/jackc/pgservicefile v0.0.0-20200714003250-2b9c44734f2b // indirect
-	github.com/jackc/pgtype v1.11.0 // indirect
-	github.com/jackc/pgx/v4 v4.16.1 // indirect
 	github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99 // indirect
+	github.com/jinzhu/gorm v1.9.16 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/jmoiron/sqlx v1.3.1 // indirect
@@ -373,7 +359,7 @@ require (
 )
 
 require (
-	github.com/agext/levenshtein v1.2.3
+	github.com/agext/levenshtein v1.2.3 // indirect
 	github.com/desertbit/timer v0.0.0-20180107155436-c41aec40b27f // indirect
 	github.com/docker/libtrust v0.0.0-20160708172513-aabc10ec26b7 // indirect
 	github.com/evanphx/grpc-gateway v1.16.1-0.20220211183845-48e5be386c15
