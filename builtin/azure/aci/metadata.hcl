@@ -1,3 +1,6 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
 integration {
   name        = "Azure Container Instance"
   description = "The Azure ACI plugin deploys a container to Azure Container Instances."

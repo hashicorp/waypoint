@@ -1,3 +1,6 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
 integration {
   name        = "Nomad Jobspec"
   description = "The Nomad Jobspec plugin deploys to a Nomad cluster from a pre-existing Nomad job specification file."

@@ -1,3 +1,8 @@
+{{!
+  Copyright (c) HashiCorp, Inc.
+  SPDX-License-Identifier: MPL-2.0
+}}
+
 {{#if @canLogout}}
   <button data-test-logout-button class="auth-link" type="button" {{on "click" this.logout}}>
     <FlightIcon @name="sign-out" class="nav-icon" />

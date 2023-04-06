@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 // Package grpcmetadata contains functions for reading and writing waypoint specific
 // metadata to contexts, which is transmitted by RPC calls.
 package grpcmetadata

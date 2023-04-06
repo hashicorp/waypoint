@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package assets
 
 // CEBArch contains the asset name by architecture. The OS is always

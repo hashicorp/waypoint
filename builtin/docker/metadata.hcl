@@ -1,3 +1,6 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
 integration {
   name        = "Docker"
   description = "The Docker plugin can build a Docker image of an application, push a Docker image to a remote registry, and/or deploy the Docker image to a Docker daemon. It also launches on-demand runners to do operations remotely."

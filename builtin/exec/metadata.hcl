@@ -1,3 +1,6 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
 integration {
   name        = "Exec"
   description = "The Exec plugin executes any command to perform a deploy. This enables the use of pre-existing deployment tools."

@@ -1,3 +1,8 @@
+/**
+ * Copyright (c) HashiCorp, Inc.
+ * SPDX-License-Identifier: MPL-2.0
+ */
+
 import { GetLogStreamRequest, LogBatch } from 'waypoint-pb';
 
 import ApiService from 'waypoint/services/api';

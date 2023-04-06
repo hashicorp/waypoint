@@ -1,3 +1,6 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
 integration {
   name        = "Kubernetes"
   description = "The Kubernetes plugin can deploy a Docker image of an application to Kubernetes, expose the Deployment with a Kubernetes Service, and source configuration from a Kubernetes Secret or ConfigMap. It also launches on-demand runners to do operations remotely."

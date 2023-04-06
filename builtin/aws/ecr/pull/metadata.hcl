@@ -1,3 +1,6 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
 integration {
   name        = "AWS ECR Pull"
   description = "The AWS ECR Pull plugin references an existing image, if found, in an AWS Elastic Container Registry. The image information can be used to push an image to a new registry, or be deployed to AWS ECS."

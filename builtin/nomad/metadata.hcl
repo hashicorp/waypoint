@@ -1,3 +1,6 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
 integration {
   name        = "Nomad"
   description = "The Nomad plugin deploys a Docker container to a Nomad cluster. It also launches on-demand runners to do operations remotely."

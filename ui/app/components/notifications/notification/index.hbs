@@ -1,3 +1,8 @@
+{{!
+  Copyright (c) HashiCorp, Inc.
+  SPDX-License-Identifier: MPL-2.0
+}}
+
 <FlashMessage role='alertdialog' class='notification' @flash={{@flash}} as |component flash close|>
   <Pds::Popup
     @variant={{flash.type}}

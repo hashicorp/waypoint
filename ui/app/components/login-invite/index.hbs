@@ -1,3 +1,8 @@
+{{!
+  Copyright (c) HashiCorp, Inc.
+  SPDX-License-Identifier: MPL-2.0
+}}
+
 <form {{on "submit" this.login}} class="login">
   <fieldset>
     <label for="invite-token-field">{{if @cli (t 'invite_login.input.cli_label') (t 'invite_login.input.label')}}</label>

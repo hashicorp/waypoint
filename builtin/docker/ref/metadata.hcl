@@ -1,3 +1,6 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
 integration {
   name        = "Docker Ref"
   description = "The Docker Ref plugin refers to an existing Docker image, passing its image information - the image name and tag - to the Waypoint lifecycle."

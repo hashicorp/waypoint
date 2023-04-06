@@ -1,3 +1,6 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
 integration {
   name        = "AWS Lambda"
   description = "The AWS Lambda plugin deploys OCI images as functions to AWS Lambda."

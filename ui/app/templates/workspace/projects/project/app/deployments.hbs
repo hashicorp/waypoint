@@ -1,3 +1,8 @@
+{{!
+  Copyright (c) HashiCorp, Inc.
+  SPDX-License-Identifier: MPL-2.0
+}}
+
 {{page-title "Deployments"}}
 {{#let (not-eq this.target.currentRouteName 'workspace.projects.project.app.deployments.deployment.resource') as |isNotResourcePage|}}
   <div class={{if (and isNotResourcePage this.deploymentsByGeneration) "grid grid--menu-with-panel"}}>

@@ -1,3 +1,8 @@
+/**
+ * Copyright (c) HashiCorp, Inc.
+ * SPDX-License-Identifier: MPL-2.0
+ */
+
 import type RouterService from '@ember/routing/router-service';
 type Transition = ReturnType<RouterService['transitionTo']>;
 
