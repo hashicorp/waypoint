@@ -2,11 +2,14 @@ package statetest
 
 import (
 	"context"
+	"github.com/hashicorp/waypoint/internal/pkg/jsonpb"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	serverptypes "github.com/hashicorp/waypoint/pkg/server/ptypes"
+	"github.com/hashicorp/waypoint/pkg/serverstate"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"testing"
+	"time"
 )
 
 func init() {
@@ -53,7 +56,32 @@ func TestEvent(t *testing.T, factory Factory, restartF RestartFactory) {
 			},
 		})
 		require.NoError(s.BuildPut(ctx, false, build))
-		require.NoError(s.EventPut(ctx, build))
+
+		var commit string
+		if build.Preload.JobDataSourceRef != nil {
+			commit = build.Preload.JobDataSourceRef.Ref.(*pb.Job_DataSource_Ref_Git).Git.Commit
+		}
+		buildDataSubset := &pb.UI_EventBuild{
+			BuildId:   build.Id,
+			Sequence:  build.Sequence,
+			Component: build.Component,
+			Workspace: build.Workspace,
+			Status:    build.Status,
+			Commit:    commit,
+		}
+
+		var buildBytes []byte
+		buildBytes, err = jsonpb.Marshal(buildDataSubset)
+		require.NoError(err)
+
+		buildEvent := &serverstate.Event{
+			EventType:      "build",
+			Application:    *refApp,
+			EventData:      buildBytes,
+			EventTimestamp: time.Now(),
+		}
+
+		require.NoError(s.EventPut(ctx, buildEvent))
 
 		pt := timestamppb.Now()
 
@@ -84,9 +112,29 @@ func TestEvent(t *testing.T, factory Factory, restartF RestartFactory) {
 			},
 			ArtifactId: "test",
 		}
-
 		require.NoError(s.DeploymentPut(ctx, false, dep))
-		require.NoError(s.EventPut(ctx, dep))
+
+		depDataSubset := &pb.UI_EventDeployment{
+			DeploymentId:  dep.Id,
+			Sequence:      dep.Sequence,
+			Component:     dep.Component,
+			Workspace:     dep.Workspace,
+			BuildSequence: build.Sequence,
+			Status:        dep.Status,
+		}
+
+		var depBytes []byte
+		depBytes, err = jsonpb.Marshal(depDataSubset)
+		require.NoError(err)
+
+		depEvent := &serverstate.Event{
+			EventType:      "deployment",
+			Application:    *refApp,
+			EventData:      depBytes,
+			EventTimestamp: time.Now(),
+		}
+
+		require.NoError(s.EventPut(ctx, depEvent))
 
 		// Put Release
 		release := &pb.Release{
@@ -101,7 +149,28 @@ func TestEvent(t *testing.T, factory Factory, restartF RestartFactory) {
 			DeploymentId: dep.Id,
 		}
 		require.NoError(s.ReleasePut(ctx, false, release))
-		require.NoError(s.EventPut(ctx, release))
+
+		releaseDataSubset := &pb.UI_EventRelease{
+			ReleaseId:          release.Id,
+			Sequence:           release.Sequence,
+			Component:          release.Component,
+			Workspace:          release.Workspace,
+			Status:             release.Status,
+			DeploymentSequence: dep.Sequence,
+		}
+
+		var releaseBytes []byte
+		releaseBytes, err = jsonpb.Marshal(releaseDataSubset)
+		require.NoError(err)
+
+		releaseEvent := &serverstate.Event{
+			EventType:      "release",
+			Application:    *refApp,
+			EventData:      releaseBytes,
+			EventTimestamp: time.Now(),
+		}
+
+		require.NoError(s.EventPut(ctx, releaseEvent))
 
 		// check
 		resp, _, err := s.EventListBundles(ctx, &pb.UI_ListEventsRequest{

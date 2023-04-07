@@ -4,13 +4,13 @@ import (
 	"context"
 	"github.com/hashicorp/go-memdb"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
+	"github.com/hashicorp/waypoint/pkg/serverstate"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"google.golang.org/protobuf/proto"
 )
 
 // EventPut puts an event based on the proto passed in, currently this is not implemented in Waypoint
-func (s *State) EventPut(ctx context.Context, value proto.Message) error {
+func (s *State) EventPut(ctx context.Context, value *serverstate.Event) error {
 	return status.Errorf(codes.Unimplemented, "method EventPut not implemented")
 }
 
