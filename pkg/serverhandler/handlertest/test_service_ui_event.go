@@ -27,12 +27,13 @@ func TestEvent(t *testing.T, factory Factory) {
 			Name: "p_test",
 		}
 		refProj := &pb.Ref_Project{Project: "p_test"}
-		_, err := client.UpsertProject(context.Background(), &pb.UpsertProjectRequest{
+		_, err := client.UpsertProject(ctx, &pb.UpsertProjectRequest{
 			Project: proj,
 		})
+
 		require.NoError(err)
 
-		_, err = client.UpsertApplication(context.Background(), &pb.UpsertApplicationRequest{
+		_, err = client.UpsertApplication(ctx, &pb.UpsertApplicationRequest{
 			Project: refProj,
 			Name:    "a_test",
 		})
