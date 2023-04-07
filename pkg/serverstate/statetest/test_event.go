@@ -76,7 +76,7 @@ func TestEvent(t *testing.T, factory Factory, restartF RestartFactory) {
 
 		buildEvent := &serverstate.Event{
 			EventType:      "build",
-			Application:    *refApp,
+			Application:    refApp,
 			EventData:      buildBytes,
 			EventTimestamp: time.Now(),
 		}
@@ -129,7 +129,7 @@ func TestEvent(t *testing.T, factory Factory, restartF RestartFactory) {
 
 		depEvent := &serverstate.Event{
 			EventType:      "deployment",
-			Application:    *refApp,
+			Application:    refApp,
 			EventData:      depBytes,
 			EventTimestamp: time.Now(),
 		}
@@ -165,7 +165,7 @@ func TestEvent(t *testing.T, factory Factory, restartF RestartFactory) {
 
 		releaseEvent := &serverstate.Event{
 			EventType:      "release",
-			Application:    *refApp,
+			Application:    refApp,
 			EventData:      releaseBytes,
 			EventTimestamp: time.Now(),
 		}

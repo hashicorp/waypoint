@@ -6,7 +6,7 @@ import (
 )
 
 type Event struct {
-	Application    gen.Ref_Application
+	Application    *gen.Ref_Application
 	EventTimestamp time.Time
 	EventType      string
 	EventData      []byte
