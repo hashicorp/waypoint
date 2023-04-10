@@ -204,7 +204,8 @@ type Interface interface {
 
 	//---------------------------------------------------------------
 	// Templates
-	UpsertProjectTemplate(context.Context, *pb.ProjectTemplate) (*pb.ProjectTemplate, error)
+	CreateProjectTemplate(context.Context, *pb.ProjectTemplate) (*pb.ProjectTemplate, error)
+	UpdateProjectTemplate(context.Context, *pb.ProjectTemplate) (*pb.ProjectTemplate, error)
 	GetProjectTemplate(context.Context, *pb.Ref_ProjectTemplate) (*pb.ProjectTemplate, error)
 	DeleteProjectTemplate(context.Context, *pb.Ref_ProjectTemplate) error
 	ListProjectTemplates(context.Context, *pb.ListProjectTemplatesRequest) ([]*pb.ProjectTemplate, error)
