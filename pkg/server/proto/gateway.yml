@@ -523,18 +523,24 @@ http:
 
     # Project Templates
   - selector: hashicorp.waypoint.Waypoint.CreateProjectTemplate
-    post: /ui/projecttemplate
+    post: /projecttemplate
     body: "*"
 
   - selector: hashicorp.waypoint.Waypoint.UpdateProjectTemplate
-    put: /ui/projecttemplate/{project_template.id}
+    put: /projecttemplate/{project_template.id}
     body: "*"
 
   - selector: hashicorp.waypoint.Waypoint.GetProjectTemplate
-    get: /ui/projecttemplate/{project_template.id}
+    get: /projecttemplate/{project_template.id}
 
   - selector: hashicorp.waypoint.Waypoint.DeleteProjectTemplate
-    delete: /ui/projecttemplate/{project_template.id}
+    delete: /projecttemplate/{project_template.id}
 
   - selector: hashicorp.waypoint.Waypoint.ListProjectTemplates
-    get: /ui/projecttemplates
+    get: /projecttemplates
+
+  - selector: hashicorp.waypoint.Waypoint.CreateProjectFromTemplate
+    post: /project/fromtemplate
+
+  - selector: hashicorp.waypoint.Waypoint.GetTFCRunStatus
+    get: /project/{project.project}/tfcrunstatus
