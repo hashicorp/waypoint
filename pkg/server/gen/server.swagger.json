@@ -6497,6 +6497,39 @@
         ]
       }
     },
+    "/ui/projecttemplate": {
+      "post": {
+        "summary": "CreateProjectTemplate creates a new projecttemplate.",
+        "operationId": "Waypoint_CreateProjectTemplate",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/hashicorp.waypoint.CreateProjectTemplateResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/grpc.gateway.runtime.Error"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/hashicorp.waypoint.CreateProjectTemplateRequest"
+            }
+          }
+        ],
+        "tags": [
+          "Waypoint"
+        ]
+      }
+    },
     "/ui/projecttemplate/{project_template.id}": {
       "get": {
         "summary": "GetProjectTemplate returns a projecttemplate by the projecttemplate name or id",
@@ -6542,7 +6575,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/hashicorp.waypoint.DeleteProjectTemplateResponse"
+              "properties": {}
             }
           },
           "default": {
@@ -6572,14 +6605,14 @@
           "Waypoint"
         ]
       },
-      "post": {
-        "summary": "UpsertProjectTemplate updates or inserts a projecttemplate.",
-        "operationId": "Waypoint_UpsertProjectTemplate",
+      "put": {
+        "summary": "UpdateProjectTemplate updates an existing projecttemplate.",
+        "operationId": "Waypoint_UpdateProjectTemplate",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/hashicorp.waypoint.UpsertProjectTemplateResponse"
+              "$ref": "#/definitions/hashicorp.waypoint.UpdateProjectTemplateResponse"
             }
           },
           "default": {
@@ -6602,7 +6635,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/hashicorp.waypoint.UpsertProjectTemplateRequest"
+              "$ref": "#/definitions/hashicorp.waypoint.UpdateProjectTemplateRequest"
             }
           }
         ],
@@ -7905,6 +7938,31 @@
         }
       }
     },
+    "hashicorp.waypoint.CreateProjectFromTemplateResponse": {
+      "type": "object",
+      "properties": {
+        "project": {
+          "$ref": "#/definitions/hashicorp.waypoint.Project"
+        }
+      },
+      "description": "GetTFCRunStatusResponse is a message intended for use in responses to requests\nfor rendering project templates."
+    },
+    "hashicorp.waypoint.CreateProjectTemplateRequest": {
+      "type": "object",
+      "properties": {
+        "project_template": {
+          "$ref": "#/definitions/hashicorp.waypoint.ProjectTemplate"
+        }
+      }
+    },
+    "hashicorp.waypoint.CreateProjectTemplateResponse": {
+      "type": "object",
+      "properties": {
+        "project_template": {
+          "$ref": "#/definitions/hashicorp.waypoint.ProjectTemplate"
+        }
+      }
+    },
     "hashicorp.waypoint.CreateSnapshotResponse": {
       "type": "object",
       "properties": {
@@ -7982,9 +8040,6 @@
           "$ref": "#/definitions/hashicorp.waypoint.OnDemandRunnerConfig"
         }
       }
-    },
-    "hashicorp.waypoint.DeleteProjectTemplateResponse": {
-      "type": "object"
     },
     "hashicorp.waypoint.Deployment": {
       "type": "object",
@@ -9012,6 +9067,30 @@
           "$ref": "#/definitions/hashicorp.waypoint.ServerConfig"
         }
       }
+    },
+    "hashicorp.waypoint.GetTFCRunStatusResponse": {
+      "type": "object",
+      "properties": {
+        "url": {
+          "type": "string",
+          "title": "the URL of the TFC run"
+        },
+        "state": {
+          "$ref": "#/definitions/hashicorp.waypoint.GetTFCRunStatusResponse.State",
+          "title": "the state of the TFC run"
+        }
+      },
+      "description": "GetTFCRunStatusResponse is a message intended for use in responses to requests\nfor the status of a TFC run which was ran during rendering a project template."
+    },
+    "hashicorp.waypoint.GetTFCRunStatusResponse.State": {
+      "type": "string",
+      "enum": [
+        "UNKNOWN",
+        "RUNNING",
+        "SUCCESS",
+        "ERROR"
+      ],
+      "default": "UNKNOWN"
     },
     "hashicorp.waypoint.GetTaskResponse": {
       "type": "object",
@@ -12537,6 +12616,22 @@
       },
       "description": "A release packaged alongside prefetched related messages."
     },
+    "hashicorp.waypoint.UpdateProjectTemplateRequest": {
+      "type": "object",
+      "properties": {
+        "project_template": {
+          "$ref": "#/definitions/hashicorp.waypoint.ProjectTemplate"
+        }
+      }
+    },
+    "hashicorp.waypoint.UpdateProjectTemplateResponse": {
+      "type": "object",
+      "properties": {
+        "project_template": {
+          "$ref": "#/definitions/hashicorp.waypoint.ProjectTemplate"
+        }
+      }
+    },
     "hashicorp.waypoint.UpdateUserRequest": {
       "type": "object",
       "properties": {
@@ -12663,22 +12758,6 @@
       "properties": {
         "project": {
           "$ref": "#/definitions/hashicorp.waypoint.Project"
-        }
-      }
-    },
-    "hashicorp.waypoint.UpsertProjectTemplateRequest": {
-      "type": "object",
-      "properties": {
-        "project_template": {
-          "$ref": "#/definitions/hashicorp.waypoint.ProjectTemplate"
-        }
-      }
-    },
-    "hashicorp.waypoint.UpsertProjectTemplateResponse": {
-      "type": "object",
-      "properties": {
-        "project_template": {
-          "$ref": "#/definitions/hashicorp.waypoint.ProjectTemplate"
         }
       }
     },
