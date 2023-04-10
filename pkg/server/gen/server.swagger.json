@@ -10957,6 +10957,10 @@
         },
         "state": {
           "$ref": "#/definitions/hashicorp.waypoint.Project.ProjectState"
+        },
+        "project_template": {
+          "$ref": "#/definitions/hashicorp.waypoint.Ref.ProjectTemplate",
+          "description": "project_template is a reference to the template that this project was\ncreated from, if any."
         }
       }
     },
@@ -12546,6 +12550,9 @@
         },
         "latest_init_job": {
           "$ref": "#/definitions/hashicorp.waypoint.Job"
+        },
+        "project_template": {
+          "$ref": "#/definitions/hashicorp.waypoint.ProjectTemplate"
         }
       }
     },
