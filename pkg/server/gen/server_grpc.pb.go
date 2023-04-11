@@ -336,7 +336,7 @@ type WaypointClient interface {
 	// List UI events for a given application.
 	UI_ListEvents(ctx context.Context, in *UI_ListEventsRequest, opts ...grpc.CallOption) (*UI_ListEventsResponse, error)
 	// List possible event data types.
-	UI_ListEventSchemas(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*UI_ListEventSchemasResponse, error)
+	INTERNAL_AdditionalMessages(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*UI_ListEventSchemasResponse, error)
 }
 
 type waypointClient struct {
@@ -1558,9 +1558,9 @@ func (c *waypointClient) UI_ListEvents(ctx context.Context, in *UI_ListEventsReq
 	return out, nil
 }
 
-func (c *waypointClient) UI_ListEventSchemas(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*UI_ListEventSchemasResponse, error) {
+func (c *waypointClient) INTERNAL_AdditionalMessages(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*UI_ListEventSchemasResponse, error) {
 	out := new(UI_ListEventSchemasResponse)
-	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/UI_ListEventSchemas", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/INTERNAL_AdditionalMessages", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1884,7 +1884,7 @@ type WaypointServer interface {
 	// List UI events for a given application.
 	UI_ListEvents(context.Context, *UI_ListEventsRequest) (*UI_ListEventsResponse, error)
 	// List possible event data types.
-	UI_ListEventSchemas(context.Context, *emptypb.Empty) (*UI_ListEventSchemasResponse, error)
+	INTERNAL_AdditionalMessages(context.Context, *emptypb.Empty) (*UI_ListEventSchemasResponse, error)
 	mustEmbedUnimplementedWaypointServer()
 }
 
@@ -2219,8 +2219,8 @@ func (UnimplementedWaypointServer) UI_ListReleases(context.Context, *UI_ListRele
 func (UnimplementedWaypointServer) UI_ListEvents(context.Context, *UI_ListEventsRequest) (*UI_ListEventsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UI_ListEvents not implemented")
 }
-func (UnimplementedWaypointServer) UI_ListEventSchemas(context.Context, *emptypb.Empty) (*UI_ListEventSchemasResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method UI_ListEventSchemas not implemented")
+func (UnimplementedWaypointServer) INTERNAL_AdditionalMessages(context.Context, *emptypb.Empty) (*UI_ListEventSchemasResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method INTERNAL_AdditionalMessages not implemented")
 }
 func (UnimplementedWaypointServer) mustEmbedUnimplementedWaypointServer() {}
 
@@ -4257,20 +4257,20 @@ func _Waypoint_UI_ListEvents_Handler(srv interface{}, ctx context.Context, dec f
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Waypoint_UI_ListEventSchemas_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Waypoint_INTERNAL_AdditionalMessages_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(emptypb.Empty)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(WaypointServer).UI_ListEventSchemas(ctx, in)
+		return srv.(WaypointServer).INTERNAL_AdditionalMessages(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/hashicorp.waypoint.Waypoint/UI_ListEventSchemas",
+		FullMethod: "/hashicorp.waypoint.Waypoint/INTERNAL_AdditionalMessages",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(WaypointServer).UI_ListEventSchemas(ctx, req.(*emptypb.Empty))
+		return srv.(WaypointServer).INTERNAL_AdditionalMessages(ctx, req.(*emptypb.Empty))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -4679,8 +4679,8 @@ var Waypoint_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Waypoint_UI_ListEvents_Handler,
 		},
 		{
-			MethodName: "UI_ListEventSchemas",
-			Handler:    _Waypoint_UI_ListEventSchemas_Handler,
+			MethodName: "INTERNAL_AdditionalMessages",
+			Handler:    _Waypoint_INTERNAL_AdditionalMessages_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{

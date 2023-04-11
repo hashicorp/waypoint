@@ -6315,7 +6315,7 @@
     "/ui/events/event-schemas": {
       "get": {
         "summary": "List possible event data types.",
-        "operationId": "Waypoint_UI_ListEventSchemas",
+        "operationId": "Waypoint_INTERNAL_AdditionalMessages",
         "responses": {
           "200": {
             "description": "A successful response.",

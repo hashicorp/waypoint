@@ -1638,6 +1638,36 @@ func (_m *WaypointClient) GetWorkspace(ctx context.Context, in *gen.GetWorkspace
 	return r0, r1
 }
 
+// INTERNAL_AdditionalMessages provides a mock function with given fields: ctx, in, opts
+func (_m *WaypointClient) INTERNAL_AdditionalMessages(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*gen.UI_ListEventSchemasResponse, error) {
+	_va := make([]interface{}, len(opts))
+	for _i := range opts {
+		_va[_i] = opts[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx, in)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
+
+	var r0 *gen.UI_ListEventSchemasResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *emptypb.Empty, ...grpc.CallOption) *gen.UI_ListEventSchemasResponse); ok {
+		r0 = rf(ctx, in, opts...)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gen.UI_ListEventSchemasResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *emptypb.Empty, ...grpc.CallOption) error); ok {
+		r1 = rf(ctx, in, opts...)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // ListAuthMethods provides a mock function with given fields: ctx, in, opts
 func (_m *WaypointClient) ListAuthMethods(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*gen.ListAuthMethodsResponse, error) {
 	_va := make([]interface{}, len(opts))
@@ -2680,36 +2710,6 @@ func (_m *WaypointClient) UI_ListDeployments(ctx context.Context, in *gen.UI_Lis
 
 	var r1 error
 	if rf, ok := ret.Get(1).(func(context.Context, *gen.UI_ListDeploymentsRequest, ...grpc.CallOption) error); ok {
-		r1 = rf(ctx, in, opts...)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// UI_ListEventSchemas provides a mock function with given fields: ctx, in, opts
-func (_m *WaypointClient) UI_ListEventSchemas(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*gen.UI_ListEventSchemasResponse, error) {
-	_va := make([]interface{}, len(opts))
-	for _i := range opts {
-		_va[_i] = opts[_i]
-	}
-	var _ca []interface{}
-	_ca = append(_ca, ctx, in)
-	_ca = append(_ca, _va...)
-	ret := _m.Called(_ca...)
-
-	var r0 *gen.UI_ListEventSchemasResponse
-	if rf, ok := ret.Get(0).(func(context.Context, *emptypb.Empty, ...grpc.CallOption) *gen.UI_ListEventSchemasResponse); ok {
-		r0 = rf(ctx, in, opts...)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*gen.UI_ListEventSchemasResponse)
-		}
-	}
-
-	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, *emptypb.Empty, ...grpc.CallOption) error); ok {
 		r1 = rf(ctx, in, opts...)
 	} else {
 		r1 = ret.Error(1)
