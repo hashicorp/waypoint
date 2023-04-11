@@ -89,9 +89,17 @@ func TestServiceDeployment_GetDeployment(t *testing.T, factory Factory) {
 	// Create our server
 	client, _ := factory(t)
 
+	artifact := serverptypes.TestValidArtifact(t, nil)
+
+	artifactresp, err := client.UpsertPushedArtifact(ctx, &pb.UpsertPushedArtifactRequest{
+		Artifact: artifact,
+	})
+
+	dep := serverptypes.TestValidDeployment(t, nil)
+	dep.ArtifactId = artifactresp.Artifact.Id
 	// Best way to mock for now is to make a request
 	resp, err := client.UpsertDeployment(ctx, &pb.UpsertDeploymentRequest{
-		Deployment: serverptypes.TestValidDeployment(t, nil),
+		Deployment: dep,
 	})
 
 	require.NoError(t, err)
