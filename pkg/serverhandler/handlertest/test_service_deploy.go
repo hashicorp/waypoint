@@ -33,9 +33,18 @@ func TestServiceDeployment(t *testing.T, factory Factory) {
 	t.Run("create and update", func(t *testing.T) {
 		require := require.New(t)
 
+		artifact := serverptypes.TestValidArtifact(t, nil)
+
+		artifactresp, err := client.UpsertPushedArtifact(ctx, &pb.UpsertPushedArtifactRequest{
+			Artifact: artifact,
+		})
+
+		dep := serverptypes.TestValidDeployment(t, nil)
+		dep.ArtifactId = artifactresp.Artifact.Id
+
 		// Create, should get an ID back
 		resp, err := client.UpsertDeployment(ctx, &Req{
-			Deployment: serverptypes.TestValidDeployment(t, nil),
+			Deployment: dep,
 		})
 		require.NoError(err)
 		require.NotNil(resp)

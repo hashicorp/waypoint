@@ -141,16 +141,27 @@ func TestServiceStatusReport_ListStatusReports(t *testing.T, factory Factory) {
 	require.NoError(t, err)
 	require.NotNil(t, respProj)
 
+	artifact := serverptypes.TestValidArtifact(t, nil)
+
+	artifactresp, err := client.UpsertPushedArtifact(ctx, &pb.UpsertPushedArtifactRequest{
+		Artifact: artifact,
+	})
+	require.NoError(t, err)
+	require.NotNil(t, artifactresp)
+
+	deployment := &pb.Deployment{
+		Component: &pb.Component{
+			Name: "testapp",
+		},
+		Application: &pb.Ref_Application{
+			Application: "apple-app",
+			Project:     "Example",
+		},
+		ArtifactId: artifactresp.Artifact.Id,
+	}
+
 	deployResp, err := client.UpsertDeployment(ctx, &pb.UpsertDeploymentRequest{
-		Deployment: serverptypes.TestValidDeployment(t, &pb.Deployment{
-			Component: &pb.Component{
-				Name: "testapp",
-			},
-			Application: &pb.Ref_Application{
-				Application: "apple-app",
-				Project:     "Example",
-			},
-		}),
+		Deployment: serverptypes.TestValidDeployment(t, deployment),
 	})
 	require.NoError(t, err)
 	require.NotNil(t, deployResp)
@@ -273,16 +284,27 @@ func TestServiceStatusReport_ExpediteStatusReport(t *testing.T, factory Factory)
 	require.NoError(t, err)
 	require.NotNil(t, respProj)
 
+	artifact := serverptypes.TestValidArtifact(t, nil)
+
+	artifactresp, err := client.UpsertPushedArtifact(ctx, &pb.UpsertPushedArtifactRequest{
+		Artifact: artifact,
+	})
+	require.NoError(t, err)
+	require.NotNil(t, artifactresp)
+
+	deployment := &pb.Deployment{
+		Component: &pb.Component{
+			Name: "testapp",
+		},
+		Application: &pb.Ref_Application{
+			Application: "apple-app",
+			Project:     "Example",
+		},
+		ArtifactId: artifactresp.Artifact.Id,
+	}
+
 	resp, err := client.UpsertDeployment(ctx, &pb.UpsertDeploymentRequest{
-		Deployment: serverptypes.TestValidDeployment(t, &pb.Deployment{
-			Component: &pb.Component{
-				Name: "testapp",
-			},
-			Application: &pb.Ref_Application{
-				Application: "apple-app",
-				Project:     "Example",
-			},
-		}),
+		Deployment: serverptypes.TestValidDeployment(t, deployment),
 	})
 	require.NoError(t, err)
 	require.NotNil(t, resp)
