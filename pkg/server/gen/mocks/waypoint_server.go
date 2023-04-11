@@ -1319,6 +1319,29 @@ func (_m *WaypointServer) GetWorkspace(_a0 context.Context, _a1 *gen.GetWorkspac
 	return r0, r1
 }
 
+// INTERNAL_AdditionalMessages provides a mock function with given fields: _a0, _a1
+func (_m *WaypointServer) INTERNAL_AdditionalMessages(_a0 context.Context, _a1 *emptypb.Empty) (*gen.UI_ListEventSchemasResponse, error) {
+	ret := _m.Called(_a0, _a1)
+
+	var r0 *gen.UI_ListEventSchemasResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *emptypb.Empty) *gen.UI_ListEventSchemasResponse); ok {
+		r0 = rf(_a0, _a1)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gen.UI_ListEventSchemasResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *emptypb.Empty) error); ok {
+		r1 = rf(_a0, _a1)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // ListAuthMethods provides a mock function with given fields: _a0, _a1
 func (_m *WaypointServer) ListAuthMethods(_a0 context.Context, _a1 *emptypb.Empty) (*gen.ListAuthMethodsResponse, error) {
 	ret := _m.Called(_a0, _a1)
@@ -2103,29 +2126,6 @@ func (_m *WaypointServer) UI_ListDeployments(_a0 context.Context, _a1 *gen.UI_Li
 
 	var r1 error
 	if rf, ok := ret.Get(1).(func(context.Context, *gen.UI_ListDeploymentsRequest) error); ok {
-		r1 = rf(_a0, _a1)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// UI_ListEventSchemas provides a mock function with given fields: _a0, _a1
-func (_m *WaypointServer) UI_ListEventSchemas(_a0 context.Context, _a1 *emptypb.Empty) (*gen.UI_ListEventSchemasResponse, error) {
-	ret := _m.Called(_a0, _a1)
-
-	var r0 *gen.UI_ListEventSchemasResponse
-	if rf, ok := ret.Get(0).(func(context.Context, *emptypb.Empty) *gen.UI_ListEventSchemasResponse); ok {
-		r0 = rf(_a0, _a1)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*gen.UI_ListEventSchemasResponse)
-		}
-	}
-
-	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, *emptypb.Empty) error); ok {
 		r1 = rf(_a0, _a1)
 	} else {
 		r1 = ret.Error(1)

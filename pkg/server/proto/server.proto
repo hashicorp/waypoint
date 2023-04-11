@@ -522,7 +522,7 @@ service Waypoint {
   rpc UI_ListEvents(UI.ListEventsRequest) returns (UI.ListEventsResponse);
 
   // List possible event data types.
-  rpc UI_ListEventSchemas(google.protobuf.Empty) returns (UI.ListEventSchemasResponse);
+  rpc INTERNAL_AdditionalMessages(google.protobuf.Empty) returns (UI.ListEventSchemasResponse);
 }
 
 /********************************************************************
