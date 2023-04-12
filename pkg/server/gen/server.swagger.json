@@ -12272,10 +12272,10 @@
           "type": "string",
           "format": "date-time"
         },
-        "eventType": {
+        "event_type": {
           "$ref": "#/definitions/hashicorp.waypoint.UI.EventBundle.EventType"
         },
-        "eventData": {
+        "event_data": {
           "type": "string",
           "format": "byte"
         }

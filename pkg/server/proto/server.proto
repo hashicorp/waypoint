@@ -680,8 +680,8 @@ message UI {
   // An event packaged alongside prefetched related messages.
   message EventBundle {
     google.protobuf.Timestamp timestamp = 1;
-    EventType eventType  = 2;
-    bytes eventData = 3;
+    EventType event_type  = 2;
+    bytes event_data = 3;
 
     // Supported EventTypes
     enum EventType {
