@@ -5218,6 +5218,9 @@ message ProjectTemplate {
   // A list of descriptive strings that can be applied to the ProjectTemplate.
   repeated string tags = 8;
 
+  // WaypointProject governs the properties that will be set on the final
+  // waypoint Project that we create. Future fields will likely include status
+  // report and datasource polling settings.
   message WaypointProject {
     // The templated waypoint.hcl file stored as HCL.
     bytes waypoint_hcl_template = 1;
