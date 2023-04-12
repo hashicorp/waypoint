@@ -11060,7 +11060,8 @@
           "format": "byte",
           "description": "The templated waypoint.hcl file stored as HCL."
         }
-      }
+      },
+      "description": "WaypointProject governs the properties that will be set on the final\nwaypoint Project that we create. Future fields will likely include status\nreport and datasource polling settings."
     },
     "hashicorp.waypoint.PushedArtifact": {
       "type": "object",

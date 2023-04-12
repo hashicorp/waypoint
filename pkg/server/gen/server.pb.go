@@ -29624,6 +29624,9 @@ func (x *GetPipelineResponse_Graph) GetFormat() GetPipelineResponse_Graph_Format
 	return GetPipelineResponse_Graph_INVALID
 }
 
+// WaypointProject governs the properties that will be set on the final
+// waypoint Project that we create. Future fields will likely include status
+// report and datasource polling settings.
 type ProjectTemplate_WaypointProject struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
