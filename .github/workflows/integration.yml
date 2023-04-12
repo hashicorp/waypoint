@@ -1,0 +1,272 @@
+name: hashicorp/waypoint/integration
+on:
+  push:
+    branches:
+    - main
+env:
+  ALGOLIA_API_KEY: xxxxxxx
+  GH_DOCKER_PASS: xxxxxxx
+  GH_DOCKER_USER: xxxxxxx
+  SLACK_APPROVAL_NOTIFICATION_WEBHOOK_URL: xxxxxxx
+  SLACK_WEBHOOK: xxxxxxx
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    container:
+      image: docker.mirror.hashicorp.services/cimg/go:1.19
+    env:
+      GOTAGS: ''
+    steps:
+    - uses: actions/checkout@v3.5.0
+    - name: Install golangci-lint
+      run: |-
+        download=https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh
+        wget -O- -q $download | sh -x -s -- -d -b /home/circleci/go v1.50.1
+    - run: go mod download
+    - name: lint
+      run: |-
+        golangci-lint run --build-tags="$GOTAGS" -v --concurrency 2 \
+          --disable-all \
+          --timeout 10m \
+          --enable gofmt \
+          --enable gosimple \
+          --enable govet
+    - uses: "./.github/actions/notify_main_failure"
+  frontend-cache:
+    runs-on: ubuntu-latest
+    container:
+      image: docker.mirror.hashicorp.services/circleci/node:14-browsers
+    needs:
+    - lint
+    env:
+      TEST_RESULTS_DIR: "/tmp/test-results"
+      GOTESTSUM_RELEASE: 1.8.2
+      EMAIL: noreply@hashicorp.com
+      GIT_AUTHOR_NAME: circleci-waypoint
+      GIT_COMMITTER_NAME: circleci-waypoint
+      BASH_ENV: "/home/circleci/project/.circleci/bash_env.sh"
+      DOCKER_BUILDKIT: 1
+    steps:
+    - uses: actions/checkout@v3.5.0
+    - uses: "./.github/actions/md5uilib"
+    - name: restore_cache
+      uses: actions/cache@v3.3.1
+      with:
+        key: waypoint-ui-v1-{{ checksum "ui/yarn.lock" }}-{{ checksum "uilib.md5" }}
+        path: |-
+          ui/node_modules
+          ui/lib/node_modules
+    - name: install yarn packages
+      run: cd ui && yarn install
+    - uses: "./.github/actions/notify_main_failure"
+  ember-build-prod:
+    runs-on: ubuntu-latest
+    container:
+      image: docker.mirror.hashicorp.services/circleci/node:14-browsers
+    needs:
+    - frontend-cache
+    env:
+      TEST_RESULTS_DIR: "/tmp/test-results"
+      GOTESTSUM_RELEASE: 1.8.2
+      EMAIL: noreply@hashicorp.com
+      GIT_AUTHOR_NAME: circleci-waypoint
+      GIT_COMMITTER_NAME: circleci-waypoint
+      BASH_ENV: "/home/circleci/project/.circleci/bash_env.sh"
+      DOCKER_BUILDKIT: 1
+      JOBS: 2
+    steps:
+    - uses: actions/checkout@v3.5.0
+    - uses: "./.github/actions/md5uilib"
+    - name: restore_cache
+      uses: actions/cache@v3.3.1
+      with:
+        key: waypoint-ui-v1-{{ checksum "ui/yarn.lock" }}-{{ checksum "uilib.md5" }}
+    - run: cd ui && make
+    - uses: actions/upload-artifact@v3.1.1
+      with:
+        path: "././ui/dist"
+    - uses: "./.github/actions/notify_main_failure"
+  build-static-assets:
+    runs-on: ubuntu-latest
+    container:
+      image: docker.mirror.hashicorp.services/cimg/go:1.19
+    needs:
+    - ember-build-prod
+    env:
+      TEST_RESULTS_DIR: "/tmp/test-results"
+      GOTESTSUM_RELEASE: 1.8.2
+      EMAIL: noreply@hashicorp.com
+      GIT_AUTHOR_NAME: circleci-waypoint
+      GIT_COMMITTER_NAME: circleci-waypoint
+      BASH_ENV: "/home/circleci/project/.circleci/bash_env.sh"
+      DOCKER_BUILDKIT: 1
+    steps:
+    - uses: actions/checkout@v3.5.0
+    - uses: actions/download-artifact@v3.0.1
+      with:
+        path: "."
+    - run: go install github.com/kevinburke/go-bindata/...
+    - run: make static-assets
+    - uses: actions/upload-artifact@v3.1.1
+      with:
+        path: "././pkg/server/gen/bindata_ui.go"
+    - uses: "./.github/actions/notify_main_failure"
+  dev-build:
+    runs-on: ubuntu-latest
+    container:
+      image: docker.mirror.hashicorp.services/cimg/go:1.19
+    needs:
+    - build-static-assets
+    env:
+      TEST_RESULTS_DIR: "/tmp/test-results"
+      GOTESTSUM_RELEASE: 1.8.2
+      EMAIL: noreply@hashicorp.com
+      GIT_AUTHOR_NAME: circleci-waypoint
+      GIT_COMMITTER_NAME: circleci-waypoint
+      BASH_ENV: "/home/circleci/project/.circleci/bash_env.sh"
+      DOCKER_BUILDKIT: 1
+    steps:
+    - uses: actions/checkout@v3.5.0
+    - uses: actions/download-artifact@v3.0.1
+      with:
+        path: "."
+    - run: |-
+        go install github.com/kevinburke/go-bindata/...
+        PATH=/home/circleci/go/bin:$PATH make bin
+        cp waypoint /home/circleci/go/bin
+    - uses: actions/upload-artifact@v3.1.1
+      with:
+        path: "/home/circleci/go/bin/waypoint"
+    - uses: "./.github/actions/notify_main_failure"
+  publish-static-assets:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    container:
+      image: docker.mirror.hashicorp.services/cimg/go:1.19
+    needs:
+    - build-static-assets
+    env:
+      TEST_RESULTS_DIR: "/tmp/test-results"
+      GOTESTSUM_RELEASE: 1.8.2
+      EMAIL: noreply@hashicorp.com
+      GIT_AUTHOR_NAME: circleci-waypoint
+      GIT_COMMITTER_NAME: circleci-waypoint
+      BASH_ENV: "/home/circleci/project/.circleci/bash_env.sh"
+      DOCKER_BUILDKIT: 1
+    steps:
+    - uses: actions/checkout@v3.5.0
+    # Ensure parameter if_key_exists is set correctly
+    - name: Install SSH key
+      uses: shimataro/ssh-key-action@v2.5.0
+      with:
+        key: "${{ secrets.CIRCLE_CI_SSH_KEY }}"
+        name: circle_ci_id_rsa
+        known_hosts: "${{ secrets.CIRCLE_CI_KNOWN_HOSTS }}"
+        if_key_exists: fail
+    - uses: actions/download-artifact@v3.0.1
+      with:
+        path: "."
+    - name: commit pkg/server/gen/bindata_ui.go
+      run: |-
+        # check if there are any changes in ui/
+        # if there are, we commit the ui static asset file
+        last_ui_commit=$(git log -n 1 --pretty=format:%H -- pkg/server/gen/bindata_ui.go)
+        if ! git diff --quiet --exit-code $last_ui_commit ui/; then
+          git config --local user.email "github-team-waypoint@hashicorp.com"
+          git config --local user.name "hc-github-team-waypoint"
+          short_sha=$(git rev-parse --short HEAD)
+          git add pkg/server/gen/bindata_ui.go
+          git commit -m "auto-updated pkg/server/gen/bindata_ui.go from commit ${short_sha}"
+          git push origin main
+        else
+          echo "no UI changes so no static assets to publish"
+        fi
+    - uses: "./.github/actions/notify_main_failure"
+  integration:
+    runs-on: ubuntu-20.04
+    needs:
+    - dev-build
+    steps:
+    - uses: actions/checkout@v3.5.0
+    - name: Setup k3s
+      run: |-
+        curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION="v1.23.8+k3s2" INSTALL_K3S_EXEC="--docker --disable=traefik --write-kubeconfig-mode 664" sh -
+        sleep 5
+    - name: Get k3s nodes
+      run: kubectl get node
+    - uses: actions/download-artifact@v3.0.1
+      with:
+        path: "."
+    - name: Execute Integration Tests
+      run: "./ci/integration.sh"
+    - uses: "./.github/actions/notify_main_failure"
+  image-release:
+    if: github.ref == 'refs/heads/main'
+    defaults:
+#       # This item was not transformed because there is no suitable equivalent in GitHub Actions
+#       run:
+#         shell: "/usr/bin/env bash -euo pipefail -c"
+    runs-on: ubuntu-latest
+    container:
+      image: docker.mirror.hashicorp.services/cimg/base:2022.12
+    needs:
+    - integration
+    env:
+      TEST_RESULTS_DIR: "/tmp/test-results"
+      GOTESTSUM_RELEASE: 1.8.2
+      EMAIL: noreply@hashicorp.com
+      GIT_AUTHOR_NAME: circleci-waypoint
+      GIT_COMMITTER_NAME: circleci-waypoint
+      BASH_ENV: "/home/circleci/project/.circleci/bash_env.sh"
+      DOCKER_BUILDKIT: 1
+    steps:
+    - uses: actions/checkout@v3.5.0
+#     # 'setup_remote_docker' was not transformed because there is no suitable equivalent in GitHub Actions
+    - uses: actions/download-artifact@v3.0.1
+      with:
+        path: "."
+    - name: 'Docker: Login to GitHub Package Registry'
+      run: echo "$GH_DOCKER_PASS" | docker login docker.pkg.github.com --username $GH_DOCKER_USER --password-stdin
+    - name: 'Docker: Build image (waypoint)'
+      run: |-
+        docker build \
+          --progress=plain \
+          -t docker.pkg.github.com/hashicorp/waypoint/alpha:latest \
+          -t docker.pkg.github.com/hashicorp/waypoint/alpha:$GIT_COMMIT \
+          .
+    - name: 'Docker: Build image (waypoint-odr)'
+      run: |-
+        docker build \
+          --target odr \
+          --progress=plain \
+          -t docker.pkg.github.com/hashicorp/waypoint/alpha-odr:latest \
+          -t docker.pkg.github.com/hashicorp/waypoint/alpha-odr:$GIT_COMMIT \
+          .
+    - name: 'Docker: Push image (waypoint)'
+      run: docker push --all-tags docker.pkg.github.com/hashicorp/waypoint/alpha
+    - name: 'Docker: Push image (waypoint-odr)'
+      run: docker push --all-tags docker.pkg.github.com/hashicorp/waypoint/alpha-odr
+    - uses: "./.github/actions/notify_main_failure"
+  e2e-docker:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    needs:
+    - image-release
+    env:
+      E2E_PLATFORM: Docker
+    steps:
+    - uses: actions/checkout@v3.5.0
+    - uses: actions/download-artifact@v3.0.1
+      with:
+        path: "."
+    - run: go version
+    - name: Install go v1.19.4
+      run: |-
+        curl -SL --fail -o /tmp/golang.tar.gz https://dl.google.com/go/go1.19.4.linux-amd64.tar.gz
+        sudo rm -rf /usr/local/go
+        sudo tar -C /usr/local/ -xzf /tmp/golang.tar.gz
+        rm -rf /tmp/golang.tar.gz
+        go version
+    - name: Execute E2E Docker Tests
+      run: "./test-e2e/run-test.sh"
+    - uses: "./.github/actions/notify_main_failure"

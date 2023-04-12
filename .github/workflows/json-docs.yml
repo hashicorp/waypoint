@@ -1,0 +1,70 @@
+name: hashicorp/waypoint/json-docs
+on:
+  push:
+    branches:
+    - main
+env:
+  ALGOLIA_API_KEY: xxxxxxx
+  GH_DOCKER_PASS: xxxxxxx
+  GH_DOCKER_USER: xxxxxxx
+  SLACK_APPROVAL_NOTIFICATION_WEBHOOK_URL: xxxxxxx
+  SLACK_WEBHOOK: xxxxxxx
+jobs:
+  generate-json-docs:
+    if: github.ref != 'refs/heads/main'
+    runs-on: ubuntu-latest
+    container:
+      image: docker.mirror.hashicorp.services/cimg/go:1.19
+    env:
+      TEST_RESULTS_DIR: "/tmp/test-results"
+      GOTESTSUM_RELEASE: 1.8.2
+      EMAIL: noreply@hashicorp.com
+      GIT_AUTHOR_NAME: circleci-waypoint
+      GIT_COMMITTER_NAME: circleci-waypoint
+      BASH_ENV: "/home/circleci/project/.circleci/bash_env.sh"
+      DOCKER_BUILDKIT: 1
+    steps:
+    - uses: actions/checkout@v3.5.0
+    - uses: actions/download-artifact@v3.0.1
+      with:
+        path: "."
+    - name: generate json plugin docs
+      run: go run ./cmd/waypoint docs -json
+    - run: rm waypoint-restore.db.lock; git status
+    - uses: actions/upload-artifact@v3.1.1
+      with:
+        path: "./."
+    - uses: "./.github/actions/notify_main_failure"
+  check-json-docs:
+    if: github.ref != 'refs/heads/main'
+    runs-on: ubuntu-latest
+    container:
+      image: docker.mirror.hashicorp.services/node:14
+    needs:
+    - generate-json-docs
+    env:
+      TEST_RESULTS_DIR: "/tmp/test-results"
+      GOTESTSUM_RELEASE: 1.8.2
+      EMAIL: noreply@hashicorp.com
+      GIT_AUTHOR_NAME: circleci-waypoint
+      GIT_COMMITTER_NAME: circleci-waypoint
+      BASH_ENV: "/home/circleci/project/.circleci/bash_env.sh"
+      DOCKER_BUILDKIT: 1
+    steps:
+    - uses: actions/checkout@v3.5.0
+    - uses: actions/download-artifact@v3.0.1
+      with:
+        path: "."
+    - run: git status
+    - run: |
+        if ! git diff --exit-code embedJson/gen > /dev/null; then
+          echo "Website directory has unstaged json changes. This is because you have modified doc strings"
+          echo "that must be reflected in the json docs. Run the following make command:"
+          echo
+          echo "make gen/website-mdx"
+          echo
+          echo "And then validate that the corresponding json docs look acceptable."
+          git status
+          exit 1
+        fi
+    - uses: "./.github/actions/notify_main_failure"

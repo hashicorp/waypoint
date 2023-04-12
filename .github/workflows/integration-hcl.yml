@@ -1,0 +1,70 @@
+name: hashicorp/waypoint/integration-hcl
+on:
+  push:
+    branches:
+    - main
+env:
+  ALGOLIA_API_KEY: xxxxxxx
+  GH_DOCKER_PASS: xxxxxxx
+  GH_DOCKER_USER: xxxxxxx
+  SLACK_APPROVAL_NOTIFICATION_WEBHOOK_URL: xxxxxxx
+  SLACK_WEBHOOK: xxxxxxx
+jobs:
+  generate-integration-hcl:
+    if: github.ref != 'refs/heads/main'
+    runs-on: ubuntu-latest
+    container:
+      image: docker.mirror.hashicorp.services/cimg/go:1.19
+    env:
+      TEST_RESULTS_DIR: "/tmp/test-results"
+      GOTESTSUM_RELEASE: 1.8.2
+      EMAIL: noreply@hashicorp.com
+      GIT_AUTHOR_NAME: circleci-waypoint
+      GIT_COMMITTER_NAME: circleci-waypoint
+      BASH_ENV: "/home/circleci/project/.circleci/bash_env.sh"
+      DOCKER_BUILDKIT: 1
+    steps:
+    - uses: actions/checkout@v3.5.0
+    - uses: actions/download-artifact@v3.0.1
+      with:
+        path: "."
+    - run: make gen/integrations-hcl
+    - uses: actions/upload-artifact@v3.1.1
+      with:
+        path: "./."
+    - uses: "./.github/actions/notify_main_failure"
+  check-integration-hcl:
+    if: github.ref != 'refs/heads/main'
+    runs-on: ubuntu-latest
+    container:
+      image: docker.mirror.hashicorp.services/cimg/go:1.19
+    needs:
+    - generate-integration-hcl
+    env:
+      TEST_RESULTS_DIR: "/tmp/test-results"
+      GOTESTSUM_RELEASE: 1.8.2
+      EMAIL: noreply@hashicorp.com
+      GIT_AUTHOR_NAME: circleci-waypoint
+      GIT_COMMITTER_NAME: circleci-waypoint
+      BASH_ENV: "/home/circleci/project/.circleci/bash_env.sh"
+      DOCKER_BUILDKIT: 1
+    steps:
+    - uses: actions/checkout@v3.5.0
+    - uses: actions/download-artifact@v3.0.1
+      with:
+        path: "."
+    - run: git status
+    - run: |
+        if ! git diff --exit-code builtin > /dev/null; then
+          echo "Built-in integration documentation has unstaged changes. This is because you have modified"
+          echo "docs for a builtin plugin that must be reflected in the website."
+          echo
+          echo "Run the following make command:"
+          echo
+          echo "make gen/integrations-hcl"
+          echo
+          echo "And then validate that the corresponding website pages look acceptable."
+          git status
+          exit 1
+        fi
+    - uses: "./.github/actions/notify_main_failure"
