@@ -1,28 +1,11 @@
-name: hashicorp/waypoint/website-mdx
+name: website-mdx
+# FIMXE: If this workflow is just a test, should we only run on pull_request instead of push? Does that convey intent correctly?
 on:
-  push:
-    branches:
-      - main
-env:
-  ALGOLIA_API_KEY: xxxxxxx
-  GH_DOCKER_PASS: xxxxxxx
-  GH_DOCKER_USER: xxxxxxx
-  SLACK_APPROVAL_NOTIFICATION_WEBHOOK_URL: xxxxxxx
-  SLACK_WEBHOOK: xxxxxxx
+  pull_request:
+
 jobs:
   generate-website-mdx:
-    if: github.ref != 'refs/heads/main'
     runs-on: ubuntu-latest
-    container:
-      image: docker.mirror.hashicorp.services/cimg/go:1.19
-    env:
-      TEST_RESULTS_DIR: "/tmp/test-results"
-      GOTESTSUM_RELEASE: 1.8.2
-      EMAIL: noreply@hashicorp.com
-      GIT_AUTHOR_NAME: circleci-waypoint
-      GIT_COMMITTER_NAME: circleci-waypoint
-      BASH_ENV: "/home/circleci/project/.circleci/bash_env.sh"
-      DOCKER_BUILDKIT: 1
     steps:
       - uses: actions/checkout@83b7061638ee4956cf7545a6f7efe594e5ad0247 # v3.5.1
       - uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
@@ -35,28 +18,26 @@ jobs:
       - run: rm waypoint-restore.db.lock; git status
       - uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
         with:
-          path: "./."
-      - uses: "./.github/actions/notify_main_failure"
+          path: website/
+          name: website
+# FIXME: This entire workflow exists to check if our website code compiles, so do we need to notify at all?
+#      - uses: hashicorp/actions-slack-status@v1
+#        if: failure() && github.ref == 'refs/heads/main'
+#        with:
+#          failure-message: website generation failed
+#          status: ${{job.status}}
+#          slack-webhook-url: ${{secrets.SLACK_WEBHOOK_URL}}
+
   check-website-mdx:
-    if: github.ref != 'refs/heads/main'
     runs-on: ubuntu-latest
-    container:
-      image: docker.mirror.hashicorp.services/node:14
     needs:
       - generate-website-mdx
-    env:
-      TEST_RESULTS_DIR: "/tmp/test-results"
-      GOTESTSUM_RELEASE: 1.8.2
-      EMAIL: noreply@hashicorp.com
-      GIT_AUTHOR_NAME: circleci-waypoint
-      GIT_COMMITTER_NAME: circleci-waypoint
-      BASH_ENV: "/home/circleci/project/.circleci/bash_env.sh"
-      DOCKER_BUILDKIT: 1
     steps:
       - uses: actions/checkout@83b7061638ee4956cf7545a6f7efe594e5ad0247 # v3.5.1
       - uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
         with:
-          path: "."
+          path: website/
+          name: website
       - run: git status
       - run: cd ./website; npm i -g npm@latest; npm install
       - run: cd ./website; npx --no-install next-hashicorp format
@@ -71,6 +52,13 @@ jobs:
             git status
             exit 1
           fi
-      - uses: "./.github/actions/notify_main_failure"
+# FIXME: This entire workflow exists to check if our website code compiles, so do we need to notify at all?
+#      - uses: hashicorp/actions-slack-status@v1
+#        if: failure() && github.ref == 'refs/heads/main'
+#        with:
+#          failure-message: website directory has unstaged mdx changes
+#          status: ${{job.status}}
+#          slack-webhook-url: ${{secrets.SLACK_WEBHOOK_URL}}
+
 permissions:
   contents: read
