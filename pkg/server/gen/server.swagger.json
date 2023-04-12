@@ -11018,9 +11018,9 @@
           "type": "string",
           "description": "A long summary of what the ProjectTemplate is to be used for. This summary\nis shared between platform engineers and application developers."
         },
-        "readme_template": {
+        "readme_markdown_template": {
           "type": "string",
-          "description": "The template which is rendered when a Project is created from a\nProjectTemplate to be shown to application developers."
+          "description": "A markdown template which is rendered when a Project is created from a\nProjectTemplate to be shown to application developers."
         },
         "waypoint_project": {
           "$ref": "#/definitions/hashicorp.waypoint.ProjectTemplate.WaypointProject",

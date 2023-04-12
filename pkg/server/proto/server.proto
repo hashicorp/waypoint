@@ -5203,9 +5203,9 @@ message ProjectTemplate {
   // is shared between platform engineers and application developers.
   string expanded_summary = 4;
 
-  // The template which is rendered when a Project is created from a
+  // A markdown template which is rendered when a Project is created from a
   // ProjectTemplate to be shown to application developers.
-  string readme_template = 5;
+  string readme_markdown_template = 5;
 
   // Settings for the Waypoint project that should be set when a project is
   // created from a ProjectTemplate.
