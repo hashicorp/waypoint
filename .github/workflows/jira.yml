@@ -23,7 +23,7 @@ jobs:
           JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
       - name: Set ticket type
         id: set-ticket-type
-        run: echo "::set-output name=type::GH Issue"
+        run: echo "type=GH Issue" >> "$GITHUB_OUTPUT"
       # Use this to add Jira labels to a ticket based on what labels are present in GitHub
       # bash note: '${#VAR}' returns the length of the variable's value
       # label assignment is simple; currently assigns 'ui', 'documentation', or 'backend'
@@ -36,7 +36,7 @@ jobs:
           if [[ "${{ contains(github.event.issue.labels.*.name, 'documentation') }}" == "true" ]]; then LABELS+="\"engineering\", "; fi
           if [[ "${{ contains(github.event.issue.labels.*.name, 'ui') }}" == "true" ]]; then LABELS+="\"experiences\", "; else LABELS+="\"foundations\", "; fi
           if [[ ${#LABELS} != 1 ]]; then LABELS=${LABELS::-2}"]"; else LABELS+="]"; fi
-          echo "::set-output name=labels::${LABELS}"
+          echo "labels=${LABELS}" >> "$GITHUB_OUTPUT"
       # Only Waypoint team members may add GitHub issues to Jira
       - name: Check if team member
         if: github.event.action == 'labeled'
@@ -46,10 +46,10 @@ jobs:
           ROLE="$(hub api orgs/hashicorp/teams/${TEAM}/memberships/${{ github.actor }} | jq -r '.role | select(.!=null)')"
           if [[ -n ${ROLE} ]]; then
             echo "Actor ${{ github.actor }} is a ${TEAM} team member"
-            echo "::set-output name=message::true"
+            echo "message=true" >> "$GITHUB_OUTPUT"
           else
             echo "Actor ${{ github.actor }} is NOT a ${TEAM} team member"
-            echo "::set-output name=message::false"
+            echo "message=false" >> "$GITHUB_OUTPUT"
           fi
         env:
           GITHUB_TOKEN: ${{ secrets.JIRA_SYNC_GITHUB_TOKEN }}
