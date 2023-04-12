@@ -8,9 +8,7 @@ on:
   issue_comment:
     # Allows the copying of GitHub Issue comments to the corresponding Jira ticket (1-way only, GH->Jira)
     types: [created]
-
 name: Jira Sync
-
 jobs:
   sync:
     runs-on: ubuntu-latest
@@ -23,11 +21,9 @@ jobs:
           JIRA_BASE_URL: ${{ secrets.JIRA_BASE_URL }}
           JIRA_USER_EMAIL: ${{ secrets.JIRA_USER_EMAIL }}
           JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
-
       - name: Set ticket type
         id: set-ticket-type
         run: echo "::set-output name=type::GH Issue"
-
       # Use this to add Jira labels to a ticket based on what labels are present in GitHub
       # bash note: '${#VAR}' returns the length of the variable's value
       # label assignment is simple; currently assigns 'ui', 'documentation', or 'backend'
@@ -41,7 +37,6 @@ jobs:
           if [[ "${{ contains(github.event.issue.labels.*.name, 'ui') }}" == "true" ]]; then LABELS+="\"experiences\", "; else LABELS+="\"foundations\", "; fi
           if [[ ${#LABELS} != 1 ]]; then LABELS=${LABELS::-2}"]"; else LABELS+="]"; fi
           echo "::set-output name=labels::${LABELS}"
-      
       # Only Waypoint team members may add GitHub issues to Jira
       - name: Check if team member
         if: github.event.action == 'labeled'
@@ -58,14 +53,12 @@ jobs:
           fi
         env:
           GITHUB_TOKEN: ${{ secrets.JIRA_SYNC_GITHUB_TOKEN }}
-
       - name: Search
         id: search
         uses: tomhjp/gh-action-jira-search@04700b457f317c3e341ce90da5a3ff4ce058f2fa # v0.2.2
         with:
           # cf[10089] is Issue Link (use JIRA API to retrieve)
           jql: 'cf[10089] = "${{ github.event.issue.html_url || github.event.pull_request.html_url }}"'
-
       - name: Create ticket
         if: ( github.event.action == 'labeled' && steps.is-team-member.outputs.message == 'true' && !steps.search.outputs.issue )
         uses: tomhjp/gh-action-jira-create@3ed1789cad3521292e591a7cfa703215ec1348bf # v0.2.1
@@ -75,26 +68,24 @@ jobs:
           summary: "${{ github.event.repository.name }} [#${{ github.event.issue.number || github.event.pull_request.number }}]: ${{ github.event.issue.title || github.event.pull_request.title }}"
           description: "${{ github.event.issue.body || github.event.pull_request.body }}\n\n_Created in GitHub by ${{ github.actor }}._"
           # customfield_10089 is "Issue Link", customfield_10371 is "Source" (use JIRA API to retrieve)
-          extraFields: '{ "customfield_10089": "${{ github.event.issue.html_url || github.event.pull_request.html_url }}",         
-                          "labels": ${{ steps.set-ticket-labels.outputs.labels }} }'
-
+          extraFields: '{ "customfield_10089": "${{ github.event.issue.html_url || github.event.pull_request.html_url }}", "labels": ${{ steps.set-ticket-labels.outputs.labels }} }'
       - name: Sync comment
         if: github.event.action == 'created' && steps.search.outputs.issue
         uses: tomhjp/gh-action-jira-comment@6eb6b9ead70221916b6badd118c24535ed220bd9 # v0.2.0
         with:
           issue: ${{ steps.search.outputs.issue }}
           comment: "${{ github.actor }} ${{ github.event.review.state || 'commented' }}:\n\n${{ github.event.comment.body || github.event.review.body }}\n\n${{ github.event.comment.html_url || github.event.review.html_url }}"
-
       - name: Close ticket
         if: ( github.event.action == 'closed' || github.event.action == 'deleted' ) && steps.search.outputs.issue
         uses: atlassian/gajira-transition@4749176faf14633954d72af7a44d7f2af01cc92b # v3
         with:
           issue: ${{ steps.search.outputs.issue }}
           transition: "Closed"
-
       - name: Reopen ticket
         if: github.event.action == 'reopened' && steps.search.outputs.issue
         uses: atlassian/gajira-transition@4749176faf14633954d72af7a44d7f2af01cc92b # v3
         with:
           issue: ${{ steps.search.outputs.issue }}
           transition: "Pending Triage"
+permissions:
+  contents: read

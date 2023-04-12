@@ -2,7 +2,6 @@
 on:
   pull_request_target:
     types: [opened]
-
 jobs:
   # checks that a .changelog entry is present for a PR
   failed-backport-check:
@@ -10,7 +9,9 @@ jobs:
     if: "contains(github.event.pull_request.title, 'Backport') && github.event.pull_request.draft"
     runs-on: ubuntu-latest
     steps:
-    - name: Notify Slack on failed Backport PRs
-      uses: slackapi/slack-github-action@007b2c3c751a190b6f0f040e47ed024deaa72844 # v1.23.0
-      env:
-        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+      - name: Notify Slack on failed Backport PRs
+        uses: slackapi/slack-github-action@007b2c3c751a190b6f0f040e47ed024deaa72844 # v1.23.0
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+permissions:
+  contents: read

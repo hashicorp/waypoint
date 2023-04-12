@@ -2,7 +2,7 @@ name: hashicorp/waypoint/frontend
 on:
   push:
     branches:
-    - main
+      - main
 env:
   ALGOLIA_API_KEY: xxxxxxx
   GH_DOCKER_PASS: xxxxxxx
@@ -23,24 +23,24 @@ jobs:
       BASH_ENV: "/home/circleci/project/.circleci/bash_env.sh"
       DOCKER_BUILDKIT: 1
     steps:
-    - uses: actions/checkout@83b7061638ee4956cf7545a6f7efe594e5ad0247 # v3.5.1
-    - uses: "./.github/actions/md5uilib"
-    - name: restore_cache
-      uses: actions/cache@88522ab9f39a2ea568f7027eddc7d8d8bc9d59c8 # v3.3.1
-      with:
-        key: waypoint-ui-v1-{{ checksum "ui/yarn.lock" }}-{{ checksum "uilib.md5" }}
-        path: |-
-          ui/node_modules
-          ui/lib/node_modules
-    - name: install yarn packages
-      run: cd ui && yarn install
-    - uses: "./.github/actions/notify_main_failure"
+      - uses: actions/checkout@83b7061638ee4956cf7545a6f7efe594e5ad0247 # v3.5.1
+      - uses: "./.github/actions/md5uilib"
+      - name: restore_cache
+        uses: actions/cache@88522ab9f39a2ea568f7027eddc7d8d8bc9d59c8 # v3.3.1
+        with:
+          key: waypoint-ui-v1-{{ checksum "ui/yarn.lock" }}-{{ checksum "uilib.md5" }}
+          path: |-
+            ui/node_modules
+            ui/lib/node_modules
+      - name: install yarn packages
+        run: cd ui && yarn install
+      - uses: "./.github/actions/notify_main_failure"
   frontend-lint:
     runs-on: ubuntu-latest
     container:
       image: docker.mirror.hashicorp.services/circleci/node:14-browsers
     needs:
-    - frontend-cache
+      - frontend-cache
     env:
       TEST_RESULTS_DIR: "/tmp/test-results"
       GOTESTSUM_RELEASE: 1.8.2
@@ -50,56 +50,58 @@ jobs:
       BASH_ENV: "/home/circleci/project/.circleci/bash_env.sh"
       DOCKER_BUILDKIT: 1
     steps:
-    - uses: actions/checkout@83b7061638ee4956cf7545a6f7efe594e5ad0247 # v3.5.1
-    - uses: "./.github/actions/md5uilib"
-    - name: restore_cache
-      uses: actions/cache@88522ab9f39a2ea568f7027eddc7d8d8bc9d59c8 # v3.3.1
-      with:
-        key: waypoint-ui-v1-{{ checksum "ui/yarn.lock" }}-{{ checksum "uilib.md5" }}
-    - run: yarn lint
-      working-directory: ui
-    - uses: "./.github/actions/notify_main_failure"
+      - uses: actions/checkout@83b7061638ee4956cf7545a6f7efe594e5ad0247 # v3.5.1
+      - uses: "./.github/actions/md5uilib"
+      - name: restore_cache
+        uses: actions/cache@88522ab9f39a2ea568f7027eddc7d8d8bc9d59c8 # v3.3.1
+        with:
+          key: waypoint-ui-v1-{{ checksum "ui/yarn.lock" }}-{{ checksum "uilib.md5" }}
+      - run: yarn lint
+        working-directory: ui
+      - uses: "./.github/actions/notify_main_failure"
   ember-build-tests:
     runs-on: ubuntu-latest
     container:
       image: docker.mirror.hashicorp.services/circleci/node:14-browsers
     needs:
-    - frontend-lint
+      - frontend-lint
     env:
       JOBS: 1
     steps:
-    - uses: actions/checkout@83b7061638ee4956cf7545a6f7efe594e5ad0247 # v3.5.1
-    - uses: "./.github/actions/md5uilib"
-    - name: restore_cache
-      uses: actions/cache@88522ab9f39a2ea568f7027eddc7d8d8bc9d59c8 # v3.3.1
-      with:
-        key: waypoint-ui-v1-{{ checksum "ui/yarn.lock" }}-{{ checksum "uilib.md5" }}
-    - run: cd ui && yarn build:test
-    - uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
-      with:
-        path: ui/dist
-    - uses: "./.github/actions/notify_main_failure"
+      - uses: actions/checkout@83b7061638ee4956cf7545a6f7efe594e5ad0247 # v3.5.1
+      - uses: "./.github/actions/md5uilib"
+      - name: restore_cache
+        uses: actions/cache@88522ab9f39a2ea568f7027eddc7d8d8bc9d59c8 # v3.3.1
+        with:
+          key: waypoint-ui-v1-{{ checksum "ui/yarn.lock" }}-{{ checksum "uilib.md5" }}
+      - run: cd ui && yarn build:test
+      - uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
+        with:
+          path: ui/dist
+      - uses: "./.github/actions/notify_main_failure"
   ember-test:
     runs-on: ubuntu-latest
     container:
       image: docker.mirror.hashicorp.services/circleci/node:14-browsers
     needs:
-    - ember-build-tests
+      - ember-build-tests
     env:
       EMBER_TEST_REPORT: test-results/report-oss.xml
       EMBER_TEST_PARALLEL: 'true'
     steps:
-    - uses: actions/checkout@83b7061638ee4956cf7545a6f7efe594e5ad0247 # v3.5.1
-    - uses: "./.github/actions/md5uilib"
-    - name: restore_cache
-      uses: actions/cache@88522ab9f39a2ea568f7027eddc7d8d8bc9d59c8 # v3.3.1
-      with:
-        key: waypoint-ui-v1-{{ checksum "ui/yarn.lock" }}-{{ checksum "uilib.md5" }}
-    - uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
-      with:
-        path: ui
-    - run: yarn test:ember:ci
-      working-directory: ui
-    - uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
-      with:
-        path: ui/test-results
+      - uses: actions/checkout@83b7061638ee4956cf7545a6f7efe594e5ad0247 # v3.5.1
+      - uses: "./.github/actions/md5uilib"
+      - name: restore_cache
+        uses: actions/cache@88522ab9f39a2ea568f7027eddc7d8d8bc9d59c8 # v3.3.1
+        with:
+          key: waypoint-ui-v1-{{ checksum "ui/yarn.lock" }}-{{ checksum "uilib.md5" }}
+      - uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
+        with:
+          path: ui
+      - run: yarn test:ember:ci
+        working-directory: ui
+      - uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
+        with:
+          path: ui/test-results
+permissions:
+  contents: read

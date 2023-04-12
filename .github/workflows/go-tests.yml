@@ -2,7 +2,7 @@ name: hashicorp/waypoint/go-tests
 on:
   push:
     branches:
-    - main
+      - main
 env:
   ALGOLIA_API_KEY: xxxxxxx
   GH_DOCKER_PASS: xxxxxxx
@@ -17,27 +17,27 @@ jobs:
     env:
       GOTAGS: ''
     steps:
-    - uses: actions/checkout@83b7061638ee4956cf7545a6f7efe594e5ad0247 # v3.5.1
-    - name: Install golangci-lint
-      run: |-
-        download=https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh
-        wget -O- -q $download | sh -x -s -- -d -b /home/circleci/go v1.50.1
-    - run: go mod download
-    - name: lint
-      run: |-
-        golangci-lint run --build-tags="$GOTAGS" -v --concurrency 2 \
-          --disable-all \
-          --timeout 10m \
-          --enable gofmt \
-          --enable gosimple \
-          --enable govet
-    - uses: "./.github/actions/notify_main_failure"
+      - uses: actions/checkout@83b7061638ee4956cf7545a6f7efe594e5ad0247 # v3.5.1
+      - name: Install golangci-lint
+        run: |-
+          download=https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh
+          wget -O- -q $download | sh -x -s -- -d -b /home/circleci/go v1.50.1
+      - run: go mod download
+      - name: lint
+        run: |-
+          golangci-lint run --build-tags="$GOTAGS" -v --concurrency 2 \
+            --disable-all \
+            --timeout 10m \
+            --enable gofmt \
+            --enable gosimple \
+            --enable govet
+      - uses: "./.github/actions/notify_main_failure"
   check-vendor:
     runs-on: ubuntu-latest
     container:
       image: docker.mirror.hashicorp.services/cimg/go:1.19
     needs:
-    - lint
+      - lint
     env:
       TEST_RESULTS_DIR: "/tmp/test-results"
       GOTESTSUM_RELEASE: 1.8.2
@@ -47,14 +47,14 @@ jobs:
       BASH_ENV: "/home/circleci/project/.circleci/bash_env.sh"
       DOCKER_BUILDKIT: 1
     steps:
-    - uses: actions/checkout@83b7061638ee4956cf7545a6f7efe594e5ad0247 # v3.5.1
-    - run: go mod tidy
-    - run: |
-        if ! git diff --exit-code; then
-          echo "Git directory has vendor changes"
-          exit 1
-        fi
-    - uses: "./.github/actions/notify_main_failure"
+      - uses: actions/checkout@83b7061638ee4956cf7545a6f7efe594e5ad0247 # v3.5.1
+      - run: go mod tidy
+      - run: |
+          if ! git diff --exit-code; then
+            echo "Git directory has vendor changes"
+            exit 1
+          fi
+      - uses: "./.github/actions/notify_main_failure"
   go-test:
     runs-on: ubuntu-latest
     container:
@@ -77,7 +77,7 @@ jobs:
         image: docker.mirror.hashicorp.services/vault
         options: "   server -dev -dev-root-token-id=hznroot"
     needs:
-    - lint
+      - lint
     env:
       TEST_RESULTS_DIR: "/tmp/test-results"
       GOTESTSUM_RELEASE: 1.8.2
@@ -89,51 +89,51 @@ jobs:
       GOTAGS: ''
       GOMAXPROCS: 4
     steps:
-    - uses: actions/checkout@83b7061638ee4956cf7545a6f7efe594e5ad0247 # v3.5.1
-    - uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
-      with:
-        path: "/home/circleci/go/bin"
-#     # 'setup_remote_docker' was not transformed because there is no suitable equivalent in GitHub Actions
-    - name: Install gotestsum
-      run: |-
-        url=https://github.com/gotestyourself/gotestsum/releases/download
-        curl -sSL "${url}/v${GOTESTSUM_RELEASE}/gotestsum_${GOTESTSUM_RELEASE}_linux_amd64.tar.gz" | \
-          sudo tar -xz --overwrite -C /usr/local/bin gotestsum
-    - run: go mod download
-    - name: Waiting for Postgres to be ready
-      run: |-
-        for i in `seq 1 10`;
-        do
-          nc -z localhost 5432 && echo Success && exit 0
-          echo -n .
-          sleep 1
-        done
-        echo Failed waiting for Postgres && exit 1
-    - name: go test
-      run: |-
-        mkdir -p $TEST_RESULTS_DIR
-        PACKAGE_NAMES=$(go list ./... | grep -v test-e2e | circleci tests split --split-by=timings --timings-type=classname)
-        echo "Running $(echo $PACKAGE_NAMES | wc -w) packages"
-        echo $PACKAGE_NAMES
-        gotestsum --format=short-verbose \
-          --junitfile $TEST_RESULTS_DIR/gotestsum-report.xml -- \
-          -tags="$GOTAGS" -p 2 \
-          -cover -coverprofile=coverage.txt \
-          $PACKAGE_NAMES
-    - uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
-      with:
-        path: "/tmp/test-results"
-    - uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
-      with:
-        path: "/tmp/test-results"
-    - uses: "./.github/actions/notify_main_failure"
+      - uses: actions/checkout@83b7061638ee4956cf7545a6f7efe594e5ad0247 # v3.5.1
+      - uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
+        with:
+          path: "/home/circleci/go/bin"
+          #     # 'setup_remote_docker' was not transformed because there is no suitable equivalent in GitHub Actions
+      - name: Install gotestsum
+        run: |-
+          url=https://github.com/gotestyourself/gotestsum/releases/download
+          curl -sSL "${url}/v${GOTESTSUM_RELEASE}/gotestsum_${GOTESTSUM_RELEASE}_linux_amd64.tar.gz" | \
+            sudo tar -xz --overwrite -C /usr/local/bin gotestsum
+      - run: go mod download
+      - name: Waiting for Postgres to be ready
+        run: |-
+          for i in `seq 1 10`;
+          do
+            nc -z localhost 5432 && echo Success && exit 0
+            echo -n .
+            sleep 1
+          done
+          echo Failed waiting for Postgres && exit 1
+      - name: go test
+        run: |-
+          mkdir -p $TEST_RESULTS_DIR
+          PACKAGE_NAMES=$(go list ./... | grep -v test-e2e | circleci tests split --split-by=timings --timings-type=classname)
+          echo "Running $(echo $PACKAGE_NAMES | wc -w) packages"
+          echo $PACKAGE_NAMES
+          gotestsum --format=short-verbose \
+            --junitfile $TEST_RESULTS_DIR/gotestsum-report.xml -- \
+            -tags="$GOTAGS" -p 2 \
+            -cover -coverprofile=coverage.txt \
+            $PACKAGE_NAMES
+      - uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
+        with:
+          path: "/tmp/test-results"
+      - uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
+        with:
+          path: "/tmp/test-results"
+      - uses: "./.github/actions/notify_main_failure"
   dev-build:
     if: github.ref != 'refs/heads/main'
     runs-on: ubuntu-latest
     container:
       image: docker.mirror.hashicorp.services/cimg/go:1.19
     needs:
-    - lint
+      - lint
     env:
       TEST_RESULTS_DIR: "/tmp/test-results"
       GOTESTSUM_RELEASE: 1.8.2
@@ -143,25 +143,25 @@ jobs:
       BASH_ENV: "/home/circleci/project/.circleci/bash_env.sh"
       DOCKER_BUILDKIT: 1
     steps:
-    - uses: actions/checkout@83b7061638ee4956cf7545a6f7efe594e5ad0247 # v3.5.1
-    - uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
-      with:
-        path: "."
-    - run: |-
-        go install github.com/kevinburke/go-bindata/...
-        PATH=/home/circleci/go/bin:$PATH make bin
-        cp waypoint /home/circleci/go/bin
-    - uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
-      with:
-        path: "/home/circleci/go/bin/waypoint"
-    - uses: "./.github/actions/notify_main_failure"
+      - uses: actions/checkout@83b7061638ee4956cf7545a6f7efe594e5ad0247 # v3.5.1
+      - uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
+        with:
+          path: "."
+      - run: |-
+          go install github.com/kevinburke/go-bindata/...
+          PATH=/home/circleci/go/bin:$PATH make bin
+          cp waypoint /home/circleci/go/bin
+      - uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
+        with:
+          path: "/home/circleci/go/bin/waypoint"
+      - uses: "./.github/actions/notify_main_failure"
   dev-build-windows:
     if: github.ref != 'refs/heads/main'
     runs-on: ubuntu-latest
     container:
       image: docker.mirror.hashicorp.services/cimg/go:1.19
     needs:
-    - lint
+      - lint
     env:
       TEST_RESULTS_DIR: "/tmp/test-results"
       GOTESTSUM_RELEASE: 1.8.2
@@ -171,11 +171,13 @@ jobs:
       BASH_ENV: "/home/circleci/project/.circleci/bash_env.sh"
       DOCKER_BUILDKIT: 1
     steps:
-    - uses: actions/checkout@83b7061638ee4956cf7545a6f7efe594e5ad0247 # v3.5.1
-    - uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
-      with:
-        path: "."
-    - run: |-
-        go install github.com/kevinburke/go-bindata/...
-        PATH=/home/circleci/go/bin:$PATH make bin/windows
-    - uses: "./.github/actions/notify_main_failure"
+      - uses: actions/checkout@83b7061638ee4956cf7545a6f7efe594e5ad0247 # v3.5.1
+      - uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
+        with:
+          path: "."
+      - run: |-
+          go install github.com/kevinburke/go-bindata/...
+          PATH=/home/circleci/go/bin:$PATH make bin/windows
+      - uses: "./.github/actions/notify_main_failure"
+permissions:
+  contents: read
