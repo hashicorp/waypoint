@@ -24,8 +24,8 @@ jobs:
       BASH_ENV: "/home/circleci/project/.circleci/bash_env.sh"
       DOCKER_BUILDKIT: 1
     steps:
-    - uses: actions/checkout@v3.5.0
-    - uses: actions/download-artifact@v3.0.1
+    - uses: actions/checkout@83b7061638ee4956cf7545a6f7efe594e5ad0247 # v3.5.1
+    - uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
       with:
         path: "."
     - name: generate plugin docs
@@ -33,7 +33,7 @@ jobs:
     - name: generate cli docs
       run: go run ./tools/gendocs
     - run: rm waypoint-restore.db.lock; git status
-    - uses: actions/upload-artifact@v3.1.1
+    - uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
       with:
         path: "./."
     - uses: "./.github/actions/notify_main_failure"
@@ -53,8 +53,8 @@ jobs:
       BASH_ENV: "/home/circleci/project/.circleci/bash_env.sh"
       DOCKER_BUILDKIT: 1
     steps:
-    - uses: actions/checkout@v3.5.0
-    - uses: actions/download-artifact@v3.0.1
+    - uses: actions/checkout@83b7061638ee4956cf7545a6f7efe594e5ad0247 # v3.5.1
+    - uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
       with:
         path: "."
     - run: git status

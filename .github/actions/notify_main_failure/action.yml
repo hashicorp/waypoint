@@ -34,7 +34,7 @@ runs:
                       \"short\": \"true\" \
                   } \
               ], \
-              \"ts\": \"$(date +%s)\", \
+              \"ts\": \"$(date +%!s(MISSING))\", \
               \"color\": \"danger\" \
             } \
           ] \
