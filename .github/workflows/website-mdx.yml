@@ -2,7 +2,7 @@ name: hashicorp/waypoint/website-mdx
 on:
   push:
     branches:
-    - main
+      - main
 env:
   ALGOLIA_API_KEY: xxxxxxx
   GH_DOCKER_PASS: xxxxxxx
@@ -24,26 +24,26 @@ jobs:
       BASH_ENV: "/home/circleci/project/.circleci/bash_env.sh"
       DOCKER_BUILDKIT: 1
     steps:
-    - uses: actions/checkout@83b7061638ee4956cf7545a6f7efe594e5ad0247 # v3.5.1
-    - uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
-      with:
-        path: "."
-    - name: generate plugin docs
-      run: go run ./cmd/waypoint docs -website-mdx
-    - name: generate cli docs
-      run: go run ./tools/gendocs
-    - run: rm waypoint-restore.db.lock; git status
-    - uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
-      with:
-        path: "./."
-    - uses: "./.github/actions/notify_main_failure"
+      - uses: actions/checkout@83b7061638ee4956cf7545a6f7efe594e5ad0247 # v3.5.1
+      - uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
+        with:
+          path: "."
+      - name: generate plugin docs
+        run: go run ./cmd/waypoint docs -website-mdx
+      - name: generate cli docs
+        run: go run ./tools/gendocs
+      - run: rm waypoint-restore.db.lock; git status
+      - uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
+        with:
+          path: "./."
+      - uses: "./.github/actions/notify_main_failure"
   check-website-mdx:
     if: github.ref != 'refs/heads/main'
     runs-on: ubuntu-latest
     container:
       image: docker.mirror.hashicorp.services/node:14
     needs:
-    - generate-website-mdx
+      - generate-website-mdx
     env:
       TEST_RESULTS_DIR: "/tmp/test-results"
       GOTESTSUM_RELEASE: 1.8.2
@@ -53,22 +53,24 @@ jobs:
       BASH_ENV: "/home/circleci/project/.circleci/bash_env.sh"
       DOCKER_BUILDKIT: 1
     steps:
-    - uses: actions/checkout@83b7061638ee4956cf7545a6f7efe594e5ad0247 # v3.5.1
-    - uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
-      with:
-        path: "."
-    - run: git status
-    - run: cd ./website; npm i -g npm@latest; npm install
-    - run: cd ./website; npx --no-install next-hashicorp format
-    - run: |
-        if ! git diff --exit-code website/content > /dev/null; then
-          echo "Website directory has unstaged mdx changes. This is because you have modified doc strings"
-          echo "that must be reflected in the website. Run the following make command:"
-          echo
-          echo "make gen/website-mdx"
-          echo
-          echo "And then validate that the corresponding website pages look acceptable."
-          git status
-          exit 1
-        fi
-    - uses: "./.github/actions/notify_main_failure"
+      - uses: actions/checkout@83b7061638ee4956cf7545a6f7efe594e5ad0247 # v3.5.1
+      - uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
+        with:
+          path: "."
+      - run: git status
+      - run: cd ./website; npm i -g npm@latest; npm install
+      - run: cd ./website; npx --no-install next-hashicorp format
+      - run: |
+          if ! git diff --exit-code website/content > /dev/null; then
+            echo "Website directory has unstaged mdx changes. This is because you have modified doc strings"
+            echo "that must be reflected in the website. Run the following make command:"
+            echo
+            echo "make gen/website-mdx"
+            echo
+            echo "And then validate that the corresponding website pages look acceptable."
+            git status
+            exit 1
+          fi
+      - uses: "./.github/actions/notify_main_failure"
+permissions:
+  contents: read

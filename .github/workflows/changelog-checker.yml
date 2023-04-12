@@ -7,14 +7,12 @@ on:
     # Runs on PRs to main and all release branches
     branches:
       - main
-
 jobs:
   # checks that a .changelog entry is present for a PR
   changelog-check:
     # If there  a `pr/no-changelog` label we ignore this check
     if: "!contains(github.event.pull_request.labels.*.name, 'pr/no-changelog')"
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@83b7061638ee4956cf7545a6f7efe594e5ad0247 # v3.5.1
         with:
@@ -33,3 +31,5 @@ jobs:
           else
             echo "Found .changelog entry in PR!"
           fi
+permissions:
+  contents: read
