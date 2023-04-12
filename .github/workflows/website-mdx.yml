@@ -36,7 +36,8 @@ jobs:
       - uses: actions/checkout@83b7061638ee4956cf7545a6f7efe594e5ad0247 # v3.5.1
       - uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
         with:
-          name: "website"
+          path: website/
+          name: website
       - run: git status
       - run: cd ./website; npm i -g npm@latest; npm install
       - run: cd ./website; npx --no-install next-hashicorp format
