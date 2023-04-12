@@ -200,6 +200,52 @@ func (_m *WaypointServer) CreateHostname(_a0 context.Context, _a1 *gen.CreateHos
 	return r0, r1
 }
 
+// CreateProjectFromTemplate provides a mock function with given fields: _a0, _a1
+func (_m *WaypointServer) CreateProjectFromTemplate(_a0 context.Context, _a1 *gen.CreateProjectFromTemplateRequest) (*gen.CreateProjectFromTemplateResponse, error) {
+	ret := _m.Called(_a0, _a1)
+
+	var r0 *gen.CreateProjectFromTemplateResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.CreateProjectFromTemplateRequest) *gen.CreateProjectFromTemplateResponse); ok {
+		r0 = rf(_a0, _a1)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gen.CreateProjectFromTemplateResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.CreateProjectFromTemplateRequest) error); ok {
+		r1 = rf(_a0, _a1)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// CreateProjectTemplate provides a mock function with given fields: _a0, _a1
+func (_m *WaypointServer) CreateProjectTemplate(_a0 context.Context, _a1 *gen.CreateProjectTemplateRequest) (*gen.CreateProjectTemplateResponse, error) {
+	ret := _m.Called(_a0, _a1)
+
+	var r0 *gen.CreateProjectTemplateResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.CreateProjectTemplateRequest) *gen.CreateProjectTemplateResponse); ok {
+		r0 = rf(_a0, _a1)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gen.CreateProjectTemplateResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.CreateProjectTemplateRequest) error); ok {
+		r1 = rf(_a0, _a1)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // CreateSnapshot provides a mock function with given fields: _a0, _a1
 func (_m *WaypointServer) CreateSnapshot(_a0 *emptypb.Empty, _a1 gen.Waypoint_CreateSnapshotServer) error {
 	ret := _m.Called(_a0, _a1)
@@ -298,6 +344,29 @@ func (_m *WaypointServer) DeleteOnDemandRunnerConfig(_a0 context.Context, _a1 *g
 
 	var r1 error
 	if rf, ok := ret.Get(1).(func(context.Context, *gen.DeleteOnDemandRunnerConfigRequest) error); ok {
+		r1 = rf(_a0, _a1)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// DeleteProjectTemplate provides a mock function with given fields: _a0, _a1
+func (_m *WaypointServer) DeleteProjectTemplate(_a0 context.Context, _a1 *gen.DeleteProjectTemplateRequest) (*emptypb.Empty, error) {
+	ret := _m.Called(_a0, _a1)
+
+	var r0 *emptypb.Empty
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.DeleteProjectTemplateRequest) *emptypb.Empty); ok {
+		r0 = rf(_a0, _a1)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*emptypb.Empty)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.DeleteProjectTemplateRequest) error); ok {
 		r1 = rf(_a0, _a1)
 	} else {
 		r1 = ret.Error(1)
@@ -974,6 +1043,29 @@ func (_m *WaypointServer) GetProject(_a0 context.Context, _a1 *gen.GetProjectReq
 	return r0, r1
 }
 
+// GetProjectTemplate provides a mock function with given fields: _a0, _a1
+func (_m *WaypointServer) GetProjectTemplate(_a0 context.Context, _a1 *gen.GetProjectTemplateRequest) (*gen.GetProjectTemplateResponse, error) {
+	ret := _m.Called(_a0, _a1)
+
+	var r0 *gen.GetProjectTemplateResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.GetProjectTemplateRequest) *gen.GetProjectTemplateResponse); ok {
+		r0 = rf(_a0, _a1)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gen.GetProjectTemplateResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.GetProjectTemplateRequest) error); ok {
+		r1 = rf(_a0, _a1)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetPushedArtifact provides a mock function with given fields: _a0, _a1
 func (_m *WaypointServer) GetPushedArtifact(_a0 context.Context, _a1 *gen.GetPushedArtifactRequest) (*gen.PushedArtifact, error) {
 	ret := _m.Called(_a0, _a1)
@@ -1081,6 +1173,29 @@ func (_m *WaypointServer) GetStatusReport(_a0 context.Context, _a1 *gen.GetStatu
 
 	var r1 error
 	if rf, ok := ret.Get(1).(func(context.Context, *gen.GetStatusReportRequest) error); ok {
+		r1 = rf(_a0, _a1)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetTFCRunStatus provides a mock function with given fields: _a0, _a1
+func (_m *WaypointServer) GetTFCRunStatus(_a0 context.Context, _a1 *gen.GetTFCRunStatusRequest) (*gen.GetTFCRunStatusResponse, error) {
+	ret := _m.Called(_a0, _a1)
+
+	var r0 *gen.GetTFCRunStatusResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.GetTFCRunStatusRequest) *gen.GetTFCRunStatusResponse); ok {
+		r0 = rf(_a0, _a1)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gen.GetTFCRunStatusResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.GetTFCRunStatusRequest) error); ok {
 		r1 = rf(_a0, _a1)
 	} else {
 		r1 = ret.Error(1)
@@ -1426,6 +1541,29 @@ func (_m *WaypointServer) ListPipelines(_a0 context.Context, _a1 *gen.ListPipeli
 
 	var r1 error
 	if rf, ok := ret.Get(1).(func(context.Context, *gen.ListPipelinesRequest) error); ok {
+		r1 = rf(_a0, _a1)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// ListProjectTemplates provides a mock function with given fields: _a0, _a1
+func (_m *WaypointServer) ListProjectTemplates(_a0 context.Context, _a1 *gen.ListProjectTemplatesRequest) (*gen.ListProjectTemplatesResponse, error) {
+	ret := _m.Called(_a0, _a1)
+
+	var r0 *gen.ListProjectTemplatesResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.ListProjectTemplatesRequest) *gen.ListProjectTemplatesResponse); ok {
+		r0 = rf(_a0, _a1)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gen.ListProjectTemplatesResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.ListProjectTemplatesRequest) error); ok {
 		r1 = rf(_a0, _a1)
 	} else {
 		r1 = ret.Error(1)
@@ -2057,6 +2195,29 @@ func (_m *WaypointServer) UI_ListReleases(_a0 context.Context, _a1 *gen.UI_ListR
 
 	var r1 error
 	if rf, ok := ret.Get(1).(func(context.Context, *gen.UI_ListReleasesRequest) error); ok {
+		r1 = rf(_a0, _a1)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// UpdateProjectTemplate provides a mock function with given fields: _a0, _a1
+func (_m *WaypointServer) UpdateProjectTemplate(_a0 context.Context, _a1 *gen.UpdateProjectTemplateRequest) (*gen.UpdateProjectTemplateResponse, error) {
+	ret := _m.Called(_a0, _a1)
+
+	var r0 *gen.UpdateProjectTemplateResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.UpdateProjectTemplateRequest) *gen.UpdateProjectTemplateResponse); ok {
+		r0 = rf(_a0, _a1)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gen.UpdateProjectTemplateResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.UpdateProjectTemplateRequest) error); ok {
 		r1 = rf(_a0, _a1)
 	} else {
 		r1 = ret.Error(1)

@@ -462,6 +462,35 @@ service Waypoint {
   rpc ConfigSyncPipeline(ConfigSyncPipelineRequest) returns (ConfigSyncPipelineResponse);
 
   //----------------------------------------------------------------------
+  // ProjectTemplate endpoints
+  //----------------------------------------------------------------------
+
+  // CreateProjectTemplate creates a new projecttemplate.
+  rpc CreateProjectTemplate(CreateProjectTemplateRequest) returns (CreateProjectTemplateResponse);
+
+  // UpdateProjectTemplate updates an existing projecttemplate.
+  rpc UpdateProjectTemplate(UpdateProjectTemplateRequest) returns (UpdateProjectTemplateResponse);
+
+  // GetProjectTemplate returns a projecttemplate by the projecttemplate name or id
+  rpc GetProjectTemplate(GetProjectTemplateRequest) returns (GetProjectTemplateResponse);
+
+  // DeleteProjectTemplate deletes a projecttemplate by the projecttemplate name or id
+  rpc DeleteProjectTemplate(DeleteProjectTemplateRequest) returns (google.protobuf.Empty);
+
+  // ListProjectTemplates returns a list of all projecttemplates known.
+  // (Pagination is currently ignored on this request)
+  rpc ListProjectTemplates(ListProjectTemplatesRequest) returns (ListProjectTemplatesResponse);
+
+  // CreateProjectFromTemplate is in BETA. It creates a new Waypoint project
+  // from a Project Template, provisioning infrastructure before upserting the
+  // Waypoint project to the database
+  rpc CreateProjectFromTemplate(CreateProjectFromTemplateRequest) returns (CreateProjectFromTemplateResponse);
+
+  // GetTFCRunStatus is in BETA. It returns the status of a TFC run, which was
+  // run to render a project template.
+  rpc GetTFCRunStatus(GetTFCRunStatusRequest) returns (GetTFCRunStatusResponse);
+
+  //----------------------------------------------------------------------
   // UI endpoints. The endpoints below are convenience methods for Waypoint's
   // various UIs (web GUI and CLI). They contain no unique functionality, i.e.
   // anything achievable through these endpoints should also be achievable through
@@ -517,6 +546,7 @@ message UI {
   message GetProjectResponse {
     Project project = 1;
     Job latest_init_job = 2;
+    ProjectTemplate project_template = 3;
   }
 
   message ListPipelinesRequest {
@@ -892,6 +922,10 @@ message Project {
 
   ProjectState state = 11;
 
+  // project_template is a reference to the template that this project was
+  // created from, if any.
+  Ref.ProjectTemplate project_template = 12;
+
   // ProjectState is set to active when the project is created and throughout its lifetime.
   // When a project destroy operation begins, the state is set to destroying.
   enum ProjectState {
@@ -1176,6 +1210,16 @@ message Ref {
 
     // Pipeline run sequence
     uint64 run_sequence = 4;
+  }
+
+  message ProjectTemplate {
+    oneof ref {
+      // ID of the ProjectTemplate
+      string id = 1;
+
+      // Name of the ProjectTemplate
+      string name = 2;
+    }
   }
 }
 
@@ -5095,6 +5139,141 @@ message ConfigSyncPipelineResponse {
   // synced_pipelines is a map of Pipeline Name Keys to Pipeline ID Refs for
   // each pipeline that was synced in the config sync request.
   map<string, Ref.Pipeline> synced_pipelines = 1;
+}
+
+/********************************************************************
+* ProjectTemplate
+********************************************************************/
+
+message GetProjectTemplateRequest {
+  Ref.ProjectTemplate project_template = 1;
+}
+
+message GetProjectTemplateResponse {
+  // A single projecttemplate
+  ProjectTemplate project_template = 1;
+}
+
+message ListProjectTemplatesRequest {
+  PaginationRequest pagination = 1;
+}
+
+message ListProjectTemplatesResponse {
+  // The full list of projecttemplates
+  repeated ProjectTemplate project_templates = 1;
+  PaginationResponse pagination = 2;
+  uint64 total_count = 3;
+}
+
+message CreateProjectTemplateRequest {
+  ProjectTemplate project_template = 1;
+}
+
+message CreateProjectTemplateResponse {
+  ProjectTemplate project_template = 1;
+}
+
+message UpdateProjectTemplateRequest {
+  ProjectTemplate project_template = 1;
+}
+
+message UpdateProjectTemplateResponse {
+  ProjectTemplate project_template = 1;
+}
+
+message DeleteProjectTemplateRequest {
+  Ref.ProjectTemplate project_template = 1;
+}
+
+message DeleteProjectTemplateResponse {
+}
+
+message ProjectTemplate {
+  // Unique ID of the ProjectTemplate
+  string id = 1;
+
+  // Unique name of the ProjectTemplate
+  string name = 2;
+
+  // A brief summary for use by platform engineers to distinguish between
+  // multiple templates
+  string summary = 3;
+
+  // A long summary of what the ProjectTemplate is to be used for. This summary
+  // is shared between platform engineers and application developers.
+  string expanded_summary = 4;
+
+  // A markdown template which is rendered when a Project is created from a
+  // ProjectTemplate to be shown to application developers.
+  string readme_markdown_template = 5;
+
+  // Settings for the Waypoint project that should be set when a project is
+  // created from a ProjectTemplate.
+  WaypointProject waypoint_project = 6;
+
+  // The Terraform No-Code Module which should be used to provision
+  // infrastructure that is used by the project created from a ProjectTemplate.
+  TerraformNocodeModule terraform_nocode_module = 7;
+
+  // A list of descriptive strings that can be applied to the ProjectTemplate.
+  repeated string tags = 8;
+
+  // WaypointProject governs the properties that will be set on the final
+  // waypoint Project that we create. Future fields will likely include status
+  // report and datasource polling settings.
+  message WaypointProject {
+    // The templated waypoint.hcl file stored as HCL.
+    bytes waypoint_hcl_template = 1;
+  }
+
+  message TerraformNocodeModule {
+    // The module name for the Terraform no-code module.
+    string source = 1;
+
+    // The version of the Terraform no-code module.
+    string version = 2;
+  }
+}
+
+/********************************************************************
+* Templating - the features using these protos are in BETA
+********************************************************************/
+// GetTFCRunStatusRequest is a message intended for use in requests to get the
+// status of a TFC run which was ran during rendering a project template.
+message GetTFCRunStatusRequest {
+  // the Waypoint project for which we want the status of the
+  // latest run in the corresponding TFC workspace
+  Ref.Project project = 1;
+}
+
+// GetTFCRunStatusResponse is a message intended for use in responses to requests
+// for the status of a TFC run which was ran during rendering a project template.
+message GetTFCRunStatusResponse {
+  // the URL of the TFC run
+  string url = 1;
+
+  // the state of the TFC run
+  State state = 2;
+
+  enum State {
+    UNKNOWN = 0;
+    RUNNING = 1;
+    SUCCESS = 2;
+    ERROR   = 3;
+  }
+}
+
+// CreateProjectFromTemplateRequest is a message intended for use in requests
+// to render project templates.
+message CreateProjectFromTemplateRequest {
+  string project_name = 1;
+  Ref.ProjectTemplate project_template = 2;
+}
+
+// GetTFCRunStatusResponse is a message intended for use in responses to requests
+// for rendering project templates.
+message CreateProjectFromTemplateResponse {
+  Project project = 1;
 }
 
 /********************************************************************

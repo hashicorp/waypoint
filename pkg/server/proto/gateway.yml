@@ -523,3 +523,27 @@ http:
 
   - selector: hashicorp.waypoint.Waypoint.UI_ListPipelineRuns
     get: /ui/project/{pipeline.owner.project.project}/pipelines/{pipeline.owner.pipeline_name}/runs
+
+    # Project Templates
+  - selector: hashicorp.waypoint.Waypoint.CreateProjectTemplate
+    post: /projecttemplate
+    body: "*"
+
+  - selector: hashicorp.waypoint.Waypoint.UpdateProjectTemplate
+    put: /projecttemplate/{project_template.id}
+    body: "*"
+
+  - selector: hashicorp.waypoint.Waypoint.GetProjectTemplate
+    get: /projecttemplate/{project_template.id}
+
+  - selector: hashicorp.waypoint.Waypoint.DeleteProjectTemplate
+    delete: /projecttemplate/{project_template.id}
+
+  - selector: hashicorp.waypoint.Waypoint.ListProjectTemplates
+    get: /projecttemplates
+
+  - selector: hashicorp.waypoint.Waypoint.CreateProjectFromTemplate
+    post: /project/fromtemplate
+
+  - selector: hashicorp.waypoint.Waypoint.GetTFCRunStatus
+    get: /project/{project.project}/tfcrunstatus

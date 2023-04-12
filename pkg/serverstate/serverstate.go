@@ -204,6 +204,14 @@ type Interface interface {
 	PipelineRunGetLatest(context.Context, string) (*pb.PipelineRun, error)
 	PipelineRunGetById(context.Context, string) (*pb.PipelineRun, error)
 	PipelineRunList(context.Context, *pb.Ref_Pipeline) ([]*pb.PipelineRun, error)
+
+	//---------------------------------------------------------------
+	// Templates
+	CreateProjectTemplate(context.Context, *pb.ProjectTemplate) (*pb.ProjectTemplate, error)
+	UpdateProjectTemplate(context.Context, *pb.ProjectTemplate) (*pb.ProjectTemplate, error)
+	GetProjectTemplate(context.Context, *pb.Ref_ProjectTemplate) (*pb.ProjectTemplate, error)
+	DeleteProjectTemplate(context.Context, *pb.Ref_ProjectTemplate) error
+	ListProjectTemplates(context.Context, *pb.ListProjectTemplatesRequest) ([]*pb.ProjectTemplate, error)
 }
 
 // Pruner is implemented by state storage implementations that require

@@ -319,6 +319,24 @@ type WaypointClient interface {
 	// ConfigSyncPipeline takes a request for a given project and syncs the current
 	// project config to the Waypoint database.
 	ConfigSyncPipeline(ctx context.Context, in *ConfigSyncPipelineRequest, opts ...grpc.CallOption) (*ConfigSyncPipelineResponse, error)
+	// CreateProjectTemplate creates a new projecttemplate.
+	CreateProjectTemplate(ctx context.Context, in *CreateProjectTemplateRequest, opts ...grpc.CallOption) (*CreateProjectTemplateResponse, error)
+	// UpdateProjectTemplate updates an existing projecttemplate.
+	UpdateProjectTemplate(ctx context.Context, in *UpdateProjectTemplateRequest, opts ...grpc.CallOption) (*UpdateProjectTemplateResponse, error)
+	// GetProjectTemplate returns a projecttemplate by the projecttemplate name or id
+	GetProjectTemplate(ctx context.Context, in *GetProjectTemplateRequest, opts ...grpc.CallOption) (*GetProjectTemplateResponse, error)
+	// DeleteProjectTemplate deletes a projecttemplate by the projecttemplate name or id
+	DeleteProjectTemplate(ctx context.Context, in *DeleteProjectTemplateRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	// ListProjectTemplates returns a list of all projecttemplates known.
+	// (Pagination is currently ignored on this request)
+	ListProjectTemplates(ctx context.Context, in *ListProjectTemplatesRequest, opts ...grpc.CallOption) (*ListProjectTemplatesResponse, error)
+	// CreateProjectFromTemplate is in BETA. It creates a new Waypoint project
+	// from a Project Template, provisioning infrastructure before upserting the
+	// Waypoint project to the database
+	CreateProjectFromTemplate(ctx context.Context, in *CreateProjectFromTemplateRequest, opts ...grpc.CallOption) (*CreateProjectFromTemplateResponse, error)
+	// GetTFCRunStatus is in BETA. It returns the status of a TFC run, which was
+	// run to render a project template.
+	GetTFCRunStatus(ctx context.Context, in *GetTFCRunStatusRequest, opts ...grpc.CallOption) (*GetTFCRunStatusResponse, error)
 	// List full projects (not just refs)
 	UI_ListProjects(ctx context.Context, in *UI_ListProjectsRequest, opts ...grpc.CallOption) (*UI_ListProjectsResponse, error)
 	// Get a given project with useful related records.
@@ -1482,6 +1500,69 @@ func (c *waypointClient) ConfigSyncPipeline(ctx context.Context, in *ConfigSyncP
 	return out, nil
 }
 
+func (c *waypointClient) CreateProjectTemplate(ctx context.Context, in *CreateProjectTemplateRequest, opts ...grpc.CallOption) (*CreateProjectTemplateResponse, error) {
+	out := new(CreateProjectTemplateResponse)
+	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/CreateProjectTemplate", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *waypointClient) UpdateProjectTemplate(ctx context.Context, in *UpdateProjectTemplateRequest, opts ...grpc.CallOption) (*UpdateProjectTemplateResponse, error) {
+	out := new(UpdateProjectTemplateResponse)
+	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/UpdateProjectTemplate", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *waypointClient) GetProjectTemplate(ctx context.Context, in *GetProjectTemplateRequest, opts ...grpc.CallOption) (*GetProjectTemplateResponse, error) {
+	out := new(GetProjectTemplateResponse)
+	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/GetProjectTemplate", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *waypointClient) DeleteProjectTemplate(ctx context.Context, in *DeleteProjectTemplateRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/DeleteProjectTemplate", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *waypointClient) ListProjectTemplates(ctx context.Context, in *ListProjectTemplatesRequest, opts ...grpc.CallOption) (*ListProjectTemplatesResponse, error) {
+	out := new(ListProjectTemplatesResponse)
+	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/ListProjectTemplates", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *waypointClient) CreateProjectFromTemplate(ctx context.Context, in *CreateProjectFromTemplateRequest, opts ...grpc.CallOption) (*CreateProjectFromTemplateResponse, error) {
+	out := new(CreateProjectFromTemplateResponse)
+	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/CreateProjectFromTemplate", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *waypointClient) GetTFCRunStatus(ctx context.Context, in *GetTFCRunStatusRequest, opts ...grpc.CallOption) (*GetTFCRunStatusResponse, error) {
+	out := new(GetTFCRunStatusResponse)
+	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/GetTFCRunStatus", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *waypointClient) UI_ListProjects(ctx context.Context, in *UI_ListProjectsRequest, opts ...grpc.CallOption) (*UI_ListProjectsResponse, error) {
 	out := new(UI_ListProjectsResponse)
 	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/UI_ListProjects", in, out, opts...)
@@ -1845,6 +1926,24 @@ type WaypointServer interface {
 	// ConfigSyncPipeline takes a request for a given project and syncs the current
 	// project config to the Waypoint database.
 	ConfigSyncPipeline(context.Context, *ConfigSyncPipelineRequest) (*ConfigSyncPipelineResponse, error)
+	// CreateProjectTemplate creates a new projecttemplate.
+	CreateProjectTemplate(context.Context, *CreateProjectTemplateRequest) (*CreateProjectTemplateResponse, error)
+	// UpdateProjectTemplate updates an existing projecttemplate.
+	UpdateProjectTemplate(context.Context, *UpdateProjectTemplateRequest) (*UpdateProjectTemplateResponse, error)
+	// GetProjectTemplate returns a projecttemplate by the projecttemplate name or id
+	GetProjectTemplate(context.Context, *GetProjectTemplateRequest) (*GetProjectTemplateResponse, error)
+	// DeleteProjectTemplate deletes a projecttemplate by the projecttemplate name or id
+	DeleteProjectTemplate(context.Context, *DeleteProjectTemplateRequest) (*emptypb.Empty, error)
+	// ListProjectTemplates returns a list of all projecttemplates known.
+	// (Pagination is currently ignored on this request)
+	ListProjectTemplates(context.Context, *ListProjectTemplatesRequest) (*ListProjectTemplatesResponse, error)
+	// CreateProjectFromTemplate is in BETA. It creates a new Waypoint project
+	// from a Project Template, provisioning infrastructure before upserting the
+	// Waypoint project to the database
+	CreateProjectFromTemplate(context.Context, *CreateProjectFromTemplateRequest) (*CreateProjectFromTemplateResponse, error)
+	// GetTFCRunStatus is in BETA. It returns the status of a TFC run, which was
+	// run to render a project template.
+	GetTFCRunStatus(context.Context, *GetTFCRunStatusRequest) (*GetTFCRunStatusResponse, error)
 	// List full projects (not just refs)
 	UI_ListProjects(context.Context, *UI_ListProjectsRequest) (*UI_ListProjectsResponse, error)
 	// Get a given project with useful related records.
@@ -2168,6 +2267,27 @@ func (UnimplementedWaypointServer) ListPipelineRuns(context.Context, *ListPipeli
 }
 func (UnimplementedWaypointServer) ConfigSyncPipeline(context.Context, *ConfigSyncPipelineRequest) (*ConfigSyncPipelineResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ConfigSyncPipeline not implemented")
+}
+func (UnimplementedWaypointServer) CreateProjectTemplate(context.Context, *CreateProjectTemplateRequest) (*CreateProjectTemplateResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateProjectTemplate not implemented")
+}
+func (UnimplementedWaypointServer) UpdateProjectTemplate(context.Context, *UpdateProjectTemplateRequest) (*UpdateProjectTemplateResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateProjectTemplate not implemented")
+}
+func (UnimplementedWaypointServer) GetProjectTemplate(context.Context, *GetProjectTemplateRequest) (*GetProjectTemplateResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetProjectTemplate not implemented")
+}
+func (UnimplementedWaypointServer) DeleteProjectTemplate(context.Context, *DeleteProjectTemplateRequest) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteProjectTemplate not implemented")
+}
+func (UnimplementedWaypointServer) ListProjectTemplates(context.Context, *ListProjectTemplatesRequest) (*ListProjectTemplatesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListProjectTemplates not implemented")
+}
+func (UnimplementedWaypointServer) CreateProjectFromTemplate(context.Context, *CreateProjectFromTemplateRequest) (*CreateProjectFromTemplateResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateProjectFromTemplate not implemented")
+}
+func (UnimplementedWaypointServer) GetTFCRunStatus(context.Context, *GetTFCRunStatusRequest) (*GetTFCRunStatusResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetTFCRunStatus not implemented")
 }
 func (UnimplementedWaypointServer) UI_ListProjects(context.Context, *UI_ListProjectsRequest) (*UI_ListProjectsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UI_ListProjects not implemented")
@@ -4081,6 +4201,132 @@ func _Waypoint_ConfigSyncPipeline_Handler(srv interface{}, ctx context.Context, 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Waypoint_CreateProjectTemplate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateProjectTemplateRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(WaypointServer).CreateProjectTemplate(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/hashicorp.waypoint.Waypoint/CreateProjectTemplate",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(WaypointServer).CreateProjectTemplate(ctx, req.(*CreateProjectTemplateRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Waypoint_UpdateProjectTemplate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateProjectTemplateRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(WaypointServer).UpdateProjectTemplate(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/hashicorp.waypoint.Waypoint/UpdateProjectTemplate",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(WaypointServer).UpdateProjectTemplate(ctx, req.(*UpdateProjectTemplateRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Waypoint_GetProjectTemplate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetProjectTemplateRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(WaypointServer).GetProjectTemplate(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/hashicorp.waypoint.Waypoint/GetProjectTemplate",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(WaypointServer).GetProjectTemplate(ctx, req.(*GetProjectTemplateRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Waypoint_DeleteProjectTemplate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteProjectTemplateRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(WaypointServer).DeleteProjectTemplate(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/hashicorp.waypoint.Waypoint/DeleteProjectTemplate",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(WaypointServer).DeleteProjectTemplate(ctx, req.(*DeleteProjectTemplateRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Waypoint_ListProjectTemplates_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListProjectTemplatesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(WaypointServer).ListProjectTemplates(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/hashicorp.waypoint.Waypoint/ListProjectTemplates",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(WaypointServer).ListProjectTemplates(ctx, req.(*ListProjectTemplatesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Waypoint_CreateProjectFromTemplate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateProjectFromTemplateRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(WaypointServer).CreateProjectFromTemplate(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/hashicorp.waypoint.Waypoint/CreateProjectFromTemplate",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(WaypointServer).CreateProjectFromTemplate(ctx, req.(*CreateProjectFromTemplateRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Waypoint_GetTFCRunStatus_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetTFCRunStatusRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(WaypointServer).GetTFCRunStatus(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/hashicorp.waypoint.Waypoint/GetTFCRunStatus",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(WaypointServer).GetTFCRunStatus(ctx, req.(*GetTFCRunStatusRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Waypoint_UI_ListProjects_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(UI_ListProjectsRequest)
 	if err := dec(in); err != nil {
@@ -4577,6 +4823,34 @@ var Waypoint_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ConfigSyncPipeline",
 			Handler:    _Waypoint_ConfigSyncPipeline_Handler,
+		},
+		{
+			MethodName: "CreateProjectTemplate",
+			Handler:    _Waypoint_CreateProjectTemplate_Handler,
+		},
+		{
+			MethodName: "UpdateProjectTemplate",
+			Handler:    _Waypoint_UpdateProjectTemplate_Handler,
+		},
+		{
+			MethodName: "GetProjectTemplate",
+			Handler:    _Waypoint_GetProjectTemplate_Handler,
+		},
+		{
+			MethodName: "DeleteProjectTemplate",
+			Handler:    _Waypoint_DeleteProjectTemplate_Handler,
+		},
+		{
+			MethodName: "ListProjectTemplates",
+			Handler:    _Waypoint_ListProjectTemplates_Handler,
+		},
+		{
+			MethodName: "CreateProjectFromTemplate",
+			Handler:    _Waypoint_CreateProjectFromTemplate_Handler,
+		},
+		{
+			MethodName: "GetTFCRunStatus",
+			Handler:    _Waypoint_GetTFCRunStatus_Handler,
 		},
 		{
 			MethodName: "UI_ListProjects",
