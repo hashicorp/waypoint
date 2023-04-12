@@ -17,7 +17,7 @@ jobs:
     env:
       GOTAGS: ''
     steps:
-    - uses: actions/checkout@v3.5.0
+    - uses: actions/checkout@83b7061638ee4956cf7545a6f7efe594e5ad0247 # v3.5.1
     - name: Install golangci-lint
       run: |-
         download=https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh
@@ -47,10 +47,10 @@ jobs:
       BASH_ENV: "/home/circleci/project/.circleci/bash_env.sh"
       DOCKER_BUILDKIT: 1
     steps:
-    - uses: actions/checkout@v3.5.0
+    - uses: actions/checkout@83b7061638ee4956cf7545a6f7efe594e5ad0247 # v3.5.1
     - uses: "./.github/actions/md5uilib"
     - name: restore_cache
-      uses: actions/cache@v3.3.1
+      uses: actions/cache@88522ab9f39a2ea568f7027eddc7d8d8bc9d59c8 # v3.3.1
       with:
         key: waypoint-ui-v1-{{ checksum "ui/yarn.lock" }}-{{ checksum "uilib.md5" }}
         path: |-
@@ -75,14 +75,14 @@ jobs:
       DOCKER_BUILDKIT: 1
       JOBS: 2
     steps:
-    - uses: actions/checkout@v3.5.0
+    - uses: actions/checkout@83b7061638ee4956cf7545a6f7efe594e5ad0247 # v3.5.1
     - uses: "./.github/actions/md5uilib"
     - name: restore_cache
-      uses: actions/cache@v3.3.1
+      uses: actions/cache@88522ab9f39a2ea568f7027eddc7d8d8bc9d59c8 # v3.3.1
       with:
         key: waypoint-ui-v1-{{ checksum "ui/yarn.lock" }}-{{ checksum "uilib.md5" }}
     - run: cd ui && make
-    - uses: actions/upload-artifact@v3.1.1
+    - uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
       with:
         path: "././ui/dist"
     - uses: "./.github/actions/notify_main_failure"
@@ -101,13 +101,13 @@ jobs:
       BASH_ENV: "/home/circleci/project/.circleci/bash_env.sh"
       DOCKER_BUILDKIT: 1
     steps:
-    - uses: actions/checkout@v3.5.0
-    - uses: actions/download-artifact@v3.0.1
+    - uses: actions/checkout@83b7061638ee4956cf7545a6f7efe594e5ad0247 # v3.5.1
+    - uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
       with:
         path: "."
     - run: go install github.com/kevinburke/go-bindata/...
     - run: make static-assets
-    - uses: actions/upload-artifact@v3.1.1
+    - uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
       with:
         path: "././pkg/server/gen/bindata_ui.go"
     - uses: "./.github/actions/notify_main_failure"
@@ -126,15 +126,15 @@ jobs:
       BASH_ENV: "/home/circleci/project/.circleci/bash_env.sh"
       DOCKER_BUILDKIT: 1
     steps:
-    - uses: actions/checkout@v3.5.0
-    - uses: actions/download-artifact@v3.0.1
+    - uses: actions/checkout@83b7061638ee4956cf7545a6f7efe594e5ad0247 # v3.5.1
+    - uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
       with:
         path: "."
     - run: |-
         go install github.com/kevinburke/go-bindata/...
         PATH=/home/circleci/go/bin:$PATH make bin
         cp waypoint /home/circleci/go/bin
-    - uses: actions/upload-artifact@v3.1.1
+    - uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
       with:
         path: "/home/circleci/go/bin/waypoint"
     - uses: "./.github/actions/notify_main_failure"
@@ -154,23 +154,23 @@ jobs:
       BASH_ENV: "/home/circleci/project/.circleci/bash_env.sh"
       DOCKER_BUILDKIT: 1
     steps:
-    - uses: actions/checkout@v3.5.0
+    - uses: actions/checkout@83b7061638ee4956cf7545a6f7efe594e5ad0247 # v3.5.1
     # Ensure parameter if_key_exists is set correctly
     - name: Install SSH key
-      uses: shimataro/ssh-key-action@v2.5.0
+      uses: shimataro/ssh-key-action@685d0f20da72e4b53cc81d373a2ed0a867770e46 # v2.5.1
       with:
         key: "${{ secrets.CIRCLE_CI_SSH_KEY }}"
         name: circle_ci_id_rsa
         known_hosts: "${{ secrets.CIRCLE_CI_KNOWN_HOSTS }}"
         if_key_exists: fail
-    - uses: actions/download-artifact@v3.0.1
+    - uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
       with:
         path: "."
     - name: commit pkg/server/gen/bindata_ui.go
       run: |-
         # check if there are any changes in ui/
         # if there are, we commit the ui static asset file
-        last_ui_commit=$(git log -n 1 --pretty=format:%H -- pkg/server/gen/bindata_ui.go)
+        last_ui_commit=$(git log -n 1 --pretty=format:%!H(MISSING) -- pkg/server/gen/bindata_ui.go)
         if ! git diff --quiet --exit-code $last_ui_commit ui/; then
           git config --local user.email "github-team-waypoint@hashicorp.com"
           git config --local user.name "hc-github-team-waypoint"
@@ -187,14 +187,14 @@ jobs:
     needs:
     - dev-build
     steps:
-    - uses: actions/checkout@v3.5.0
+    - uses: actions/checkout@83b7061638ee4956cf7545a6f7efe594e5ad0247 # v3.5.1
     - name: Setup k3s
       run: |-
         curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION="v1.23.8+k3s2" INSTALL_K3S_EXEC="--docker --disable=traefik --write-kubeconfig-mode 664" sh -
         sleep 5
     - name: Get k3s nodes
       run: kubectl get node
-    - uses: actions/download-artifact@v3.0.1
+    - uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
       with:
         path: "."
     - name: Execute Integration Tests
@@ -220,9 +220,9 @@ jobs:
       BASH_ENV: "/home/circleci/project/.circleci/bash_env.sh"
       DOCKER_BUILDKIT: 1
     steps:
-    - uses: actions/checkout@v3.5.0
+    - uses: actions/checkout@83b7061638ee4956cf7545a6f7efe594e5ad0247 # v3.5.1
 #     # 'setup_remote_docker' was not transformed because there is no suitable equivalent in GitHub Actions
-    - uses: actions/download-artifact@v3.0.1
+    - uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
       with:
         path: "."
     - name: 'Docker: Login to GitHub Package Registry'
@@ -255,8 +255,8 @@ jobs:
     env:
       E2E_PLATFORM: Docker
     steps:
-    - uses: actions/checkout@v3.5.0
-    - uses: actions/download-artifact@v3.0.1
+    - uses: actions/checkout@83b7061638ee4956cf7545a6f7efe594e5ad0247 # v3.5.1
+    - uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
       with:
         path: "."
     - run: go version

@@ -17,7 +17,7 @@ jobs:
     env:
       GOTAGS: ''
     steps:
-    - uses: actions/checkout@v3.5.0
+    - uses: actions/checkout@83b7061638ee4956cf7545a6f7efe594e5ad0247 # v3.5.1
     - name: Install golangci-lint
       run: |-
         download=https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh
@@ -47,7 +47,7 @@ jobs:
       BASH_ENV: "/home/circleci/project/.circleci/bash_env.sh"
       DOCKER_BUILDKIT: 1
     steps:
-    - uses: actions/checkout@v3.5.0
+    - uses: actions/checkout@83b7061638ee4956cf7545a6f7efe594e5ad0247 # v3.5.1
     - run: go mod tidy
     - run: |
         if ! git diff --exit-code; then
@@ -89,8 +89,8 @@ jobs:
       GOTAGS: ''
       GOMAXPROCS: 4
     steps:
-    - uses: actions/checkout@v3.5.0
-    - uses: actions/download-artifact@v3.0.1
+    - uses: actions/checkout@83b7061638ee4956cf7545a6f7efe594e5ad0247 # v3.5.1
+    - uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
       with:
         path: "/home/circleci/go/bin"
 #     # 'setup_remote_docker' was not transformed because there is no suitable equivalent in GitHub Actions
@@ -120,10 +120,10 @@ jobs:
           -tags="$GOTAGS" -p 2 \
           -cover -coverprofile=coverage.txt \
           $PACKAGE_NAMES
-    - uses: actions/upload-artifact@v3.1.1
+    - uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
       with:
         path: "/tmp/test-results"
-    - uses: actions/upload-artifact@v3.1.1
+    - uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
       with:
         path: "/tmp/test-results"
     - uses: "./.github/actions/notify_main_failure"
@@ -143,15 +143,15 @@ jobs:
       BASH_ENV: "/home/circleci/project/.circleci/bash_env.sh"
       DOCKER_BUILDKIT: 1
     steps:
-    - uses: actions/checkout@v3.5.0
-    - uses: actions/download-artifact@v3.0.1
+    - uses: actions/checkout@83b7061638ee4956cf7545a6f7efe594e5ad0247 # v3.5.1
+    - uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
       with:
         path: "."
     - run: |-
         go install github.com/kevinburke/go-bindata/...
         PATH=/home/circleci/go/bin:$PATH make bin
         cp waypoint /home/circleci/go/bin
-    - uses: actions/upload-artifact@v3.1.1
+    - uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
       with:
         path: "/home/circleci/go/bin/waypoint"
     - uses: "./.github/actions/notify_main_failure"
@@ -171,8 +171,8 @@ jobs:
       BASH_ENV: "/home/circleci/project/.circleci/bash_env.sh"
       DOCKER_BUILDKIT: 1
     steps:
-    - uses: actions/checkout@v3.5.0
-    - uses: actions/download-artifact@v3.0.1
+    - uses: actions/checkout@83b7061638ee4956cf7545a6f7efe594e5ad0247 # v3.5.1
+    - uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
       with:
         path: "."
     - run: |-
