@@ -54,6 +54,9 @@ jobs:
 #      - frontend-cache
     steps:
       - uses: actions/checkout@83b7061638ee4956cf7545a6f7efe594e5ad0247 # v3.5.1
+      - uses: actions/setup-go@4d34df0c2316fe8122ab82dc22947d607c0c91f9 # v4.0.0
+        with:
+          go-version-file: go.mod
       - uses: actions/setup-node@64ed1c7eab4cce3362f8c340dee64e5eaeef8f7c # v3.6.0
         with:
           node-version: 14.x
@@ -65,11 +68,6 @@ jobs:
           cache-dependency-path: ui/yarn.lock
       - name: Install Yarn
         run: npm install -g yarn
-#      - run: find ui/lib -type f | sort | xargs md5sum > uilib.md5
-#      - name: restore_cache
-#        uses: actions/cache@88522ab9f39a2ea568f7027eddc7d8d8bc9d59c8 # v3.3.1
-#        with:
-#          key: waypoint-ui-v1-{{ checksum "ui/yarn.lock" }}-{{ checksum "uilib.md5" }}
       - name: Make UI
         run: cd ui && make
       - name: Make static assets (bindata_ui)
