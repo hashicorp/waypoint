@@ -1,4 +1,4 @@
-name: hashicorp/waypoint/integration
+name: integration tests
 on:
   pull_request:
 permissions:
@@ -70,7 +70,8 @@ jobs:
 #        uses: actions/cache@88522ab9f39a2ea568f7027eddc7d8d8bc9d59c8 # v3.3.1
 #        with:
 #          key: waypoint-ui-v1-{{ checksum "ui/yarn.lock" }}-{{ checksum "uilib.md5" }}
-      - run: cd ui && make
+      - name: Make UI
+        run: cd ui && make
       - uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
         with:
           path: "ui/dist"
@@ -87,11 +88,14 @@ jobs:
       - uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
         with:
           path: "ui/dist"
-      - run: go install github.com/kevinburke/go-bindata/...
-      - run: make static-assets
+      - name: Make static assets (bindata_ui)
+        run: |-
+          go install github.com/kevinburke/go-bindata/...
+          make static-assets
       - uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
         with:
           path: "pkg/server/gen/bindata_ui.go"
+          name: bindata_ui.go
 
   dev-build:
     runs-on: ubuntu-latest
@@ -105,6 +109,7 @@ jobs:
       - uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
         with:
           path: "pkg/server/gen/bindata_ui.go"
+          name: bindata_ui.go
       - run: |-
           go install github.com/kevinburke/go-bindata/...
           PATH=/home/circleci/go/bin:$PATH make bin
@@ -186,7 +191,7 @@ jobs:
           docker build \
             --progress=plain \
             -t ${{env.REGISTRY}}/hashicorp/waypoint/alpha:latest \
-            -t ${{env.REGISTRY}}/hashicorp/waypoint/alpha:$GIT_COMMIT \
+            -t "${{env.REGISTRY}}/hashicorp/waypoint/alpha:$GIT_COMMIT" \
             .
       - name: 'Docker: Build image (waypoint-odr)'
         run: |-
@@ -194,7 +199,7 @@ jobs:
             --target odr \
             --progress=plain \
             -t ${{env.REGISTRY}}/hashicorp/waypoint/alpha-odr:latest \
-            -t ${{env.REGISTRY}}/hashicorp/waypoint/alpha-odr:$GIT_COMMIT \
+            -t "${{env.REGISTRY}}/hashicorp/waypoint/alpha-odr:$GIT_COMMIT" \
             .
       - name: 'Docker: Push image (waypoint)'
         run: docker push --all-tags docker.pkg.github.com/hashicorp/waypoint/alpha
