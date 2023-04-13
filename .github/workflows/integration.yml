@@ -86,9 +86,10 @@ jobs:
       - name: Make waypoint binary
         run: |-
           make bin
+          tar -cvf waypoint.tar waypoint
       - uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
         with:
-          path: waypoint
+          path: waypoint.tar
           name: waypoint
 
 # FIXME: I *think* this is likely something that should be in a separate workflow.
@@ -140,9 +141,11 @@ jobs:
         run: kubectl get node
       - uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
         with:
-          name: waypoint
+          name: waypoint.tar
       - name: Execute Integration Tests
-        run: "./ci/integration.sh"
+        run: |-
+          tar -xvf waypoint.tar
+          exec ./ci/integration.sh
 
   alpha-image:
     if: github.ref == 'refs/heads/main'
@@ -166,6 +169,8 @@ jobs:
       - uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
         with:
           name: waypoint
+      - name: Uncompress waypoint artifact
+        run: tar -xvf waypoint.tar
       - name: 'Docker: Build image (waypoint)'
         run: |-
           docker build \
@@ -198,6 +203,8 @@ jobs:
       - uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
         with:
           name: waypoint
+      - name: Unpack
+        run: tar -xvf waypoint.tar
       - name: 'Docker: Build image (waypoint-odr)'
         run: |-
           docker build \
@@ -223,7 +230,9 @@ jobs:
       - uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
         with:
           name: waypoint
-      - run: go version
+      - run: |-
+          tar -xvf waypoint.tar
+          go version
       - name: Install go v1.19.4
         run: |-
           curl -SL --fail -o /tmp/golang.tar.gz https://dl.google.com/go/go1.19.4.linux-amd64.tar.gz
