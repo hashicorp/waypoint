@@ -1,30 +1,16 @@
-name: hashicorp/waypoint/json-docs
+name: json-docs
 on:
-  push:
-    branches:
-      - main
-env:
-  ALGOLIA_API_KEY: xxxxxxx
-  GH_DOCKER_PASS: xxxxxxx
-  GH_DOCKER_USER: xxxxxxx
-  SLACK_APPROVAL_NOTIFICATION_WEBHOOK_URL: xxxxxxx
-  SLACK_WEBHOOK: xxxxxxx
+  pull_request:
+
 jobs:
   generate-json-docs:
-    if: github.ref != 'refs/heads/main'
     runs-on: ubuntu-latest
-    container:
-      image: docker.mirror.hashicorp.services/cimg/go:1.19
-    env:
-      TEST_RESULTS_DIR: "/tmp/test-results"
-      GOTESTSUM_RELEASE: 1.8.2
-      EMAIL: noreply@hashicorp.com
-      GIT_AUTHOR_NAME: circleci-waypoint
-      GIT_COMMITTER_NAME: circleci-waypoint
-      BASH_ENV: "/home/circleci/project/.circleci/bash_env.sh"
-      DOCKER_BUILDKIT: 1
     steps:
       - uses: actions/checkout@83b7061638ee4956cf7545a6f7efe594e5ad0247 # v3.5.1
+      - uses: actions/setup-go@4d34df0c2316fe8122ab82dc22947d607c0c91f9 # v4.0.0
+        with:
+          go-version-file: go.mod
+      - run: go mod download
       - uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
         with:
           path: "."
@@ -33,28 +19,19 @@ jobs:
       - run: rm waypoint-restore.db.lock; git status
       - uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
         with:
-          path: "./."
-      - uses: "./.github/actions/notify_main_failure"
+          path: "embedJson"
+          name: docs
+
   check-json-docs:
-    if: github.ref != 'refs/heads/main'
     runs-on: ubuntu-latest
-    container:
-      image: docker.mirror.hashicorp.services/node:14
     needs:
       - generate-json-docs
-    env:
-      TEST_RESULTS_DIR: "/tmp/test-results"
-      GOTESTSUM_RELEASE: 1.8.2
-      EMAIL: noreply@hashicorp.com
-      GIT_AUTHOR_NAME: circleci-waypoint
-      GIT_COMMITTER_NAME: circleci-waypoint
-      BASH_ENV: "/home/circleci/project/.circleci/bash_env.sh"
-      DOCKER_BUILDKIT: 1
     steps:
       - uses: actions/checkout@83b7061638ee4956cf7545a6f7efe594e5ad0247 # v3.5.1
       - uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
         with:
-          path: "."
+          path: "embedJson"
+          name: docs
       - run: git status
       - run: |
           if ! git diff --exit-code embedJson/gen > /dev/null; then
@@ -67,6 +44,6 @@ jobs:
             git status
             exit 1
           fi
-      - uses: "./.github/actions/notify_main_failure"
+
 permissions:
   contents: read
