@@ -22,7 +22,7 @@ require (
 	github.com/distribution/distribution/v3 v3.0.0-20210804104954-38ab4c606ee3
 	github.com/docker/cli v20.10.7+incompatible
 	github.com/docker/distribution v2.8.0+incompatible
-	github.com/docker/docker v20.10.7+incompatible
+	github.com/docker/docker v20.10.24+incompatible
 	github.com/docker/go-connections v0.4.0
 	github.com/docker/go-units v0.4.0
 	github.com/dustin/go-humanize v1.0.0
