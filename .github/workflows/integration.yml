@@ -11,17 +11,21 @@ jobs:
       - uses: actions/setup-go@4d34df0c2316fe8122ab82dc22947d607c0c91f9 # v4.0.0
         with:
           go-version-file: go.mod
+      - name: Download go modules
+        run: go mod download
+      - name: Install golangci-lint
+        run: |-
+          download=https://raw.githubusercontent.com/golangci/golangci-lint/9a8a056e9fe49c0e9ed2287aedce1022c79a115b/install.sh  # v1.52.2
+          curl -sSf "$download" | sh -s v1.50.1
       - run: go mod download
-      - name: Run Linter
-        uses: golangci/golangci-lint-action@08e2f20817b15149a52b5b3ebe7de50aff2ba8c5 # v3.4.0
-        with:
-          version: v1.51
-          args: >-
-            --timeout 10m
-            --enable gofmt
-            --enable gosimple
+      - name: lint
+        run: |-
+          ./bin/golangci-lint run -v --concurrency 2 \
+            --disable-all \
+            --timeout 10m \
+            --enable gofmt \
+            --enable gosimple \
             --enable govet
-
 #  frontend-cache:
 #    runs-on: ubuntu-latest
 #    steps:
