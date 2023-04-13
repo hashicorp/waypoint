@@ -115,14 +115,18 @@ jobs:
 #          fi
 #      - uses: "./.github/actions/notify_main_failure"
   integration:
-    runs-on: ubuntu-20.04
     needs:
       - dev-build
+    runs-on: ubuntu-latest
     steps:
-      - uses: nolar/setup-k3d-k3s@v1
+      - uses: debianmaster/actions-k3s@master
+        id: k3s
         with:
           version: v1.23.8+k3s2
-          github-token: ${{secrets.GITHUB_TOKEN}}  # to bypass rate-limiting with anonymous access
+#      - uses: nolar/setup-k3d-k3s@v1
+#        with:
+#          version: v1.23.8+k3s2
+#          github-token: ${{secrets.GITHUB_TOKEN}}  # to bypass rate-limiting with anonymous access
       - uses: actions/checkout@83b7061638ee4956cf7545a6f7efe594e5ad0247 # v3.5.1
 #      - name: Setup k3s
 #        run: |-
