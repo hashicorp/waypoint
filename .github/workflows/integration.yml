@@ -209,7 +209,8 @@ jobs:
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     needs:
-      - alpha-release
+      - alpha-image
+      - alpha-odr-image
     env:
       E2E_PLATFORM: Docker
     steps:
