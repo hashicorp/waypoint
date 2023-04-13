@@ -713,8 +713,8 @@ message UI {
   // An event packaged alongside prefetched related messages.
   message EventBundle {
     google.protobuf.Timestamp timestamp = 1;
-    EventType eventType  = 2;
-    bytes eventData = 3;
+    EventType event_type  = 2;
+    bytes event_data = 3;
 
     // Supported EventTypes
     enum EventType {
@@ -761,10 +761,10 @@ message UI {
   }
 */
   message ListEventSchemasResponse {
-    UI.EventBuild eventBuildSchema = 1;
-    UI.EventDeployment eventDeploymentSchema = 2;
-    UI.EventRelease eventReleaseSchema = 3;
-    //UI.EventPipelineRun eventPipelineRunSchema = 4;
+    UI.EventBuild event_build_schema = 1;
+    UI.EventDeployment event_deployment_schema = 2;
+    UI.EventRelease event_release_schema = 3;
+    //UI.EventPipelineRun event_pipeline_run_schema = 4;
   }
 }
 

@@ -6484,7 +6484,30 @@
         ]
       }
     },
-    "/ui/events/application/{application.application}": {
+    "/ui/events/event-schemas": {
+      "get": {
+        "summary": "List possible event data types.",
+        "operationId": "Waypoint_INTERNAL_AdditionalMessages",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/hashicorp.waypoint.UI.ListEventSchemasResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/grpc.gateway.runtime.Error"
+            }
+          }
+        },
+        "tags": [
+          "Waypoint"
+        ]
+      }
+    },
+    "/ui/project/{application.project}/application/{application.application}/events": {
       "get": {
         "summary": "List UI events for a given application.",
         "operationId": "Waypoint_UI_ListEvents",
@@ -6504,15 +6527,15 @@
         },
         "parameters": [
           {
-            "name": "application.application",
+            "name": "application.project",
             "in": "path",
             "required": true,
             "type": "string"
           },
           {
-            "name": "application.project",
-            "in": "query",
-            "required": false,
+            "name": "application.application",
+            "in": "path",
+            "required": true,
             "type": "string"
           },
           {
@@ -6555,29 +6578,6 @@
             "collectionFormat": "multi"
           }
         ],
-        "tags": [
-          "Waypoint"
-        ]
-      }
-    },
-    "/ui/events/event-schemas": {
-      "get": {
-        "summary": "List possible event data types.",
-        "operationId": "Waypoint_INTERNAL_AdditionalMessages",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/hashicorp.waypoint.UI.ListEventSchemasResponse"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/grpc.gateway.runtime.Error"
-            }
-          }
-        },
         "tags": [
           "Waypoint"
         ]
@@ -12678,10 +12678,10 @@
           "type": "string",
           "format": "date-time"
         },
-        "eventType": {
+        "event_type": {
           "$ref": "#/definitions/hashicorp.waypoint.UI.EventBundle.EventType"
         },
-        "eventData": {
+        "event_data": {
           "type": "string",
           "format": "byte"
         }
@@ -12786,13 +12786,13 @@
     "hashicorp.waypoint.UI.ListEventSchemasResponse": {
       "type": "object",
       "properties": {
-        "eventBuildSchema": {
+        "event_build_schema": {
           "$ref": "#/definitions/hashicorp.waypoint.UI.EventBuild"
         },
-        "eventDeploymentSchema": {
+        "event_deployment_schema": {
           "$ref": "#/definitions/hashicorp.waypoint.UI.EventDeployment"
         },
-        "eventReleaseSchema": {
+        "event_release_schema": {
           "$ref": "#/definitions/hashicorp.waypoint.UI.EventRelease"
         }
       },

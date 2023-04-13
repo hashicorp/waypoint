@@ -547,7 +547,7 @@ http:
 
     # Events
   - selector: hashicorp.waypoint.Waypoint.UI_ListEvents
-    get: /ui/events/application/{application.application}
+    get: /ui/project/{application.project}/application/{application.application}/events
 
   - selector: hashicorp.waypoint.Waypoint.INTERNAL_AdditionalMessages
     get: /ui/events/event-schemas
