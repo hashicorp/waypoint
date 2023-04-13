@@ -1,8 +1,10 @@
 # If the repository is public, be sure to change to GitHub hosted runners
 name: Lint GitHub Actions Workflows
 on:
-  push:
   pull_request:
+    paths:
+      - .github/workflows/*
+
 permissions:
   contents: read
 jobs:
