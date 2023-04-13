@@ -75,14 +75,15 @@ jobs:
       - name: Make static assets (bindata_ui)
         run: |-
           go install github.com/kevinburke/go-bindata/...
+          echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
           make static-assets
       - uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
         with:
           path: "pkg/server/gen/bindata_ui.go"
           name: bindata_ui.go
-      - run: |-
-          go install github.com/kevinburke/go-bindata/...
-          PATH=/home/circleci/go/bin:$PATH make bin
+      - name: Make waypoint binary
+        run: |-
+          make bin
       - uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
         with:
           path: waypoint
