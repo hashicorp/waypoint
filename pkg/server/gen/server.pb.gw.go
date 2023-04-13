@@ -13942,7 +13942,7 @@ func RegisterWaypointHandlerServer(ctx context.Context, mux *runtime.ServeMux, s
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
-		ctx, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/INTERNAL_AdditionalMessages", runtime.WithHTTPPathPattern("/ui/events/event-schemas"))
+		ctx, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/INTERNAL_AdditionalMessages", runtime.WithHTTPPathPattern("/ui/events/INTERNAL_AdditionalMessages"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -17134,7 +17134,7 @@ func RegisterWaypointHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
-		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/INTERNAL_AdditionalMessages", runtime.WithHTTPPathPattern("/ui/events/event-schemas"))
+		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/INTERNAL_AdditionalMessages", runtime.WithHTTPPathPattern("/ui/events/INTERNAL_AdditionalMessages"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -17452,7 +17452,7 @@ var (
 
 	pattern_Waypoint_UI_ListEvents_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6, 2, 7}, []string{"ui", "project", "application.project", "application", "application.application", "workspace", "workspace.workspace", "events"}, ""))
 
-	pattern_Waypoint_INTERNAL_AdditionalMessages_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"ui", "events", "event-schemas"}, ""))
+	pattern_Waypoint_INTERNAL_AdditionalMessages_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"ui", "events", "INTERNAL_AdditionalMessages"}, ""))
 )
 
 var (

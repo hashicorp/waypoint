@@ -6484,7 +6484,7 @@
         ]
       }
     },
-    "/ui/events/event-schemas": {
+    "/ui/events/INTERNAL_AdditionalMessages": {
       "get": {
         "summary": "List possible event data types.",
         "operationId": "Waypoint_INTERNAL_AdditionalMessages",
