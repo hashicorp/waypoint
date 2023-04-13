@@ -84,7 +84,6 @@ jobs:
           make bin
       - uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
         with:
-          path: waypoint
           name: waypoint
 
 # FIXME: I *think* this is likely something that should be in a separate workflow.
@@ -136,7 +135,6 @@ jobs:
         run: kubectl get node
       - uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
         with:
-          path: waypoint
           name: waypoint
       - name: Execute Integration Tests
         run: "./ci/integration.sh"
@@ -162,7 +160,6 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       - uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
         with:
-          path: waypoint
           name: waypoint
       - name: 'Docker: Build image (waypoint)'
         run: |-
@@ -195,7 +192,6 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       - uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
         with:
-          path: waypoint
           name: waypoint
       - name: 'Docker: Build image (waypoint-odr)'
         run: |-
@@ -221,7 +217,6 @@ jobs:
       - uses: actions/checkout@83b7061638ee4956cf7545a6f7efe594e5ad0247 # v3.5.1
       - uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
         with:
-          path: waypoint
           name: waypoint
       - run: go version
       - name: Install go v1.19.4
