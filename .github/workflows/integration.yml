@@ -119,11 +119,15 @@ jobs:
     needs:
       - dev-build
     steps:
+      - uses: nolar/setup-k3d-k3s@v1
+        with:
+          version: v1.23.8+k3s2
+          github-token: ${{secrets.GITHUB_TOKEN}}  # to bypass rate-limiting with anonymous access
       - uses: actions/checkout@83b7061638ee4956cf7545a6f7efe594e5ad0247 # v3.5.1
-      - name: Setup k3s
-        run: |-
-          curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION="v1.23.8+k3s2" INSTALL_K3S_EXEC="--docker --disable=traefik --write-kubeconfig-mode 664" sh -
-          sleep 5
+#      - name: Setup k3s
+#        run: |-
+#          curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION="v1.23.8+k3s2" INSTALL_K3S_EXEC="--docker --disable=traefik --write-kubeconfig-mode 664" sh -
+#          sleep 5
       - name: Get k3s nodes
         run: kubectl get node
       - uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
@@ -133,11 +137,9 @@ jobs:
       - name: Execute Integration Tests
         run: "./ci/integration.sh"
 
-  image-release:
+  alpha-image:
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    container:
-      image: docker.mirror.hashicorp.services/cimg/base:2022.12
     needs:
       - dev-build
       - integration
@@ -165,6 +167,32 @@ jobs:
             -t ${{env.REGISTRY}}/hashicorp/waypoint/alpha:latest \
             -t "${{env.REGISTRY}}/hashicorp/waypoint/alpha:$GIT_COMMIT" \
             .
+      - name: 'Docker: Push image (waypoint)'
+        run: docker push --all-tags docker.pkg.github.com/hashicorp/waypoint/alpha
+
+  alpha-odr-image:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    needs:
+      - dev-build
+      - integration
+    env:
+      REGISTRY: ghcr.io
+    permissions:
+      packages: write
+      contents: read
+    steps:
+      - uses: actions/checkout@83b7061638ee4956cf7545a6f7efe594e5ad0247 # v3.5.1
+      - name: Log in to the Container registry
+        uses: docker/login-action@f054a8b539a109f9f41c372932f1ae047eff08c9
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
+        with:
+          path: waypoint
+          name: waypoint
       - name: 'Docker: Build image (waypoint-odr)'
         run: |-
           docker build \
@@ -173,8 +201,6 @@ jobs:
             -t ${{env.REGISTRY}}/hashicorp/waypoint/alpha-odr:latest \
             -t "${{env.REGISTRY}}/hashicorp/waypoint/alpha-odr:$GIT_COMMIT" \
             .
-      - name: 'Docker: Push image (waypoint)'
-        run: docker push --all-tags docker.pkg.github.com/hashicorp/waypoint/alpha
       - name: 'Docker: Push image (waypoint-odr)'
         run: docker push --all-tags docker.pkg.github.com/hashicorp/waypoint/alpha-odr
       #- uses: "./.github/actions/notify_main_failure"
@@ -183,7 +209,7 @@ jobs:
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     needs:
-      - image-release
+      - alpha-release
     env:
       E2E_PLATFORM: Docker
     steps:
