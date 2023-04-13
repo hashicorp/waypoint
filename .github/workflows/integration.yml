@@ -122,7 +122,7 @@ jobs:
       - uses: debianmaster/actions-k3s@master
         id: k3s
         with:
-          version: v1.23.8+k3s2
+          version: v1.23.8-k3s2
 #      - uses: nolar/setup-k3d-k3s@v1
 #        with:
 #          version: v1.23.8+k3s2
