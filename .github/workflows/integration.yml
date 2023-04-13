@@ -88,6 +88,7 @@ jobs:
           make bin
       - uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
         with:
+          path: waypoint
           name: waypoint
 
 # FIXME: I *think* this is likely something that should be in a separate workflow.
