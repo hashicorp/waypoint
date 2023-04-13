@@ -48,7 +48,7 @@ jobs:
 #      - name: install yarn packages
 #        run: cd ui && yarn install
 
-  ember-build-prod:
+  dev-build:
     runs-on: ubuntu-latest
 #    needs:
 #      - frontend-cache
@@ -72,22 +72,6 @@ jobs:
 #          key: waypoint-ui-v1-{{ checksum "ui/yarn.lock" }}-{{ checksum "uilib.md5" }}
       - name: Make UI
         run: cd ui && make
-      - uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
-        with:
-          path: "ui/dist"
-
-  build-static-assets:
-    runs-on: ubuntu-latest
-    needs:
-      - ember-build-prod
-    steps:
-      - uses: actions/checkout@83b7061638ee4956cf7545a6f7efe594e5ad0247 # v3.5.1
-      - uses: actions/setup-go@4d34df0c2316fe8122ab82dc22947d607c0c91f9 # v4.0.0
-        with:
-          go-version-file: go.mod
-      - uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
-        with:
-          path: "ui/dist"
       - name: Make static assets (bindata_ui)
         run: |-
           go install github.com/kevinburke/go-bindata/...
@@ -96,26 +80,13 @@ jobs:
         with:
           path: "pkg/server/gen/bindata_ui.go"
           name: bindata_ui.go
-
-  dev-build:
-    runs-on: ubuntu-latest
-    needs:
-      - build-static-assets
-    steps:
-      - uses: actions/checkout@83b7061638ee4956cf7545a6f7efe594e5ad0247 # v3.5.1
-      - uses: actions/setup-go@4d34df0c2316fe8122ab82dc22947d607c0c91f9 # v4.0.0
-        with:
-          go-version-file: go.mod
-      - uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
-        with:
-          path: "pkg/server/gen/bindata_ui.go"
-          name: bindata_ui.go
       - run: |-
           go install github.com/kevinburke/go-bindata/...
           PATH=/home/circleci/go/bin:$PATH make bin
       - uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
         with:
-          path: "waypoint"
+          path: waypoint
+          name: waypoint
 
 # FIXME: I *think* this is likely something that should be in a separate workflow.
 #  publish-static-assets:
@@ -158,7 +129,8 @@ jobs:
         run: kubectl get node
       - uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
         with:
-          path: "waypoint"
+          path: waypoint
+          name: waypoint
       - name: Execute Integration Tests
         run: "./ci/integration.sh"
 
@@ -185,7 +157,8 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       - uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
         with:
-          path: "waypoint"
+          path: waypoint
+          name: waypoint
       - name: 'Docker: Build image (waypoint)'
         run: |-
           docker build \
@@ -218,7 +191,8 @@ jobs:
       - uses: actions/checkout@83b7061638ee4956cf7545a6f7efe594e5ad0247 # v3.5.1
       - uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
         with:
-          path: "waypoint"
+          path: waypoint
+          name: waypoint
       - run: go version
       - name: Install go v1.19.4
         run: |-
