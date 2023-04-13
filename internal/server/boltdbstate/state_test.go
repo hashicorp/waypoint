@@ -26,6 +26,7 @@ func TestImpl(t *testing.T) {
 	knownFailingStateTests := []string{
 		"TestProjectPagination", // Failing b/c pagination not implemented in boltdb
 		"TestJobListPagination", // Failing b/c pagination not implemented in boltdb
+		"TestEvent",             //Failing b/c events aren't implemented in boltdb
 	}
 
 	statetest.Test(t, func(t *testing.T) serverstate.Interface {

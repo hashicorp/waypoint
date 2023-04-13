@@ -121,6 +121,11 @@ type Interface interface {
 	GetFileChangeSignal(context.Context, *pb.Ref_Application) (string, error)
 
 	//---------------------------------------------------------------
+	// Events
+	EventListBundles(context.Context, *pb.UI_ListEventsRequest) ([]*pb.UI_EventBundle, *pb.PaginationResponse, error)
+	EventPut(context.Context, *Event) error
+
+	//---------------------------------------------------------------
 	// Operations
 
 	ArtifactPut(context.Context, bool, *pb.PushedArtifact) error

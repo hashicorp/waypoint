@@ -547,3 +547,13 @@ http:
 
   - selector: hashicorp.waypoint.Waypoint.GetTFCRunStatus
     get: /project/{project.project}/tfcrunstatus
+
+    # Events
+  - selector: hashicorp.waypoint.Waypoint.UI_ListEvents
+    get: /ui/project/{application.project}/application/{application.application}/events
+
+  - selector: hashicorp.waypoint.Waypoint.UI_ListEvents
+    get: /ui/project/{application.project}/application/{application.application}/workspace/{workspace.workspace}/events
+
+  - selector: hashicorp.waypoint.Waypoint.INTERNAL_AdditionalMessages
+    get: /ui/events/INTERNAL_AdditionalMessages

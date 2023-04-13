@@ -6484,6 +6484,181 @@
         ]
       }
     },
+    "/ui/events/INTERNAL_AdditionalMessages": {
+      "get": {
+        "summary": "List possible event data types.",
+        "operationId": "Waypoint_INTERNAL_AdditionalMessages",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/hashicorp.waypoint.UI.ListEventSchemasResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/grpc.gateway.runtime.Error"
+            }
+          }
+        },
+        "tags": [
+          "Waypoint"
+        ]
+      }
+    },
+    "/ui/project/{application.project}/application/{application.application}/events": {
+      "get": {
+        "summary": "List UI events for a given application.",
+        "operationId": "Waypoint_UI_ListEvents",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/hashicorp.waypoint.UI.ListEventsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/grpc.gateway.runtime.Error"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "application.project",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "application.application",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "workspace.workspace",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "pagination.page_size",
+            "description": "The max number of results per page that should be returned. If the number\nof available results is larger than `page_size`, a `next_page_token` is\nreturned which can be used to get the next page of results in subsequent\nrequests. A value of zero will cause `page_size` to be defaulted.",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "pagination.next_page_token",
+            "description": "Specifies a page token to use to retrieve the next page. Set this to the\n`next_page_token` returned by previous list requests to get the next page of\nresults. If set, `previous_page_token` must not be set.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "pagination.previous_page_token",
+            "description": "Specifies a page token to use to retrieve the previous page. Set this to\nthe `previous_page_token` returned by previous list requests to get the\nprevious page of results. If set, `next_page_token` must not be set.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "sorting.order_by",
+            "description": "Specifies the list of per field ordering that should be used for sorting.\nThe order matters as rows are sorted in order by fields and when the field\nmatches, the next field is used to tie break the ordering.\nThe per field default ordering is ascending.\n\nThe fields should be immutable, unique, and orderable. If the field is\nnot unique, more than one sort fields should be passed.\n\nExample: order_by=name,age desc,created_at asc\nIn that case, 'name' will get the default 'ascending' order.",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi"
+          }
+        ],
+        "tags": [
+          "Waypoint"
+        ]
+      }
+    },
+    "/ui/project/{application.project}/application/{application.application}/workspace/{workspace.workspace}/events": {
+      "get": {
+        "summary": "List UI events for a given application.",
+        "operationId": "Waypoint_UI_ListEvents2",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/hashicorp.waypoint.UI.ListEventsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/grpc.gateway.runtime.Error"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "application.project",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "application.application",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "workspace.workspace",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "pagination.page_size",
+            "description": "The max number of results per page that should be returned. If the number\nof available results is larger than `page_size`, a `next_page_token` is\nreturned which can be used to get the next page of results in subsequent\nrequests. A value of zero will cause `page_size` to be defaulted.",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "pagination.next_page_token",
+            "description": "Specifies a page token to use to retrieve the next page. Set this to the\n`next_page_token` returned by previous list requests to get the next page of\nresults. If set, `previous_page_token` must not be set.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "pagination.previous_page_token",
+            "description": "Specifies a page token to use to retrieve the previous page. Set this to\nthe `previous_page_token` returned by previous list requests to get the\nprevious page of results. If set, `next_page_token` must not be set.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "sorting.order_by",
+            "description": "Specifies the list of per field ordering that should be used for sorting.\nThe order matters as rows are sorted in order by fields and when the field\nmatches, the next field is used to tie break the ordering.\nThe per field default ordering is ascending.\n\nThe fields should be immutable, unique, and orderable. If the field is\nnot unique, more than one sort fields should be passed.\n\nExample: order_by=name,age desc,created_at asc\nIn that case, 'name' will get the default 'ascending' order.",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi"
+          }
+        ],
+        "tags": [
+          "Waypoint"
+        ]
+      }
+    },
     "/ui/project/{pipeline.owner.project.project}/pipelines/{pipeline.owner.pipeline_name}/runs": {
       "get": {
         "summary": "List pipeline runs with pagination for a given pipeline",
@@ -11955,6 +12130,19 @@
         }
       }
     },
+    "hashicorp.waypoint.SortingRequest": {
+      "type": "object",
+      "properties": {
+        "order_by": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Specifies the list of per field ordering that should be used for sorting.\nThe order matters as rows are sorted in order by fields and when the field\nmatches, the next field is used to tie break the ordering.\nThe per field default ordering is ascending.\n\nThe fields should be immutable, unique, and orderable. If the field is\nnot unique, more than one sort fields should be passed.\n\nExample: order_by=name,age desc,created_at asc\nIn that case, 'name' will get the default 'ascending' order."
+        }
+      },
+      "description": "SortingRequest are the parameters for a sorted list request."
+    },
     "hashicorp.waypoint.Status": {
       "type": "object",
       "properties": {
@@ -12534,6 +12722,108 @@
       },
       "description": "A deployment packaged alongside prefetched related messages."
     },
+    "hashicorp.waypoint.UI.EventBuild": {
+      "type": "object",
+      "properties": {
+        "build_id": {
+          "type": "string"
+        },
+        "sequence": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "component": {
+          "$ref": "#/definitions/hashicorp.waypoint.Component"
+        },
+        "workspace": {
+          "$ref": "#/definitions/hashicorp.waypoint.Ref.Workspace"
+        },
+        "status": {
+          "$ref": "#/definitions/hashicorp.waypoint.Status"
+        },
+        "commit": {
+          "type": "string",
+          "title": "commit is the full commit hash"
+        }
+      }
+    },
+    "hashicorp.waypoint.UI.EventBundle": {
+      "type": "object",
+      "properties": {
+        "timestamp": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "event_type": {
+          "$ref": "#/definitions/hashicorp.waypoint.UI.EventBundle.EventType"
+        },
+        "event_data": {
+          "type": "string",
+          "format": "byte"
+        }
+      },
+      "description": "An event packaged alongside prefetched related messages."
+    },
+    "hashicorp.waypoint.UI.EventBundle.EventType": {
+      "type": "string",
+      "enum": [
+        "BUILD",
+        "DEPLOYMENT",
+        "RELEASE"
+      ],
+      "default": "BUILD",
+      "title": "Supported EventTypes"
+    },
+    "hashicorp.waypoint.UI.EventDeployment": {
+      "type": "object",
+      "properties": {
+        "deployment_id": {
+          "type": "string"
+        },
+        "sequence": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "component": {
+          "$ref": "#/definitions/hashicorp.waypoint.Component"
+        },
+        "workspace": {
+          "$ref": "#/definitions/hashicorp.waypoint.Ref.Workspace"
+        },
+        "status": {
+          "$ref": "#/definitions/hashicorp.waypoint.Status"
+        },
+        "build_sequence": {
+          "type": "string",
+          "format": "uint64"
+        }
+      }
+    },
+    "hashicorp.waypoint.UI.EventRelease": {
+      "type": "object",
+      "properties": {
+        "release_id": {
+          "type": "string"
+        },
+        "sequence": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "component": {
+          "$ref": "#/definitions/hashicorp.waypoint.Component"
+        },
+        "workspace": {
+          "$ref": "#/definitions/hashicorp.waypoint.Ref.Workspace"
+        },
+        "status": {
+          "$ref": "#/definitions/hashicorp.waypoint.Status"
+        },
+        "deployment_sequence": {
+          "type": "string",
+          "format": "uint64"
+        }
+      }
+    },
     "hashicorp.waypoint.UI.GetDeploymentResponse": {
       "type": "object",
       "properties": {
@@ -12566,6 +12856,36 @@
             "$ref": "#/definitions/hashicorp.waypoint.UI.DeploymentBundle"
           },
           "description": "The list of deployments with related messages prefetched."
+        }
+      }
+    },
+    "hashicorp.waypoint.UI.ListEventSchemasResponse": {
+      "type": "object",
+      "properties": {
+        "event_build_schema": {
+          "$ref": "#/definitions/hashicorp.waypoint.UI.EventBuild"
+        },
+        "event_deployment_schema": {
+          "$ref": "#/definitions/hashicorp.waypoint.UI.EventDeployment"
+        },
+        "event_release_schema": {
+          "$ref": "#/definitions/hashicorp.waypoint.UI.EventRelease"
+        }
+      },
+      "title": "NOTE(Cassie): This should be implemented once pipeline_runs are app scoped\nmessage EventPipelineRun {\nstring pipelineRun_id = 1;\nuint64 sequence = 2;\n//    Component component = 3; //aka platform\n//    Ref.Workspace workspace = 4;\n}"
+    },
+    "hashicorp.waypoint.UI.ListEventsResponse": {
+      "type": "object",
+      "properties": {
+        "events": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/hashicorp.waypoint.UI.EventBundle"
+          },
+          "description": "The list of events with related messages prefetched."
+        },
+        "pagination": {
+          "$ref": "#/definitions/hashicorp.waypoint.PaginationResponse"
         }
       }
     },

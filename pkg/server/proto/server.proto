@@ -517,6 +517,12 @@ service Waypoint {
 
   // List releases for a given application.
   rpc UI_ListReleases(UI.ListReleasesRequest) returns (UI.ListReleasesResponse);
+
+  // List UI events for a given application.
+  rpc UI_ListEvents(UI.ListEventsRequest) returns (UI.ListEventsResponse);
+
+  // List possible event data types.
+  rpc INTERNAL_AdditionalMessages(google.protobuf.Empty) returns (UI.ListEventSchemasResponse);
 }
 
 /********************************************************************
@@ -684,6 +690,81 @@ message UI {
 
     // The most recent status report generated for this release.
     StatusReport latest_status_report = 2;
+  }
+
+  message ListEventsRequest {
+    // Application that the events belong to.
+    Ref.Application application = 1;
+
+    // Workspace that the events belong to.
+    // If undefined, events from all workspaces will be listed.
+    Ref.Workspace workspace = 2;
+
+    PaginationRequest pagination = 3;
+    SortingRequest sorting = 4;
+  }
+
+  message ListEventsResponse {
+    // The list of events with related messages prefetched.
+    repeated UI.EventBundle events = 1;
+    PaginationResponse pagination = 2;
+  }
+
+  // An event packaged alongside prefetched related messages.
+  message EventBundle {
+    google.protobuf.Timestamp timestamp = 1;
+    EventType event_type  = 2;
+    bytes event_data = 3;
+
+    // Supported EventTypes
+    enum EventType {
+      BUILD = 0;
+      DEPLOYMENT = 1;
+      RELEASE = 2;
+    }
+    //generic so looser contract for activity feed between backend and UI
+  }
+
+  message EventBuild {
+    string build_id = 1;
+    uint64 sequence = 2;
+    Component component = 3; //aka platform
+    Ref.Workspace workspace = 4;
+    Status status = 5;
+    // commit is the full commit hash
+    string commit = 6;
+  }
+
+  message EventDeployment {
+    string deployment_id = 1;
+    uint64 sequence = 2;
+    Component component = 3; //aka platform
+    Ref.Workspace workspace = 4;
+    Status status = 5;
+    uint64 build_sequence = 6;
+  }
+
+  message EventRelease {
+    string release_id = 1;
+    uint64 sequence = 2;
+    Component component = 3; //aka platform
+    Ref.Workspace workspace = 4;
+    Status status = 5;
+    uint64 deployment_sequence = 6;
+  }
+/* NOTE(Cassie): This should be implemented once pipeline_runs are app scoped
+  message EventPipelineRun {
+    string pipelineRun_id = 1;
+    uint64 sequence = 2;
+//    Component component = 3; //aka platform
+//    Ref.Workspace workspace = 4;
+  }
+*/
+  message ListEventSchemasResponse {
+    UI.EventBuild event_build_schema = 1;
+    UI.EventDeployment event_deployment_schema = 2;
+    UI.EventRelease event_release_schema = 3;
+    //UI.EventPipelineRun event_pipeline_run_schema = 4;
   }
 }
 
@@ -5708,3 +5789,19 @@ message PaginationResponse {
   // there are no more pages.
   string previous_page_token = 2 [json_name="previous_page_token"];
 }
+
+// SortingRequest are the parameters for a sorted list request.
+message SortingRequest {
+  // Specifies the list of per field ordering that should be used for sorting.
+  // The order matters as rows are sorted in order by fields and when the field
+  // matches, the next field is used to tie break the ordering.
+  // The per field default ordering is ascending.
+  //
+  // The fields should be immutable, unique, and orderable. If the field is
+  // not unique, more than one sort fields should be passed.
+  //
+  // Example: order_by=name,age desc,created_at asc
+  // In that case, 'name' will get the default 'ascending' order.
+  repeated string order_by = 1 [json_name="order_by"];
+}
+
