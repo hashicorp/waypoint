@@ -61,30 +61,32 @@ jobs:
       - uses: actions/setup-go@4d34df0c2316fe8122ab82dc22947d607c0c91f9 # v4.0.0
         with:
           go-version-file: go.mod
-      - uses: actions/setup-node@64ed1c7eab4cce3362f8c340dee64e5eaeef8f7c # v3.6.0
-        with:
-          node-version: 14.x
-      - name: Setup Nodejs with yarn caching
-        uses: actions/setup-node@v3
-        with:
-          node-version: "14"
-          cache: yarn
-          cache-dependency-path: ui/yarn.lock
-      - name: Install Yarn
-        run: npm install -g yarn
-      - name: Make UI
-        run: cd ui && make
-      - name: Make static assets (bindata_ui)
+#      - uses: actions/setup-node@64ed1c7eab4cce3362f8c340dee64e5eaeef8f7c # v3.6.0
+#        with:
+#          node-version: 14.x
+#      - name: Setup Nodejs with yarn caching
+#        uses: actions/setup-node@v3
+#        with:
+#          node-version: "14"
+#          cache: yarn
+#          cache-dependency-path: ui/yarn.lock
+#      - name: Install Yarn
+#        run: npm install -g yarn
+#      - name: Make UI
+#        run: cd ui && make
+#      - name: Make static assets (bindata_ui)
+#        run: |-
+#          go install github.com/kevinburke/go-bindata/...
+#          echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
+#          make static-assets
+#      - uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
+#        with:
+#          path: "pkg/server/gen/bindata_ui.go"
+#          name: bindata_ui.go
+      - name: Make waypoint binary
         run: |-
           go install github.com/kevinburke/go-bindata/...
           echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
-          make static-assets
-      - uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
-        with:
-          path: "pkg/server/gen/bindata_ui.go"
-          name: bindata_ui.go
-      - name: Make waypoint binary
-        run: |-
           make bin
           tar --strip-components=1 -cvf waypoint.tar dist/waypoint
       - uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
