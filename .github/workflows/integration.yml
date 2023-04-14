@@ -90,10 +90,7 @@ jobs:
           go install github.com/kevinburke/go-bindata/...
           echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
           make static-assets
-      - uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
-        with:
-          path: "pkg/server/gen/bindata_ui.go"
-          name: bindata_ui.go
+
       - name: Make waypoint binary
         run: |-
           make bin
@@ -103,38 +100,14 @@ jobs:
           path: waypoint.tar
           name: waypoint.tar
 
-# FIXME: I *think* this is likely something that should be in a separate workflow.
-#  publish-static-assets:
-#    if: github.ref == 'refs/heads/main'
-#    runs-on: ubuntu-latest
-#    needs:
-#      - build-static-assets
-#    steps:
-#      - uses: actions/checkout@83b7061638ee4956cf7545a6f7efe594e5ad0247 # v3.5.1
-#      - uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
-#        with:
-#          path: "waypoint"
-#      - name: commit pkg/server/gen/bindata_ui.go
-#        run: |-
-#          # check if there are any changes in ui/
-#          # if there are, we commit the ui static asset file
-#          last_ui_commit=$(git log -n 1 --pretty=format:%!H(MISSING) -- pkg/server/gen/bindata_ui.go)
-#          if ! git diff --quiet --exit-code $last_ui_commit ui/; then
-#            git config --local user.email "github-team-waypoint@hashicorp.com"
-#            git config --local user.name "hc-github-team-waypoint"
-#            short_sha=$(git rev-parse --short HEAD)
-#            git add pkg/server/gen/bindata_ui.go
-#            git commit -m "auto-updated pkg/server/gen/bindata_ui.go from commit ${short_sha}"
-#            git push origin main
-#          else
-#            echo "no UI changes so no static assets to publish"
-#          fi
-#      - uses: "./.github/actions/notify_main_failure"
   integration:
     needs:
       - dev-build
     runs-on: ubuntu-latest
     steps:
+      # FIXME: Figure out how to install k3s.
+      # 1) Port the action? Use e different action?
+      # 2) Fix the srart-up (is it a performance issue? Do we need to wait longer?)
       - uses: debianmaster/actions-k3s@master
         id: k3s
         with:
@@ -147,7 +120,7 @@ jobs:
 #      - name: Setup k3s
 #        run: |-
 #          curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION="v1.23.8+k3s2" INSTALL_K3S_EXEC="--docker --disable=traefik --write-kubeconfig-mode 664" sh -
-#          sleep 5
+#          timeout 60s bash -c 'while ! kubectl get node 2>/dev/null ; do sleep 5 ; done; echo "Connected, ok"'
       - name: Get k3s nodes
         run: kubectl get node
       - uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
@@ -160,96 +133,97 @@ jobs:
           git status; chmod u+x waypoint
           exec ./ci/integration.sh
 
-  alpha-image:
-    if: github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-    needs:
-      - dev-build
-      - integration
-    env:
-      REGISTRY: ghcr.io
-    permissions:
-      packages: write
-      contents: read
-    steps:
-      - uses: actions/checkout@83b7061638ee4956cf7545a6f7efe594e5ad0247 # v3.5.1
-      - name: Log in to the Container registry
-        uses: docker/login-action@f054a8b539a109f9f41c372932f1ae047eff08c9
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      - uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
-        with:
-          name: waypoint.tar
-      - name: Uncompress waypoint artifact
-        run: tar -xvf waypoint.tar
-      - name: 'Docker: Build image (waypoint)'
-        run: |-
-          docker build \
-            --progress=plain \
-            -t ${{env.REGISTRY}}/hashicorp/waypoint/alpha:latest \
-            -t "${{env.REGISTRY}}/hashicorp/waypoint/alpha:$GIT_COMMIT" \
-            .
-      - name: 'Docker: Push image (waypoint)'
-        run: docker push --all-tags docker.pkg.github.com/hashicorp/waypoint/alpha
-
-  alpha-odr-image:
-    if: github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-    needs:
-      - dev-build
-      - integration
-    env:
-      REGISTRY: ghcr.io
-    permissions:
-      packages: write
-      contents: read
-    steps:
-      - uses: actions/checkout@83b7061638ee4956cf7545a6f7efe594e5ad0247 # v3.5.1
-      - name: Log in to the Container registry
-        uses: docker/login-action@f054a8b539a109f9f41c372932f1ae047eff08c9
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      - uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
-        with:
-          name: waypoint.tar
-      - name: Unpack
-        run: tar -xvf waypoint.tar
-      - name: 'Docker: Build image (waypoint-odr)'
-        run: |-
-          docker build \
-            --target odr \
-            --progress=plain \
-            -t ${{env.REGISTRY}}/hashicorp/waypoint/alpha-odr:latest \
-            -t "${{env.REGISTRY}}/hashicorp/waypoint/alpha-odr:$GIT_COMMIT" \
-            .
-      - name: 'Docker: Push image (waypoint-odr)'
-        run: docker push --all-tags docker.pkg.github.com/hashicorp/waypoint/alpha-odr
-      #- uses: "./.github/actions/notify_main_failure"
-
-  e2e-docker:
-    if: github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-    needs:
-      - alpha-image
-      - alpha-odr-image
-    env:
-      E2E_PLATFORM: Docker
-    steps:
-      - uses: actions/checkout@83b7061638ee4956cf7545a6f7efe594e5ad0247 # v3.5.1
-      - uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
-        with:
-          name: waypoint.tar
-      - run: |-
-          tar -xvf waypoint.tar
-          go version
-      - uses: actions/setup-go@4d34df0c2316fe8122ab82dc22947d607c0c91f9 # v4.0.0
-        with:
-          go-version-file: go.mod
-      - name: Execute E2E Docker Tests
-        run: "./test-e2e/run-test.sh"
-      #- uses: "./.github/actions/notify_main_failure"
-
+# FIXME: Is this CRT-able?
+#  alpha-image:
+#    if: github.ref == 'refs/heads/main'
+#    runs-on: ubuntu-latest
+#    needs:
+#      - dev-build
+#      - integration
+#    env:
+#      REGISTRY: ghcr.io
+#    permissions:
+#      packages: write
+#      contents: read
+#    steps:
+#      - uses: actions/checkout@83b7061638ee4956cf7545a6f7efe594e5ad0247 # v3.5.1
+#      - name: Log in to the Container registry
+#        uses: docker/login-action@f054a8b539a109f9f41c372932f1ae047eff08c9
+#        with:
+#          registry: ${{ env.REGISTRY }}
+#          username: ${{ github.actor }}
+#          password: ${{ secrets.GITHUB_TOKEN }}
+#      - uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
+#        with:
+#          name: waypoint.tar
+#      - name: Uncompress waypoint artifact
+#        run: tar -xvf waypoint.tar
+#      - name: 'Docker: Build image (waypoint)'
+#        run: |-
+#          docker build \
+#            --progress=plain \
+#            -t ${{env.REGISTRY}}/hashicorp/waypoint/alpha:latest \
+#            -t "${{env.REGISTRY}}/hashicorp/waypoint/alpha:$GIT_COMMIT" \
+#            .
+#      - name: 'Docker: Push image (waypoint)'
+#        run: docker push --all-tags docker.pkg.github.com/hashicorp/waypoint/alpha
+#
+#  alpha-odr-image:
+#    if: github.ref == 'refs/heads/main'
+#    runs-on: ubuntu-latest
+#    needs:
+#      - dev-build
+#      - integration
+#    env:
+#      REGISTRY: ghcr.io
+#    permissions:
+#      packages: write
+#      contents: read
+#    steps:
+#      - uses: actions/checkout@83b7061638ee4956cf7545a6f7efe594e5ad0247 # v3.5.1
+#      - name: Log in to the Container registry
+#        uses: docker/login-action@f054a8b539a109f9f41c372932f1ae047eff08c9
+#        with:
+#          registry: ${{ env.REGISTRY }}
+#          username: ${{ github.actor }}
+#          password: ${{ secrets.GITHUB_TOKEN }}
+#      - uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
+#        with:
+#          name: waypoint.tar
+#      - name: Unpack
+#        run: tar -xvf waypoint.tar
+#      - name: 'Docker: Build image (waypoint-odr)'
+#        run: |-
+#          docker build \
+#            --target odr \
+#            --progress=plain \
+#            -t ${{env.REGISTRY}}/hashicorp/waypoint/alpha-odr:latest \
+#            -t "${{env.REGISTRY}}/hashicorp/waypoint/alpha-odr:$GIT_COMMIT" \
+#            .
+#      - name: 'Docker: Push image (waypoint-odr)'
+#        run: docker push --all-tags docker.pkg.github.com/hashicorp/waypoint/alpha-odr
+#      #- uses: "./.github/actions/notify_main_failure"
+#
+#  e2e-docker:
+#    if: github.ref == 'refs/heads/main'
+#    runs-on: ubuntu-latest
+#    needs:
+#      - alpha-image
+#      - alpha-odr-image
+#    env:
+#      E2E_PLATFORM: Docker
+#    steps:
+#      - uses: actions/checkout@83b7061638ee4956cf7545a6f7efe594e5ad0247 # v3.5.1
+#      - uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
+#        with:
+#          name: waypoint.tar
+#      - run: |-
+#          tar -xvf waypoint.tar
+#          go version
+#      - uses: actions/setup-go@4d34df0c2316fe8122ab82dc22947d607c0c91f9 # v4.0.0
+#        with:
+#          go-version-file: go.mod
+#      - name: Execute E2E Docker Tests
+#        run: "./test-e2e/run-test.sh"
+#      #- uses: "./.github/actions/notify_main_failure"
+#
