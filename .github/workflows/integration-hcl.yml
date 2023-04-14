@@ -1,7 +1,8 @@
 name: integration-hcl
 on:
   pull_request:
-    paths: [builtin/**]
+# FIXME: Disabling for the purposes of PR #4617 validation, but re-enable before merging!
+#    paths: [builtin/**]
 jobs:
   generate-integration-hcl:
     runs-on: ubuntu-latest
