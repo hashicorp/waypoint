@@ -147,6 +147,8 @@ jobs:
       - name: Execute Integration Tests
         run: |-
           tar -xvf waypoint.tar
+          ls -lah
+          git status; chmod u+x waypoint
           exec ./ci/integration.sh
 
   alpha-image:
