@@ -90,7 +90,7 @@ jobs:
       - uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
         with:
           path: waypoint.tar
-          name: waypoint
+          name: waypoint.tar
 
 # FIXME: I *think* this is likely something that should be in a separate workflow.
 #  publish-static-assets:
@@ -168,7 +168,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       - uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
         with:
-          name: waypoint
+          name: waypoint.tar
       - name: Uncompress waypoint artifact
         run: tar -xvf waypoint.tar
       - name: 'Docker: Build image (waypoint)'
@@ -202,7 +202,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       - uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
         with:
-          name: waypoint
+          name: waypoint.tar
       - name: Unpack
         run: tar -xvf waypoint.tar
       - name: 'Docker: Build image (waypoint-odr)'
@@ -229,18 +229,14 @@ jobs:
       - uses: actions/checkout@83b7061638ee4956cf7545a6f7efe594e5ad0247 # v3.5.1
       - uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
         with:
-          name: waypoint
+          name: waypoint.tar
       - run: |-
           tar -xvf waypoint.tar
           go version
-      - name: Install go v1.19.4
-        run: |-
-          curl -SL --fail -o /tmp/golang.tar.gz https://dl.google.com/go/go1.19.4.linux-amd64.tar.gz
-          sudo rm -rf /usr/local/go
-          sudo tar -C /usr/local/ -xzf /tmp/golang.tar.gz
-          rm -rf /tmp/golang.tar.gz
-          go version
+      - uses: actions/setup-go@4d34df0c2316fe8122ab82dc22947d607c0c91f9 # v4.0.0
+        with:
+          go-version-file: go.mod
       - name: Execute E2E Docker Tests
         run: "./test-e2e/run-test.sh"
-      - uses: "./.github/actions/notify_main_failure"
+      #- uses: "./.github/actions/notify_main_failure"
 
