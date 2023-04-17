@@ -1,0 +1,4 @@
+```release-note:improvement
+cli: new flags for `waypoint install` on Nomad:
+-nomad-service-address and -nomad-network-mode
+```
