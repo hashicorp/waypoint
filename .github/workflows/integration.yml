@@ -113,17 +113,21 @@ jobs:
 #        id: k3s
 #        with:
 #          version: v1.23.8-k3s2
-#      - uses: nolar/setup-k3d-k3s@v1
-#        with:
-#          version: v1.23.8+k3s2
-#          github-token: ${{secrets.GITHUB_TOKEN}}  # to bypass rate-limiting with anonymous access
-      - uses: actions/checkout@83b7061638ee4956cf7545a6f7efe594e5ad0247 # v3.5.1
-      - name: Setup k3s
-        run: |-
-          curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION="v1.23.8+k3s2" INSTALL_K3S_EXEC="--docker --disable=traefik --write-kubeconfig-mode 664" sh -
-          timeout 60s bash -c 'while ! kubectl get node 2>/dev/null ; do sleep 3 ; done; echo "Connected, ok"'
-      - name: Get k3s nodes
-        run: kubectl get node
+      # k3d is the k3s recommended way to run in docker
+      # https://docs.k3s.io/advanced#running-k3s-in-docker
+      - uses: nolar/setup-k3d-k3s@v1
+        with:
+          version: v1.23.8+k3s2
+          github-token: ${{secrets.GITHUB_TOKEN}}  # to bypass rate-limiting with anonymous access
+#      - uses: actions/checkout@83b7061638ee4956cf7545a6f7efe594e5ad0247 # v3.5.1
+#      - name: Setup k3s
+#        run: |-
+#          curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION="v1.23.8+k3s2" INSTALL_K3S_EXEC="--docker --disable=traefik --write-kubeconfig-mode 664" sh -
+#          systemd status k3s
+#
+#      - name: Validate k3s is online
+#        run: >-
+#          timeout 60s bash -c 'trap "echo Failed, timeout reached while waiting for kubernetes to launch 1>&2" SIGTERM; while ! kubectl get node 2>/dev/null ; do sleep 1 ; done; echo "Connected, ok"'
       - uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
         with:
           name: waypoint.tar
