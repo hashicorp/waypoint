@@ -17,10 +17,10 @@ THIS_RELEASE?=$$(git rev-parse --abbrev-ref HEAD)
 
 .PHONY: bin
 bin: # Creates the binaries for Waypoint for the current platform
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags $(GOLDFLAGS) -o ./internal/assets/ceb/ceb ./cmd/waypoint-entrypoint
-	CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -ldflags $(GOLDFLAGS) -o ./internal/assets/ceb/ceb-arm64 ./cmd/waypoint-entrypoint
-	cd internal/assets && go-bindata -pkg assets -o prod.go -tags assetsembedded ./ceb
-	CGO_ENABLED=$(CGO_ENABLED) go build -ldflags $(GOLDFLAGS) -tags assetsembedded -o ./waypoint ./cmd/waypoint
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 time go build -ldflags $(GOLDFLAGS) -o ./internal/assets/ceb/ceb ./cmd/waypoint-entrypoint
+	CGO_ENABLED=0 GOOS=linux GOARCH=arm64 time go build -ldflags $(GOLDFLAGS) -o ./internal/assets/ceb/ceb-arm64 ./cmd/waypoint-entrypoint
+	cd internal/assets && time go-bindata -pkg assets -o prod.go -tags assetsembedded ./ceb
+	CGO_ENABLED=$(CGO_ENABLED) time go build -ldflags $(GOLDFLAGS) -tags assetsembedded -o ./waypoint ./cmd/waypoint
 
 # bin/cli-only only recompiles waypoint, and doesn't recompile or embed the ceb.
 # You can use the binary it produces as a server, runner, or CLI, but it won't contain the CEB, so
