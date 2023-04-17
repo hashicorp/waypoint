@@ -104,8 +104,8 @@ jobs:
           name: waypoint.tar
 
   integration:
-#    needs:
-#      - dev-build
+    needs:
+      - dev-build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@83b7061638ee4956cf7545a6f7efe594e5ad0247 # v3.5.1
