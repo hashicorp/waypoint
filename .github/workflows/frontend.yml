@@ -1,4 +1,4 @@
-name: hashicorp/waypoint/frontend
+name: Test Frontend
 on:
   push:
   pull_request:

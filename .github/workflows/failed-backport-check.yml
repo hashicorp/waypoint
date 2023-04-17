@@ -1,4 +1,5 @@
 # This workflow notifies slack if a failed backport PR is opened (aka in draft mode)
+name: Failed Backport Check
 on:
   pull_request_target:
     types: [opened]
