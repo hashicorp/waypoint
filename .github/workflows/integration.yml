@@ -119,6 +119,13 @@ jobs:
         with:
           version: v1.23.8+k3s2
           github-token: ${{secrets.GITHUB_TOKEN}}  # to bypass rate-limiting with anonymous access
+#      - name: Install kind and kubectl
+#        uses: helm/kind-action@d8ccf8fb623ce1bb360ae2f45f323d9d5c5e9f00 # pin@v1.5.0
+#        with:
+#          version: ${{ inputs.kind-version }}
+#          kubectl_version: ${{ inputs.kubectl-version }}
+#          install_only: true
+#          verbosity: 10
 #      - uses: actions/checkout@83b7061638ee4956cf7545a6f7efe594e5ad0247 # v3.5.1
 #      - name: Setup k3s
 #        run: |-
@@ -134,7 +141,9 @@ jobs:
       - name: Execute Integration Tests
         run: |-
           tar -xvf waypoint.tar
-          exec ./ci/integration.sh
+          pwd
+          ls -alh ./ci
+          ./ci/integration.sh
 
 # FIXME: Is this CRT-able?
 #  alpha-image:
