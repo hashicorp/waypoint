@@ -1,6 +1,7 @@
 name: integration tests
 on:
   pull_request:
+  push:
 
 permissions:
   contents: read
