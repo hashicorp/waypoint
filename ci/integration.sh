@@ -10,12 +10,13 @@ fi
 
 # Confirm k8s is working
 echo "Confirm kubernetes is working:"
-kubectl cluster-info
+kubectl cluster-info dump
 
 
-echo "Boot up the registry to use:"
-
-docker run -d -p 5000:5000 --restart=always --name registry registry:2
+if [ -z "$GITHUB_ACTION" ]; then
+  echo "Boot up the registry to use:"
+  docker run -d -p 5000:5000 --restart=always --name registry registry:2
+fi
 
 WP="$(pwd)/waypoint"
 
@@ -25,7 +26,7 @@ cd ci/sinatra || exit 1
 
 "$WP" init
 
-"$WP" build
+timeout 3m "$WP" build
 
 "$WP" deploy
 
