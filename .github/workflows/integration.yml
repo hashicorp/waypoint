@@ -116,17 +116,19 @@ jobs:
 #        id: k3s
 #        with:
 #          version: v1.23.8-k3s2
-      - name: Setup k3s
-        run: |-
-          curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION="v1.23.8+k3s2" INSTALL_K3S_EXEC="--docker --disable=traefik --write-kubeconfig-mode=664" sh -
-          systemd cat k3s.service
-          systemd status k3s
+#      - name: Setup k3s
+#        run: |-
+#          curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION="v1.23.8+k3s2" INSTALL_K3S_EXEC="--docker --disable=traefik --write-kubeconfig-mode=664" sh -
+#          systemd cat k3s.service
+#          systemd status k3s
       # k3d is the k3s recommended way to run in docker
       # https://docs.k3s.io/advanced#running-k3s-in-docker
-#      - uses: nolar/setup-k3d-k3s@v1
-#        with:
-#          version: v1.23.8+k3s2
-#          github-token: ${{secrets.GITHUB_TOKEN}}  # to bypass rate-limiting with anonymous access
+      #
+      - uses: nolar/setup-k3d-k3s@v1
+        with:
+          version: v1.23.8+k3s2
+          github-token: ${{secrets.GITHUB_TOKEN}}  # to bypass rate-limiting with anonymous access
+          k3d-args: --registry-config=./ci/registry-config.yml
 #      - name: Install kind and kubectl
 #        uses: helm/kind-action@d8ccf8fb623ce1bb360ae2f45f323d9d5c5e9f00 # pin@v1.5.0
 #        with:
