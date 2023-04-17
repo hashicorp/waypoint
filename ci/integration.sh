@@ -4,6 +4,15 @@ set -e -u -o pipefail
 
 set -x
 
+if [ -z "$CI" ]; then  # We are running locally
+  export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
+fi
+
+# Confirm k8s is working
+echo "Confirm kubernetes is working:"
+kubectl cluster-info
+
+
 echo "Boot up the registry to use:"
 
 docker run -d -p 5000:5000 --restart=always --name registry registry:2
@@ -11,8 +20,6 @@ docker run -d -p 5000:5000 --restart=always --name registry registry:2
 WP="$(pwd)/waypoint"
 
 test -e "$WP"
-
-export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
 
 cd ci/sinatra || exit 1
 
