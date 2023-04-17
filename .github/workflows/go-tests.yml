@@ -1,4 +1,4 @@
-name: hashicorp/waypoint/go-tests
+name: Test Go
 on:
   pull_request:
   push:
