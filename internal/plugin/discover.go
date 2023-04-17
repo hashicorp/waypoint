@@ -100,7 +100,7 @@ func DefaultPaths(pwd string) ([]string, error) {
 		pwd,
 		filepath.Join(pwd, ".waypoint", "plugins"),
 		filepath.Dir(xdgPath),
-		filepath.Join(hd, ".config", ".waypoint", "plugins"),
+		filepath.Join(hd, ".config", "waypoint", "plugins"),
 	}, nil
 }
 
