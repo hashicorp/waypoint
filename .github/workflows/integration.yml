@@ -94,7 +94,8 @@ jobs:
       - name: Make waypoint binary
         run: |-
           make bin
-          tar -cvf waypoint.tar --strip-components=1 dist/waypoint
+          pushd dist
+          tar -cvf ../waypoint.tar ./waypoint
       - uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
         with:
           path: waypoint.tar
@@ -129,8 +130,6 @@ jobs:
       - name: Execute Integration Tests
         run: |-
           tar -xvf waypoint.tar
-          ls -lah
-          git status; chmod u+x waypoint
           exec ./ci/integration.sh
 
 # FIXME: Is this CRT-able?
