@@ -78,6 +78,8 @@ jobs:
           path: |-
             ui/node_modules
             ui/lib/node_modules
+      - name: host-magic
+        run: host registry.localhost
 
       - name: install yarn packages
         run: yarn install
@@ -97,8 +99,7 @@ jobs:
         run: |-
           pwd
           make bin
-          pushd dist
-          tar -cvf ../waypoint.tar ./waypoint
+          tar -cvf waypoint.tar ./waypoint
       - uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
         with:
           path: waypoint.tar
