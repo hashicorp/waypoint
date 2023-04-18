@@ -40,6 +40,7 @@ jobs:
         run: echo "cache-key=waypoint-ui-v1-${{ hashFiles('ui/yarn.lock', 'ui/lib/**') }}" | tee -a "${GITHUB_OUTPUT}"
 
       - name: save ui cache
+        id: ui-cache
         uses: actions/cache@88522ab9f39a2ea568f7027eddc7d8d8bc9d59c8 # v3.3.1
         with:
           key: "${{ steps.set-cache-key.outputs.cache-key }}"
@@ -49,17 +50,17 @@ jobs:
             ui/dist/
 
       - uses: actions/setup-node@v3
-        if: steps.restore-cache.outputs.cache-hit == false
+        if: steps.ui-cache.outputs.cache-hit == false
         with:
           node-version: 14
 
       - name: install yarn packages
-        if: steps.restore-cache.outputs.cache-hit == false
+        if: steps.ui-cache.outputs.cache-hit == false
         run: yarn install
         working-directory: ui
 
       - name: Make UI
-        if: steps.restore-cache.outputs.cache-hit == false
+        if: steps.ui-cache.outputs.cache-hit == false
         run: make
         working-directory: ui
 

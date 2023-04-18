@@ -15,7 +15,8 @@ jobs:
         id: set-cache-key
         run: echo "cache-key=waypoint-ui-v1-${{ hashFiles('ui/yarn.lock', 'ui/lib/**') }}" | tee -a "${GITHUB_OUTPUT}"
 
-      - name: restore-cache
+      - name: Initialize UI cache
+        id: ui-cache
         uses: actions/cache@88522ab9f39a2ea568f7027eddc7d8d8bc9d59c8 # v3.3.1
         with:
           key: "${{ steps.set-cache-key.outputs.cache-key }}"
@@ -24,12 +25,12 @@ jobs:
             ui/lib/node_modules
 
       - uses: actions/setup-node@v3
-        if: steps.restore-cache.outputs.cache-hit == false
+        if: steps.ui-cache.outputs.cache-hit == false
         with:
           node-version: 14
 
       - name: install yarn packages
-        if: steps.restore-cache.outputs.cache-hit == false
+        if: steps.ui-cache.outputs.cache-hit == false
         run: yarn install
         working-directory: ui
 

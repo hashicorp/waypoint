@@ -82,7 +82,7 @@ jobs:
       - run: go mod download
       - name: Waiting for Postgres to be ready
         run: |-
-          for i in `seq 1 10`;
+          for _ in $(seq 1 10);
           do
             nc -z localhost 5432 && echo Success && exit 0
             echo -n .
@@ -91,17 +91,17 @@ jobs:
           echo Failed waiting for Postgres && exit 1
       - name: go test
         env:
-          PACKAGE_NAMES: ${{ join(matrix.packages, ' ') }}
           POSTGRES_USER: postgres
           POSTGRES_DB: waypoint_test
         run: |-
+          read -ra PACKAGE_NAMES <<< "${{ join(matrix.packages, ' ') }}"
           mkdir -p "$TEST_RESULTS_DIR"
           echo "Testing $PACKAGE_NAMES"
           gotestsum --format=short-verbose \
-            --junitfile $TEST_RESULTS_DIR/gotestsum-report.xml -- \
+            --junitfile "$TEST_RESULTS_DIR/gotestsum-report.xml" -- \
             -tags="$GOTAGS" -p 2 \
             -cover -coverprofile=coverage.txt \
-            $PACKAGE_NAMES
+            "${PACKAGE_NAMES[@]}"
 
       - uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
         with:
