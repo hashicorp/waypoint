@@ -1,6 +1,0 @@
-name: md5uilib
-runs:
-  using: composite
-  steps:
-  - run: find ui/lib -type f | sort | xargs md5sum > uilib.md5
-    shell: bash
