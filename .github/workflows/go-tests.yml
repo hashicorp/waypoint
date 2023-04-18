@@ -4,6 +4,7 @@ on:
   push:
 
 jobs:
+  # FIXME: We already lint in integration.yml, which should we keep?
   lint:
     runs-on: ubuntu-latest
     env:
