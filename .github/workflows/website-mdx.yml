@@ -1,7 +1,8 @@
 name: website-mdx
-# FIMXE: If this workflow is just a test, should we only run on pull_request instead of push? Does that convey intent correctly?
 on:
   pull_request:
+# FIXME: Disabling for the purposes of PR #4617 validation, but re-enable before merging!
+#    paths: [website/**]
 
 jobs:
   generate-website-mdx:

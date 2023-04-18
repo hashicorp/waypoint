@@ -1,6 +1,9 @@
+# FIXME: This looks like a duplicate of website-mdx (which runs gen/website-mdx) already updates json docs
 name: json-docs
 on:
   pull_request:
+# FIXME: Disabling for the purposes of PR #4617 validation, but re-enable before merging!
+#    paths: [embedJson/**]
 
 jobs:
   generate-json-docs:

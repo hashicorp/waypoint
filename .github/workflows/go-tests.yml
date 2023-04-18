@@ -1,4 +1,4 @@
-name: Test Go
+name: go-tests
 on:
   pull_request:
   push:

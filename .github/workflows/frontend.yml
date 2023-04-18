@@ -1,4 +1,4 @@
-name: Test Frontend
+name: frontend
 on:
   push:
   pull_request:
