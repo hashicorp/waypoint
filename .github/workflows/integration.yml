@@ -28,7 +28,7 @@ jobs:
             --enable gosimple \
             --enable govet
 
-  frontend-cache:
+  build-frontend:
     runs-on: ubuntu-latest
     outputs:
       yarn-cache-key: ${{ steps.set-cache-key.outputs.cache-key}}
@@ -39,13 +39,14 @@ jobs:
         id: set-cache-key
         run: echo "cache-key=waypoint-ui-v1-${{ hashFiles('ui/yarn.lock', 'ui/lib/**') }}" | tee -a "${GITHUB_OUTPUT}"
 
-      - name: restore-cache
+      - name: save ui cache
         uses: actions/cache@88522ab9f39a2ea568f7027eddc7d8d8bc9d59c8 # v3.3.1
         with:
           key: "${{ steps.set-cache-key.outputs.cache-key }}"
           path: |-
             ui/node_modules
             ui/lib/node_modules
+            ui/dist/
 
       - uses: actions/setup-node@v3
         if: steps.restore-cache.outputs.cache-hit == false
@@ -57,34 +58,29 @@ jobs:
         run: yarn install
         working-directory: ui
 
+      - name: Make UI
+        if: steps.restore-cache.outputs.cache-hit == false
+        run: make
+        working-directory: ui
+
   dev-build:
     runs-on: ubuntu-latest
     needs:
-      - frontend-cache
+      - build-frontend
     steps:
       - uses: actions/checkout@83b7061638ee4956cf7545a6f7efe594e5ad0247 # v3.5.1
       - uses: actions/setup-go@4d34df0c2316fe8122ab82dc22947d607c0c91f9 # v4.0.0
         with:
           go-version-file: go.mod
-      - uses: actions/setup-node@64ed1c7eab4cce3362f8c340dee64e5eaeef8f7c # v3.6.0
-        with:
-          node-version: 14
 
-      - name: restore-cache
+      - name: Restore UI cache
         uses: actions/cache@88522ab9f39a2ea568f7027eddc7d8d8bc9d59c8 # v3.3.1
         with:
-          key: ${{ needs.frontend-cache.outputs.yarn-cache-key }}
+          key: ${{ needs.build-frontend.outputs.yarn-cache-key }}
           path: |-
             ui/node_modules
             ui/lib/node_modules
-
-      - name: install yarn packages
-        run: yarn install
-        working-directory: ui
-
-      - name: Make UI
-        run: make
-        working-directory: ui
+            ui/dist/
 
       - name: Make static assets (bindata_ui)
         run: |-
@@ -108,13 +104,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@83b7061638ee4956cf7545a6f7efe594e5ad0247 # v3.5.1
-      # FIXME: Figure out how to install k3s.
-      # 1) Port the action? Use e different action?
-      # 2) Fix the srart-up (is it a performance issue? Do we need to wait longer?)
-#      - uses: debianmaster/actions-k3s@master
-#        id: k3s
-#        with:
-#          version: v1.23.8-k3s2
       - name: Setup k3s
         run: |-
           curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION="v1.26.3+k3s1" INSTALL_K3S_EXEC="--docker --disable=traefik --write-kubeconfig-mode=664" sh -
@@ -122,32 +111,6 @@ jobs:
         run: |-
           export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
           timeout 60s bash -c 'trap "echo Failed, timeout reached while waiting for kubernetes to launch 1>&2" SIGTERM; while ! kubectl get node 2>/dev/null ; do sleep 1 ; done; echo "Connected, ok"'
-      # k3d is the k3s recommended way to run in docker
-      # https://docs.k3s.io/advanced#running-k3s-in-docker
-      #
-#      - uses: nolar/setup-k3d-k3s@v1
-#        with:
-#          version: v1.23.8+k3s2
-#          github-token: ${{secrets.GITHUB_TOKEN}}  # to bypass rate-limiting with anonymous access
-#          # --k3s-arg='--no-deploy=traefik@server:*'
-#          # -p "30000:30000@server:0"
-#          k3d-args: --registry-config=./ci/registry-config.yml
-#      - name: Install kind and kubectl
-#        uses: helm/kind-action@d8ccf8fb623ce1bb360ae2f45f323d9d5c5e9f00 # pin@v1.5.0
-#        with:
-#          version: ${{ inputs.kind-version }}
-#          kubectl_version: ${{ inputs.kubectl-version }}
-#          install_only: true
-#          verbosity: 10
-#      - uses: actions/checkout@83b7061638ee4956cf7545a6f7efe594e5ad0247 # v3.5.1
-#      - name: Setup k3s
-#        run: |-
-#          curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION="v1.23.8+k3s2" INSTALL_K3S_EXEC="--docker --disable=traefik --write-kubeconfig-mode 664" sh -
-#          systemd status k3s
-#
-#      - name: Validate k3s is online
-#        run: >-
-#          timeout 60s bash -c 'trap "echo Failed, timeout reached while waiting for kubernetes to launch 1>&2" SIGTERM; while ! kubectl get node 2>/dev/null ; do sleep 1 ; done; echo "Connected, ok"'
       - uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
         with:
           name: waypoint.tar
