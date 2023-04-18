@@ -4,6 +4,8 @@ set -e -u -o pipefail
 
 set -x
 
+[[ -n "$GITHUB_ACTION" ]] && echo "::group::Configure Kubernetes"
+
 export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
 
 # Confirm k8s is working
