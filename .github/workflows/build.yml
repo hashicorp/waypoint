@@ -153,7 +153,7 @@ jobs:
           - {goos: "darwin", goarch: "amd64", pkg-name: "waypoint"}
           - { goos: "darwin", goarch: "arm64", pkg-name: "waypoint-entrypoint" }
           - { goos: "darwin", goarch: "amd64", pkg-name: "waypoint-entrypoint" }
-    name: Go ${{ matrix.go }} ${{ matrix.goos }} ${{ matrix.goarch }} build
+    name: Go ${{ matrix.goos }} ${{ matrix.goarch }} build
     uses: ./.github/workflows/build-waypoint-oss.yml
     with:
       create-packages: false
@@ -220,8 +220,6 @@ jobs:
   package-docker-waypoint-odr:
     name: Build Docker ODR image for linux_${{ matrix.arch }}
     runs-on: ubuntu-latest
-    outputs:
-      product-version: ${{ steps.prepare-zips.outputs.working-dir }}
     needs:
       - get-product-version
       - build-waypoint
