@@ -97,7 +97,7 @@ jobs:
         run: |-
           read -ra PACKAGE_NAMES <<< "${{ join(matrix.packages, ' ') }}"
           mkdir -p "$TEST_RESULTS_DIR"
-          echo "Testing $PACKAGE_NAMES"
+          echo "Testing packages: ${PACKAGE_NAMES[*]}"
           gotestsum --format=short-verbose \
             --junitfile "$TEST_RESULTS_DIR/gotestsum-report.xml" -- \
             -tags="$GOTAGS" -p 2 \

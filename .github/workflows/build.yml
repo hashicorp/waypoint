@@ -53,7 +53,7 @@ jobs:
         id: get-go-version
         run: |
           echo "Building with Go $(cat .go-version)"
-          echo "go-version=$(cat .go-version)" >> $GITHUB_OUTPUT
+          echo "go-version=$(cat .go-version)" >> "$GITHUB_OUTPUT"
 
   generate-metadata-file:
     name: "Generate release metadata"
@@ -90,7 +90,7 @@ jobs:
         run: |
           export PKG_VERSION=${{ needs.get-product-version.outputs.product-version }}
           export PKG_BINARY_TYPE=${{ needs.get-product-version.outputs.pkg-metadata }}
-          export PKG_COPYRIGHT_YEAR=$(git show -s --format=%cd --date=format:%Y HEAD)
+          PKG_COPYRIGHT_YEAR="$(git show -s --format=%cd --date=format:%Y HEAD)" ; export PKG_COPYRIGHT_YEAR
           export PKG_NAME=${{ needs.get-product-version.outputs.pkg-name }}
           echo "${PKG_NAME} version is ${PKG_VERSION}"
           echo "${PKG_NAME} binary type is ${PKG_BINARY_TYPE}"
@@ -196,11 +196,11 @@ jobs:
       - name: Prepare zipped binaries to build Docker image
         id: prepare-zips
         run: |
-          DIR=$(mktemp -d)
-          echo "working-dir=$DIR" >> $GITHUB_OUTPUT
-          cp -v Dockerfile $DIR/Dockerfile
-          unzip -j archive/waypoint_${{env.version}}_linux_${{ matrix.arch }}.zip -d $DIR
-          unzip -j archive/waypoint-entrypoint_${{env.version}}_linux_${{ matrix.arch }}.zip -d $DIR
+          DIR="$(mktemp -d)"
+          echo "working-dir=$DIR" >> "$GITHUB_OUTPUT"
+          cp -v Dockerfile "$DIR/Dockerfile"
+          unzip -j "archive/waypoint_${{env.version}}_linux_${{ matrix.arch }}.zip" -d "$DIR"
+          unzip -j "archive/waypoint-entrypoint_${{env.version}}_linux_${{ matrix.arch }}.zip" -d "$DIR"
       - name: Build Docker image
         uses: hashicorp/actions-docker-build@v1
         with:
