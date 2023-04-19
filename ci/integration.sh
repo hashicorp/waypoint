@@ -45,7 +45,6 @@ timeout 1m "$WP" deploy
 sleep 10
 
 [[ -n "$GITHUB_ACTION" ]] && echo "::group::Check deployed sinatra service"
-kubectl get service sinatra -o 'jsonpath={}' | jq
 
 PORT=$(kubectl get service sinatra -o jsonpath="{.spec.ports[0].nodePort}")
 

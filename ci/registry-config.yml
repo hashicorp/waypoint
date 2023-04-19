@@ -1,5 +1,0 @@
-# Used by k3d to point to the registry running on the host
-mirrors:
-  "registry.localhost:5000":
-    endpoint:
-      - http://registry.localhost:5000
