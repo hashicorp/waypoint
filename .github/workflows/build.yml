@@ -6,6 +6,7 @@ on:
     branches:
       - main
       - release/*
+      - releng/e2e-spike
 
 env:
   METADATA: "oss"
@@ -14,6 +15,7 @@ env:
 permissions:
   contents: read
   statuses: write
+  packages: write
 
 jobs:
   get-product-version:
@@ -246,4 +248,19 @@ jobs:
           tags: |
             docker.io/hashicorp/${{env.repo}}-odr:${{env.version}}
             public.ecr.aws/hashicorp/${{env.repo}}-odr:${{env.version}}
+
+  end-to-end-tests:
+    needs:
+      - get-product-version
+      - package-docker-waypoint-server
+      - package-docker-waypoint-odr
+    uses: ./.github/workflows/end-to-end.yml
+    with:
+      waypoint-binary: waypoint_${{needs.get-product-version.outputs.product-version}}_linux_amd64.zip
+      # TODO: Does action-docker-build provide these as outputs?
+      waypoint-tar: waypoint_crt_linux_amd64_0.12.0_${{github.sha}}.docker.tar
+      waypoint-image: hashicorp/waypoint:${{ needs.get-product-version.outputs.product-version }}
+      waypoint-odr-tar: waypoint_odr-crt_linux_amd64_0.12.0_${{github.sha}}.docker.tar
+      waypoint-odr-image: hashicorp/waypoint-odr:${{ needs.get-product-version.outputs.product-version }}
+    secrets: inherit
 
