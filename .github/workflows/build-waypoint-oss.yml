@@ -90,6 +90,7 @@ jobs:
           instructions: |
             make bin/crt-${{ inputs.package-name }}
       - name: Linux packaging
+        id: packaging
         if: ${{ (inputs.goos == 'linux') && (inputs.package-name == 'waypoint') && (inputs.goarch != '386') }}
         uses: hashicorp/actions-packaging-linux@v1
         with:
@@ -104,19 +105,19 @@ jobs:
           deb_depends: "git"
           rpm_depends: "git"
       - name: Set Package Names
-        if: ${{ inputs.goos == 'linux' }}
+        if: steps.packaging.conclusion == 'success'
         run: |
           echo "RPM_PACKAGE=$(basename out/*.rpm)" >> "$GITHUB_ENV"
           echo "DEB_PACKAGE=$(basename out/*.deb)" >> "$GITHUB_ENV"
-
-      - uses: actions/upload-artifact@v2
-        if: ${{ inputs.goos == 'linux' }}
+      - name: Upload rpm package
+        uses: actions/upload-artifact@v2
+        if: steps.packaging.conclusion == 'success'
         with:
           name: ${{ env.RPM_PACKAGE }}
           path: out/${{ env.RPM_PACKAGE }}
-
-      - uses: actions/upload-artifact@v2
-        if: ${{ inputs.goos == 'linux' }}
+      - name: Upload deb package
+        uses: actions/upload-artifact@v2
+        if: steps.packaging.conclusion == 'success'
         with:
           name: ${{ env.DEB_PACKAGE }}
           path: out/${{ env.DEB_PACKAGE }}
