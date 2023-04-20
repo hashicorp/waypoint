@@ -97,6 +97,7 @@ jobs:
           name: ${{ inputs.package-name }}
           description: ${{ inputs.package-name }}
           arch: ${{ inputs.goarch }}
+          # FIXME: This is generating packages with the version `1.0.0-oss`
           version: ${{ inputs.waypoint-version }}+${{ inputs.waypoint-metadata }}
           maintainer: "HashiCorp"
           homepage: "https://github.com/hashicorp/waypoint"
