@@ -80,7 +80,7 @@ if [ ! -d "$WP_EXAMPLES_PATH" ]; then
   echo "==> Pulling in waypoint-examples for test..."
   echo
 
-  git clone --depth 1 git@github.com:hashicorp/waypoint-examples.git "$TESTDIR/waypoint-examples"
+  git clone --depth 1 https://github.com/hashicorp/waypoint-examples "$TESTDIR/waypoint-examples"
 else
   echo "==> Using existing waypoint-examples repo for test..."
   echo
