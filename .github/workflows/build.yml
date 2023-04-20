@@ -249,9 +249,13 @@ jobs:
             public.ecr.aws/hashicorp/${{env.repo}}-odr:${{env.version}}
 
   end-to-end-tests:
+    needs:
+      - get-product-version
+      - package-docker-waypoint
+      - package-docker-waypoint-odr
     uses: ./.github/workflows/end-to-end.yml
     with:
-      waypoint-image: docker.io/hashicorp/${{env.repo}}:${{env.version}}
-      waypoint-odr-image: docker.io/hashicorp/${{env.repo}}-odr:${{env.version}}
+      waypoint-image: docker.io/hashicorp/waypoint:${{needs.get-product-version.outputs.product-version}}
+      waypoint-odr-image: docker.io/hashicorp/waypoint-odr:${{needs.get-product-version.outputs.product-version}}
     secrets: inherit
 
