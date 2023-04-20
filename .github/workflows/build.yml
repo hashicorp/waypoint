@@ -251,7 +251,7 @@ jobs:
   end-to-end-tests:
     needs:
       - get-product-version
-      - package-docker-waypoint
+      - package-docker-waypoint-server
       - package-docker-waypoint-odr
     uses: ./.github/workflows/end-to-end.yml
     with:
