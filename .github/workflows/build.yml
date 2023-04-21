@@ -6,8 +6,7 @@ on:
     branches:
       - main
       - release/*
-      - releng/e2e-spike
-
+      - convert-hashicorp-waypoint-to-actions-20230412-195606
 env:
   METADATA: "oss"
   PKG_NAME: "waypoint"
