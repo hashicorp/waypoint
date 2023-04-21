@@ -6,7 +6,7 @@ on:
     branches:
       - main
       - release/*
-      - convert-hashicorp-waypoint-to-actions-20230412-195606
+
 env:
   METADATA: "oss"
   PKG_NAME: "waypoint"

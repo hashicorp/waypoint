@@ -1,8 +1,7 @@
 name: website-mdx
 on:
   pull_request:
-# FIXME: Disabling for the purposes of PR #4617 validation, but re-enable before merging!
-#    paths: [website/**]
+    paths: [website/**]
 
 jobs:
   generate-website-mdx:
