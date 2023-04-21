@@ -166,7 +166,6 @@ jobs:
       waypoint-version: ${{ needs.get-product-version.outputs.product-version }}
       waypoint-base-version: ${{ needs.get-product-version.outputs.base-product-version }}
       waypoint-prerelease: ${{ needs.get-product-version.outputs.prerelease-product-version }}
-      waypoint-metadata: ${{ needs.get-product-version.outputs.pkg-metadata }}
     secrets: inherit
 
   package-docker-waypoint-server:
