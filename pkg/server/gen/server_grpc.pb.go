@@ -103,6 +103,9 @@ type WaypointClient interface {
 	ListDeployments(ctx context.Context, in *ListDeploymentsRequest, opts ...grpc.CallOption) (*ListDeploymentsResponse, error)
 	// GetDeployment returns a deployment
 	GetDeployment(ctx context.Context, in *GetDeploymentRequest, opts ...grpc.CallOption) (*Deployment, error)
+	// GetLatestDeployment returns the most recent successfully completed build
+	// for an app.
+	GetLatestDeployment(ctx context.Context, in *GetLatestDeploymentRequest, opts ...grpc.CallOption) (*Deployment, error)
 	// ListInstances returns the running instances of deployments.
 	ListInstances(ctx context.Context, in *ListInstancesRequest, opts ...grpc.CallOption) (*ListInstancesResponse, error)
 	// ListReleases returns the releases.
@@ -635,6 +638,15 @@ func (c *waypointClient) ListDeployments(ctx context.Context, in *ListDeployment
 func (c *waypointClient) GetDeployment(ctx context.Context, in *GetDeploymentRequest, opts ...grpc.CallOption) (*Deployment, error) {
 	out := new(Deployment)
 	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/GetDeployment", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *waypointClient) GetLatestDeployment(ctx context.Context, in *GetLatestDeploymentRequest, opts ...grpc.CallOption) (*Deployment, error) {
+	out := new(Deployment)
+	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/GetLatestDeployment", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1765,6 +1777,9 @@ type WaypointServer interface {
 	ListDeployments(context.Context, *ListDeploymentsRequest) (*ListDeploymentsResponse, error)
 	// GetDeployment returns a deployment
 	GetDeployment(context.Context, *GetDeploymentRequest) (*Deployment, error)
+	// GetLatestDeployment returns the most recent successfully completed build
+	// for an app.
+	GetLatestDeployment(context.Context, *GetLatestDeploymentRequest) (*Deployment, error)
 	// ListInstances returns the running instances of deployments.
 	ListInstances(context.Context, *ListInstancesRequest) (*ListInstancesResponse, error)
 	// ListReleases returns the releases.
@@ -2119,6 +2134,9 @@ func (UnimplementedWaypointServer) ListDeployments(context.Context, *ListDeploym
 }
 func (UnimplementedWaypointServer) GetDeployment(context.Context, *GetDeploymentRequest) (*Deployment, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetDeployment not implemented")
+}
+func (UnimplementedWaypointServer) GetLatestDeployment(context.Context, *GetLatestDeploymentRequest) (*Deployment, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetLatestDeployment not implemented")
 }
 func (UnimplementedWaypointServer) ListInstances(context.Context, *ListInstancesRequest) (*ListInstancesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListInstances not implemented")
@@ -2939,6 +2957,24 @@ func _Waypoint_GetDeployment_Handler(srv interface{}, ctx context.Context, dec f
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(WaypointServer).GetDeployment(ctx, req.(*GetDeploymentRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Waypoint_GetLatestDeployment_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetLatestDeploymentRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(WaypointServer).GetLatestDeployment(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/hashicorp.waypoint.Waypoint/GetLatestDeployment",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(WaypointServer).GetLatestDeployment(ctx, req.(*GetLatestDeploymentRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -4749,6 +4785,10 @@ var Waypoint_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetDeployment",
 			Handler:    _Waypoint_GetDeployment_Handler,
+		},
+		{
+			MethodName: "GetLatestDeployment",
+			Handler:    _Waypoint_GetLatestDeployment_Handler,
 		},
 		{
 			MethodName: "ListInstances",

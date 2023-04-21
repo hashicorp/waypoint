@@ -20,6 +20,7 @@ func init() {
 	tests["deploy"] = []testFunc{
 		TestServiceDeployment,
 		TestServiceDeployment_GetDeployment,
+		TestServiceDeployment_GetLatestDeployment,
 		TestServiceDeployment_ListDeployments,
 	}
 }
@@ -135,6 +136,77 @@ func TestServiceDeployment_GetDeployment(t *testing.T, factory Factory) {
 		st, ok := status.FromError(err)
 		require.True(ok)
 		require.Equal(codes.NotFound, st.Code())
+	})
+}
+
+func TestServiceDeployment_GetLatestDeployment(t *testing.T, factory Factory) {
+	ctx := context.Background()
+
+	// Create our server
+	client, _ := factory(t)
+
+	var application *pb.Ref_Application
+	var workspace *pb.Ref_Workspace
+
+	var latestSuccessfulDepResp *pb.UpsertDeploymentResponse
+	// Upsert some deployments
+	depNum := []int{1, 2, 3}
+	for index := range depNum {
+		// for i := 0; i < 3; i++ {
+		buildresp, err := client.UpsertBuild(ctx, &pb.UpsertBuildRequest{
+			Build: serverptypes.TestValidBuild(t, nil),
+		})
+		require.NoError(t, err)
+		require.NotNil(t, buildresp)
+
+		build := buildresp.Build
+
+		artifact := serverptypes.TestValidArtifact(t, nil)
+		artifact.BuildId = build.Id
+
+		artifactresp, err := client.UpsertPushedArtifact(ctx, &pb.UpsertPushedArtifactRequest{
+			Artifact: artifact,
+		})
+		require.NoError(t, err)
+		require.NotNil(t, artifactresp)
+
+		dep := serverptypes.TestValidDeployment(t, nil)
+		dep.ArtifactId = artifactresp.Artifact.Id
+		if index == len(depNum)-1 { // make latest deployment a failed one
+			dep.Status.State = pb.Status_ERROR
+			dep.Status.Error = status.New(codes.Internal, "test failed deployment").Proto()
+		}
+
+		// Best way to mock for now is to make a request
+		resp, err := client.UpsertDeployment(ctx, &pb.UpsertDeploymentRequest{
+			Deployment: dep,
+		})
+
+		require.NoError(t, err)
+
+		// set latest successful deployment response
+		if resp.Deployment.Status.State == pb.Status_SUCCESS {
+			latestSuccessfulDepResp = resp
+		}
+		application = resp.Deployment.Application
+		workspace = resp.Deployment.Workspace
+	}
+
+	// Simplify writing tests
+	type Req = pb.GetLatestDeploymentRequest
+
+	t.Run("get latest", func(t *testing.T) {
+		require := require.New(t)
+
+		deployment, err := client.GetLatestDeployment(ctx, &Req{
+			Application: application,
+			Workspace:   workspace,
+		})
+
+		// GetLatest, should return the latest succesful deployment
+		require.NoError(err)
+		require.NotEmpty(deployment)
+		require.Equal(deployment.Id, latestSuccessfulDepResp.Deployment.Id)
 	})
 }
 

@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/hashicorp/waypoint/pkg/server/hcerr"
+	"github.com/hashicorp/waypoint/pkg/server/ptypes"
 
 	"github.com/hashicorp/go-hclog"
 
@@ -121,6 +122,35 @@ func setDeploymentUrlIfNeeded(d *pb.Deployment) {
 
 		d.Preload.DeployUrl = d.Url
 	}
+}
+
+// TODO: test
+func (s *Service) GetLatestDeployment(
+	ctx context.Context,
+	req *pb.GetLatestDeploymentRequest,
+) (*pb.Deployment, error) {
+	if err := ptypes.ValidateGetLatestDeploymentRequest(req); err != nil {
+		return nil, err
+	}
+
+	r, err := s.state(ctx).DeploymentLatest(ctx, req.Application, req.Workspace)
+	if err != nil {
+		return nil, hcerr.Externalize(
+			hclog.FromContext(ctx),
+			err,
+			"error getting latest deployment",
+		)
+	}
+
+	if err := s.deploymentPreloadDetails(ctx, req.LoadDetails, r); err != nil {
+		return nil, hcerr.Externalize(
+			hclog.FromContext(ctx),
+			err,
+			"error preloading deployment details",
+		)
+	}
+
+	return r, nil
 }
 
 // GetDeployment returns a Deployment based on ID
