@@ -78,8 +78,8 @@ jobs:
         id: install-waypoint
         run: |
           unzip ${{ inputs.waypoint-binary }}
-          mkdir -p $(pwd)/bin
-          mv waypoint $(pwd)/bin/waypoint
+          mkdir -p "$(pwd)/bin"
+          mv waypoint "$(pwd)/bin/waypoint"
           echo "wp-binary=$(pwd)/bin/waypoint" | tee -a "$GITHUB_OUTPUT"
 
       - name: Run Tests
