@@ -5,29 +5,6 @@ on:
 permissions:
   contents: read
 jobs:
-  lint:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@83b7061638ee4956cf7545a6f7efe594e5ad0247 # v3.5.1
-      - uses: actions/setup-go@4d34df0c2316fe8122ab82dc22947d607c0c91f9 # v4.0.0
-        with:
-          go-version-file: go.mod
-      - name: Download go modules
-        run: go mod download
-      - name: Install golangci-lint
-        run: |-
-          download=https://raw.githubusercontent.com/golangci/golangci-lint/9a8a056e9fe49c0e9ed2287aedce1022c79a115b/install.sh  # v1.52.2
-          curl -sSf "$download" | sh -s v1.50.1
-      - run: go mod download
-      - name: lint
-        run: |-
-          ./bin/golangci-lint run -v --concurrency 2 \
-            --disable-all \
-            --timeout 10m \
-            --enable gofmt \
-            --enable gosimple \
-            --enable govet
-
   build-frontend:
     runs-on: ubuntu-latest
     outputs:

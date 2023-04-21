@@ -4,7 +4,6 @@ on:
   push:
 
 jobs:
-  # FIXME: We already lint in integration.yml, which should we keep?
   lint:
     runs-on: ubuntu-latest
     env:
@@ -13,13 +12,15 @@ jobs:
       - uses: actions/checkout@83b7061638ee4956cf7545a6f7efe594e5ad0247 # v3.5.1
       - uses: actions/setup-go@4d34df0c2316fe8122ab82dc22947d607c0c91f9 # v4.0.0
         with:
-          go-version-file: 'go.mod'
-      - run: go mod download
-      - name: install golangci-lint
+          go-version-file: go.mod
+      - name: Download go modules
+        run: go mod download
+      - name: Install golangci-lint
         run: |-
-          # HEAD of default branch on 2023.04.13
-          curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/0b5709648c8ba9780e821faf16c5c2bb3262ce3e/install.sh | sh -s v1.50.1
-      - name: run golangci-lint
+          download=https://raw.githubusercontent.com/golangci/golangci-lint/9a8a056e9fe49c0e9ed2287aedce1022c79a115b/install.sh  # v1.52.2
+          curl -sSf "$download" | sh -s v1.50.1
+      - run: go mod download
+      - name: lint
         run: |-
           ./bin/golangci-lint run --build-tags="$GOTAGS" -v --concurrency 2 \
             --disable-all \
