@@ -9,7 +9,7 @@ jobs:
     env:
       GOTAGS: ''
     steps:
-      - uses: actions/checkout@83b7061638ee4956cf7545a6f7efe594e5ad0247 # v3.5.1
+      - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
       - uses: actions/setup-go@4d34df0c2316fe8122ab82dc22947d607c0c91f9 # v4.0.0
         with:
           go-version-file: go.mod
@@ -32,7 +32,7 @@ jobs:
   check-vendor:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@83b7061638ee4956cf7545a6f7efe594e5ad0247 # v3.5.1
+      - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
       - run: go mod tidy
       - run: |
           if ! git diff --exit-code; then
@@ -45,7 +45,7 @@ jobs:
     outputs:
       matrix: ${{ steps.split-tests.outputs.matrix }}
     steps:
-      - uses: actions/checkout@83b7061638ee4956cf7545a6f7efe594e5ad0247 # v3.5.1
+      - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
       - uses: actions/setup-go@4d34df0c2316fe8122ab82dc22947d607c0c91f9 # v4.0.0
         with:
           go-version-file: './go.mod'
@@ -69,11 +69,11 @@ jobs:
       GOTAGS: ''
       GOMAXPROCS: 4
     steps:
-      - uses: actions/checkout@83b7061638ee4956cf7545a6f7efe594e5ad0247 # v3.5.1
+      - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
       - name: Start Services
         run: |-
           docker compose -f .github/services/go-tests/docker-compose.yml up --detach --no-color --wait
-      - uses: actions/setup-go@v4
+      - uses: actions/setup-go@4d34df0c2316fe8122ab82dc22947d607c0c91f9 # v4.0.0
         with:
           go-version-file: './go.mod'
       - name: Install gotestsum
@@ -119,7 +119,7 @@ jobs:
     if: github.ref != 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@83b7061638ee4956cf7545a6f7efe594e5ad0247 # v3.5.1
+      - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
       - uses: actions/setup-go@4d34df0c2316fe8122ab82dc22947d607c0c91f9 # v4.0.0
         with:
           go-version-file: './go.mod'
@@ -131,7 +131,7 @@ jobs:
     if: github.ref != 'refs/heads/main'
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@83b7061638ee4956cf7545a6f7efe594e5ad0247 # v3.5.1
+      - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
       - uses: actions/setup-go@4d34df0c2316fe8122ab82dc22947d607c0c91f9 # v4.0.0
         with:
           go-version-file: './go.mod'

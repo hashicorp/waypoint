@@ -28,7 +28,7 @@ jobs:
       pkg-name: ${{ steps.get-pkg-env-vars.outputs.pkg-name }}
       pkg-metadata: ${{ steps.get-pkg-env-vars.outputs.pkg-metadata }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
       - name: Get package environment variables
         id: get-pkg-env-vars
         run: |
@@ -50,7 +50,7 @@ jobs:
     outputs:
       go-version: ${{ steps.get-go-version.outputs.go-version }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
       - name: Determine Go version
         id: get-go-version
         run: |
@@ -64,14 +64,14 @@ jobs:
     outputs:
       filepath: ${{ steps.generate-metadata-file.outputs.filepath }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
       - name: Generate package metadata
         id: generate-metadata-file
         uses: hashicorp/actions-generate-metadata@v1
         with:
           version: ${{ needs.get-product-version.outputs.product-version }}
           product: ${{ env.PKG_NAME }}
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
         with:
           name: metadata.json
           path: ${{ steps.generate-metadata-file.outputs.filepath }}
@@ -81,9 +81,9 @@ jobs:
     name: Build UI
     needs: get-product-version
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
       - name: Set up node and yarn
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@64ed1c7eab4cce3362f8c340dee64e5eaeef8f7c # v3.6.0
         with:
           node-version: 14
           cache: yarn
@@ -99,7 +99,7 @@ jobs:
           echo "${PKG_NAME} copyright year is ${PKG_COPYRIGHT_YEAR}"
           cd ui && make && cd ..
       - name: Save assets to cache
-        uses: actions/cache/save@v3
+        uses: actions/cache/save@v3 # TSCCR: no version of actions/cache trusts nested action "save"
         with:
           path: ui/dist/assets
           key: ui_assets_${{ github.sha }}
@@ -112,12 +112,12 @@ jobs:
       - get-product-version
       - build-ui
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-go@v3
+      - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
+      - uses: actions/setup-go@4d34df0c2316fe8122ab82dc22947d607c0c91f9 # v4.0.0
         with:
           go-version: ${{ needs.get-go-version.outputs.go-version }}
       - name: Restore ui assets
-        uses: actions/cache/restore@v3
+        uses: actions/cache/restore@v3 # TSCCR: no version of actions/cache trusts nested action "restore"
         with:
           path: ui/dist/assets
           key: ui_assets_${{ github.sha }}
@@ -183,14 +183,14 @@ jobs:
       repo: "waypoint"
       version: ${{ needs.get-product-version.outputs.product-version }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
       - name: Download Waypoint
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
         with:
           path: archive
           name: waypoint_${{env.version}}_linux_${{ matrix.arch }}.zip
       - name: Download Entrypoint
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
         with:
           path: archive
           name: waypoint-entrypoint_${{ env.version }}_linux_${{ matrix.arch }}.zip
@@ -232,7 +232,7 @@ jobs:
       repo: "waypoint"
       version: ${{ needs.get-product-version.outputs.product-version }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
       - name: Build Docker image
         uses: hashicorp/actions-docker-build@v1
         with:
