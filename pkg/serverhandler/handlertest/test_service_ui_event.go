@@ -2,11 +2,12 @@ package handlertest
 
 import (
 	"context"
+	"testing"
+	"time"
+
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	serverptypes "github.com/hashicorp/waypoint/pkg/server/ptypes"
 	"github.com/stretchr/testify/require"
-	"testing"
-	"time"
 )
 
 func init() {
@@ -46,6 +47,8 @@ func TestEvent(t *testing.T, factory Factory) {
 
 		// Create build, deployment, release
 		createEvents(client, ctx, t)
+
+		time.Sleep(250 * time.Millisecond)
 
 		eventResp, err := client.UI_ListEvents(ctx, &pb.UI_ListEventsRequest{
 			Application: &pb.Ref_Application{
