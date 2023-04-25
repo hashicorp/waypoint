@@ -487,16 +487,7 @@ http:
 
     # Deployments
   - selector: hashicorp.waypoint.Waypoint.UI_ListDeployments
-    get: /ui/deployments/workspace/{workspace.workspace}
-
-  - selector: hashicorp.waypoint.Waypoint.UI_ListDeployments
-    get: /ui/deployments/application/{application.application}
-
-  - selector: hashicorp.waypoint.Waypoint.UI_ListDeployments
-    get: /ui/deployments/project/{application.project}
-
-  - selector: hashicorp.waypoint.Waypoint.UI_ListDeployments
-    get: /ui/deployments/state/{physical_state}
+    get: /ui/project/{application.project}/application/{application.application}/deployments
 
   - selector: hashicorp.waypoint.Waypoint.UI_GetDeployment
     get: /ui/deployment/{ref.id}
@@ -506,16 +497,7 @@ http:
 
     # Releases
   - selector: hashicorp.waypoint.Waypoint.UI_ListReleases
-    get: /ui/releases/workspace/{workspace.workspace}
-
-  - selector: hashicorp.waypoint.Waypoint.UI_ListReleases
-    get: /ui/releases/application/{application.application}
-
-  - selector: hashicorp.waypoint.Waypoint.UI_ListReleases
-    get: /ui/releases/project/{application.project}
-
-  - selector: hashicorp.waypoint.Waypoint.UI_ListReleases
-    get: /ui/releases/state/{physical_state}
+    get: /ui/project/{application.project}/application/{application.application}/releases
 
     # Pipelines
   - selector: hashicorp.waypoint.Waypoint.UI_ListPipelines
