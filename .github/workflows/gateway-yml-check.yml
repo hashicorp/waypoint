@@ -1,17 +1,17 @@
 name: Check gateway.yml for missing RPCs
-
 on:
   pull_request:
     types: [opened, synchronize]
     branches: [main]
-
 jobs:
   gateway-yml-check:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
         with:
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
       - name: Check gateway.yml for missing RPCs
         run: ./scripts/gateway-yml-check.sh
+permissions:
+  contents: read
