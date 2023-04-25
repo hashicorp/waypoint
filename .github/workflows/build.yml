@@ -14,6 +14,7 @@ env:
 permissions:
   contents: read
   statuses: write
+  packages: write
 
 jobs:
   get-product-version:
@@ -26,7 +27,7 @@ jobs:
       pkg-name: ${{ steps.get-pkg-env-vars.outputs.pkg-name }}
       pkg-metadata: ${{ steps.get-pkg-env-vars.outputs.pkg-metadata }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
       - name: Get package environment variables
         id: get-pkg-env-vars
         run: |
@@ -48,12 +49,12 @@ jobs:
     outputs:
       go-version: ${{ steps.get-go-version.outputs.go-version }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
       - name: Determine Go version
         id: get-go-version
         run: |
           echo "Building with Go $(cat .go-version)"
-          echo "go-version=$(cat .go-version)" >> $GITHUB_OUTPUT
+          echo "go-version=$(cat .go-version)" >> "$GITHUB_OUTPUT"
 
   generate-metadata-file:
     name: "Generate release metadata"
@@ -62,14 +63,14 @@ jobs:
     outputs:
       filepath: ${{ steps.generate-metadata-file.outputs.filepath }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
       - name: Generate package metadata
         id: generate-metadata-file
         uses: hashicorp/actions-generate-metadata@v1
         with:
           version: ${{ needs.get-product-version.outputs.product-version }}
           product: ${{ env.PKG_NAME }}
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
         with:
           name: metadata.json
           path: ${{ steps.generate-metadata-file.outputs.filepath }}
@@ -79,9 +80,9 @@ jobs:
     name: Build UI
     needs: get-product-version
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
       - name: Set up node and yarn
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@64ed1c7eab4cce3362f8c340dee64e5eaeef8f7c # v3.6.0
         with:
           node-version: 14
           cache: yarn
@@ -90,14 +91,14 @@ jobs:
         run: |
           export PKG_VERSION=${{ needs.get-product-version.outputs.product-version }}
           export PKG_BINARY_TYPE=${{ needs.get-product-version.outputs.pkg-metadata }}
-          export PKG_COPYRIGHT_YEAR=$(git show -s --format=%cd --date=format:%Y HEAD)
+          PKG_COPYRIGHT_YEAR="$(git show -s --format=%cd --date=format:%Y HEAD)" ; export PKG_COPYRIGHT_YEAR
           export PKG_NAME=${{ needs.get-product-version.outputs.pkg-name }}
           echo "${PKG_NAME} version is ${PKG_VERSION}"
           echo "${PKG_NAME} binary type is ${PKG_BINARY_TYPE}"
           echo "${PKG_NAME} copyright year is ${PKG_COPYRIGHT_YEAR}"
           cd ui && make && cd ..
       - name: Save assets to cache
-        uses: actions/cache/save@v3
+        uses: actions/cache/save@v3 # TSCCR: no version of actions/cache trusts nested action "save"
         with:
           path: ui/dist/assets
           key: ui_assets_${{ github.sha }}
@@ -110,12 +111,12 @@ jobs:
       - get-product-version
       - build-ui
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-go@v3
+      - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
+      - uses: actions/setup-go@4d34df0c2316fe8122ab82dc22947d607c0c91f9 # v4.0.0
         with:
           go-version: ${{ needs.get-go-version.outputs.go-version }}
       - name: Restore ui assets
-        uses: actions/cache/restore@v3
+        uses: actions/cache/restore@v3 # TSCCR: no version of actions/cache trusts nested action "restore"
         with:
           path: ui/dist/assets
           key: ui_assets_${{ github.sha }}
@@ -130,7 +131,7 @@ jobs:
           go install github.com/kevinburke/go-bindata/go-bindata@v3.24.0+incompatible
           make bin/crt-assets
       - name: Save assets to cache
-        uses: actions/cache/save@v3
+        uses: actions/cache/save@88522ab9f39a2ea568f7027eddc7d8d8bc9d59c8 # v3.3.1
         with:
           path: internal/assets
           key: build_assets_${{ github.sha }}
@@ -153,7 +154,7 @@ jobs:
           - {goos: "darwin", goarch: "amd64", pkg-name: "waypoint"}
           - { goos: "darwin", goarch: "arm64", pkg-name: "waypoint-entrypoint" }
           - { goos: "darwin", goarch: "amd64", pkg-name: "waypoint-entrypoint" }
-    name: Go ${{ matrix.go }} ${{ matrix.goos }} ${{ matrix.goarch }} build
+    name: Go ${{ matrix.goos }} ${{ matrix.goarch }} build
     uses: ./.github/workflows/build-waypoint-oss.yml
     with:
       create-packages: false
@@ -165,7 +166,6 @@ jobs:
       waypoint-version: ${{ needs.get-product-version.outputs.product-version }}
       waypoint-base-version: ${{ needs.get-product-version.outputs.base-product-version }}
       waypoint-prerelease: ${{ needs.get-product-version.outputs.prerelease-product-version }}
-      waypoint-metadata: ${{ needs.get-product-version.outputs.pkg-metadata }}
     secrets: inherit
 
   package-docker-waypoint-server:
@@ -182,25 +182,25 @@ jobs:
       repo: "waypoint"
       version: ${{ needs.get-product-version.outputs.product-version }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
       - name: Download Waypoint
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
         with:
           path: archive
           name: waypoint_${{env.version}}_linux_${{ matrix.arch }}.zip
       - name: Download Entrypoint
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
         with:
           path: archive
           name: waypoint-entrypoint_${{ env.version }}_linux_${{ matrix.arch }}.zip
       - name: Prepare zipped binaries to build Docker image
         id: prepare-zips
         run: |
-          DIR=$(mktemp -d)
-          echo "working-dir=$DIR" >> $GITHUB_OUTPUT
-          cp -v Dockerfile $DIR/Dockerfile
-          unzip -j archive/waypoint_${{env.version}}_linux_${{ matrix.arch }}.zip -d $DIR
-          unzip -j archive/waypoint-entrypoint_${{env.version}}_linux_${{ matrix.arch }}.zip -d $DIR
+          DIR="$(mktemp -d)"
+          echo "working-dir=$DIR" >> "$GITHUB_OUTPUT"
+          cp -v Dockerfile "$DIR/Dockerfile"
+          unzip -j "archive/waypoint_${{env.version}}_linux_${{ matrix.arch }}.zip" -d "$DIR"
+          unzip -j "archive/waypoint-entrypoint_${{env.version}}_linux_${{ matrix.arch }}.zip" -d "$DIR"
       - name: Build Docker image
         uses: hashicorp/actions-docker-build@v1
         with:
@@ -220,8 +220,6 @@ jobs:
   package-docker-waypoint-odr:
     name: Build Docker ODR image for linux_${{ matrix.arch }}
     runs-on: ubuntu-latest
-    outputs:
-      product-version: ${{ steps.prepare-zips.outputs.working-dir }}
     needs:
       - get-product-version
       - build-waypoint
@@ -233,7 +231,7 @@ jobs:
       repo: "waypoint"
       version: ${{ needs.get-product-version.outputs.product-version }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
       - name: Build Docker image
         uses: hashicorp/actions-docker-build@v1
         with:
@@ -246,4 +244,18 @@ jobs:
           tags: |
             docker.io/hashicorp/${{env.repo}}-odr:${{env.version}}
             public.ecr.aws/hashicorp/${{env.repo}}-odr:${{env.version}}
+
+  end-to-end-tests:
+    needs:
+      - get-product-version
+      - package-docker-waypoint-server
+      - package-docker-waypoint-odr
+    uses: ./.github/workflows/end-to-end.yml
+    with:
+      waypoint-binary: waypoint_${{needs.get-product-version.outputs.product-version}}_linux_amd64.zip
+      waypoint-tar: waypoint_crt_linux_amd64_0.12.0_${{github.sha}}.docker.tar
+      waypoint-image: hashicorp/waypoint:${{ needs.get-product-version.outputs.product-version }}
+      waypoint-odr-tar: waypoint_odr-crt_linux_amd64_0.12.0_${{github.sha}}.docker.tar
+      waypoint-odr-image: hashicorp/waypoint-odr:${{ needs.get-product-version.outputs.product-version }}
+    secrets: inherit
 

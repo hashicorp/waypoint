@@ -1,0 +1,143 @@
+name: go-tests
+on:
+  pull_request:
+  push:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    env:
+      GOTAGS: ''
+    steps:
+      - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
+      - uses: actions/setup-go@4d34df0c2316fe8122ab82dc22947d607c0c91f9 # v4.0.0
+        with:
+          go-version-file: go.mod
+      - name: Download go modules
+        run: go mod download
+      - name: Install golangci-lint
+        run: |-
+          download=https://raw.githubusercontent.com/golangci/golangci-lint/9a8a056e9fe49c0e9ed2287aedce1022c79a115b/install.sh  # v1.52.2
+          curl -sSf "$download" | sh -s v1.50.1
+      - run: go mod download
+      - name: lint
+        run: |-
+          ./bin/golangci-lint run --build-tags="$GOTAGS" -v --concurrency 2 \
+            --disable-all \
+            --timeout 10m \
+            --enable gofmt \
+            --enable gosimple \
+            --enable govet
+
+  check-vendor:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
+      - run: go mod tidy
+      - run: |
+          if ! git diff --exit-code; then
+            echo "Git directory has vendor changes"
+            exit 1
+          fi
+
+  split-go-tests:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.split-tests.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
+      - uses: actions/setup-go@4d34df0c2316fe8122ab82dc22947d607c0c91f9 # v4.0.0
+        with:
+          go-version-file: './go.mod'
+      - name: Split tests
+        id: split-tests
+        env:
+          runner_count: 8
+        run: ./.github/scripts/split-tests.sh
+                
+  go-test:
+    name: go-test-${{ matrix.id }}
+    runs-on: ubuntu-latest
+    needs: split-go-tests
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJson(needs.split-go-tests.outputs.matrix) }}
+    env:
+      TEST_RESULTS_DIR: "/tmp/test-results"
+      GOTESTSUM_RELEASE: 1.8.2
+      GOTAGS: ''
+      GOMAXPROCS: 4
+    steps:
+      - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
+      - name: Start Services
+        run: |-
+          docker compose -f .github/services/go-tests/docker-compose.yml up --detach --no-color --wait
+      - uses: actions/setup-go@4d34df0c2316fe8122ab82dc22947d607c0c91f9 # v4.0.0
+        with:
+          go-version-file: './go.mod'
+      - name: Install gotestsum
+        run: |-
+          url=https://github.com/gotestyourself/gotestsum/releases/download
+          curl -sSL "${url}/v${GOTESTSUM_RELEASE}/gotestsum_${GOTESTSUM_RELEASE}_linux_amd64.tar.gz" | \
+            sudo tar -xz --overwrite -C /usr/local/bin gotestsum
+      - run: go mod download
+      - name: Waiting for Postgres to be ready
+        run: |-
+          for _ in $(seq 1 10);
+          do
+            nc -z localhost 5432 && echo Success && exit 0
+            echo -n .
+            sleep 1
+          done
+          echo Failed waiting for Postgres && exit 1
+      - name: go test
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_DB: waypoint_test
+        run: |-
+          read -ra PACKAGE_NAMES <<< "${{ join(matrix.packages, ' ') }}"
+          mkdir -p "$TEST_RESULTS_DIR"
+          echo "Testing packages: ${PACKAGE_NAMES[*]}"
+          gotestsum --format=short-verbose \
+            --junitfile "$TEST_RESULTS_DIR/gotestsum-report.xml" -- \
+            -tags="$GOTAGS" -p 2 \
+            -cover -coverprofile=coverage.txt \
+            "${PACKAGE_NAMES[@]}"
+
+      - uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
+        with:
+          name: test-results-${{ matrix.id }}
+          path: "/tmp/test-results"
+
+      - name: Stop containers
+        if: always()
+        run: |-
+          docker compose -f .github/services/go-tests/docker-compose.yml down
+
+  dev-build:
+    if: github.ref != 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
+      - uses: actions/setup-go@4d34df0c2316fe8122ab82dc22947d607c0c91f9 # v4.0.0
+        with:
+          go-version-file: './go.mod'
+      - run: |-
+          go install github.com/kevinburke/go-bindata/...
+          make bin
+
+  dev-build-windows:
+    if: github.ref != 'refs/heads/main'
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
+      - uses: actions/setup-go@4d34df0c2316fe8122ab82dc22947d607c0c91f9 # v4.0.0
+        with:
+          go-version-file: './go.mod'
+      - run: |-
+          go install github.com/kevinburke/go-bindata/...
+          make bin/windows
+
+permissions:
+  contents: read

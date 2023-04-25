@@ -35,9 +35,6 @@ on:
       waypoint-prerelease:
         type: string
         required: true
-      waypoint-metadata:
-        type: string
-        required: true
 
 jobs:
   build:
@@ -46,16 +43,16 @@ jobs:
       bin-name: ${{ steps.get-bin-name.outputs.bin-name }}
     name: Build ${{ inputs.package-name }} ${{ inputs.goos }} ${{ inputs.goarch }} v${{ inputs.waypoint-version }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
       - name: Restore ui assets
-        uses: actions/cache/restore@v3
+        uses: actions/cache/restore@88522ab9f39a2ea568f7027eddc7d8d8bc9d59c8 # v3.3.1
         with:
           path: ui/dist/assets
           key: ui_assets_${{ github.sha }}
           fail-on-cache-miss: true
           enableCrossOsArchive: true
       - name: Restore build assets
-        uses: actions/cache/restore@v3
+        uses: actions/cache/restore@88522ab9f39a2ea568f7027eddc7d8d8bc9d59c8 # v3.3.1
         with:
           path: internal/assets
           key: build_assets_${{ github.sha }}
@@ -77,7 +74,6 @@ jobs:
           WAYPOINT_GOARCH: ${{ inputs.goarch }}
           BASE_VERSION: ${{ inputs.waypoint-base-version }}
           PRERELEASE: ${{ inputs.waypoint-prerelease }}
-          ACTIONSOS: ${{ inputs.runson }}
           CGO_ENABLED: ${{ inputs.cgo-enabled }}
           CRT_BIN_NAME: ${{ steps.get-bin-name.outputs.bin-name }}
         uses: hashicorp/actions-go-build@v0.1.7
@@ -90,14 +86,16 @@ jobs:
           reproducible: nope
           instructions: |
             make bin/crt-${{ inputs.package-name }}
+
       - name: Linux packaging
+        id: packaging
         if: ${{ (inputs.goos == 'linux') && (inputs.package-name == 'waypoint') && (inputs.goarch != '386') }}
         uses: hashicorp/actions-packaging-linux@v1
         with:
           name: ${{ inputs.package-name }}
           description: ${{ inputs.package-name }}
           arch: ${{ inputs.goarch }}
-          version: ${{ inputs.waypoint-version }}+${{ inputs.waypoint-metadata }}
+          version: ${{ inputs.waypoint-version }}
           maintainer: "HashiCorp"
           homepage: "https://github.com/hashicorp/waypoint"
           license: "MPL-2.0"
@@ -105,19 +103,19 @@ jobs:
           deb_depends: "git"
           rpm_depends: "git"
       - name: Set Package Names
-        if: ${{ inputs.goos == 'linux' }}
+        if: steps.packaging.conclusion == 'success'
         run: |
-          echo "RPM_PACKAGE=$(basename out/*.rpm)" >> $GITHUB_ENV
-          echo "DEB_PACKAGE=$(basename out/*.deb)" >> $GITHUB_ENV
-
-      - uses: actions/upload-artifact@v2
-        if: ${{ inputs.goos == 'linux' }}
+          echo "RPM_PACKAGE=$(basename out/*.rpm)" >> "$GITHUB_ENV"
+          echo "DEB_PACKAGE=$(basename out/*.deb)" >> "$GITHUB_ENV"
+      - name: Upload rpm package
+        uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
+        if: steps.packaging.conclusion == 'success'
         with:
           name: ${{ env.RPM_PACKAGE }}
           path: out/${{ env.RPM_PACKAGE }}
-
-      - uses: actions/upload-artifact@v2
-        if: ${{ inputs.goos == 'linux' }}
+      - name: Upload deb package
+        uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
+        if: steps.packaging.conclusion == 'success'
         with:
           name: ${{ env.DEB_PACKAGE }}
           path: out/${{ env.DEB_PACKAGE }}

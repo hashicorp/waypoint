@@ -1,0 +1,26 @@
+version: "3.9"
+services:
+  localstack:
+    image: docker.mirror.hashicorp.services/localstack/localstack:1.3
+    ports:
+      - 4510-4559:4510-4559
+      - 4566:4566
+      - 5678:5678
+  pebble:
+    image: docker.mirror.hashicorp.services/letsencrypt/pebble
+    command: pebble
+    environment:
+      PEBBLE_VA_NOSLEEP: 1
+      PEBBLE_VA_ALWAYS_VALID: 1
+  postgres:
+    image: docker.mirror.hashicorp.services/circleci/postgres:11-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_DB: waypoint_test
+    ports:
+      - "5432:5432"
+  vault:
+    image: docker.mirror.hashicorp.services/vault
+    command: server -dev -dev-root-token-id=hznroot
+    ports:
+      - "8200:8200"

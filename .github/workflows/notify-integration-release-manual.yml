@@ -45,11 +45,11 @@ jobs:
           - "waypoint/hashicorp/vault"
     steps:
       - name: Checkout this repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
         with:
           ref: ${{ github.event.inputs.branch }}
       - name: Checkout integration-release-action
-        uses: actions/checkout@v2
+        uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
         with:
           repository: hashicorp/integration-release-action
           path: ./integration-release-action
@@ -60,3 +60,5 @@ jobs:
           release_version: ${{ github.event.inputs.version }}
           release_sha: ${{ github.event.inputs.branch }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
+permissions:
+  contents: read

@@ -1,12 +1,10 @@
 ---
 name: Backport Assistant Runner
-
 on:
   pull_request_target:
     types:
       - closed
       - labeled
-
 jobs:
   backport:
     if: github.event.pull_request.merged
@@ -47,3 +45,5 @@ jobs:
           BACKPORT_LABEL_REGEXP: "backport/(?P<target>\\d+\\.\\d+\\.\\w+)"
           BACKPORT_TARGET_TEMPLATE: "release/{{.target}}"
           GITHUB_TOKEN: ${{ secrets.ELEVATED_GITHUB_TOKEN }}
+permissions:
+  contents: read
