@@ -1,0 +1,93 @@
+name: frontend
+on:
+  push:
+  pull_request:
+
+jobs:
+  frontend-cache:
+    runs-on: ubuntu-latest
+    outputs:
+      yarn-cache-key: ${{ steps.set-cache-key.outputs.cache-key}}
+    steps:
+      - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
+
+      - name: set-cache-key
+        id: set-cache-key
+        run: echo "cache-key=waypoint-ui-v1-${{ hashFiles('ui/yarn.lock', 'ui/lib/**') }}" | tee -a "${GITHUB_OUTPUT}"
+
+      - name: Initialize UI cache
+        id: ui-cache
+        uses: actions/cache@88522ab9f39a2ea568f7027eddc7d8d8bc9d59c8 # v3.3.1
+        with:
+          key: "${{ steps.set-cache-key.outputs.cache-key }}"
+          path: |- 
+            ui/node_modules
+            ui/lib/node_modules
+
+      - uses: actions/setup-node@64ed1c7eab4cce3362f8c340dee64e5eaeef8f7c # v3.6.0
+        if: steps.ui-cache.outputs.cache-hit == false
+        with:
+          node-version: 14
+
+      - name: install yarn packages
+        if: steps.ui-cache.outputs.cache-hit == false
+        run: yarn install
+        working-directory: ui
+
+
+  frontend-lint:
+    runs-on: ubuntu-latest
+    needs:
+      - frontend-cache
+    steps:
+      - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
+      - uses: actions/setup-node@64ed1c7eab4cce3362f8c340dee64e5eaeef8f7c # v3.6.0
+        with:
+          node-version: 14
+
+      - name: restore-cache
+        uses: actions/cache@88522ab9f39a2ea568f7027eddc7d8d8bc9d59c8 # v3.3.1
+        with:
+          key: ${{ needs.frontend-cache.outputs.yarn-cache-key }}
+          path: |- 
+            ui/node_modules
+            ui/lib/node_modules
+
+      - run: yarn lint
+        working-directory: ui
+
+  ember-tests:
+    runs-on: ubuntu-latest
+    env:
+      EMBER_TEST_REPORT: test-results/report-oss.xml
+      EMBER_TEST_PARALLEL: 'true'
+    needs:
+      - frontend-cache
+    steps:
+      - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
+      - uses: actions/setup-node@64ed1c7eab4cce3362f8c340dee64e5eaeef8f7c # v3.6.0
+        with:
+          node-version: 14
+
+      - name: restore-cache
+        uses: actions/cache@88522ab9f39a2ea568f7027eddc7d8d8bc9d59c8 # v3.3.1
+        with:
+          key: ${{ needs.frontend-cache.outputs.yarn-cache-key }}
+          path: |- 
+            ui/node_modules
+            ui/lib/node_modules
+
+      - name: build:test
+        run: yarn build:test
+        working-directory: ui
+      
+      - name: test:ember:ci
+        run: yarn test:ember:ci
+        working-directory: ui
+
+      - uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
+        with:
+          path: ui/test-results
+
+permissions:
+  contents: read

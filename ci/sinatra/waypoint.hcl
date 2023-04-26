@@ -6,7 +6,7 @@ app "sinatra" {
 
     registry {
       use "docker" {
-        image = "localhost:5000/sinatra"
+        image = "registry.localhost:5000/sinatra"
         tag   = "latest"
       }
     }

@@ -1,0 +1,31 @@
+name: integrations-hcl
+on:
+  pull_request:
+    paths: [builtin/**]
+jobs:
+  generate-integration-hcl:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
+      - uses: actions/setup-go@4d34df0c2316fe8122ab82dc22947d607c0c91f9 # v4.0.0
+        with:
+          go-version-file: go.mod
+      - name: Download go modules
+        run: go mod download
+      - run: make gen/integrations-hcl
+      - run: git status
+      - run: |
+          if ! git diff --exit-code builtin > /dev/null; then
+            echo "Built-in integration documentation has unstaged changes. This is because you have modified"
+            echo "docs for a builtin plugin that must be reflected in the website."
+            echo
+            echo "Run the following make command:"
+            echo
+            echo "make gen/integrations-hcl"
+            echo
+            echo "And then validate that the corresponding website pages look acceptable."
+            git status
+            exit 1
+          fi
+permissions:
+  contents: read
