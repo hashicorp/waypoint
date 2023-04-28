@@ -1460,6 +1460,13 @@ func (i *NomadInstaller) UpgradeFlags(set *flag.Set) {
 	})
 
 	set.StringVar(&flag.StringVar{
+		Name:    "nomad-network-mode",
+		Target:  &i.config.networkMode,
+		Usage:   "Nomad task group network mode.",
+		Default: "host",
+	})
+
+	set.StringVar(&flag.StringVar{
 		Name:   "nomad-odr-image",
 		Target: &i.config.odrImage,
 		Usage: "Docker image for the on-demand runners. If not specified, it " +
@@ -1492,6 +1499,12 @@ func (i *NomadInstaller) UpgradeFlags(set *flag.Set) {
 		Target:  &i.config.serverResourcesMemory,
 		Usage:   "MB of Memory to allocate to the server job task.",
 		Default: strconv.Itoa(defaultResourcesMemory),
+	})
+
+	set.StringVar(&flag.StringVar{
+		Name:   "nomad-service-address",
+		Target: &i.config.serviceAddress,
+		Usage:  "Address for the Nomad services.",
 	})
 
 	set.StringVar(&flag.StringVar{
