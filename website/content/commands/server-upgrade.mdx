@@ -77,11 +77,13 @@ manually installed runners will not be automatically upgraded.
 - `-nomad-dc=<string>` - Datacenters to install to for Nomad. The default is dc1.
 - `-nomad-host=<string>` - Hostname of the Nomad server to use, like for launching on-demand tasks. The default is http://localhost:4646.
 - `-nomad-namespace=<string>` - Namespace to install the Waypoint server into for Nomad. The default is default.
+- `-nomad-network-mode=<string>` - Nomad task group network mode. The default is host.
 - `-nomad-odr-image=<string>` - Docker image for the on-demand runners. If not specified, it defaults to the server image name + '-odr' (i.e. 'hashicorp/waypoint-odr:latest').
 - `-nomad-policy-override` - Override the Nomad sentinel policy for enterprise Nomad. The default is false.
 - `-nomad-region=<string>` - Region to install to for Nomad. The default is global.
 - `-nomad-server-cpu=<string>` - CPU required to run this task in MHz. The default is 200.
 - `-nomad-server-memory=<string>` - MB of Memory to allocate to the server job task. The default is 600.
+- `-nomad-service-address=<string>` - Address for the Nomad services.
 - `-nomad-runner-cpu=<string>` - CPU required to run this task in MHz. The default is 200.
 - `-nomad-runner-memory=<string>` - MB of Memory to allocate to the runner job task. The default is 600.
 - `-nomad-runner-host-volume=<string>` - Name of the host volume to use for the Waypoint runner.
