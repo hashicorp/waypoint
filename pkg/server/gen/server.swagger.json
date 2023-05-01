@@ -6149,15 +6149,15 @@
         ]
       }
     },
-    "/ui/deployments/application/{application.application}": {
+    "/ui/events/INTERNAL_AdditionalMessages": {
       "get": {
-        "summary": "List deployments for a given application.",
-        "operationId": "Waypoint_UI_ListDeployments2",
+        "summary": "List possible event data types.",
+        "operationId": "Waypoint_INTERNAL_AdditionalMessages",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/hashicorp.waypoint.UI.ListDeploymentsResponse"
+              "$ref": "#/definitions/hashicorp.waypoint.UI.ListEventSchemasResponse"
             }
           },
           "default": {
@@ -6167,240 +6167,12 @@
             }
           }
         },
-        "parameters": [
-          {
-            "name": "application.application",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "application.project",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "workspace.workspace",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "order.order",
-            "description": "Order for the results.",
-            "in": "query",
-            "required": false,
-            "type": "string",
-            "enum": [
-              "UNSET",
-              "START_TIME",
-              "COMPLETE_TIME"
-            ],
-            "default": "UNSET"
-          },
-          {
-            "name": "order.desc",
-            "in": "query",
-            "required": false,
-            "type": "boolean"
-          },
-          {
-            "name": "order.limit",
-            "description": "Limit the number of results.",
-            "in": "query",
-            "required": false,
-            "type": "integer",
-            "format": "int64"
-          },
-          {
-            "name": "physical_state",
-            "description": "The physical state to filter for. If this is zero or unset then no\nfiltering on physical state will be done.",
-            "in": "query",
-            "required": false,
-            "type": "string",
-            "enum": [
-              "UNKNOWN",
-              "PENDING",
-              "CREATED",
-              "DESTROYED"
-            ],
-            "default": "UNKNOWN"
-          }
-        ],
         "tags": [
           "Waypoint"
         ]
       }
     },
-    "/ui/deployments/project/{application.project}": {
-      "get": {
-        "summary": "List deployments for a given application.",
-        "operationId": "Waypoint_UI_ListDeployments3",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/hashicorp.waypoint.UI.ListDeploymentsResponse"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/grpc.gateway.runtime.Error"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "application.project",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "application.application",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "workspace.workspace",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "order.order",
-            "description": "Order for the results.",
-            "in": "query",
-            "required": false,
-            "type": "string",
-            "enum": [
-              "UNSET",
-              "START_TIME",
-              "COMPLETE_TIME"
-            ],
-            "default": "UNSET"
-          },
-          {
-            "name": "order.desc",
-            "in": "query",
-            "required": false,
-            "type": "boolean"
-          },
-          {
-            "name": "order.limit",
-            "description": "Limit the number of results.",
-            "in": "query",
-            "required": false,
-            "type": "integer",
-            "format": "int64"
-          },
-          {
-            "name": "physical_state",
-            "description": "The physical state to filter for. If this is zero or unset then no\nfiltering on physical state will be done.",
-            "in": "query",
-            "required": false,
-            "type": "string",
-            "enum": [
-              "UNKNOWN",
-              "PENDING",
-              "CREATED",
-              "DESTROYED"
-            ],
-            "default": "UNKNOWN"
-          }
-        ],
-        "tags": [
-          "Waypoint"
-        ]
-      }
-    },
-    "/ui/deployments/state/{physical_state}": {
-      "get": {
-        "summary": "List deployments for a given application.",
-        "operationId": "Waypoint_UI_ListDeployments4",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/hashicorp.waypoint.UI.ListDeploymentsResponse"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/grpc.gateway.runtime.Error"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "physical_state",
-            "description": "The physical state to filter for. If this is zero or unset then no\nfiltering on physical state will be done.",
-            "in": "path",
-            "required": true,
-            "type": "string",
-            "enum": [
-              "UNKNOWN",
-              "PENDING",
-              "CREATED",
-              "DESTROYED"
-            ]
-          },
-          {
-            "name": "application.application",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "application.project",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "workspace.workspace",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "order.order",
-            "description": "Order for the results.",
-            "in": "query",
-            "required": false,
-            "type": "string",
-            "enum": [
-              "UNSET",
-              "START_TIME",
-              "COMPLETE_TIME"
-            ],
-            "default": "UNSET"
-          },
-          {
-            "name": "order.desc",
-            "in": "query",
-            "required": false,
-            "type": "boolean"
-          },
-          {
-            "name": "order.limit",
-            "description": "Limit the number of results.",
-            "in": "query",
-            "required": false,
-            "type": "integer",
-            "format": "int64"
-          }
-        ],
-        "tags": [
-          "Waypoint"
-        ]
-      }
-    },
-    "/ui/deployments/workspace/{workspace.workspace}": {
+    "/ui/project/{application.project}/application/{application.application}/deployments": {
       "get": {
         "summary": "List deployments for a given application.",
         "operationId": "Waypoint_UI_ListDeployments",
@@ -6420,19 +6192,19 @@
         },
         "parameters": [
           {
-            "name": "workspace.workspace",
+            "name": "application.project",
             "in": "path",
             "required": true,
             "type": "string"
           },
           {
             "name": "application.application",
-            "in": "query",
-            "required": false,
+            "in": "path",
+            "required": true,
             "type": "string"
           },
           {
-            "name": "application.project",
+            "name": "workspace.workspace",
             "in": "query",
             "required": false,
             "type": "string"
@@ -6479,29 +6251,6 @@
             "default": "UNKNOWN"
           }
         ],
-        "tags": [
-          "Waypoint"
-        ]
-      }
-    },
-    "/ui/events/INTERNAL_AdditionalMessages": {
-      "get": {
-        "summary": "List possible event data types.",
-        "operationId": "Waypoint_INTERNAL_AdditionalMessages",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/hashicorp.waypoint.UI.ListEventSchemasResponse"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/grpc.gateway.runtime.Error"
-            }
-          }
-        },
         "tags": [
           "Waypoint"
         ]
@@ -6576,6 +6325,90 @@
               "type": "string"
             },
             "collectionFormat": "multi"
+          }
+        ],
+        "tags": [
+          "Waypoint"
+        ]
+      }
+    },
+    "/ui/project/{application.project}/application/{application.application}/releases": {
+      "get": {
+        "summary": "List releases for a given application.",
+        "operationId": "Waypoint_UI_ListReleases",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/hashicorp.waypoint.UI.ListReleasesResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/grpc.gateway.runtime.Error"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "application.project",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "application.application",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "workspace.workspace",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "order.order",
+            "description": "Order for the results.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "UNSET",
+              "START_TIME",
+              "COMPLETE_TIME"
+            ],
+            "default": "UNSET"
+          },
+          {
+            "name": "order.desc",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          },
+          {
+            "name": "order.limit",
+            "description": "Limit the number of results.",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "physical_state",
+            "description": "The physical state to filter for. If this is zero or unset then no\nfiltering on physical state will be done.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "UNKNOWN",
+              "PENDING",
+              "CREATED",
+              "DESTROYED"
+            ],
+            "default": "UNKNOWN"
           }
         ],
         "tags": [
@@ -6913,341 +6746,6 @@
             "in": "query",
             "required": false,
             "type": "string"
-          }
-        ],
-        "tags": [
-          "Waypoint"
-        ]
-      }
-    },
-    "/ui/releases/application/{application.application}": {
-      "get": {
-        "summary": "List releases for a given application.",
-        "operationId": "Waypoint_UI_ListReleases2",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/hashicorp.waypoint.UI.ListReleasesResponse"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/grpc.gateway.runtime.Error"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "application.application",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "application.project",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "workspace.workspace",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "order.order",
-            "description": "Order for the results.",
-            "in": "query",
-            "required": false,
-            "type": "string",
-            "enum": [
-              "UNSET",
-              "START_TIME",
-              "COMPLETE_TIME"
-            ],
-            "default": "UNSET"
-          },
-          {
-            "name": "order.desc",
-            "in": "query",
-            "required": false,
-            "type": "boolean"
-          },
-          {
-            "name": "order.limit",
-            "description": "Limit the number of results.",
-            "in": "query",
-            "required": false,
-            "type": "integer",
-            "format": "int64"
-          },
-          {
-            "name": "physical_state",
-            "description": "The physical state to filter for. If this is zero or unset then no\nfiltering on physical state will be done.",
-            "in": "query",
-            "required": false,
-            "type": "string",
-            "enum": [
-              "UNKNOWN",
-              "PENDING",
-              "CREATED",
-              "DESTROYED"
-            ],
-            "default": "UNKNOWN"
-          }
-        ],
-        "tags": [
-          "Waypoint"
-        ]
-      }
-    },
-    "/ui/releases/project/{application.project}": {
-      "get": {
-        "summary": "List releases for a given application.",
-        "operationId": "Waypoint_UI_ListReleases3",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/hashicorp.waypoint.UI.ListReleasesResponse"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/grpc.gateway.runtime.Error"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "application.project",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "application.application",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "workspace.workspace",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "order.order",
-            "description": "Order for the results.",
-            "in": "query",
-            "required": false,
-            "type": "string",
-            "enum": [
-              "UNSET",
-              "START_TIME",
-              "COMPLETE_TIME"
-            ],
-            "default": "UNSET"
-          },
-          {
-            "name": "order.desc",
-            "in": "query",
-            "required": false,
-            "type": "boolean"
-          },
-          {
-            "name": "order.limit",
-            "description": "Limit the number of results.",
-            "in": "query",
-            "required": false,
-            "type": "integer",
-            "format": "int64"
-          },
-          {
-            "name": "physical_state",
-            "description": "The physical state to filter for. If this is zero or unset then no\nfiltering on physical state will be done.",
-            "in": "query",
-            "required": false,
-            "type": "string",
-            "enum": [
-              "UNKNOWN",
-              "PENDING",
-              "CREATED",
-              "DESTROYED"
-            ],
-            "default": "UNKNOWN"
-          }
-        ],
-        "tags": [
-          "Waypoint"
-        ]
-      }
-    },
-    "/ui/releases/state/{physical_state}": {
-      "get": {
-        "summary": "List releases for a given application.",
-        "operationId": "Waypoint_UI_ListReleases4",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/hashicorp.waypoint.UI.ListReleasesResponse"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/grpc.gateway.runtime.Error"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "physical_state",
-            "description": "The physical state to filter for. If this is zero or unset then no\nfiltering on physical state will be done.",
-            "in": "path",
-            "required": true,
-            "type": "string",
-            "enum": [
-              "UNKNOWN",
-              "PENDING",
-              "CREATED",
-              "DESTROYED"
-            ]
-          },
-          {
-            "name": "application.application",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "application.project",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "workspace.workspace",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "order.order",
-            "description": "Order for the results.",
-            "in": "query",
-            "required": false,
-            "type": "string",
-            "enum": [
-              "UNSET",
-              "START_TIME",
-              "COMPLETE_TIME"
-            ],
-            "default": "UNSET"
-          },
-          {
-            "name": "order.desc",
-            "in": "query",
-            "required": false,
-            "type": "boolean"
-          },
-          {
-            "name": "order.limit",
-            "description": "Limit the number of results.",
-            "in": "query",
-            "required": false,
-            "type": "integer",
-            "format": "int64"
-          }
-        ],
-        "tags": [
-          "Waypoint"
-        ]
-      }
-    },
-    "/ui/releases/workspace/{workspace.workspace}": {
-      "get": {
-        "summary": "List releases for a given application.",
-        "operationId": "Waypoint_UI_ListReleases",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/hashicorp.waypoint.UI.ListReleasesResponse"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/grpc.gateway.runtime.Error"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "workspace.workspace",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "application.application",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "application.project",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "order.order",
-            "description": "Order for the results.",
-            "in": "query",
-            "required": false,
-            "type": "string",
-            "enum": [
-              "UNSET",
-              "START_TIME",
-              "COMPLETE_TIME"
-            ],
-            "default": "UNSET"
-          },
-          {
-            "name": "order.desc",
-            "in": "query",
-            "required": false,
-            "type": "boolean"
-          },
-          {
-            "name": "order.limit",
-            "description": "Limit the number of results.",
-            "in": "query",
-            "required": false,
-            "type": "integer",
-            "format": "int64"
-          },
-          {
-            "name": "physical_state",
-            "description": "The physical state to filter for. If this is zero or unset then no\nfiltering on physical state will be done.",
-            "in": "query",
-            "required": false,
-            "type": "string",
-            "enum": [
-              "UNKNOWN",
-              "PENDING",
-              "CREATED",
-              "DESTROYED"
-            ],
-            "default": "UNKNOWN"
           }
         ],
         "tags": [
@@ -12760,6 +12258,9 @@
         "event_data": {
           "type": "string",
           "format": "byte"
+        },
+        "id": {
+          "type": "string"
         }
       },
       "description": "An event packaged alongside prefetched related messages."
