@@ -715,6 +715,7 @@ message UI {
     google.protobuf.Timestamp timestamp = 1;
     EventType event_type  = 2;
     bytes event_data = 3;
+    string id = 4; // external ID for this event
 
     // Supported EventTypes
     enum EventType {
