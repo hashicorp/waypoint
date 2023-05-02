@@ -2088,6 +2088,29 @@ func (_m *WaypointServer) UI_GetDeployment(_a0 context.Context, _a1 *gen.UI_GetD
 	return r0, r1
 }
 
+// UI_GetPipelineRun provides a mock function with given fields: _a0, _a1
+func (_m *WaypointServer) UI_GetPipelineRun(_a0 context.Context, _a1 *gen.UI_GetPipelineRunRequest) (*gen.UI_GetPipelineRunResponse, error) {
+	ret := _m.Called(_a0, _a1)
+
+	var r0 *gen.UI_GetPipelineRunResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.UI_GetPipelineRunRequest) *gen.UI_GetPipelineRunResponse); ok {
+		r0 = rf(_a0, _a1)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gen.UI_GetPipelineRunResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.UI_GetPipelineRunRequest) error); ok {
+		r1 = rf(_a0, _a1)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // UI_GetProject provides a mock function with given fields: _a0, _a1
 func (_m *WaypointServer) UI_GetProject(_a0 context.Context, _a1 *gen.UI_GetProjectRequest) (*gen.UI_GetProjectResponse, error) {
 	ret := _m.Called(_a0, _a1)

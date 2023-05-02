@@ -9469,6 +9469,206 @@ func local_request_Waypoint_UI_ListPipelineRuns_0(ctx context.Context, marshaler
 }
 
 var (
+	filter_Waypoint_UI_GetPipelineRun_0 = &utilities.DoubleArray{Encoding: map[string]int{"pipeline": 0, "id": 1, "sequence": 2}, Base: []int{1, 1, 1, 2, 0, 0}, Check: []int{0, 1, 2, 1, 3, 4}}
+)
+
+func request_Waypoint_UI_GetPipelineRun_0(ctx context.Context, marshaler runtime.Marshaler, client WaypointClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq UI_GetPipelineRunRequest
+	var metadata runtime.ServerMetadata
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["pipeline.id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "pipeline.id")
+	}
+
+	err = runtime.PopulateFieldFromPath(&protoReq, "pipeline.id", val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "pipeline.id", err)
+	}
+
+	val, ok = pathParams["sequence"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "sequence")
+	}
+
+	protoReq.Sequence, err = runtime.Uint64(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "sequence", err)
+	}
+
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Waypoint_UI_GetPipelineRun_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := client.UI_GetPipelineRun(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_Waypoint_UI_GetPipelineRun_0(ctx context.Context, marshaler runtime.Marshaler, server WaypointServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq UI_GetPipelineRunRequest
+	var metadata runtime.ServerMetadata
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["pipeline.id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "pipeline.id")
+	}
+
+	err = runtime.PopulateFieldFromPath(&protoReq, "pipeline.id", val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "pipeline.id", err)
+	}
+
+	val, ok = pathParams["sequence"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "sequence")
+	}
+
+	protoReq.Sequence, err = runtime.Uint64(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "sequence", err)
+	}
+
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Waypoint_UI_GetPipelineRun_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := server.UI_GetPipelineRun(ctx, &protoReq)
+	return msg, metadata, err
+
+}
+
+var (
+	filter_Waypoint_UI_GetPipelineRun_1 = &utilities.DoubleArray{Encoding: map[string]int{"pipeline": 0, "owner": 1, "project": 2, "pipeline_name": 3, "sequence": 4}, Base: []int{1, 6, 1, 2, 1, 5, 0, 5, 4, 0, 0}, Check: []int{0, 1, 2, 3, 4, 1, 5, 2, 8, 9, 6}}
+)
+
+func request_Waypoint_UI_GetPipelineRun_1(ctx context.Context, marshaler runtime.Marshaler, client WaypointClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq UI_GetPipelineRunRequest
+	var metadata runtime.ServerMetadata
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["pipeline.owner.project.project"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "pipeline.owner.project.project")
+	}
+
+	err = runtime.PopulateFieldFromPath(&protoReq, "pipeline.owner.project.project", val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "pipeline.owner.project.project", err)
+	}
+
+	val, ok = pathParams["pipeline.owner.pipeline_name"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "pipeline.owner.pipeline_name")
+	}
+
+	err = runtime.PopulateFieldFromPath(&protoReq, "pipeline.owner.pipeline_name", val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "pipeline.owner.pipeline_name", err)
+	}
+
+	val, ok = pathParams["sequence"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "sequence")
+	}
+
+	protoReq.Sequence, err = runtime.Uint64(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "sequence", err)
+	}
+
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Waypoint_UI_GetPipelineRun_1); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := client.UI_GetPipelineRun(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_Waypoint_UI_GetPipelineRun_1(ctx context.Context, marshaler runtime.Marshaler, server WaypointServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq UI_GetPipelineRunRequest
+	var metadata runtime.ServerMetadata
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["pipeline.owner.project.project"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "pipeline.owner.project.project")
+	}
+
+	err = runtime.PopulateFieldFromPath(&protoReq, "pipeline.owner.project.project", val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "pipeline.owner.project.project", err)
+	}
+
+	val, ok = pathParams["pipeline.owner.pipeline_name"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "pipeline.owner.pipeline_name")
+	}
+
+	err = runtime.PopulateFieldFromPath(&protoReq, "pipeline.owner.pipeline_name", val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "pipeline.owner.pipeline_name", err)
+	}
+
+	val, ok = pathParams["sequence"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "sequence")
+	}
+
+	protoReq.Sequence, err = runtime.Uint64(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "sequence", err)
+	}
+
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Waypoint_UI_GetPipelineRun_1); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := server.UI_GetPipelineRun(ctx, &protoReq)
+	return msg, metadata, err
+
+}
+
+var (
 	filter_Waypoint_UI_ListDeployments_0 = &utilities.DoubleArray{Encoding: map[string]int{"application": 0, "project": 1}, Base: []int{1, 3, 1, 0, 3, 0}, Check: []int{0, 1, 2, 3, 2, 5}}
 )
 
@@ -13255,6 +13455,54 @@ func RegisterWaypointHandlerServer(ctx context.Context, mux *runtime.ServeMux, s
 
 	})
 
+	mux.Handle("GET", pattern_Waypoint_UI_GetPipelineRun_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		var stream runtime.ServerTransportStream
+		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		var err error
+		ctx, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/UI_GetPipelineRun", runtime.WithHTTPPathPattern("/ui/pipeline/{pipeline.id}/run/{sequence}"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_Waypoint_UI_GetPipelineRun_0(ctx, inboundMarshaler, server, req, pathParams)
+		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_Waypoint_UI_GetPipelineRun_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("GET", pattern_Waypoint_UI_GetPipelineRun_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		var stream runtime.ServerTransportStream
+		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		var err error
+		ctx, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/UI_GetPipelineRun", runtime.WithHTTPPathPattern("/ui/project/{pipeline.owner.project.project}/pipeline/{pipeline.owner.pipeline_name}/run/{sequence}"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_Waypoint_UI_GetPipelineRun_1(ctx, inboundMarshaler, server, req, pathParams)
+		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_Waypoint_UI_GetPipelineRun_1(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
 	mux.Handle("GET", pattern_Waypoint_UI_ListDeployments_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
@@ -16341,6 +16589,48 @@ func RegisterWaypointHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 
 	})
 
+	mux.Handle("GET", pattern_Waypoint_UI_GetPipelineRun_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		var err error
+		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/UI_GetPipelineRun", runtime.WithHTTPPathPattern("/ui/pipeline/{pipeline.id}/run/{sequence}"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_Waypoint_UI_GetPipelineRun_0(ctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_Waypoint_UI_GetPipelineRun_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("GET", pattern_Waypoint_UI_GetPipelineRun_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		var err error
+		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/UI_GetPipelineRun", runtime.WithHTTPPathPattern("/ui/project/{pipeline.owner.project.project}/pipeline/{pipeline.owner.pipeline_name}/run/{sequence}"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_Waypoint_UI_GetPipelineRun_1(ctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_Waypoint_UI_GetPipelineRun_1(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
 	mux.Handle("GET", pattern_Waypoint_UI_ListDeployments_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
@@ -16766,6 +17056,10 @@ var (
 
 	pattern_Waypoint_UI_ListPipelineRuns_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"ui", "project", "pipeline.owner.project.project", "pipelines", "pipeline.owner.pipeline_name", "runs"}, ""))
 
+	pattern_Waypoint_UI_GetPipelineRun_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"ui", "pipeline", "pipeline.id", "run", "sequence"}, ""))
+
+	pattern_Waypoint_UI_GetPipelineRun_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6}, []string{"ui", "project", "pipeline.owner.project.project", "pipeline", "pipeline.owner.pipeline_name", "run", "sequence"}, ""))
+
 	pattern_Waypoint_UI_ListDeployments_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"ui", "project", "application.project", "application", "application.application", "deployments"}, ""))
 
 	pattern_Waypoint_UI_GetDeployment_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"ui", "deployment", "ref.id"}, ""))
@@ -17055,6 +17349,10 @@ var (
 	forward_Waypoint_UI_ListPipelines_0 = runtime.ForwardResponseMessage
 
 	forward_Waypoint_UI_ListPipelineRuns_0 = runtime.ForwardResponseMessage
+
+	forward_Waypoint_UI_GetPipelineRun_0 = runtime.ForwardResponseMessage
+
+	forward_Waypoint_UI_GetPipelineRun_1 = runtime.ForwardResponseMessage
 
 	forward_Waypoint_UI_ListDeployments_0 = runtime.ForwardResponseMessage
 

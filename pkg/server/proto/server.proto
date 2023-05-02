@@ -508,7 +508,10 @@ service Waypoint {
 
   // List pipeline runs with pagination for a given pipeline
   rpc UI_ListPipelineRuns(UI.ListPipelineRunsRequest) returns (UI.ListPipelineRunsResponse);
- 
+
+  // Get a pipline run with additional computed data.
+  rpc UI_GetPipelineRun(UI.GetPipelineRunRequest) returns (UI.GetPipelineRunResponse);
+
   // List deployments for a given application.
   rpc UI_ListDeployments(UI.ListDeploymentsRequest) returns (UI.ListDeploymentsResponse);
 
@@ -577,6 +580,16 @@ message UI {
     PaginationResponse pagination = 2;
   }
 
+  message GetPipelineRunRequest {
+    Ref.Pipeline pipeline = 1;
+    uint64 sequence = 2;
+  }
+
+  message GetPipelineRunResponse {
+    PipelineRun pipeline_run = 1;
+    PipelineRunTreeNode root_tree_node = 2;
+  }
+
   message PipelineBundle {
     Pipeline pipeline = 1;
     PipelineRunBundle last_run = 2;
@@ -587,6 +600,39 @@ message UI {
     google.protobuf.Timestamp queue_time = 2;
     Ref.Application application = 3;
     Job.DataSource.Ref data_source_ref = 4;
+  }
+
+  message PipelineRunTreeNode {
+    // If step is absent then the node is “virtual” — it represents a set of
+    // concurrent steps/jobs.
+    Pipeline.Step step = 1;
+    State state = 2;
+    google.protobuf.Timestamp start_time = 3;
+    google.protobuf.Timestamp complete_time = 4;
+    Ref.Application application = 5;
+    Ref.Workspace workspace = 6;
+    Ref.Job job = 7;
+    Job.Result result = 8;
+    StatusReport latest_status_report = 11;
+    Children children = 12;
+
+    enum State {
+      UNKNOWN = 0;
+      QUEUED = 1;
+      RUNNING = 2;
+      ERROR = 3;
+      CANCELLED = 4;
+      SUCCESS = 5;
+    }
+
+    message Children {
+      Mode mode = 1;
+      repeated UI.PipelineRunTreeNode nodes = 2;
+      enum Mode {
+        SERIAL = 0;
+        PARALLEL = 1;
+      }
+    }
   }
 
   message ListDeploymentsRequest {

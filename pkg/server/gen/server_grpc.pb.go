@@ -345,6 +345,8 @@ type WaypointClient interface {
 	UI_ListPipelines(ctx context.Context, in *UI_ListPipelinesRequest, opts ...grpc.CallOption) (*UI_ListPipelinesResponse, error)
 	// List pipeline runs with pagination for a given pipeline
 	UI_ListPipelineRuns(ctx context.Context, in *UI_ListPipelineRunsRequest, opts ...grpc.CallOption) (*UI_ListPipelineRunsResponse, error)
+	// Get a pipline run with additional computed data.
+	UI_GetPipelineRun(ctx context.Context, in *UI_GetPipelineRunRequest, opts ...grpc.CallOption) (*UI_GetPipelineRunResponse, error)
 	// List deployments for a given application.
 	UI_ListDeployments(ctx context.Context, in *UI_ListDeploymentsRequest, opts ...grpc.CallOption) (*UI_ListDeploymentsResponse, error)
 	// GetDeployment returns a deployment
@@ -1603,6 +1605,15 @@ func (c *waypointClient) UI_ListPipelineRuns(ctx context.Context, in *UI_ListPip
 	return out, nil
 }
 
+func (c *waypointClient) UI_GetPipelineRun(ctx context.Context, in *UI_GetPipelineRunRequest, opts ...grpc.CallOption) (*UI_GetPipelineRunResponse, error) {
+	out := new(UI_GetPipelineRunResponse)
+	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/UI_GetPipelineRun", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *waypointClient) UI_ListDeployments(ctx context.Context, in *UI_ListDeploymentsRequest, opts ...grpc.CallOption) (*UI_ListDeploymentsResponse, error) {
 	out := new(UI_ListDeploymentsResponse)
 	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/UI_ListDeployments", in, out, opts...)
@@ -1974,6 +1985,8 @@ type WaypointServer interface {
 	UI_ListPipelines(context.Context, *UI_ListPipelinesRequest) (*UI_ListPipelinesResponse, error)
 	// List pipeline runs with pagination for a given pipeline
 	UI_ListPipelineRuns(context.Context, *UI_ListPipelineRunsRequest) (*UI_ListPipelineRunsResponse, error)
+	// Get a pipline run with additional computed data.
+	UI_GetPipelineRun(context.Context, *UI_GetPipelineRunRequest) (*UI_GetPipelineRunResponse, error)
 	// List deployments for a given application.
 	UI_ListDeployments(context.Context, *UI_ListDeploymentsRequest) (*UI_ListDeploymentsResponse, error)
 	// GetDeployment returns a deployment
@@ -2326,6 +2339,9 @@ func (UnimplementedWaypointServer) UI_ListPipelines(context.Context, *UI_ListPip
 }
 func (UnimplementedWaypointServer) UI_ListPipelineRuns(context.Context, *UI_ListPipelineRunsRequest) (*UI_ListPipelineRunsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UI_ListPipelineRuns not implemented")
+}
+func (UnimplementedWaypointServer) UI_GetPipelineRun(context.Context, *UI_GetPipelineRunRequest) (*UI_GetPipelineRunResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UI_GetPipelineRun not implemented")
 }
 func (UnimplementedWaypointServer) UI_ListDeployments(context.Context, *UI_ListDeploymentsRequest) (*UI_ListDeploymentsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UI_ListDeployments not implemented")
@@ -4431,6 +4447,24 @@ func _Waypoint_UI_ListPipelineRuns_Handler(srv interface{}, ctx context.Context,
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Waypoint_UI_GetPipelineRun_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UI_GetPipelineRunRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(WaypointServer).UI_GetPipelineRun(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/hashicorp.waypoint.Waypoint/UI_GetPipelineRun",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(WaypointServer).UI_GetPipelineRun(ctx, req.(*UI_GetPipelineRunRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Waypoint_UI_ListDeployments_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(UI_ListDeploymentsRequest)
 	if err := dec(in); err != nil {
@@ -4935,6 +4969,10 @@ var Waypoint_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UI_ListPipelineRuns",
 			Handler:    _Waypoint_UI_ListPipelineRuns_Handler,
+		},
+		{
+			MethodName: "UI_GetPipelineRun",
+			Handler:    _Waypoint_UI_GetPipelineRun_Handler,
 		},
 		{
 			MethodName: "UI_ListDeployments",
