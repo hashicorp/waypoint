@@ -198,13 +198,14 @@ jobs:
         run: |
           DIR="$(mktemp -d)"
           echo "working-dir=$DIR" >> "$GITHUB_OUTPUT"
-          cp -v Dockerfile "$DIR/Dockerfile"
+          cp -v CRT.Dockerfile "$DIR/CRT.Dockerfile"
           unzip -j "archive/waypoint_${{env.version}}_linux_${{ matrix.arch }}.zip" -d "$DIR"
           unzip -j "archive/waypoint-entrypoint_${{env.version}}_linux_${{ matrix.arch }}.zip" -d "$DIR"
       - name: Build Docker image
         uses: hashicorp/actions-docker-build@v1
         with:
           pkg_name: "waypoint_${{env.version}}"
+          dockerfile: CRT.Dockerfile
           version: ${{ env.version }}
           bin_name: ${{ env.repo }}
           do_zip_extract_step: false
@@ -236,6 +237,7 @@ jobs:
         uses: hashicorp/actions-docker-build@v1
         with:
           pkg_name: "waypoint_${{env.version}}"
+          dockerfile: CRT.Dockerfile
           version: ${{ env.version }}
           bin_name: ${{ env.repo }}
           target: odr-crt
