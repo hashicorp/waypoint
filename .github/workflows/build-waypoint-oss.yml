@@ -76,7 +76,7 @@ jobs:
           PRERELEASE: ${{ inputs.waypoint-prerelease }}
           CGO_ENABLED: ${{ inputs.cgo-enabled }}
           CRT_BIN_NAME: ${{ steps.get-bin-name.outputs.bin-name }}
-        uses: hashicorp/actions-go-build@v0.1.7
+        uses: hashicorp/actions-go-build@v0.1.9
         with:
           product_name: ${{ inputs.package-name }}
           product_version: ${{ inputs.waypoint-version }}
