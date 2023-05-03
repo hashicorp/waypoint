@@ -1,0 +1,3 @@
+```release-note:bug
+trigger: Ensure trigger Name is only alpha-numeric
+```
