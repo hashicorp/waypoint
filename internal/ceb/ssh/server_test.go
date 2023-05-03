@@ -13,7 +13,6 @@ import (
 
 	"github.com/gliderlabs/ssh"
 	"github.com/hashicorp/go-hclog"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	gossh "golang.org/x/crypto/ssh"
 )
@@ -90,6 +89,10 @@ func TestServer(t *testing.T) {
 
 	err = sess.Run("sh -c 'echo hello'")
 	require.NoError(t, err)
-
-	assert.Equal(t, "hello\n", buf.String())
+	require.Eventually(
+		t,
+		func() bool { return buf.String() == "hello\n" },
+		time.Second,
+		10*time.Millisecond,
+	)
 }
