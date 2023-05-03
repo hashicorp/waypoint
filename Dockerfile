@@ -6,7 +6,7 @@
 
 FROM docker.mirror.hashicorp.services/golang:1.19-alpine3.17 AS builder
 
-RUN apk add --no-cache git gcc libc-dev make
+RUN apk add --no-cache git gcc libc-dev make binutils-gold
 
 RUN mkdir -p /tmp/wp-prime
 COPY go.sum /tmp/wp-prime
