@@ -1,0 +1,3 @@
+```release-note:bug
+cli: Fix load path for custom Waypoint plugins
+```
