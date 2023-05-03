@@ -58,6 +58,28 @@ func TestServiceTrigger(t *testing.T, factory Factory) {
 		require.Equal(result.Name, testName)
 	})
 
+	t.Run("upsert fails if invalid Name for path given", func(t *testing.T) {
+		require := require.New(t)
+
+		// Create, should get an ID back
+		resp, err := client.UpsertTrigger(ctx, &pb.UpsertTriggerRequest{
+			Trigger: serverptypes.TestValidTrigger(t, nil),
+		})
+		require.NoError(err)
+		require.NotNil(resp)
+		result := resp.Trigger
+		require.NotEmpty(result.Id)
+
+		// Let's write some bad data
+		testName := "../TestyTest" // this is an invalid path
+		result.Name = testName
+		resp, err = client.UpsertTrigger(ctx, &pb.UpsertTriggerRequest{
+			Trigger: result,
+		})
+		require.Error(err)
+		require.Nil(resp)
+	})
+
 	t.Run("create uses default workspace if unset", func(t *testing.T) {
 		require := require.New(t)
 
