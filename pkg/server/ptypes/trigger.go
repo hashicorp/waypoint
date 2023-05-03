@@ -62,6 +62,9 @@ func ValidateUpsertTriggerRequest(v *pb.UpsertTriggerRequest) error {
 		validationext.StructField(&v.Trigger, func() []*validation.FieldRules {
 			return []*validation.FieldRules{
 				validation.Field(&v.Trigger.Project, validation.Required),
+				// Trigger Name is also the "path" in the HTTP request, so we will
+				// validate the name against our valid path token check
+				validation.Field(&v.Trigger.Name, validation.Required, validation.By(validatePathToken)),
 			}
 		}),
 	))
