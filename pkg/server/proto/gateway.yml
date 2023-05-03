@@ -532,6 +532,7 @@ http:
 
   - selector: hashicorp.waypoint.Waypoint.CreateProjectFromTemplate
     post: /project/fromtemplate
+    body: "*"
 
   - selector: hashicorp.waypoint.Waypoint.GetTFCRunStatus
     get: /project/{project.project}/tfcrunstatus

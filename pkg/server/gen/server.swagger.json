@@ -1939,6 +1939,16 @@
             }
           }
         },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/hashicorp.waypoint.CreateProjectFromTemplateRequest"
+            }
+          }
+        ],
         "tags": [
           "Waypoint"
         ]
@@ -7768,6 +7778,18 @@
           "title": "Created hostname"
         }
       }
+    },
+    "hashicorp.waypoint.CreateProjectFromTemplateRequest": {
+      "type": "object",
+      "properties": {
+        "project_name": {
+          "type": "string"
+        },
+        "project_template": {
+          "$ref": "#/definitions/hashicorp.waypoint.Ref.ProjectTemplate"
+        }
+      },
+      "description": "CreateProjectFromTemplateRequest is a message intended for use in requests\nto render project templates."
     },
     "hashicorp.waypoint.CreateProjectFromTemplateResponse": {
       "type": "object",
