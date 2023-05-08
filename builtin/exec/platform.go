@@ -152,7 +152,7 @@ func (p *Platform) renderTemplate(tpl *ConfigTemplate, data *tplData) (string, f
 	if err != nil {
 		return "", nil, err
 	}
-	closer := func() {} //os.RemoveAll(td) }
+	closer := func() { os.RemoveAll(td) }
 
 	// Render
 	var path string
