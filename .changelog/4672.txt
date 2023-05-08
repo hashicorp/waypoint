@@ -1,0 +1,3 @@
+```release-note:bug
+cli: Avoid panic in empty slice for runner installs platform var.
+```
