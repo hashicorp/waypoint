@@ -1,0 +1,3 @@
+```release-note:bug
+plugin/exec: Cleanup all values stored in /tmp while rendering exec templates
+```
