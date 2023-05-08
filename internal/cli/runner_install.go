@@ -167,16 +167,16 @@ func (c *RunnerInstallCommand) Run(args []string) int {
 	}
 
 	// If the user doesn't set a platform, set platform to the platform of the user's context
-	platform := c.platform
-	if len(platform) == 0 {
-		platform = append(platform, serverConfig.Config.Platform)
+	var runnerPlatform string
+	if len(c.platform) == 0 {
+		runnerPlatform = serverConfig.Config.Platform
 	}
 
-	p, ok := runnerinstall.Platforms[strings.ToLower(platform[0])]
+	p, ok := runnerinstall.Platforms[strings.ToLower(runnerPlatform)]
 	if !ok {
 		c.ui.Output(
 			"Error installing runner into %q: unsupported platform",
-			platform[0],
+			runnerPlatform,
 			terminal.WithErrorStyle(),
 		)
 		return 1
@@ -271,10 +271,10 @@ func (c *RunnerInstallCommand) Run(args []string) int {
 		c.ui.Output("Error installing runner: %s", clierrors.Humanize(err),
 			terminal.WithErrorStyle(),
 		)
-		c.ui.Output(runnerInstallFailed, c.platform[0], id, terminal.WithWarningStyle())
+		c.ui.Output(runnerInstallFailed, runnerPlatform, id, terminal.WithWarningStyle())
 		return 1
 	}
-	s.Update("Runner %q installed successfully to %s", id, platform[0])
+	s.Update("Runner %q installed successfully to %s", id, runnerPlatform)
 	s.Status(terminal.StatusOK)
 	s.Done()
 
@@ -296,9 +296,9 @@ func (c *RunnerInstallCommand) Run(args []string) int {
 			odrConfig.OciUrl = c.runnerProfileOdrImage // Use what we got from flags (or the default)
 		} else {
 			odrConfig = &pb.OnDemandRunnerConfig{
-				Name:       platform[0] + "-" + id,
+				Name:       runnerPlatform + "-" + id,
 				OciUrl:     c.runnerProfileOdrImage,
-				PluginType: platform[0],
+				PluginType: runnerPlatform,
 			}
 		}
 		if len(targetLabels) != 0 {
