@@ -607,7 +607,11 @@ func (c *StatusCommand) FormatAppStatus(projectTarget string, appTarget string) 
 				details = artDetails
 			}
 			if img, ok := deployBundle.Build.Labels["common/image-id"]; ok {
-				img = shortImg(img)
+				img, err = shortImg(img)
+				if err != nil {
+					c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+					return err
+				}
 
 				details = details + " image:" + img
 			}
@@ -705,7 +709,11 @@ func (c *StatusCommand) FormatAppStatus(projectTarget string, appTarget string) 
 				details = artDetails
 			}
 			if img, ok := release.Preload.Build.Labels["common/image-id"]; ok {
-				img = shortImg(img)
+				img, err = shortImg(img)
+				if err != nil {
+					c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+					return err
+				}
 
 				details = details + " image:" + img
 			}

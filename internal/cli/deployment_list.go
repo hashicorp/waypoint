@@ -37,12 +37,16 @@ type DeploymentListCommand struct {
 	filterFlags      filterFlags
 }
 
-func shortImg(img string) string {
-	if strings.HasPrefix(img, "sha256:") {
-		return img[7:14]
+func shortImg(img string) (string, error) {
+	if len(img) < 7 {
+		return "", fmt.Errorf("string not long enough to obtain short img: %s", img)
 	}
 
-	return img[:7]
+	if strings.HasPrefix(img, "sha256:") {
+		return img[7:14], nil
+	}
+
+	return img[:7], nil
 }
 
 // Add either language: or languages: based on how many values are specified
@@ -247,7 +251,11 @@ func (c *DeploymentListCommand) Run(args []string) int {
 				}
 
 				if img, ok := build.Labels["common/image-id"]; ok {
-					img = shortImg(img)
+					img, err = shortImg(img)
+					if err != nil {
+						app.UI.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+						return err
+					}
 
 					details = append(details, "image:"+img)
 				}
