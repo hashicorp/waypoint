@@ -188,7 +188,7 @@ func (c *ConfigSetCommand) Flags() *flag.Sets {
 			Target: &c.flagWorkspaceScope,
 			Usage: "Specify that the configuration is only available within a " +
 				"specific workspace. This configuration will only be set for " +
-				"deployments or operations (if -runner if set) when the workspace " +
+				"deployments or operations (if -runner is set) when the workspace " +
 				"matches this.",
 			Default: "",
 		})
