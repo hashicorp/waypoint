@@ -10757,6 +10757,10 @@
         "state": {
           "$ref": "#/definitions/hashicorp.waypoint.Project.ProjectState"
         },
+        "readme_markdown": {
+          "type": "string",
+          "description": "readme_markdown is markdown formatted instructions on how to operate the project. This may be populated from a project template."
+        },
         "project_template": {
           "$ref": "#/definitions/hashicorp.waypoint.Ref.ProjectTemplate",
           "description": "project_template is a reference to the template that this project was\ncreated from, if any."
