@@ -449,6 +449,10 @@ func (s *Service) GenerateLoginToken(
 
 	// Get our user, that's what we log in as
 	currentUser := s.UserFromContext(ctx)
+	if currentUser == nil {
+		return nil,
+			status.Error(codes.Unauthenticated, "no user found from current context")
+	}
 
 	// If we have a duration set, set the expiry
 	var dur time.Duration
