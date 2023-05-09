@@ -76,7 +76,7 @@ func UserWithContext(ctx context.Context, u *pb.User) context.Context {
 // UserFromContext returns the authenticated user in the request context.
 // This will return nil if the user is not authenticated. Note that a user
 // may not be authenticated but the request can still be authenticated
-// using a non-user token type. The safeste way to check is decodedTokenFromContext.
+// using a non-user token type. The safest way to check is decodedTokenFromContext.
 func (s *Service) UserFromContext(ctx context.Context) *pb.User {
 	value, ok := ctx.Value(userKey{}).(*pb.User)
 	if !ok && s.superuser {
