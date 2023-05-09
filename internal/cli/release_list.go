@@ -194,7 +194,11 @@ func (c *ReleaseListCommand) Run(args []string) int {
 				}
 
 				if img, ok := build.Labels["common/image-id"]; ok {
-					img = shortImg(img)
+					img, err = shortImg(img)
+					if err != nil {
+						app.UI.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+						return err
+					}
 
 					details = append(details, "image:"+img)
 				}
