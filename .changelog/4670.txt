@@ -1,0 +1,3 @@
+```release-note:bug
+builtin/consul: Fix request logger to properly log configured data center
+```
