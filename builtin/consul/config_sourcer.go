@@ -226,7 +226,7 @@ func (cs *ConfigSourcer) read(ctx context.Context, log hclog.Logger, reqs []*com
 			reqLogger = reqLogger.With("partition", kvReq.Partition)
 		}
 		if kvReq.Datacenter != "" {
-			reqLogger = reqLogger.With("datacenter", kvReq.Partition)
+			reqLogger = reqLogger.With("datacenter", kvReq.Datacenter)
 		}
 
 		cacheVal, ok := cs.cache[kvReq.cacheKey()]
