@@ -1,0 +1,3 @@
+```release-note:bug
+internal: Improve git URL string trimming when determining remote URLs
+```

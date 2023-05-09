@@ -241,8 +241,8 @@ func remoteConvertSSHtoHTTPS(sshRemote string) (string, error) {
 // Remote urls of type ssh may not start with git@, so this is trimmed.
 func normalizeRemote(remoteUrl string) string {
 	// Trim the git@ bc you can still have a remote url of type ssh w/o the git@
-	trimmedRemoteUrl := strings.TrimLeft(remoteUrl, "git@")
-	return strings.TrimRight(trimmedRemoteUrl, ".git")
+	trimmedRemoteUrl := strings.TrimPrefix(remoteUrl, "git@")
+	return strings.TrimSuffix(trimmedRemoteUrl, ".git")
 }
 
 // getRemoteName queries the repo at GitDirty.path for all remotes, and then
