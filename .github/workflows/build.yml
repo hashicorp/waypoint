@@ -255,9 +255,9 @@ jobs:
     uses: ./.github/workflows/end-to-end.yml
     with:
       waypoint-binary: waypoint_${{needs.get-product-version.outputs.product-version}}_linux_amd64.zip
-      waypoint-tar: waypoint_crt_linux_amd64_0.12.0_${{github.sha}}.docker.tar
+      waypoint-tar: waypoint_crt_linux_amd64_${{needs.get-product-version.outputs.product-version}}_${{github.sha}}.docker.tar
       waypoint-image: hashicorp/waypoint:${{ needs.get-product-version.outputs.product-version }}
-      waypoint-odr-tar: waypoint_odr-crt_linux_amd64_0.12.0_${{github.sha}}.docker.tar
+      waypoint-odr-tar: waypoint_odr-crt_linux_amd64_${{needs.get-product-version.outputs.product-version}}_${{github.sha}}.docker.tar
       waypoint-odr-image: hashicorp/waypoint-odr:${{ needs.get-product-version.outputs.product-version }}
     secrets: inherit
 
