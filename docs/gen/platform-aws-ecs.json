@@ -177,7 +177,7 @@
          "Synopsis": "the name of the IAM role to use for ECS execution",
          "Summary": "",
          "Optional": true,
-         "Default": "create a new exeuction IAM role based on the application name",
+         "Default": "create a new execution IAM role based on the application name",
          "EnvVar": "",
          "Category": false,
          "SubFields": null

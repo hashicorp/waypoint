@@ -244,7 +244,7 @@ func (i *ECSRunnerInstaller) InstallFlags(set *flag.Set) {
 	})
 
 	set.StringVar(&flag.StringVar{
-		Name:    "ecs-exeuction-role-name",
+		Name:    "ecs-execution-role-name",
 		Target:  &i.Config.ExecutionRoleName,
 		Usage:   "The name of the execution task IAM Role to associate with the ECS Service.",
 		Default: "waypoint-runner-execution-role",
