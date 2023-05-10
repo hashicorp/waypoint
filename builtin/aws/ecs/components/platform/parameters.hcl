@@ -118,7 +118,7 @@ parameter {
   description   = "the name of the IAM role to use for ECS execution"
   type          = "string"
   required      = false
-  default_value = "create a new exeuction IAM role based on the application name"
+  default_value = "create a new execution IAM role based on the application name"
 }
 
 parameter {
