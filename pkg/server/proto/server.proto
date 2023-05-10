@@ -1050,6 +1050,9 @@ message Project {
 
   ProjectState state = 11;
 
+  // readme_markdown is markdown formatted instructions on how to operate the project. This may be populated from a project template.
+  string readme_markdown = 13;
+
   // project_template is a reference to the template that this project was
   // created from, if any.
   Ref.ProjectTemplate project_template = 12;
