@@ -266,6 +266,14 @@ func ValidateUIListPipelineRunsRequest(v *pb.UI_ListPipelineRunsRequest) error {
 	))
 }
 
+// ValidateUIGetPipelineRunRequest
+func ValidateUIGetPipelineRunRequest(v *pb.UI_GetPipelineRunRequest) error {
+	return validationext.Error(validation.ValidateStruct(v,
+		validation.Field(&v.Pipeline, validation.Required),
+		validation.Field(&v.Sequence, validation.Required)),
+	)
+}
+
 // ValidateListPipelineRunsRequest
 func ValidateListPipelineRunsRequest(v *pb.ListPipelineRunsRequest) error {
 	return validationext.Error(validation.ValidateStruct(v,
