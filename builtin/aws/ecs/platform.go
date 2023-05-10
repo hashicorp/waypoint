@@ -2971,7 +2971,7 @@ deploy {
 	doc.SetField(
 		"execution_role_name",
 		"the name of the IAM role to use for ECS execution",
-		docs.Default("create a new exeuction IAM role based on the application name"),
+		docs.Default("create a new execution IAM role based on the application name"),
 	)
 
 	doc.SetField(

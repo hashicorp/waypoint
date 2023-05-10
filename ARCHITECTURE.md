@@ -318,7 +318,7 @@ CLI:
 Server:
 
 4. `internal/server/singleprocess`: Server-side API request logic
-5. `internal/server/singleprocess/state`: Server-side persistant storage logic
+5. `internal/server/singleprocess/state`: Server-side persistent storage logic
 
 Runner: 
 
@@ -374,7 +374,7 @@ This makes it easy to use in different contexts (runners, entrypoints, locally).
 ### `internal/auth`
 
 Package auth contains helpers for both the server and client-side for
-autenticating with the Waypoint server. 
+authenticating with the Waypoint server. 
 
 ### `internal/ceb`
 
@@ -499,7 +499,7 @@ anyone trying to implement a Waypoint server.
 
 This is the main current implementation of the Waypoint server. This is
 a Waypoint server designed to be single process only; this server implementation
-is never intended to become multi-process (i.e. horizonally scalable). 
+is never intended to become multi-process (i.e. horizontally scalable). 
 
 #### `internal/server/singleprocess/state`
 
