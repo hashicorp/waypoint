@@ -2181,8 +2181,9 @@ type Project struct {
 	// poll operations and their success/failure by using the ListJobs API.
 	StatusReportPoll *Project_AppStatusPoll `protobuf:"bytes,10,opt,name=status_report_poll,json=statusReportPoll,proto3" json:"status_report_poll,omitempty"`
 	State            Project_ProjectState   `protobuf:"varint,11,opt,name=state,proto3,enum=hashicorp.waypoint.Project_ProjectState" json:"state,omitempty"`
-	// readme_markdown is markdown formatted instructions on how to operate the project. This may be populated from a project template.
-	ReadmeMarkdown string `protobuf:"bytes,13,opt,name=readme_markdown,json=readmeMarkdown,proto3" json:"readme_markdown,omitempty"`
+	// readme_markdown is markdown formatted instructions on how to operate the project.
+	// This may be populated from a project template.
+	ReadmeMarkdown []byte `protobuf:"bytes,13,opt,name=readme_markdown,json=readmeMarkdown,proto3" json:"readme_markdown,omitempty"`
 	// project_template is a reference to the template that this project was
 	// created from, if any.
 	ProjectTemplate *Ref_ProjectTemplate `protobuf:"bytes,12,opt,name=project_template,json=projectTemplate,proto3" json:"project_template,omitempty"`
@@ -2297,11 +2298,11 @@ func (x *Project) GetState() Project_ProjectState {
 	return Project_ACTIVE
 }
 
-func (x *Project) GetReadmeMarkdown() string {
+func (x *Project) GetReadmeMarkdown() []byte {
 	if x != nil {
 		return x.ReadmeMarkdown
 	}
-	return ""
+	return nil
 }
 
 func (x *Project) GetProjectTemplate() *Ref_ProjectTemplate {
@@ -16571,9 +16572,14 @@ type ProjectTemplate struct {
 	// A long summary of what the ProjectTemplate is to be used for. This summary
 	// is shared between platform engineers and application developers.
 	ExpandedSummary string `protobuf:"bytes,4,opt,name=expanded_summary,json=expandedSummary,proto3" json:"expanded_summary,omitempty"`
-	// A markdown template which is rendered when a Project is created from a
+	// A markdown text template which is rendered when a Project is created from a
 	// ProjectTemplate to be shown to application developers.
-	ReadmeMarkdownTemplate string `protobuf:"bytes,5,opt,name=readme_markdown_template,json=readmeMarkdownTemplate,proto3" json:"readme_markdown_template,omitempty"`
+	// Accepted tokens:
+	// "{{ .ProjectName }}", representing the application developer chosen project name
+	// "{{ .TfcOrgName }}", representing the Terraform Cloud organization name in which
+	//
+	//	the no-code module was reified
+	ReadmeMarkdownTemplate []byte `protobuf:"bytes,5,opt,name=readme_markdown_template,json=readmeMarkdownTemplate,proto3" json:"readme_markdown_template,omitempty"`
 	// Settings for the Waypoint project that should be set when a project is
 	// created from a ProjectTemplate.
 	WaypointProject *ProjectTemplate_WaypointProject `protobuf:"bytes,6,opt,name=waypoint_project,json=waypointProject,proto3" json:"waypoint_project,omitempty"`
@@ -16644,11 +16650,11 @@ func (x *ProjectTemplate) GetExpandedSummary() string {
 	return ""
 }
 
-func (x *ProjectTemplate) GetReadmeMarkdownTemplate() string {
+func (x *ProjectTemplate) GetReadmeMarkdownTemplate() []byte {
 	if x != nil {
 		return x.ReadmeMarkdownTemplate
 	}
-	return ""
+	return nil
 }
 
 func (x *ProjectTemplate) GetWaypointProject() *ProjectTemplate_WaypointProject {
@@ -30676,7 +30682,12 @@ type ProjectTemplate_WaypointProject struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// The templated waypoint.hcl file stored as HCL.
+	// waypoint.hcl text template file stored as HCL.
+	// Accepted tokens:
+	// "{{ .ProjectName }}", representing the application developer chosen project name
+	// "{{ .TfcOrgName }}", representing the Terraform Cloud organization name in which
+	//
+	//	the no-code module was reified
 	WaypointHclTemplate []byte `protobuf:"bytes,1,opt,name=waypoint_hcl_template,json=waypointHclTemplate,proto3" json:"waypoint_hcl_template,omitempty"`
 }
 
@@ -32079,7 +32090,7 @@ var file_pkg_server_proto_server_proto_rawDesc = []byte{
 	0x70, 0x6f, 0x69, 0x6e, 0x74, 0x2e, 0x50, 0x72, 0x6f, 0x6a, 0x65, 0x63, 0x74, 0x2e, 0x50, 0x72,
 	0x6f, 0x6a, 0x65, 0x63, 0x74, 0x53, 0x74, 0x61, 0x74, 0x65, 0x52, 0x05, 0x73, 0x74, 0x61, 0x74,
 	0x65, 0x12, 0x27, 0x0a, 0x0f, 0x72, 0x65, 0x61, 0x64, 0x6d, 0x65, 0x5f, 0x6d, 0x61, 0x72, 0x6b,
-	0x64, 0x6f, 0x77, 0x6e, 0x18, 0x0d, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0e, 0x72, 0x65, 0x61, 0x64,
+	0x64, 0x6f, 0x77, 0x6e, 0x18, 0x0d, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x0e, 0x72, 0x65, 0x61, 0x64,
 	0x6d, 0x65, 0x4d, 0x61, 0x72, 0x6b, 0x64, 0x6f, 0x77, 0x6e, 0x12, 0x52, 0x0a, 0x10, 0x70, 0x72,
 	0x6f, 0x6a, 0x65, 0x63, 0x74, 0x5f, 0x74, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x18, 0x0c,
 	0x20, 0x01, 0x28, 0x0b, 0x32, 0x27, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70,
@@ -35637,7 +35648,7 @@ var file_pkg_server_proto_server_proto_rawDesc = []byte{
 	0x61, 0x72, 0x79, 0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0f, 0x65, 0x78, 0x70, 0x61, 0x6e,
 	0x64, 0x65, 0x64, 0x53, 0x75, 0x6d, 0x6d, 0x61, 0x72, 0x79, 0x12, 0x38, 0x0a, 0x18, 0x72, 0x65,
 	0x61, 0x64, 0x6d, 0x65, 0x5f, 0x6d, 0x61, 0x72, 0x6b, 0x64, 0x6f, 0x77, 0x6e, 0x5f, 0x74, 0x65,
-	0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x18, 0x05, 0x20, 0x01, 0x28, 0x09, 0x52, 0x16, 0x72, 0x65,
+	0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x18, 0x05, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x16, 0x72, 0x65,
 	0x61, 0x64, 0x6d, 0x65, 0x4d, 0x61, 0x72, 0x6b, 0x64, 0x6f, 0x77, 0x6e, 0x54, 0x65, 0x6d, 0x70,
 	0x6c, 0x61, 0x74, 0x65, 0x12, 0x5e, 0x0a, 0x10, 0x77, 0x61, 0x79, 0x70, 0x6f, 0x69, 0x6e, 0x74,
 	0x5f, 0x70, 0x72, 0x6f, 0x6a, 0x65, 0x63, 0x74, 0x18, 0x06, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x33,

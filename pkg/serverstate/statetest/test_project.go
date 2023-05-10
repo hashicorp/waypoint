@@ -7,6 +7,8 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
+	"github.com/google/go-cmp/cmp"
+	"google.golang.org/protobuf/testing/protocmp"
 	"math/rand"
 	"strings"
 	"testing"
@@ -34,6 +36,7 @@ func init() {
 		TestProjectCanTransitionDataSource,
 		TestProjectPagination,
 		TestProjectCount,
+		TestProjectTemplateFeatures,
 	}
 }
 
@@ -1063,4 +1066,117 @@ func TestProjectCount(t *testing.T, factory Factory, restartF RestartFactory) {
 	actual, err := s.ProjectCount(ctx)
 	require.NoError(err)
 	require.EqualValues(1, actual)
+}
+
+func TestProjectTemplateFeatures(t *testing.T, factory Factory, restartF RestartFactory) {
+	ctx := context.Background()
+	require := require.New(t)
+
+	s := factory(t)
+	defer s.Close()
+
+	// Create a project template
+	projectTemplate, err := s.CreateProjectTemplate(ctx, &pb.ProjectTemplate{
+		Id:                     "",
+		Name:                   "test",
+		Summary:                "test",
+		ExpandedSummary:        "test",
+		ReadmeMarkdownTemplate: []byte("test"),
+		TerraformNocodeModule: &pb.ProjectTemplate_TerraformNocodeModule{
+			Source:  "test",
+			Version: "test",
+		},
+		Tags: []string{"test1", "test2"},
+	})
+	require.NoError(err)
+
+	name := "p1"
+
+	proj := serverptypes.TestProject(t, &pb.Project{
+		Name:           name,
+		ReadmeMarkdown: []byte("contents"),
+		ProjectTemplate: &pb.Ref_ProjectTemplate{
+			Ref: &pb.Ref_ProjectTemplate_Id{
+				Id: projectTemplate.Id,
+			},
+		},
+		FileChangeSignal: "SIGINT",
+	})
+	// Can save by ID
+	err = s.ProjectPut(ctx, proj)
+	require.NoError(err)
+
+	// Can read
+	{
+		resp, err := s.ProjectGet(ctx, &pb.Ref_Project{Project: name})
+		require.NoError(err)
+		require.Empty(cmp.Diff(proj, resp, protocmp.Transform()))
+	}
+
+	// Can update
+	{
+		proj.ReadmeMarkdown = []byte("different contents")
+
+		err := s.ProjectPut(ctx, proj)
+		require.NoError(err)
+		resp, err := s.ProjectGet(ctx, &pb.Ref_Project{Project: name})
+		require.NoError(err)
+		require.Empty(cmp.Diff(proj, resp, protocmp.Transform()))
+	}
+
+	// Cannot set a project ref to a non-existent project template
+	{
+		proj.ProjectTemplate.Ref = &pb.Ref_ProjectTemplate_Id{Id: "does-not-exist"}
+
+		err := s.ProjectPut(ctx, proj)
+		require.Error(err)
+	}
+
+	// Can set the project template ref by name
+	projectTemplate2, err := s.CreateProjectTemplate(ctx, &pb.ProjectTemplate{
+		Id:                     "",
+		Name:                   "test2",
+		Summary:                "test",
+		ExpandedSummary:        "test",
+		ReadmeMarkdownTemplate: []byte("test"),
+		TerraformNocodeModule: &pb.ProjectTemplate_TerraformNocodeModule{
+			Source:  "test",
+			Version: "test",
+		},
+		Tags: []string{"test1", "test2"},
+	})
+	require.NoError(err)
+	{
+		// Create a project template
+		proj.ProjectTemplate.Ref = &pb.Ref_ProjectTemplate_Name{Name: projectTemplate2.Name}
+		err = s.ProjectPut(ctx, proj)
+		require.NoError(err)
+
+		resp, err := s.ProjectGet(ctx, &pb.Ref_Project{Project: name})
+		require.NoError(err)
+
+		// Can come back as name or ID
+		switch ref := resp.ProjectTemplate.Ref.(type) {
+		case *pb.Ref_ProjectTemplate_Name:
+			require.Equal(projectTemplate2.Name, ref.Name)
+		case *pb.Ref_ProjectTemplate_Id:
+			require.Equal(projectTemplate2.Id, ref.Id)
+		}
+	}
+
+	// Deleting the project template doesn't cause an error when getting projects
+	{
+		//require.NoError(
+		err := s.DeleteProjectTemplate(ctx, &pb.Ref_ProjectTemplate{
+			Ref: &pb.Ref_ProjectTemplate_Id{
+				Id: projectTemplate2.Id,
+			},
+		})
+		//)
+
+		resp, err := s.ProjectGet(ctx, &pb.Ref_Project{Project: name})
+		require.NoError(err)
+
+		require.Empty(resp.ProjectTemplate)
+	}
 }
