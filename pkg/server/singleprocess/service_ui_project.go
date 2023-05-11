@@ -72,8 +72,22 @@ func (s *Service) UI_GetProject(
 		)
 	}
 
+	var projectTemplate *pb.ProjectTemplate
+	if project.ProjectTemplate != nil {
+		t, err := s.state(ctx).GetProjectTemplate(ctx, project.ProjectTemplate)
+		if err != nil {
+			return nil, hcerr.Externalize(
+				hclog.FromContext(ctx),
+				err,
+				"error getting template for project",
+			)
+		}
+		projectTemplate = t
+	}
+
 	return &pb.UI_GetProjectResponse{
-		Project:       project,
-		LatestInitJob: latestInitJob,
+		Project:         project,
+		LatestInitJob:   latestInitJob,
+		ProjectTemplate: projectTemplate,
 	}, nil
 }
