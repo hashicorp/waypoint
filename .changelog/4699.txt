@@ -1,0 +1,3 @@
+```release-note:bug
+cli: Honor runner install -platform arg
+```

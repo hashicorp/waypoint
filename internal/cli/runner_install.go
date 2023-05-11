@@ -167,6 +167,8 @@ func (c *RunnerInstallCommand) Run(args []string) int {
 	var runnerPlatform string
 	if len(c.platform) == 0 {
 		runnerPlatform = serverConfig.Config.Platform
+	} else {
+		runnerPlatform = c.platform[0]
 	}
 
 	p, ok := runnerinstall.Platforms[strings.ToLower(runnerPlatform)]
