@@ -6,6 +6,34 @@ IMPROVEMENTS:
 
 BUG FIXES:
 
+## 0.11.1 (May 11, 2023)
+
+IMPROVEMENTS:
+
+* cli: Add a `-verbose` flag to `waypoint job list` to improve relevant columns shown to user
+  at a glance. [[GH-4531](https://github.com/hashicorp/waypoint/issues/4531)]
+* cli: Include job `QueueTime` in output for `waypoint job list` and `waypoint job inspect`. [[GH-4531](https://github.com/hashicorp/waypoint/issues/4531)]
+* cli: Introduce `waypoint runner profile edit` to edit a runners plugin config
+  directly in your configured terminal editor [[GH-4594](https://github.com/hashicorp/waypoint/issues/4594)]
+* cli: Update the `waypoint runner profile set` command to accept an argument
+  for setting the name. This also removes the behavior where if no name was given,
+  it would generate a random one. [[GH-4527](https://github.com/hashicorp/waypoint/issues/4527)]
+* cli: new flags for `waypoint install` on Nomad:
+  -nomad-service-address and -nomad-network-mode [[GH-4619](https://github.com/hashicorp/waypoint/issues/4619)]
+* plugin/ecs: Enable custom health checks for ECS plugin. [[GH-4473](https://github.com/hashicorp/waypoint/issues/4473)]
+* plugin/ecs: Update ECS releaser to verify deployment health before releasing. [[GH-4520](https://github.com/hashicorp/waypoint/issues/4520)]
+
+BUG FIXES:
+
+* builtin/consul: Fix request logger to properly log configured data center [[GH-4670](https://github.com/hashicorp/waypoint/issues/4670)]
+* cli: Avoid panic in empty slice for runner installs platform var. [[GH-4672](https://github.com/hashicorp/waypoint/issues/4672)]
+* cli: Fix load path for custom Waypoint plugins [[GH-4623](https://github.com/hashicorp/waypoint/issues/4623)]
+* core: Ensure project and workspaces cannot be created with malformed names [[GH-4588](https://github.com/hashicorp/waypoint/issues/4588)]
+* internal: Improve git URL string trimming when determining remote URLs [[GH-4675](https://github.com/hashicorp/waypoint/issues/4675)]
+* plugin/ecs: Update ECS destroyer to wait for there to be zero listeners for the
+  target group before destroying the target group. [[GH-4497](https://github.com/hashicorp/waypoint/issues/4497)]
+* trigger: Ensure trigger Name is only alpha-numeric [[GH-4660](https://github.com/hashicorp/waypoint/issues/4660)]
+* ui: Only show health-check “Re-run” button if project has a data source. [[GH-4553](https://github.com/hashicorp/waypoint/issues/4553)]
 
 ## 0.11.0 (February 16, 2023)
 
