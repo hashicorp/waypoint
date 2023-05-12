@@ -17,13 +17,14 @@ func main() {
 		os.Exit(1)
 	}
 	dir := os.Args[1]
+	duplicatesFound := false
 	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
 		if !info.IsDir() && strings.HasSuffix(path, ".go") && !strings.HasSuffix(path, ".pb.go") &&
 			!strings.HasSuffix(path, "_test.go") {
-			err = analyzeFile(path)
+			duplicatesFound, err = analyzeFile(path)
 			if err != nil {
 				return err
 			}
@@ -34,13 +35,17 @@ func main() {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 		os.Exit(1)
 	}
+	if duplicatesFound {
+		os.Exit(1)
+	}
 }
 
-func analyzeFile(file string) error {
+func analyzeFile(file string) (bool, error) {
 	fset := token.NewFileSet()
 	node, err := parser.ParseFile(fset, file, nil, parser.ParseComments)
+	duplicatesFound := false
 	if err != nil {
-		return err
+		return false, err
 	}
 	ast.Inspect(node, func(n ast.Node) bool {
 		s, ok := n.(*ast.StructType)
@@ -55,6 +60,7 @@ func analyzeFile(file string) error {
 				if dup {
 					fmt.Printf("Duplicate tag '%s' found in file '%s' at line %d\n",
 						tag, file, fset.Position(field.Pos()).Line)
+					duplicatesFound = true
 				} else {
 					seenTags[tag] = &token.Position{Line: fset.Position(field.Pos()).Line}
 				}
@@ -62,7 +68,7 @@ func analyzeFile(file string) error {
 		}
 		return false
 	})
-	return nil
+	return duplicatesFound, nil
 }
 
 func getTag(field *ast.Field) (string, bool) {
