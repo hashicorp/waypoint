@@ -235,8 +235,6 @@ func (cs *ConfigSourcer) read(
 				continue
 			}
 
-			defer resp.Body.Close()
-
 			if resp.StatusCode != 200 {
 				L.Error("error reading workspace info", "status-code", resp.StatusCode)
 
@@ -272,6 +270,7 @@ func (cs *ConfigSourcer) read(
 				"workspace-id", id)
 
 			cs.workspaceIds[key] = id
+			resp.Body.Close()
 		}
 
 		// Get this secret or read it if we haven't already.
@@ -315,8 +314,6 @@ func (cs *ConfigSourcer) read(
 				continue
 			}
 
-			defer resp.Body.Close()
-
 			var data stateLookup
 
 			err = json.NewDecoder(resp.Body).Decode(&data)
@@ -345,6 +342,7 @@ func (cs *ConfigSourcer) read(
 
 			cachedSecretVal = &cachedSecret{Outputs: outputs}
 			cs.secretCache[id] = cachedSecretVal
+			resp.Body.Close()
 		}
 
 		if tfcReq.Output == "" {
