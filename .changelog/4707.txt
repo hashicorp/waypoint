@@ -1,0 +1,3 @@
+```release-note:bug
+auth: Prevent a runner token from generating a new token for a different runner
+```
