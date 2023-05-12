@@ -33,11 +33,7 @@ func TokenDecode(token string) (*pb.TokenTransport, *pb.Token, error) {
 		return nil, nil, err
 	}
 
-	if cap(data) < len(TokenMagic) {
-		return nil, nil, errors.Wrapf(ErrInvalidToken, "invalid token length")
-	}
-
-	if subtle.ConstantTimeCompare(data[:len(TokenMagic)], []byte(TokenMagic)) != 1 {
+	if len(data) < len(TokenMagic) || subtle.ConstantTimeCompare(data[:len(TokenMagic)], []byte(TokenMagic)) != 1 {
 		return nil, nil, errors.Wrapf(ErrInvalidToken, "bad magic")
 	}
 
