@@ -54,7 +54,7 @@ type nomadConfig struct {
 	consulServiceUITags      []string `hcl:"consul_service_ui_tags:optional"`
 	consulServiceBackendTags []string `hcl:"consul_service_backend_tags:optional"`
 	consulDatacenter         string   `hcl:"consul_datacenter,optional"`
-	consulDomain             string   `hcl:"consul_datacenter,optional"`
+	consulDomain             string   `hcl:"consul_domain,optional"`
 	consulToken              string   `hcl:"consul_token,optional"`
 
 	// If set along with consul, will use this hostname instead of
@@ -63,7 +63,7 @@ type nomadConfig struct {
 
 	odrImage string `hcl:"odr_image,optional"`
 
-	region         string   `hcl:"namespace,optional"`
+	region         string   `hcl:"region,optional"`
 	datacenters    []string `hcl:"datacenters,optional"`
 	policyOverride bool     `hcl:"policy_override,optional"`
 
