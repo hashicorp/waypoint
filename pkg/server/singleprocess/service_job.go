@@ -737,12 +737,14 @@ func (s *Service) GetJobStream(
 
 			// Updated job, requery it
 			ws = memdb.NewWatchSet()
-			job, err = s.state(ctx).JobById(ctx, job.Id, ws)
+
+			updatedJob, err := s.state(ctx).JobById(ctx, job.Id, ws)
 			if err != nil {
 				log.Error("error acquiring job by id", "error", err, "id", req.JobId)
 				errCh <- err
 				return
 			}
+			job = updatedJob
 			if job == nil {
 				errCh <- status.Errorf(codes.Internal, "job disappeared for ID: %s", req.JobId)
 				return
