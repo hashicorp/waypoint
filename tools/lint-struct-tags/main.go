@@ -24,9 +24,12 @@ func main() {
 		}
 		if !info.IsDir() && strings.HasSuffix(path, ".go") && !strings.HasSuffix(path, ".pb.go") &&
 			!strings.HasSuffix(path, "_test.go") {
-			duplicatesFound, err = analyzeFile(path)
+			dupes, err := analyzeFile(path)
 			if err != nil {
 				return err
+			}
+			if dupes {
+				duplicatesFound = true
 			}
 		}
 		return nil
