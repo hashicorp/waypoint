@@ -1,0 +1,3 @@
+```release-note:bug
+builtin: de-dupe various hcl annotation keys
+```

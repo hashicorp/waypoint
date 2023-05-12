@@ -34,7 +34,7 @@ type NomadConfig struct {
 
 	RunnerImage string `hcl:"runner_image,optional"`
 
-	Region         string   `hcl:"namespace,optional"`
+	Region         string   `hcl:"region,optional"`
 	Datacenters    []string `hcl:"datacenters,optional"`
 	PolicyOverride bool     `hcl:"policy_override,optional"`
 
