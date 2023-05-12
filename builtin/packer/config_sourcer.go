@@ -107,7 +107,7 @@ func (cs *ConfigSourcer) read(
 			result.Result = &pb.ConfigSource_Value_Error{
 				Error: status.New(codes.Aborted, err.Error()).Proto(),
 			}
-			return nil, err
+			continue
 		}
 		channelParams.BucketSlug = packerConfig.Bucket
 		channelParams.Slug = packerConfig.Channel

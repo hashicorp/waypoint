@@ -356,7 +356,8 @@ func (cs *ConfigSourcer) read(
 
 			allOutputsJson, err := json.Marshal(allOutputsMap)
 			if err != nil {
-				return nil, errors.Wrapf(err, "failed marshalling all TFC outputs for org %q workspace %q to json", tfcReq.Organization, tfcReq.Workspace)
+				log.Warn("failed to marshall TFC outputs", errors.Wrapf(err, "failed marshalling all TFC outputs for org %q workspace %q to json", tfcReq.Organization, tfcReq.Workspace))
+				continue
 			}
 
 			result.Result = &pb.ConfigSource_Value_Json{
