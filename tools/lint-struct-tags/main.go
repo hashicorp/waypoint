@@ -46,10 +46,10 @@ func main() {
 func analyzeFile(file string) (bool, error) {
 	fset := token.NewFileSet()
 	node, err := parser.ParseFile(fset, file, nil, parser.ParseComments)
-	duplicatesFound := false
 	if err != nil {
 		return false, err
 	}
+	duplicatesFound := false
 	ast.Inspect(node, func(n ast.Node) bool {
 		s, ok := n.(*ast.StructType)
 		if !ok {
