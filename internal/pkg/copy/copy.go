@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 // From: https://gist.github.com/m4ng0squ4sh/92462b38df26839a3ca324697c8cba04
@@ -54,9 +55,30 @@ func CopyFile(src, dst string) (err error) {
 	return
 }
 
+func evalSymlink(src, target string) (string, error) {
+	srcDir := filepath.Dir(src)
+
+	// Evaluate the target so we can figure out if it's escaping.
+	if filepath.IsAbs(target) {
+		target = filepath.Clean(target)
+	} else {
+		target = filepath.Join(srcDir, target)
+	}
+
+	// If the new target isn't under src, then return an error because the
+	// symlink would escape.
+
+	if !strings.HasPrefix(target, srcDir+string(filepath.Separator)) {
+		return "", fmt.Errorf("symlink target escapes source source directory")
+	}
+
+	return target, nil
+}
+
 // CopyDir recursively copies a directory tree, attempting to preserve permissions.
 // Source directory must exist, destination directory must *not* exist.
-// Symlinks are ignored and skipped.
+// Symlinks are resolved and their pointed to contents is copied, not the symlink
+// itself.
 func CopyDir(src string, dst string) (err error) {
 	src = filepath.Clean(src)
 	dst = filepath.Clean(dst)
@@ -94,6 +116,11 @@ func CopyDir(src string, dst string) (err error) {
 		// If the entry is a symlink, we copy the contents
 		for entry.Mode()&os.ModeSymlink != 0 {
 			target, err := os.Readlink(srcPath)
+			if err != nil {
+				return err
+			}
+
+			target, err = evalSymlink(srcPath, target)
 			if err != nil {
 				return err
 			}

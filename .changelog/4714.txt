@@ -1,0 +1,3 @@
+```release-note:bug
+internal: prevent symlinks from copying files from outside the source tree
+```
