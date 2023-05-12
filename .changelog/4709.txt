@@ -1,0 +1,3 @@
+```release-note:bug
+auth: fix possible issue with invalid auth token lengths
+```
