@@ -386,6 +386,37 @@ func TestServiceAuth(t *testing.T) {
 		_, err = s.Authenticate(context.Background(), token, "test", nil)
 		require.NoError(err)
 	})
+
+	t.Run("validate that a runner token can't be created for a different runner", func(t *testing.T) {
+		require := require.New(t)
+		require.NoError(err)
+
+		require.NoError(s.state(ctx).RunnerCreate(ctx, &pb.Runner{
+			Id: "A",
+			Kind: &pb.Runner_Remote_{
+				Remote: &pb.Runner_Remote{},
+			},
+		}))
+
+		token, err := s.newToken(ctx, 0, DefaultKeyId, nil, &pb.Token{
+			Kind: &pb.Token_Runner_{
+				Runner: &pb.Token_Runner{
+					Id: "A",
+				},
+			},
+		})
+		require.NoError(err)
+		defer s.state(ctx).RunnerDelete(ctx, "A")
+		require.NoError(s.state(ctx).RunnerAdopt(ctx, "A", false))
+
+		contextWithRunnerToken, err := s.Authenticate(context.Background(), token, "test", nil)
+		require.NoError(err)
+
+		_, err = s.GenerateRunnerToken(contextWithRunnerToken, &pb.GenerateRunnerTokenRequest{
+			Id: "B",
+		})
+		require.Error(err)
+	})
 }
 
 func TestServiceAuth_TriggerToken(t *testing.T) {
