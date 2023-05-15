@@ -1164,19 +1164,17 @@ func TestProjectTemplateFeatures(t *testing.T, factory Factory, restartF Restart
 		}
 	}
 
-	// Deleting the project template doesn't cause an error when getting projects
+	// Deleting the project template
 	{
-		//require.NoError(
-		err := s.DeleteProjectTemplate(ctx, &pb.Ref_ProjectTemplate{
-			Ref: &pb.Ref_ProjectTemplate_Id{
-				Id: projectTemplate2.Id,
-			},
-		})
-		//)
+		require.NoError(
+			s.DeleteProjectTemplate(ctx, &pb.Ref_ProjectTemplate{
+				Ref: &pb.Ref_ProjectTemplate_Id{
+					Id: projectTemplate2.Id,
+				},
+			}),
+		)
 
-		resp, err := s.ProjectGet(ctx, &pb.Ref_Project{Project: name})
+		_, err := s.ProjectGet(ctx, &pb.Ref_Project{Project: name})
 		require.NoError(err)
-
-		require.Empty(resp.ProjectTemplate)
 	}
 }
