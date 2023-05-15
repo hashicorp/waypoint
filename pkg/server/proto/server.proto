@@ -1050,8 +1050,9 @@ message Project {
 
   ProjectState state = 11;
 
-  // readme_markdown is markdown formatted instructions on how to operate the project. This may be populated from a project template.
-  string readme_markdown = 13;
+  // readme_markdown is markdown formatted instructions on how to operate the project.
+  // This may be populated from a project template.
+  bytes readme_markdown = 13;
 
   // project_template is a reference to the template that this project was
   // created from, if any.
@@ -5334,9 +5335,13 @@ message ProjectTemplate {
   // is shared between platform engineers and application developers.
   string expanded_summary = 4;
 
-  // A markdown template which is rendered when a Project is created from a
+  // A markdown text template which is rendered when a Project is created from a
   // ProjectTemplate to be shown to application developers.
-  string readme_markdown_template = 5;
+  // Accepted tokens:
+  // "{{ .ProjectName }}", representing the application developer chosen project name
+  // "{{ .TfcOrgName }}", representing the Terraform Cloud organization name in which
+  //  the no-code module was reified
+  bytes readme_markdown_template = 5;
 
   // Settings for the Waypoint project that should be set when a project is
   // created from a ProjectTemplate.
@@ -5353,7 +5358,11 @@ message ProjectTemplate {
   // waypoint Project that we create. Future fields will likely include status
   // report and datasource polling settings.
   message WaypointProject {
-    // The templated waypoint.hcl file stored as HCL.
+    // waypoint.hcl text template file stored as HCL.
+    // Accepted tokens:
+    // "{{ .ProjectName }}", representing the application developer chosen project name
+    // "{{ .TfcOrgName }}", representing the Terraform Cloud organization name in which
+    //  the no-code module was reified
     bytes waypoint_hcl_template = 1;
   }
 

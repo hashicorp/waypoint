@@ -29,11 +29,16 @@ func TestImpl(t *testing.T) {
 		"TestEvent",             //Failing b/c events aren't implemented in boltdb
 	}
 
+	// Tests for features that have not been implemented in OSS
+	unimplementedTests := []string{
+		"TestProjectTemplateFeatures",
+	}
+
 	statetest.Test(t, func(t *testing.T) serverstate.Interface {
 		return TestState(t)
 	}, func(t *testing.T, impl serverstate.Interface) serverstate.Interface {
 		v, err := TestStateRestart(t, impl.(*State))
 		require.NoError(t, err)
 		return v
-	}, knownFailingStateTests)
+	}, append(knownFailingStateTests, unimplementedTests...))
 }
