@@ -2681,9 +2681,11 @@ func TestJobHeartbeatOnRestart(t *testing.T, factory Factory, rf RestartFactory)
 		defer s.Close()
 
 		// Verify it exists
-		job, err = s.JobById(ctx, "A", nil)
-		require.NoError(err)
-		require.Equal(pb.Job_RUNNING, job.Job.State)
+		{
+			job, err := s.JobById(ctx, "A", nil)
+			require.NoError(err)
+			require.Equal(pb.Job_RUNNING, job.Job.State)
+		}
 
 		// Should time out
 		require.Eventually(func() bool {
