@@ -170,11 +170,6 @@ func (s *Service) Authenticate(
 		}
 	}
 
-	// Ensure the token message is well-formed (e.g. has required fields)
-	if err := serverptypes.ValidateToken(body); err != nil {
-		return nil, err
-	}
-
 	// Store the token in the context
 	ctx = DecodedTokenWithContext(ctx, body)
 
