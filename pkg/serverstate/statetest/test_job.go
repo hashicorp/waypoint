@@ -2680,7 +2680,7 @@ func TestJobHeartbeatOnRestart(t *testing.T, factory Factory, rf RestartFactory)
 		s = rf(t, s)
 		defer s.Close()
 
-		// Verify it exists
+		// Verify it exists. We use a closure here to avoid a possible race condition with the job object
 		{
 			job, err := s.JobById(ctx, "A", nil)
 			require.NoError(err)
