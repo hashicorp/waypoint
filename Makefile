@@ -217,7 +217,7 @@ tools: # Install dependencies and tools required to build
 
 .PHONY: test
 test: # Run tests
-	go test ./...
+	go test ./... -race
 
 # Run state tests found in pkg/serverstate/statetest/
 # To run a specific test, use TESTARGS
