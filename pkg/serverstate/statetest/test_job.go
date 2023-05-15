@@ -2482,7 +2482,7 @@ func TestJobHeartbeat(t *testing.T, factory Factory, rf RestartFactory) {
 		// Should time out
 		require.Eventually(func() bool {
 			// Verify it is canceled
-			job, err = s.JobById(ctx, "A", nil)
+			job, err := s.JobById(ctx, "A", nil)
 			require.NoError(err)
 			return job.Job.State == pb.Job_ERROR
 		}, 4*time.Second, time.Second)
@@ -2620,7 +2620,7 @@ func TestJobHeartbeat(t *testing.T, factory Factory, rf RestartFactory) {
 		// Should time out
 		require.Eventually(func() bool {
 			// Verify it is canceled
-			job, err = s.JobById(context.Background(), "A", nil)
+			job, err := s.JobById(context.Background(), "A", nil)
 			require.NoError(err)
 			return job.Job.State == pb.Job_ERROR
 		}, 4*time.Second, time.Second)
@@ -2694,7 +2694,7 @@ func TestJobHeartbeatOnRestart(t *testing.T, factory Factory, rf RestartFactory)
 		// Should time out
 		require.Eventually(func() bool {
 			// Verify it is canceled
-			job, err = s.JobById(ctx, "A", nil)
+			job, err := s.JobById(ctx, "A", nil)
 			require.NoError(err)
 			return job.Job.State == pb.Job_ERROR
 		}, 4*time.Second, time.Second)
