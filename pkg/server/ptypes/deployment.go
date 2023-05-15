@@ -15,7 +15,7 @@ import (
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 )
 
-// TestDeployment returns a valid project for tests.
+// TestDeployment returns a valid deployment for tests.
 func TestDeployment(t testing.T, src *pb.Deployment) *pb.Deployment {
 	t.Helper()
 

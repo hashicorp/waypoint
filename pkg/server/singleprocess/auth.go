@@ -170,6 +170,11 @@ func (s *Service) Authenticate(
 		}
 	}
 
+	// Ensure the token message is well-formed (e.g. has required fields)
+	if err := serverptypes.ValidateToken(body); err != nil {
+		return nil, err
+	}
+
 	// Store the token in the context
 	ctx = DecodedTokenWithContext(ctx, body)
 
@@ -534,6 +539,9 @@ func (s *Service) GenerateRunnerToken(
 	}
 
 	decodedToken := s.decodedTokenFromContext(ctx)
+	if err := serverptypes.ValidateToken(decodedToken); err != nil {
+		return nil, errors.Wrapf(err, "invalid request token")
+	}
 
 	switch k := decodedToken.Kind.(type) {
 	case *pb.Token_Runner_:
