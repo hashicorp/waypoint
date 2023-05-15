@@ -1,0 +1,17 @@
+name: Check Repo for duplicate struct tags
+on:
+  pull_request:
+    types: [opened, synchronize]
+    branches: [main]
+jobs:
+  check-struct-tags:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+      - name: Check Repo for duplicate struct tags
+        run: go run ./tools/lint-struct-tags ./
+permissions:
+  contents: read

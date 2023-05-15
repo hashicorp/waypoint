@@ -6,9 +6,11 @@ package nomad
 import (
 	"context"
 	"fmt"
-	"github.com/hashicorp/nomad/api"
-	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"time"
+
+	"github.com/hashicorp/nomad/api"
+
+	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 )
 
 const (
@@ -30,7 +32,7 @@ type NomadConfig struct {
 	consulServiceUITags      []string `hcl:"consul_service_ui_tags:optional"`
 	consulServiceBackendTags []string `hcl:"consul_service_backend_tags:optional"`
 	consulDatacenter         string   `hcl:"consul_datacenter,optional"`
-	consulDomain             string   `hcl:"consul_datacenter,optional"`
+	consulDomain             string   `hcl:"consul_domain,optional"`
 
 	// If set along with consul, will use this hostname instead of
 	// making a consul DNS hostname for the server address in its context
@@ -38,7 +40,7 @@ type NomadConfig struct {
 
 	odrImage string `hcl:"odr_image,optional"`
 
-	region         string   `hcl:"namespace,optional"`
+	region         string   `hcl:"region,optional"`
 	datacenters    []string `hcl:"datacenters,optional"`
 	policyOverride bool     `hcl:"policy_override,optional"`
 
