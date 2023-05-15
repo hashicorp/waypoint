@@ -530,6 +530,22 @@ func (s *Service) GenerateRunnerToken(
 		}
 	}
 
+	decodedToken := s.decodedTokenFromContext(ctx)
+
+	switch k := decodedToken.Kind.(type) {
+	case *pb.Token_Runner_:
+		// Prevent a runner token from generating a token for a runner with an
+		// ID different from the ID encoded in the runner token
+		if k.Runner != nil {
+			if k.Runner.Id != req.Id {
+				msg := "cannot generate a token for runner " + req.Id + " using a runner token for runner " + k.Runner.Id
+				log.Error(msg)
+				return nil, status.Errorf(codes.InvalidArgument, msg)
+			}
+		}
+	default:
+	}
+
 	encodedId, err := s.encodeId(ctx, req.Id)
 	if err != nil {
 		msg := "failed to encode id when generating a runner token"
