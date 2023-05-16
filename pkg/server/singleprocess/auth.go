@@ -534,6 +534,9 @@ func (s *Service) GenerateRunnerToken(
 	}
 
 	decodedToken := s.decodedTokenFromContext(ctx)
+	if err := serverptypes.ValidateToken(decodedToken); err != nil {
+		return nil, errors.Wrapf(err, "invalid request token")
+	}
 
 	switch k := decodedToken.Kind.(type) {
 	case *pb.Token_Runner_:
