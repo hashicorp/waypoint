@@ -242,6 +242,7 @@ func (cs *ConfigSourcer) read(
 					Error: status.New(codes.Aborted, "failed to read workspace info").Proto(),
 				}
 
+				resp.Body.Close()
 				continue
 			}
 
@@ -255,6 +256,7 @@ func (cs *ConfigSourcer) read(
 					Error: status.New(codes.Aborted, err.Error()).Proto(),
 				}
 
+				resp.Body.Close()
 				continue
 			}
 
@@ -305,12 +307,14 @@ func (cs *ConfigSourcer) read(
 
 				continue
 			}
+
 			if resp.StatusCode != 200 {
 				L.Error("error in sending request for state version for workspace, unexpected response code", "workspace_id", id, "code", resp.Status)
 				result.Result = &pb.ConfigSource_Value_Error{
 					Error: status.New(codes.Aborted, err.Error()).Proto(),
 				}
 
+				resp.Body.Close()
 				continue
 			}
 
@@ -324,6 +328,7 @@ func (cs *ConfigSourcer) read(
 					Error: status.New(codes.Aborted, err.Error()).Proto(),
 				}
 
+				resp.Body.Close()
 				continue
 			}
 
