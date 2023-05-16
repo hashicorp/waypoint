@@ -5,9 +5,11 @@ package singleprocess
 
 import (
 	"context"
+	"time"
 
 	"github.com/hashicorp/go-hclog"
 
+	"github.com/hashicorp/waypoint/internal/telemetry/metrics"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	"github.com/hashicorp/waypoint/pkg/server/hcerr"
 	serverptypes "github.com/hashicorp/waypoint/pkg/server/ptypes"
@@ -70,5 +72,98 @@ func (s *Service) UI_ListPipelineRuns(
 	return &pb.UI_ListPipelineRunsResponse{
 		PipelineRunBundles: allPipelineRuns,
 		Pagination:         &pb.PaginationResponse{},
+	}, nil
+}
+
+func (s *Service) UI_GetPipelineRun(
+	ctx context.Context,
+	req *pb.UI_GetPipelineRunRequest,
+) (*pb.UI_GetPipelineRunResponse, error) {
+	log := hclog.FromContext(ctx)
+
+	if err := serverptypes.ValidateUIGetPipelineRunRequest(req); err != nil {
+		return nil, err
+	}
+
+	runResp, err := s.GetPipelineRun(ctx, &pb.GetPipelineRunRequest{
+		Pipeline: req.Pipeline,
+		Sequence: req.Sequence,
+	})
+	if err != nil {
+		return nil, err
+	}
+	run := runResp.PipelineRun
+
+	// Fetch full jobs
+	start := time.Now()
+	var jobs []*pb.Job
+	for _, ref := range run.Jobs {
+		job, err := s.GetJob(ctx, &pb.GetJobRequest{JobId: ref.Id})
+		if err != nil {
+			return nil, hcerr.Externalize(
+				log,
+				err,
+				"failed to get jobs for all pipeline steps",
+			)
+		}
+		jobs = append(jobs, job)
+	}
+	metrics.MeasureOperation(ctx, start, "fetch_jobs_for_ui_get_pipeline_run")
+
+	// Fetch latest status report for every deployment and release
+	start = time.Now()
+	var statusReports []*pb.StatusReport
+	for _, job := range jobs {
+		if d := job.Result.GetDeploy().GetDeployment(); d != nil {
+			sr, err := s.GetLatestStatusReport(ctx, &pb.GetLatestStatusReportRequest{
+				Application: d.Application,
+				Workspace:   d.Workspace,
+				Target: &pb.GetLatestStatusReportRequest_DeploymentId{
+					DeploymentId: d.Id,
+				},
+			})
+			if err != nil {
+				return nil, hcerr.Externalize(
+					log,
+					err,
+					"failed to get latest status report for deployment %q",
+					d.Id,
+				)
+			}
+			if sr != nil {
+				statusReports = append(statusReports, sr)
+			}
+		}
+		if r := job.Result.GetRelease().GetRelease(); r != nil {
+			sr, err := s.GetLatestStatusReport(ctx, &pb.GetLatestStatusReportRequest{
+				Application: r.Application,
+				Workspace:   r.Workspace,
+				Target: &pb.GetLatestStatusReportRequest_ReleaseId{
+					ReleaseId: r.Id,
+				},
+			})
+			if err != nil {
+				return nil, hcerr.Externalize(
+					log,
+					err,
+					"failed to get latest status report for release %q",
+					r.Id,
+				)
+			}
+			if sr != nil {
+				statusReports = append(statusReports, sr)
+			}
+		}
+	}
+	metrics.MeasureOperation(ctx, start, "fetch_latest_status_reports_for_ui_get_pipeline_run")
+
+	rootNode, err := serverptypes.UI_PipelineRunTreeFromJobs(jobs, statusReports)
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.UI_GetPipelineRunResponse{
+		PipelineRun:  run,
+		RootTreeNode: rootNode,
 	}, nil
 }
