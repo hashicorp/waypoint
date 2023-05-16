@@ -32,10 +32,13 @@ func Copy(fs http.FileSystem, dst, src string) error {
 		if err != nil {
 			return err
 		}
-		defer dstF.Close()
+		defer dstF.Close() // 2nd call to make sure the file is closed
 
 		_, err = io.Copy(dstF, f)
-		return err
+		if err != nil {
+			return err
+		}
+		return dstF.Close() // 1st call to surface any errors from close
 	}
 
 	// Create this directory
@@ -69,7 +72,7 @@ func Copy(fs http.FileSystem, dst, src string) error {
 		}
 	}
 
-	return nil
+	return f.Close()
 }
 
 // mode returns the proper mode to use for creating files
