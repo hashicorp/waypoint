@@ -2482,7 +2482,7 @@ func TestJobHeartbeat(t *testing.T, factory Factory, rf RestartFactory) {
 		// Should time out
 		require.Eventually(func() bool {
 			// Verify it is canceled
-			job, err = s.JobById(ctx, "A", nil)
+			job, err := s.JobById(ctx, "A", nil)
 			require.NoError(err)
 			return job.Job.State == pb.Job_ERROR
 		}, 4*time.Second, time.Second)
@@ -2542,10 +2542,12 @@ func TestJobHeartbeat(t *testing.T, factory Factory, rf RestartFactory) {
 		// Sleep for a bit
 		time.Sleep(1 * time.Second)
 
-		// Verify it is running
-		job, err = s.JobById(ctx, "A", nil)
-		require.NoError(err)
-		require.Equal(pb.Job_RUNNING, job.Job.State)
+		// Verify it is running. We use a closure here to avoid a possible race condition with the job object
+		{
+			job, err := s.JobById(ctx, "A", nil)
+			require.NoError(err)
+			require.Equal(pb.Job_RUNNING, job.Job.State)
+		}
 
 		// Stop it
 		require.NoError(s.JobComplete(ctx, job.Id, nil, nil))
@@ -2605,10 +2607,12 @@ func TestJobHeartbeat(t *testing.T, factory Factory, rf RestartFactory) {
 		// Sleep for a bit
 		time.Sleep(1 * time.Second)
 
-		// Verify it is running
-		job, err = s.JobById(ctx, "A", nil)
-		require.NoError(err)
-		require.Equal(pb.Job_RUNNING, job.Job.State)
+		// Verify it is running. We use a closure here to avoid a possible race condition with the job object
+		{
+			job, err := s.JobById(ctx, "A", nil)
+			require.NoError(err)
+			require.Equal(pb.Job_RUNNING, job.Job.State)
+		}
 
 		// Stop heartbeating
 		cancel()
@@ -2616,7 +2620,7 @@ func TestJobHeartbeat(t *testing.T, factory Factory, rf RestartFactory) {
 		// Should time out
 		require.Eventually(func() bool {
 			// Verify it is canceled
-			job, err = s.JobById(context.Background(), "A", nil)
+			job, err := s.JobById(context.Background(), "A", nil)
 			require.NoError(err)
 			return job.Job.State == pb.Job_ERROR
 		}, 4*time.Second, time.Second)
@@ -2690,7 +2694,7 @@ func TestJobHeartbeatOnRestart(t *testing.T, factory Factory, rf RestartFactory)
 		// Should time out
 		require.Eventually(func() bool {
 			// Verify it is canceled
-			job, err = s.JobById(ctx, "A", nil)
+			job, err := s.JobById(ctx, "A", nil)
 			require.NoError(err)
 			return job.Job.State == pb.Job_ERROR
 		}, 4*time.Second, time.Second)
