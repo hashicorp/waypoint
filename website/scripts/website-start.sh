@@ -24,7 +24,7 @@ should_pull=true
 # Clone the dev-portal project, if needed
 if [ ! -d "$PREVIEW_DIR" ]; then
     echo "⏳ Cloning the $REPO_TO_CLONE repo, this might take a while..."
-    git clone --depth=1 https://github.com/hashicorp/$REPO_TO_CLONE.git "$PREVIEW_DIR"
+    git clone https://github.com/hashicorp/$REPO_TO_CLONE.git "$PREVIEW_DIR"
     should_pull=false
 fi
 
@@ -34,6 +34,9 @@ cd "$PREVIEW_DIR"
 if [ "$should_pull" = true ]; then
     git pull origin main
 fi
+
+# Temporary - checkout the branch to test
+git checkout zs.upgrade-waypoint-api-docs
 
 # Run the dev-portal content-repo start script
 REPO=$PRODUCT \

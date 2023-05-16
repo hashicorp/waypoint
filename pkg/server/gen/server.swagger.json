@@ -1,7 +1,7 @@
 {
   "swagger": "2.0",
   "info": {
-    "title": "pkg/server/proto/server.proto",
+    "title": "HELLO pkg/server/proto/server.proto",
     "version": "version not set"
   },
   "consumes": [

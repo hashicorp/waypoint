@@ -31,7 +31,10 @@ fi
 
 # Clone the base project, if needed
 echo "⏳ Cloning the $REPO_TO_CLONE repo, this might take a while..."
-git clone --depth=1 "https://github.com/hashicorp/$REPO_TO_CLONE.git" "$CLONE_DIR"
+git clone "https://github.com/hashicorp/$REPO_TO_CLONE.git" "$CLONE_DIR"
+
+# Temporary - checkout the branch to test
+git checkout zs.upgrade-waypoint-api-docs
 
 if [ "$from_cache" = true ]; then
   echo "Setting up $PREVIEW_DIR"
