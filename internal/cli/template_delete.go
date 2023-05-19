@@ -64,7 +64,7 @@ func (c *ProjectTemplateDeleteCommand) Run(args []string) int {
 		}
 		name = c.flagName
 	} else {
-		c.ui.Output("missing project template name or id", terminal.WithErrorStyle())
+		c.ui.Output("Missing project template name or id.\n\n"+c.Help(), terminal.WithErrorStyle())
 		return 1
 	}
 
@@ -72,11 +72,11 @@ func (c *ProjectTemplateDeleteCommand) Run(args []string) int {
 		ProjectTemplate: &tref,
 	})
 	if err != nil {
-		c.ui.Output("error: ", clierrors.Humanize(err), terminal.WithErrorStyle())
+		c.ui.Output("Encountered an error while deleting the project template: %s", clierrors.Humanize(err), terminal.WithErrorStyle())
 		return 1
 	}
 
-	c.ui.Output("template %q deleted", name)
+	c.ui.Output("Template %q deleted", name, terminal.WithSuccessStyle())
 
 	return 0
 }
@@ -89,14 +89,14 @@ func (c *ProjectTemplateDeleteCommand) Flags() *flag.Sets {
 			Name:    "name",
 			Target:  &c.flagName,
 			Default: "",
-			Usage:   "Name of project template",
+			Usage:   "Name of the project template to delete",
 		})
 
 		f.StringVar(&flag.StringVar{
 			Name:    "id",
 			Target:  &c.flagID,
 			Default: "",
-			Usage:   "Id of project template",
+			Usage:   "Id of the project template to delete",
 		})
 	})
 }

@@ -60,7 +60,7 @@ func (c *ProjectTemplateUpdateCommand) Run(args []string) int {
 		}
 		name = c.flagName
 	} else {
-		c.ui.Output("missing project template name or id", terminal.WithErrorStyle())
+		c.ui.Output("Missing project template name or id.\n\n"+c.Help(), terminal.WithErrorStyle())
 		return 1
 	}
 
@@ -96,7 +96,7 @@ func (c *ProjectTemplateUpdateCommand) Run(args []string) int {
 	if c.flagReadmeMarkdownTemplate != "" {
 		rmt, err := os.ReadFile(c.flagReadmeMarkdownTemplate)
 		if err != nil {
-			c.ui.Output("unable to read readme.md template file. %s", clierrors.Humanize(err), terminal.WithErrorStyle())
+			c.ui.Output("Unable to read readme.md template file: %s", clierrors.Humanize(err), terminal.WithErrorStyle())
 			return 1
 		}
 		template.ReadmeMarkdownTemplate = rmt
@@ -105,7 +105,7 @@ func (c *ProjectTemplateUpdateCommand) Run(args []string) int {
 	if c.flagWaypointHCLTemplatePath != "" {
 		wpt, err := os.ReadFile(c.flagWaypointHCLTemplatePath)
 		if err != nil {
-			c.ui.Output("unable to read waypoint.hcl template file. %s", clierrors.Humanize(err), terminal.WithErrorStyle())
+			c.ui.Output("Unable to read waypoint.hcl template file: %s", clierrors.Humanize(err), terminal.WithErrorStyle())
 			return 1
 		}
 		template.WaypointProject = &pb.ProjectTemplate_WaypointProject{
@@ -114,10 +114,10 @@ func (c *ProjectTemplateUpdateCommand) Run(args []string) int {
 	}
 
 	if c.flagTFCNoCodeModuleSource != "" && c.flagTFCNoCodeModuleVersion == "" {
-		c.ui.Output("Terraform no code module version required", terminal.WithErrorStyle())
+		c.ui.Output("Terraform no code module version required.\n\n"+c.Help(), terminal.WithErrorStyle())
 		return 1
 	} else if c.flagTFCNoCodeModuleSource == "" && c.flagTFCNoCodeModuleVersion != "" {
-		c.ui.Output("Terraform no code module source required", terminal.WithErrorStyle())
+		c.ui.Output("Terraform no code module source required.\n\n"+c.Help(), terminal.WithErrorStyle())
 		return 1
 	} else if c.flagTFCNoCodeModuleSource != "" && c.flagTFCNoCodeModuleVersion != "" {
 		template.TerraformNocodeModule = &pb.ProjectTemplate_TerraformNocodeModule{
@@ -132,7 +132,7 @@ func (c *ProjectTemplateUpdateCommand) Run(args []string) int {
 		ProjectTemplate: template,
 	})
 	if err != nil {
-		c.ui.Output("Error updating project template: %q", clierrors.Humanize(err), terminal.WithErrorStyle())
+		c.ui.Output("Error updating project template: %s", clierrors.Humanize(err), terminal.WithErrorStyle())
 		return 1
 	}
 

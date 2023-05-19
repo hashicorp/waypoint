@@ -59,7 +59,7 @@ func (c *ProjectTemplateInspectCommand) Run(args []string) int {
 			Name: c.flagName,
 		}
 	} else {
-		c.ui.Output("missing project template name or id", terminal.WithErrorStyle())
+		c.ui.Output("Missing project template name or id.\n\n"+c.Help(), terminal.WithErrorStyle())
 		return 1
 	}
 
