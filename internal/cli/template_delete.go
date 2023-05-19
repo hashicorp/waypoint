@@ -16,21 +16,6 @@ type ProjectTemplateDeleteCommand struct {
 	flagID   string
 }
 
-//ProjectTemplate: &pb.ProjectTemplate{
-//	Name:            name,
-//	Summary:         "",
-//	ExpandedSummary: "",
-//	ReadmeTemplate:  "",
-//	WaypointProject: &pb.ProjectTemplate_WaypointProject{
-//		WaypointHclTemplate: []byte(""),
-//	},
-//	TerraformNocodeModule: &pb.ProjectTemplate_TerraformNocodeModule{
-//		Source:  "",
-//		Version: "",
-//	},
-//	Tags: []string{},
-//},
-
 func (c *ProjectTemplateDeleteCommand) Run(args []string) int {
 	flagSet := c.Flags()
 	if err := c.Init(
