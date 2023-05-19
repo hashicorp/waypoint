@@ -138,14 +138,14 @@ func (c *ProjectTemplateCreateCommand) Flags() *flag.Sets {
 			Name:    "tfc-nocode-module-source",
 			Target:  &c.flagTFCNoCodeModuleSource,
 			Default: "",
-			Usage:   "The name of the Terraform no-code module that the template should use to provision infrastructure for Waypoint projects created from the template",
+			Usage:   "The name of the Terraform no-code module from a Terraform registry that the template should use to provision infrastructure for Waypoint projects created from the template",
 		})
 
 		f.StringVar(&flag.StringVar{
 			Name:    "tfc-nocode-module-version",
 			Target:  &c.flagTFCNoCodeModuleVersion,
 			Default: "",
-			Usage:   "The version of the Terraform no-code module that the template should use to provision infrastructure for Waypoint projects created from the template",
+			Usage:   "The version of the Terraform no-code module from a Terraform registry that the template should use to provision infrastructure for Waypoint projects created from the template",
 		})
 
 		f.StringSliceVar(&flag.StringSliceVar{
