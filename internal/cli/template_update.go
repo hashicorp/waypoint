@@ -17,13 +17,13 @@ type ProjectTemplateUpdateCommand struct {
 	flagID   string
 	flagName string
 
-	flagSummary                 string
-	flagExpandedSummary         string
-	flagReadmeMarkdownTemplate  string
-	flagWaypointHCLTemplatePath string
-	flagTFCNoCodeModuleSource   string
-	flagTFCNoCodeModuleVersion  string
-	flagTags                    []string
+	flagSummary                    string
+	flagExpandedSummary            string
+	flagReadmeMarkdownTemplatePath string
+	flagWaypointHCLTemplatePath    string
+	flagTFCNoCodeModuleSource      string
+	flagTFCNoCodeModuleVersion     string
+	flagTags                       []string
 }
 
 func (c *ProjectTemplateUpdateCommand) Run(args []string) int {
@@ -93,8 +93,8 @@ func (c *ProjectTemplateUpdateCommand) Run(args []string) int {
 		template.ExpandedSummary = c.flagExpandedSummary
 	}
 
-	if c.flagReadmeMarkdownTemplate != "" {
-		rmt, err := os.ReadFile(c.flagReadmeMarkdownTemplate)
+	if c.flagReadmeMarkdownTemplatePath != "" {
+		rmt, err := os.ReadFile(c.flagReadmeMarkdownTemplatePath)
 		if err != nil {
 			c.ui.Output("Unable to read readme.md template file: %s", clierrors.Humanize(err), terminal.WithErrorStyle())
 			return 1
@@ -174,10 +174,10 @@ func (c *ProjectTemplateUpdateCommand) Flags() *flag.Sets {
 		})
 
 		f.StringVar(&flag.StringVar{
-			Name:    "readme-markdown-template",
-			Target:  &c.flagReadmeMarkdownTemplate,
+			Name:    "readme-markdown-template-path",
+			Target:  &c.flagReadmeMarkdownTemplatePath,
 			Default: "",
-			Usage:   "Readme template for projects created from a project template",
+			Usage:   "Path to a markdown readme template for projects created from a project template",
 		})
 
 		f.StringVar(&flag.StringVar{
@@ -191,14 +191,14 @@ func (c *ProjectTemplateUpdateCommand) Flags() *flag.Sets {
 			Name:    "tfc-nocode-module-source",
 			Target:  &c.flagTFCNoCodeModuleSource,
 			Default: "",
-			Usage:   "The name of the Terraform no-code module that the template should use to provision infrastructure for Waypoint projects created from the template",
+			Usage:   "The name of the Terraform no-code module from a Terraform registry that the template should use to provision infrastructure for Waypoint projects created from the template",
 		})
 
 		f.StringVar(&flag.StringVar{
 			Name:    "tfc-nocode-module-version",
 			Target:  &c.flagTFCNoCodeModuleVersion,
 			Default: "",
-			Usage:   "The version of the Terraform no-code module that the template should use to provision infrastructure for Waypoint projects created from the template",
+			Usage:   "The version of the Terraform no-code module from a Terraform registry that the template should use to provision infrastructure for Waypoint projects created from the template",
 		})
 
 		f.StringSliceVar(&flag.StringSliceVar{

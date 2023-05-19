@@ -14,13 +14,13 @@ import (
 type ProjectTemplateCreateCommand struct {
 	*baseCommand
 
-	flagSummary                 string
-	flagExpandedSummary         string
-	flagReadmeMarkdownTemplate  string
-	flagWaypointHCLTemplatePath string
-	flagTFCNoCodeModuleSource   string
-	flagTFCNoCodeModuleVersion  string
-	flagTags                    []string
+	flagSummary                    string
+	flagExpandedSummary            string
+	flagReadmeMarkdownTemplatePath string
+	flagWaypointHCLTemplatePath    string
+	flagTFCNoCodeModuleSource      string
+	flagTFCNoCodeModuleVersion     string
+	flagTags                       []string
 }
 
 func (c *ProjectTemplateCreateCommand) Run(args []string) int {
@@ -52,8 +52,8 @@ func (c *ProjectTemplateCreateCommand) Run(args []string) int {
 		template.ExpandedSummary = c.flagExpandedSummary
 	}
 
-	if c.flagReadmeMarkdownTemplate != "" {
-		rmt, err := os.ReadFile(c.flagReadmeMarkdownTemplate)
+	if c.flagReadmeMarkdownTemplatePath != "" {
+		rmt, err := os.ReadFile(c.flagReadmeMarkdownTemplatePath)
 		if err == os.ErrNotExist {
 			rmt = []byte("")
 		} else if err != nil {
@@ -121,10 +121,10 @@ func (c *ProjectTemplateCreateCommand) Flags() *flag.Sets {
 		})
 
 		f.StringVar(&flag.StringVar{
-			Name:    "readme-markdown-template",
-			Target:  &c.flagReadmeMarkdownTemplate,
+			Name:    "readme-markdown-template-path",
+			Target:  &c.flagReadmeMarkdownTemplatePath,
 			Default: "",
-			Usage:   "Readme template for projects created from a project template",
+			Usage:   "Path to a markdown readme template for projects created from a project template",
 		})
 
 		f.StringVar(&flag.StringVar{
