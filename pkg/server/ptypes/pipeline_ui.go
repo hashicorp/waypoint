@@ -29,7 +29,12 @@ func newUIPipelineProcessor(jobs []*pb.Job, statusReports []*pb.StatusReport) ui
 
 	// Populate job index
 	for _, job := range jobs {
-		p.jobIdx[job.Id] = job
+		switch job.Operation.(type) {
+		case *pb.Job_StartTask, *pb.Job_StopTask, *pb.Job_WatchTask:
+			continue
+		default:
+			p.jobIdx[job.Id] = job
+		}
 	}
 
 	// Populate status report index
@@ -43,7 +48,7 @@ func newUIPipelineProcessor(jobs []*pb.Job, statusReports []*pb.StatusReport) ui
 	}
 
 	// Populate node index
-	for _, job := range jobs {
+	for _, job := range p.jobIdx {
 		var step *pb.Pipeline_Step
 		var statusReport *pb.StatusReport
 
