@@ -32,10 +32,10 @@ require (
 	github.com/gliderlabs/ssh v0.3.1
 	github.com/go-git/go-git/v5 v5.2.0
 	github.com/go-openapi/errors v0.20.3
-	github.com/go-openapi/runtime v0.19.24
+	github.com/go-openapi/runtime v0.25.0
 	github.com/go-openapi/strfmt v0.21.3
-	github.com/go-openapi/swag v0.19.14
-	github.com/go-openapi/validate v0.20.2
+	github.com/go-openapi/swag v0.22.3
+	github.com/go-openapi/validate v0.22.1
 	github.com/go-ozzo/ozzo-validation/v4 v4.3.0
 	github.com/go-playground/validator v9.31.0+incompatible
 	github.com/gofrs/flock v0.8.0
@@ -66,7 +66,7 @@ require (
 	github.com/hashicorp/go-uuid v1.0.2
 	github.com/hashicorp/go-version v1.6.0
 	github.com/hashicorp/hcl/v2 v2.10.1-0.20210621220818-327f3ce2570e
-	github.com/hashicorp/hcp-sdk-go v0.27.0
+	github.com/hashicorp/hcp-sdk-go v0.46.0
 	github.com/hashicorp/horizon v0.0.0-20210317214650-d2053943be04
 	github.com/hashicorp/nomad/api v0.0.0-20220510192829-894c2e61dd03
 	github.com/hashicorp/vault/api v1.8.0
@@ -102,7 +102,7 @@ require (
 	github.com/sebdah/goldie/v2 v2.5.3
 	github.com/skratchdot/open-golang v0.0.0-20200116055534-eef842397966
 	github.com/slack-go/slack v0.6.5
-	github.com/stretchr/testify v1.8.1
+	github.com/stretchr/testify v1.8.2
 	github.com/vektra/mockery/v2 v2.15.0
 	github.com/zclconf/go-cty v1.8.4
 	github.com/zclconf/go-cty-yaml v1.0.2
@@ -110,8 +110,8 @@ require (
 	go.opencensus.io v0.24.0
 	go.uber.org/goleak v1.1.12
 	golang.org/x/crypto v0.0.0-20220622213112-05595931fe9d
-	golang.org/x/oauth2 v0.1.0
-	golang.org/x/sys v0.5.0
+	golang.org/x/oauth2 v0.6.0
+	golang.org/x/sys v0.6.0
 	google.golang.org/api v0.103.0
 	google.golang.org/genproto v0.0.0-20221201164419-0e50fba7f41c
 	google.golang.org/grpc v1.50.1
@@ -151,8 +151,6 @@ require (
 	github.com/Masterminds/squirrel v1.5.0 // indirect
 	github.com/Microsoft/go-winio v0.5.2 // indirect
 	github.com/Microsoft/hcsshim v0.8.25 // indirect
-	github.com/PuerkitoBio/purell v1.1.1 // indirect
-	github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578 // indirect
 	github.com/VividCortex/ewma v1.1.1 // indirect
 	github.com/anmitsu/go-shlex v0.0.0-20161002113705-648efa622239 // indirect
 	github.com/apex/log v1.9.0 // indirect
@@ -193,12 +191,13 @@ require (
 	github.com/go-errors/errors v1.0.1 // indirect
 	github.com/go-git/gcfg v1.5.0 // indirect
 	github.com/go-git/go-billy/v5 v5.0.0 // indirect
-	github.com/go-logr/logr v0.4.0 // indirect
-	github.com/go-openapi/analysis v0.20.0 // indirect
+	github.com/go-logr/logr v1.2.3 // indirect
+	github.com/go-logr/stdr v1.2.2 // indirect
+	github.com/go-openapi/analysis v0.21.4 // indirect
 	github.com/go-openapi/jsonpointer v0.19.5 // indirect
-	github.com/go-openapi/jsonreference v0.19.5 // indirect
-	github.com/go-openapi/loads v0.20.2 // indirect
-	github.com/go-openapi/spec v0.20.3 // indirect
+	github.com/go-openapi/jsonreference v0.20.0 // indirect
+	github.com/go-openapi/loads v0.21.2 // indirect
+	github.com/go-openapi/spec v0.20.8 // indirect
 	github.com/go-playground/locales v0.13.0 // indirect
 	github.com/go-playground/universal-translator v0.17.0 // indirect
 	github.com/go-sql-driver/mysql v1.6.0 // indirect
@@ -260,7 +259,7 @@ require (
 	github.com/lib/pq v1.10.6 // indirect
 	github.com/liggitt/tabwriter v0.0.0-20181228230101-89fcab3d43de // indirect
 	github.com/magiconair/properties v1.8.6 // indirect
-	github.com/mailru/easyjson v0.7.6 // indirect
+	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/mattn/go-colorable v0.1.12 // indirect
 	github.com/mattn/go-runewidth v0.0.9 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.4 // indirect
@@ -322,15 +321,17 @@ require (
 	github.com/xlab/treeprint v0.0.0-20181112141820-a009c3971eca // indirect
 	github.com/y0ssar1an/q v1.0.7 // indirect
 	go.mongodb.org/mongo-driver v1.11.0 // indirect
+	go.opentelemetry.io/otel v1.11.1 // indirect
+	go.opentelemetry.io/otel/trace v1.11.1 // indirect
 	go.starlark.net v0.0.0-20200707032745-474f21a9602d // indirect
 	go.uber.org/atomic v1.9.0 // indirect
-	golang.org/x/mod v0.6.0-dev.0.20220419223038-86c51ed26bb4 // indirect
-	golang.org/x/net v0.7.0 // indirect
+	golang.org/x/mod v0.8.0 // indirect
+	golang.org/x/net v0.8.0 // indirect
 	golang.org/x/sync v0.1.0 // indirect
-	golang.org/x/term v0.5.0 // indirect
-	golang.org/x/text v0.7.0 // indirect
+	golang.org/x/term v0.6.0 // indirect
+	golang.org/x/text v0.8.0 // indirect
 	golang.org/x/time v0.0.0-20210723032227-1f47c861a9ac // indirect
-	golang.org/x/tools v0.1.12 // indirect
+	golang.org/x/tools v0.6.0 // indirect
 	golang.org/x/xerrors v0.0.0-20220907171357-04be3eba64a2 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	gopkg.in/DataDog/dd-trace-go.v1 v1.27.0 // indirect
