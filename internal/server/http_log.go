@@ -15,20 +15,21 @@ import (
 	"github.com/hashicorp/go-hclog"
 )
 
-// httpLogHandler returns an http.Handler that uses the request-scoped and
+// httpLogHandler returns a http.Handler that uses the request-scoped and
 // annotated logger to write access logs.
 func httpLogHandler(handler http.Handler, log hclog.Logger) http.Handler {
 	return handlers.CustomLoggingHandler(nil, handler, func(_ io.Writer, params handlers.LogFormatterParams) {
 		req := params.Request
 
-		// Extract the Client IP honoring the X-Forwarded-For header set by
+		// Extract the Client IP and the X-Forwarded-For header set by
 		// proxies.
 		clientIP, _, err := net.SplitHostPort(req.RemoteAddr)
 		if err != nil {
 			clientIP = req.RemoteAddr
 		}
+		var forwardedIP string
 		if forwardedFor := req.Header.Get("X-Forwarded-For"); forwardedFor != "" {
-			clientIP = forwardedFor
+			forwardedIP = net.ParseIP(forwardedFor).String()
 		}
 
 		// Extract the URL scheme honoring the X-Forwarded-Proto header set by
@@ -54,6 +55,7 @@ func httpLogHandler(handler http.Handler, log hclog.Logger) http.Handler {
 			"http.method", req.Method,
 			"http.request_path", req.URL.Path,
 			"http.remote_addr", clientIP,
+			"http.forwarded_for", forwardedIP,
 			"http.response_size", params.Size,
 			"http.scheme", scheme,
 			"http.scheme_forwarded", forwarded,
