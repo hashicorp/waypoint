@@ -135,12 +135,12 @@ func (i *K8sInstaller) Install(
 
 	s.Update("Getting Helm configs...")
 	defer func() { s.Abort() }()
-	settings, err := helminstallutil.SettingsInit()
+	settings, err := helminstallutil.SettingsInit(i.Config.Namespace)
 	if err != nil {
 		return nil, "", err
 	}
 
-	actionConfig, err := helminstallutil.ActionInit(opts.Log, i.Config.KubeConfigPath, i.Config.K8sContext)
+	actionConfig, err := helminstallutil.ActionInit(opts.Log, i.Config.KubeConfigPath, i.Config.K8sContext, i.Config.Namespace)
 	if err != nil {
 		return nil, "", err
 	}
@@ -446,12 +446,12 @@ func (i *K8sInstaller) Upgrade(
 
 	s := sg.Add("Getting Helm configs...")
 	defer func() { s.Abort() }()
-	settings, err := helminstallutil.SettingsInit()
+	settings, err := helminstallutil.SettingsInit(i.Config.Namespace)
 	if err != nil {
 		return nil, err
 	}
 
-	actionConfig, err := helminstallutil.ActionInit(opts.Log, i.Config.KubeConfigPath, i.Config.K8sContext)
+	actionConfig, err := helminstallutil.ActionInit(opts.Log, i.Config.KubeConfigPath, i.Config.K8sContext, i.Config.Namespace)
 	if err != nil {
 		return nil, err
 	}
@@ -671,7 +671,7 @@ func (i *K8sInstaller) Uninstall(ctx context.Context, opts *InstallOpts) error {
 	s := sg.Add("Getting Helm action configuration...")
 	defer func() { s.Abort() }()
 
-	actionConfig, err := helminstallutil.ActionInit(opts.Log, i.Config.KubeConfigPath, i.Config.K8sContext)
+	actionConfig, err := helminstallutil.ActionInit(opts.Log, i.Config.KubeConfigPath, i.Config.K8sContext, i.Config.Namespace)
 	if err != nil {
 		return err
 	}

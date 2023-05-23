@@ -19,7 +19,9 @@ import (
 
 func (p *Platform) settingsInit() (*cli.EnvSettings, error) {
 	cli := cli.New()
-	cli.SetNamespace(p.config.Namespace)
+	if p.config.Namespace != "" {
+	    cli.SetNamespace(p.config.Namespace)
+	}
 	return cli, nil
 }
 
@@ -28,6 +30,10 @@ func (p *Platform) actionInit(log hclog.Logger) (*action.Configuration, error) {
 	_, ns, rc, err := k8s.Clientset(p.config.KubeconfigPath, p.config.Context)
 	if err != nil {
 		return nil, err
+	}
+
+	if p.config.Namespace != "" {
+		ns = p.config.Namespace
 	}
 
 	driver := "secret"
