@@ -381,7 +381,7 @@ func TestRunnerAccept_serverDownJobExec(t *testing.T) {
 	require.Equal(pb.Job_SUCCESS, job.State)
 }
 
-func TestRunnerAccept_closeCancelesAccept(t *testing.T) {
+func TestRunnerAccept_closeCancelsAccept(t *testing.T) {
 	require := require.New(t)
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
