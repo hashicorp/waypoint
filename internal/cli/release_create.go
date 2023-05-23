@@ -278,7 +278,7 @@ Deployment %s marked as released.
 
 No release manager was configured and the configured platform doesn't
 natively support releases. This means that releasing doesn't generate any
-public URL. Waypoint marked the deployment aboved as "released" for server
+public URL. Waypoint marked the deployment above as "released" for server
 history and to prevent commands such as "waypoint destroy" from deleting
 the deployment by default.
 `
