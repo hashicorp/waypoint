@@ -1317,6 +1317,7 @@ func (p *Platform) resourceTargetGroupCreate(
 		Port:               &state.Port,
 		TargetType:         aws.String("ip"),
 		VpcId:              &subnets.Subnets.VpcId,
+		Matcher:            &elbv2.Matcher{},
 	}
 
 	if p.config.Protocol != "" {
