@@ -75,10 +75,10 @@ func (c *ProjectTemplateCreateCommand) Run(args []string) int {
 	}
 
 	if c.flagTFCNoCodeModuleSource != "" && c.flagTFCNoCodeModuleVersion == "" {
-		c.ui.Output("Terraform no code module version required.\n\n"+c.Help(), terminal.WithErrorStyle())
+		c.ui.Output("Terraform No Code module version required.\n\n"+c.Help(), terminal.WithErrorStyle())
 		return 1
 	} else if c.flagTFCNoCodeModuleSource == "" && c.flagTFCNoCodeModuleVersion != "" {
-		c.ui.Output("Terraform no code module source required.\n\n"+c.Help(), terminal.WithErrorStyle())
+		c.ui.Output("Terraform No Code module source required.\n\n"+c.Help(), terminal.WithErrorStyle())
 		return 1
 	} else if c.flagTFCNoCodeModuleSource != "" && c.flagTFCNoCodeModuleVersion != "" {
 		template.TerraformNocodeModule = &pb.ProjectTemplate_TerraformNocodeModule{

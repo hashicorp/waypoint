@@ -108,7 +108,7 @@ Usage: waypoint template delete [options] [NAME]
 
   Deleting a project template only deletes the template and does not delete the
   projects which have been created from the project template. To delete
-  projects created from project templates, the terraform workspace will need to
+  projects created from project templates, the Terraform workspace will need to
   be cleaned up in addition to deleting the project within Waypoint using
   "waypoint project destroy".
 
