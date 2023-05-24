@@ -1405,7 +1405,7 @@ func (p *Platform) resourceTargetGroupDestroy(
 	})
 	if err != nil {
 		return status.Errorf(codes.Internal, "failed to describe target group %s (ARN: %q): %s", state.Name, state.Arn, err)
-	} else if len(groups.TargetGroups) > 0 {
+	} else if len(groups.TargetGroups) > 1 {
 		return status.Errorf(codes.FailedPrecondition, "only one target group should be returned for ARN %q, but found %d matching target groups", state.Arn, len(groups.TargetGroups))
 	}
 
