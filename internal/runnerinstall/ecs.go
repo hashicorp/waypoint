@@ -97,6 +97,7 @@ const odrRolePolicy = `{
         "elasticloadbalancing:DescribeRules",
         "elasticloadbalancing:DescribeTargetGroups",
         "elasticloadbalancing:ModifyListener",
+	"elasticloadbalancing:DescribeTargetHealth",
         "iam:AttachRolePolicy",
         "iam:CreateRole",
         "iam:GetRole",
