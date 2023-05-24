@@ -11,7 +11,7 @@ require (
 	github.com/DataDog/opencensus-go-exporter-datadog v0.0.0-20210527074920-9baf37265e83
 	github.com/adrg/xdg v0.2.1
 	github.com/armon/circbuf v0.0.0-20190214190532-5111143e8da2
-	github.com/aws/aws-sdk-go v1.44.122
+	github.com/aws/aws-sdk-go v1.44.269
 	github.com/bmatcuk/doublestar v1.1.5
 	github.com/buildpacks/pack v0.20.0
 	github.com/cenkalti/backoff/v4 v4.1.1

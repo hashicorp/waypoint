@@ -60,8 +60,10 @@ func (r *Releaser) Release(
 		s.Update("Deployment did not define an ALB listener - skipping release.")
 		s.Done()
 		return &Release{}, nil
-
 	}
+
+	s.Update("Release initialized")
+	s.Done()
 
 	sess, err := utils.GetSession(&utils.SessionConfig{
 		Region: r.p.config.Region,
@@ -134,22 +136,24 @@ func (r *Releaser) Release(
 	}
 
 	s = sg.Add("Checking that all targets are healthy...")
-	targetHealth, err := elbsrv.DescribeTargetHealthWithContext(ctx, &elbv2.DescribeTargetHealthInput{
+	targetHealth, err := elbsrv.DescribeTargetHealth(&elbv2.DescribeTargetHealthInput{
 		TargetGroupArn: aws.String(target.TargetGroupArn),
 	})
 	if err != nil {
+		log.Error("error getting target health", "err", err.Error())
 		return nil, errors.Wrapf(err, "failed to describe health of target group with ARN %q", target.TargetGroupArn)
 	}
 
 	// Check each target to see if any one of them isn't healthy, before we
 	// route 100% of traffic to it!
-	for _, targetHealth := range targetHealth.TargetHealthDescriptions {
+	for _, targetHealthDescription := range targetHealth.TargetHealthDescriptions {
+		log.Debug("checking target health", "target", targetHealthDescription.Target.Id)
 		// Possible states are: initial, healthy, unhealthy, unused, draining,
 		// and unavailable.
-		if *targetHealth.TargetHealth.State != "healthy" {
+		if *targetHealthDescription.TargetHealth.State != "healthy" {
 			return nil, errors.Errorf("target (id: %s) is not healthy - will "+
 				"only release when all targets in group (ARN: %q) are healthy",
-				*targetHealth.Target.Id, target.TargetGroupArn)
+				*targetHealthDescription.Target.Id, target.TargetGroupArn)
 		}
 	}
 	s.Update("All targets are healthy!")
