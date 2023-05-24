@@ -297,7 +297,7 @@ func (c *TaskInspectCommand) FormatJob(job *pb.Job) error {
 			Name: "Cancel Time", Value: cancelTime,
 		},
 		{
-			Name: "Error Messsage", Value: errMsg,
+			Name: "Error Message", Value: errMsg,
 		},
 	}, terminal.WithInfoStyle())
 
