@@ -1312,14 +1312,23 @@ func (p *Platform) resourceTargetGroupCreate(
 		HealthCheckEnabled: aws.Bool(true),
 		Name:               &targetGroupName,
 		Port:               &state.Port,
-		Protocol:           aws.String("HTTP"),
 		TargetType:         aws.String("ip"),
 		VpcId:              &subnets.Subnets.VpcId,
 	}
 
+	if p.config.Protocol != "" {
+		createTargetGroupInput.Protocol = aws.String(p.config.Protocol)
+	} else {
+		createTargetGroupInput.Protocol = aws.String("HTTP")
+	}
+
+	if p.config.ProtocolVersion != "" {
+		createTargetGroupInput.ProtocolVersion = aws.String(p.config.ProtocolVersion)
+	}
+
 	if p.config.HealthCheck != nil {
 		if p.config.HealthCheck.Protocol != "" {
-			createTargetGroupInput.Protocol = aws.String(p.config.HealthCheck.Protocol)
+			createTargetGroupInput.HealthCheckProtocol = aws.String(p.config.HealthCheck.Protocol)
 		}
 
 		if p.config.HealthCheck.Path != "" {
@@ -2890,7 +2899,14 @@ type Config struct {
 
 	Logging *Logging `hcl:"logging,block"`
 
+	// Health check configurations for the target group
 	HealthCheck *AppHealthCheck `hcl:"health_check,block"`
+
+	// The protocol to use for routing traffic to the targets
+	Protocol string `hcl:"target_group_protocol,optional"`
+
+	// The version of the protocol to use for routing traffic to the targets
+	ProtocolVersion string `hcl:"target_group_protocol_version,optional"`
 }
 
 type AppHealthCheck struct {
@@ -3299,6 +3315,25 @@ deploy {
 		"architecture",
 		"the instruction set CPU architecture that the Amazon ECS supports. Valid values are: \"x86_64\", \"arm64\"",
 	)
+
+	doc.SetField(
+		"target_group_protocol",
+		"The protocol to use for routing traffic to the targets.",
+		docs.Default("HTTP"),
+		docs.Summary("The protocol to use for routing traffic to the targets. "+
+			"For Application Load Balancers, the supported protocols are HTTP "+
+			"and HTTPS. For Network Load Balancers, the supported protocols are"+
+			" TCP, TLS, UDP, or TCP_UDP. For Gateway Load Balancers, the supported"+
+			" protocol is GENEVE. A TCP_UDP listener must be associated with a "+
+			"TCP_UDP target group. If the target is a Lambda function, this "+
+			"parameter does not apply."))
+
+	doc.SetField("target_group_protocol_version",
+		"The version of the protocol to use for routing traffic to the targets.",
+		docs.Summary("[HTTP/HTTPS protocol] The protocol version. Specify GRPC "+
+			"to send requests to targets using gRPC. Specify HTTP2 to send requests"+
+			" to targets using HTTP/2. The default is HTTP1, which sends requests "+
+			"to targets using HTTP/1.1."))
 
 	return doc, nil
 }
