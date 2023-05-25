@@ -1433,10 +1433,13 @@ func (p *Platform) resourceTargetGroupDestroy(
 			}
 
 			listeners, err := elbsrv.DescribeListeners(describeListenersInput)
+
+			log.Debug("inspecting listeners", "alb_arn", lb)
 			if err != nil {
 				return status.Errorf(codes.Internal, "failed to describe listeners for ALB (ARN: %q): %s", *lb, err)
 			}
 			for _, listener := range listeners.Listeners {
+				log.Debug("inspecting listener", "listener_arn", listener.ListenerArn)
 				for _, defaultAction := range listener.DefaultActions {
 					if *defaultAction.TargetGroupArn == state.Arn {
 						s.Update("Found active ALB listener with ARN " + *listener.ListenerArn)
@@ -1876,15 +1879,47 @@ func (p *Platform) resourceAlbDestroy(
 		return nil
 	}
 
-	s := sg.Add("Initializing ALB deletion")
+	s := sg.Add("Checking if ALB is managed by Waypoint")
 	defer s.Abort()
-
-	s.Update("Deleting ALB %s", state.DnsName)
 
 	elbsrv := elbv2.New(sess)
 	input := elbv2.DeleteLoadBalancerInput{LoadBalancerArn: &state.Arn}
 
-	_, err := elbsrv.DeleteLoadBalancer(&input)
+	loadBalancers, err := elbsrv.DescribeLoadBalancers(&elbv2.DescribeLoadBalancersInput{
+		LoadBalancerArns: []*string{&state.Arn},
+	})
+	if err != nil {
+		log.Error("error getting ALB details", "err", err.Error())
+		return status.Errorf(codes.Internal, "failed to get ALB details")
+	}
+	for _, loadBalancer := range loadBalancers.LoadBalancers {
+		tdo, err := elbsrv.DescribeTags(&elbv2.DescribeTagsInput{ResourceArns: aws.StringSlice([]string{
+			*loadBalancer.LoadBalancerArn,
+		})})
+		if err != nil {
+			status.Errorf(codes.Internal, "failed to get ALB with ARN %s tags: %s", loadBalancer.LoadBalancerArn, err)
+		}
+
+		for _, tagDescription := range tdo.TagDescriptions {
+			for _, tag := range tagDescription.Tags {
+				if *tag.Key == "waypoint_managed" && *tag.Value == "true" {
+					goto DELETE_ALB
+				}
+			}
+		}
+		// If we reach this point, we've checked all of the tags on the ALB,
+		// and none of them indicate the ALB is managed by Waypoint
+		log.Debug("ALB not created by Waypoint - skipping ALB deletion")
+		s.Update("ALB is not managed by Waypoint - skipping ALB deletion")
+		s.Done()
+		return nil
+	}
+DELETE_ALB:
+	s.Update("ALB is managed by Waypoint - proceeding with deletion")
+	s.Done()
+
+	s = sg.Add("Deleting ALB %s", state.DnsName)
+	_, err = elbsrv.DeleteLoadBalancer(&input)
 	if err != nil {
 		return status.Errorf(codes.Internal, "failed to remove ALB %s: %s", state.DnsName, err)
 	}
