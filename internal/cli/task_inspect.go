@@ -46,7 +46,7 @@ func (c *TaskInspectCommand) Run(args []string) int {
 	if c.flagRunJobId != "" && taskId != "" {
 		c.ui.Output("Both Run Job Id and Task Id was supplied, will look up by Task Id", terminal.WithWarningStyle())
 	}
-
+	
 	var (
 		taskReq *pb.GetTaskRequest
 	)
