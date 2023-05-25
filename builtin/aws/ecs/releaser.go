@@ -180,6 +180,8 @@ func (r *Releaser) Release(
 	s.Done()
 
 	return &Release{
+		// TODO: Determine what the prefix to the hostname should be instead of
+		// assuming HTTP
 		Url:             "http://" + hostname,
 		LoadBalancerArn: target.LoadBalancerArn,
 	}, nil

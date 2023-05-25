@@ -14,5 +14,8 @@ plugin/aws-ecs: Fix failure when destroying the target group during a release
 destroy operation.
 ```
 ```release-note:bug
+plugin/aws-ecs: Destroy the ALB only if it is managed by Waypoint.
+```
+```release-note:bug
 runnerinstall/aws-ecs: Add missing permission to on-demand runner IAM policy.
 ```
