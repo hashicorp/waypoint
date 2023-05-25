@@ -1,0 +1,3 @@
+```release-note:bug
+config: Remove extra eval context append for parsing configs which caused a slowdown during pipeline config parsing.
+```
