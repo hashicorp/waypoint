@@ -83,8 +83,6 @@ func (c *Config) Pipelines() []string {
 // Note that currently this parsing function does not attempt to detect cycles
 // between embedded pipelines.
 func (c *Config) Pipeline(id string, ctx *hcl.EvalContext) (*Pipeline, error) {
-	ctx = appendContext(c.ctx, ctx)
-
 	// Find the pipeline by progressively decoding
 	var rawPipeline *hclPipeline
 	for _, p := range c.hclConfig.Pipelines {

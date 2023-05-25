@@ -306,6 +306,20 @@ func TestPipelineProtos(t *testing.T) {
 		},
 
 		{
+			"pipelines_many_many_many.hcl",
+			func(t *testing.T, c *Config) {
+				require := require.New(t)
+
+				pipelines, err := c.PipelineProtos()
+				require.NoError(err)
+				require.Len(pipelines, 7)
+
+				require.Equal(pipelines[0].Name, "foo")
+				require.Equal(pipelines[1].Name, "bar")
+			},
+		},
+
+		{
 			"pipeline_nested_pipes.hcl",
 			func(t *testing.T, c *Config) {
 				require := require.New(t)
