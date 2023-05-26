@@ -721,32 +721,46 @@
           },
           {
             "name": "pipeline.pipeline_id",
-            "description": "ID of the pipeline.",
+            "description": "ID of the current pipeline (the one containing the current step).",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "pipeline.pipeline_name",
-            "description": "Name of the pipeline.",
+            "description": "Name of the current pipeline.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "pipeline.step",
-            "description": "Step name within the pipeline.",
+            "description": "Step name within the current pipeline.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "pipeline.run_sequence",
-            "description": "Pipeline run sequence.",
+            "description": "Run sequence for the root pipeline.",
             "in": "query",
             "required": false,
             "type": "string",
             "format": "uint64"
+          },
+          {
+            "name": "pipeline.root_pipeline_id",
+            "description": "Name of the root pipeline (the one invoked in `waypoint pipeline run <pipeline>`).",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "pipeline.root_pipeline_name",
+            "description": "Name of the root pipeline.",
+            "in": "query",
+            "required": false,
+            "type": "string"
           },
           {
             "name": "jobState",
@@ -878,32 +892,46 @@
           },
           {
             "name": "pipeline.pipeline_id",
-            "description": "ID of the pipeline.",
+            "description": "ID of the current pipeline (the one containing the current step).",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "pipeline.pipeline_name",
-            "description": "Name of the pipeline.",
+            "description": "Name of the current pipeline.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "pipeline.step",
-            "description": "Step name within the pipeline.",
+            "description": "Step name within the current pipeline.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "pipeline.run_sequence",
-            "description": "Pipeline run sequence.",
+            "description": "Run sequence for the root pipeline.",
             "in": "query",
             "required": false,
             "type": "string",
             "format": "uint64"
+          },
+          {
+            "name": "pipeline.root_pipeline_id",
+            "description": "Name of the root pipeline (the one invoked in `waypoint pipeline run <pipeline>`).",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "pipeline.root_pipeline_name",
+            "description": "Name of the root pipeline.",
+            "in": "query",
+            "required": false,
+            "type": "string"
           },
           {
             "name": "jobState",
@@ -1021,32 +1049,46 @@
           },
           {
             "name": "pipeline.pipeline_id",
-            "description": "ID of the pipeline.",
+            "description": "ID of the current pipeline (the one containing the current step).",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "pipeline.pipeline_name",
-            "description": "Name of the pipeline.",
+            "description": "Name of the current pipeline.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "pipeline.step",
-            "description": "Step name within the pipeline.",
+            "description": "Step name within the current pipeline.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "pipeline.run_sequence",
-            "description": "Pipeline run sequence.",
+            "description": "Run sequence for the root pipeline.",
             "in": "query",
             "required": false,
             "type": "string",
             "format": "uint64"
+          },
+          {
+            "name": "pipeline.root_pipeline_id",
+            "description": "Name of the root pipeline (the one invoked in `waypoint pipeline run <pipeline>`).",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "pipeline.root_pipeline_name",
+            "description": "Name of the root pipeline.",
+            "in": "query",
+            "required": false,
+            "type": "string"
           },
           {
             "name": "pagination.page_size",
@@ -1200,32 +1242,46 @@
           },
           {
             "name": "pipeline.pipeline_id",
-            "description": "ID of the pipeline.",
+            "description": "ID of the current pipeline (the one containing the current step).",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "pipeline.pipeline_name",
-            "description": "Name of the pipeline.",
+            "description": "Name of the current pipeline.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "pipeline.step",
-            "description": "Step name within the pipeline.",
+            "description": "Step name within the current pipeline.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "pipeline.run_sequence",
-            "description": "Pipeline run sequence.",
+            "description": "Run sequence for the root pipeline.",
             "in": "query",
             "required": false,
             "type": "string",
             "format": "uint64"
+          },
+          {
+            "name": "pipeline.root_pipeline_id",
+            "description": "Name of the root pipeline (the one invoked in `waypoint pipeline run <pipeline>`).",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "pipeline.root_pipeline_name",
+            "description": "Name of the root pipeline.",
+            "in": "query",
+            "required": false,
+            "type": "string"
           },
           {
             "name": "jobState",
@@ -1343,32 +1399,46 @@
           },
           {
             "name": "pipeline.pipeline_id",
-            "description": "ID of the pipeline.",
+            "description": "ID of the current pipeline (the one containing the current step).",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "pipeline.pipeline_name",
-            "description": "Name of the pipeline.",
+            "description": "Name of the current pipeline.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "pipeline.step",
-            "description": "Step name within the pipeline.",
+            "description": "Step name within the current pipeline.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "pipeline.run_sequence",
-            "description": "Pipeline run sequence.",
+            "description": "Run sequence for the root pipeline.",
             "in": "query",
             "required": false,
             "type": "string",
             "format": "uint64"
+          },
+          {
+            "name": "pipeline.root_pipeline_id",
+            "description": "Name of the root pipeline (the one invoked in `waypoint pipeline run <pipeline>`).",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "pipeline.root_pipeline_name",
+            "description": "Name of the root pipeline.",
+            "in": "query",
+            "required": false,
+            "type": "string"
           },
           {
             "name": "pagination.page_size",
@@ -11097,20 +11167,28 @@
       "properties": {
         "pipeline_id": {
           "type": "string",
-          "title": "ID of the pipeline"
+          "title": "ID of the current pipeline (the one containing the current step)"
         },
         "pipeline_name": {
           "type": "string",
-          "title": "Name of the pipeline"
+          "title": "Name of the current pipeline"
         },
         "step": {
           "type": "string",
-          "description": "Step name within the pipeline."
+          "title": "Step name within the current pipeline"
         },
         "run_sequence": {
           "type": "string",
           "format": "uint64",
-          "title": "Pipeline run sequence"
+          "title": "Run sequence for the root pipeline"
+        },
+        "root_pipeline_id": {
+          "type": "string",
+          "title": "Name of the root pipeline (the one invoked in `waypoint pipeline run <pipeline>`)"
+        },
+        "root_pipeline_name": {
+          "type": "string",
+          "title": "Name of the root pipeline"
         }
       }
     },
