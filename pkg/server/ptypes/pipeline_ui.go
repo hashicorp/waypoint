@@ -410,7 +410,7 @@ func (p uiPipelineProcessor) stepRefFromJob(job *pb.Job) *pb.Pipeline_Step_Pipel
 				Ref: &pb.Ref_Pipeline_Owner{
 					Owner: &pb.Ref_PipelineOwner{
 						Project:      &pb.Ref_Project{Project: job.Application.Project},
-						PipelineName: job.Pipeline.PipelineName,
+						PipelineName: job.Pipeline.GetPipelineName(),
 					},
 				},
 			},
