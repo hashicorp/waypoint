@@ -1,0 +1,4 @@
+```release-note:improvement
+cli,server: Introduce explicit `delete` endpoint for CLI and Server for Config
+and Config Sourcers.
+```
