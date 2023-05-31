@@ -1317,10 +1317,10 @@ func (p *Platform) resourceTargetGroupCreate(
 		Matcher:            &elbv2.Matcher{},
 	}
 
+        // default to HTTP
+	createTargetGroupInput.Protocol = aws.String("HTTP")
 	if p.config.Protocol != "" {
 		createTargetGroupInput.Protocol = aws.String(p.config.Protocol)
-	} else {
-		createTargetGroupInput.Protocol = aws.String("HTTP")
 	}
 
 	if p.config.ProtocolVersion != "" {
