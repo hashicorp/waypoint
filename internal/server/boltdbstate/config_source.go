@@ -28,6 +28,28 @@ func init() {
 	schemas = append(schemas, configSourceIndexSchema)
 }
 
+// ConfigSourceDelete deletes the config sourcer value from the db
+func (s *State) ConfigSourceDelete(ctx context.Context, vs ...*pb.ConfigSource) error {
+	memTxn := s.inmem.Txn(true)
+	defer memTxn.Abort()
+
+	err := s.db.Update(func(dbTxn *bolt.Tx) error {
+		for _, v := range vs {
+			v.Delete = true
+			if err := s.configSourceSet(dbTxn, memTxn, v); err != nil {
+				return err
+			}
+		}
+
+		return nil
+	})
+	if err == nil {
+		memTxn.Commit()
+	}
+
+	return err
+}
+
 // ConfigSourceSet writes a set of config source values to the database.
 func (s *State) ConfigSourceSet(ctx context.Context, vs ...*pb.ConfigSource) error {
 	memTxn := s.inmem.Txn(true)

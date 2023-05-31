@@ -81,6 +81,7 @@ type Interface interface {
 	ConfigGetWatch(context.Context, *pb.ConfigGetRequest, memdb.WatchSet) ([]*pb.ConfigVar, error)
 
 	ConfigSourceSet(context.Context, ...*pb.ConfigSource) error
+	ConfigSourceDelete(context.Context, ...*pb.ConfigSource) error
 	ConfigSourceGet(context.Context, *pb.GetConfigSourceRequest) ([]*pb.ConfigSource, error)
 	ConfigSourceGetWatch(context.Context, *pb.GetConfigSourceRequest, memdb.WatchSet) ([]*pb.ConfigSource, error)
 
