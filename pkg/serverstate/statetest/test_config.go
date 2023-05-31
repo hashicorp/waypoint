@@ -177,8 +177,7 @@ func TestConfig(t *testing.T, factory Factory, restartF RestartFactory) {
 					},
 				},
 
-				Name:  "foo",
-				Value: &pb.ConfigVar_Unset{},
+				Name: "foo",
 			})
 			err := s.ConfigDelete(ctx, vars...)
 			require.NoError(err)
