@@ -87,6 +87,10 @@
     "path": "config-set"
   },
   {
+    "title": "config delete",
+    "path": "config-delete"
+  },
+  {
     "title": "config source-get",
     "path": "config-source-get"
   },
