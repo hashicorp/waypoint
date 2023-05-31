@@ -126,6 +126,42 @@ func TestConfigSource(t *testing.T, factory Factory, restartF RestartFactory) {
 			require.NoError(err)
 			require.Len(vs, 0)
 		}
+
+		// Create
+		require.NoError(s.ConfigSourceSet(ctx, &pb.ConfigSource{
+			Scope: &pb.ConfigSource_Global{
+				Global: &pb.Ref_Global{},
+			},
+
+			Type:   "vault",
+			Config: map[string]string{},
+		}))
+
+		{
+			// Get it exactly, then explicit delete
+			vs, err := s.ConfigSourceGet(ctx, &pb.GetConfigSourceRequest{
+				Scope: &pb.GetConfigSourceRequest_Global{
+					Global: &pb.Ref_Global{},
+				},
+
+				Type: "vault",
+			})
+			require.NoError(err)
+			require.Len(vs, 1)
+
+			err = s.ConfigSourceDelete(ctx, vs...)
+
+			// Get it exactly again, should be gone
+			vs, err = s.ConfigSourceGet(ctx, &pb.GetConfigSourceRequest{
+				Scope: &pb.GetConfigSourceRequest_Global{
+					Global: &pb.Ref_Global{},
+				},
+
+				Type: "vault",
+			})
+			require.NoError(err)
+			require.Len(vs, 0)
+		}
 	})
 
 	t.Run("hash", func(t *testing.T) {
