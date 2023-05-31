@@ -1320,7 +1320,7 @@ func (p *Platform) resourceTargetGroupCreate(
 		Matcher:            &elbv2.Matcher{},
 	}
 
-        // default to HTTP
+	// default to HTTP
 	createTargetGroupInput.Protocol = aws.String("HTTP")
 	if p.config.Protocol != "" {
 		createTargetGroupInput.Protocol = aws.String(p.config.Protocol)
@@ -1893,14 +1893,14 @@ func (p *Platform) resourceAlbDestroy(
 	})
 	if err != nil {
 		log.Error("error getting ALB details", "err", err.Error())
-		return status.Errorf(codes.Internal, "failed to get ALB details")
+		return status.Errorf(codes.Internal, "failed to get ALB details: %s", err)
 	}
 	for _, loadBalancer := range loadBalancers.LoadBalancers {
 		tdo, err := elbsrv.DescribeTags(&elbv2.DescribeTagsInput{ResourceArns: aws.StringSlice([]string{
 			*loadBalancer.LoadBalancerArn,
 		})})
 		if err != nil {
-			status.Errorf(codes.Internal, "failed to get ALB with ARN %s tags: %s", loadBalancer.LoadBalancerArn, err)
+			return status.Errorf(codes.Internal, "failed to get ALB with ARN %s tags: %s", *loadBalancer.LoadBalancerArn, err)
 		}
 
 		for _, tagDescription := range tdo.TagDescriptions {
