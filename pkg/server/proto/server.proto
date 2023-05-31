@@ -187,6 +187,9 @@ service Waypoint {
   // to set application configuration, you probably want SetConfig instead.
   rpc SetConfigSource(SetConfigSourceRequest) returns (google.protobuf.Empty);
 
+  // Delete the configuration for a dynamic configuration source
+  rpc DeleteConfigSource(DeleteConfigSourceRequest) returns (google.protobuf.Empty);
+
   // Get the matching configuration source for the request. This will return
   // the most specific matching config source given the scope in the request.
   // For example, if you search for an app-specific config source and only
@@ -4746,6 +4749,10 @@ message ConfigSource {
 }
 
 message SetConfigSourceRequest {
+  ConfigSource config_source = 1;
+}
+
+message DeleteConfigSourceRequest {
   ConfigSource config_source = 1;
 }
 
