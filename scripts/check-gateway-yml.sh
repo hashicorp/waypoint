@@ -55,6 +55,7 @@ if [ $status -eq 0 ]; then
   echo -e "\033[32mSUCCESS: $gateway_path looks good!\033[0m"
 else
   echo -e >&2 "\n\033[31mERROR: The RPCs above are missing from $gateway_path\033[0m"
+  echo -e >&2 "\n\033[31mYou must manually add these paths to the yml file.\033[0m"
 fi
 
 exit $status
