@@ -255,7 +255,15 @@ http:
     put: /project/config
     body: "*"
 
+  - selector: hashicorp.waypoint.Waypoint.DeleteConfig
+    put: /project/config
+    body: "*"
+
   - selector: hashicorp.waypoint.Waypoint.SetConfigSource
+    put: /config-source
+    body: "*"
+
+  - selector: hashicorp.waypoint.Waypoint.DeleteConfigSource
     put: /config-source
     body: "*"
 
@@ -489,4 +497,3 @@ http:
     # Releases
   - selector: hashicorp.waypoint.Waypoint.UI_ListReleases
     get: /ui/project/{application.project}/application/{application.application}/releases
-
