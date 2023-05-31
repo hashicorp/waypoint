@@ -139,6 +139,8 @@ type WaypointClient interface {
 	// Set the configuration for a dynamic configuration source. If you're looking
 	// to set application configuration, you probably want SetConfig instead.
 	SetConfigSource(ctx context.Context, in *SetConfigSourceRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	// Delete the configuration for a dynamic configuration source
+	DeleteConfigSource(ctx context.Context, in *DeleteConfigSourceRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	// Get the matching configuration source for the request. This will return
 	// the most specific matching config source given the scope in the request.
 	// For example, if you search for an app-specific config source and only
@@ -776,6 +778,15 @@ func (c *waypointClient) GetConfig(ctx context.Context, in *ConfigGetRequest, op
 func (c *waypointClient) SetConfigSource(ctx context.Context, in *SetConfigSourceRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	out := new(emptypb.Empty)
 	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/SetConfigSource", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *waypointClient) DeleteConfigSource(ctx context.Context, in *DeleteConfigSourceRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/DeleteConfigSource", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1654,6 +1665,8 @@ type WaypointServer interface {
 	// Set the configuration for a dynamic configuration source. If you're looking
 	// to set application configuration, you probably want SetConfig instead.
 	SetConfigSource(context.Context, *SetConfigSourceRequest) (*emptypb.Empty, error)
+	// Delete the configuration for a dynamic configuration source
+	DeleteConfigSource(context.Context, *DeleteConfigSourceRequest) (*emptypb.Empty, error)
 	// Get the matching configuration source for the request. This will return
 	// the most specific matching config source given the scope in the request.
 	// For example, if you search for an app-specific config source and only
@@ -1984,6 +1997,9 @@ func (UnimplementedWaypointServer) GetConfig(context.Context, *ConfigGetRequest)
 }
 func (UnimplementedWaypointServer) SetConfigSource(context.Context, *SetConfigSourceRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SetConfigSource not implemented")
+}
+func (UnimplementedWaypointServer) DeleteConfigSource(context.Context, *DeleteConfigSourceRequest) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteConfigSource not implemented")
 }
 func (UnimplementedWaypointServer) GetConfigSource(context.Context, *GetConfigSourceRequest) (*GetConfigSourceResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetConfigSource not implemented")
@@ -2986,6 +3002,24 @@ func _Waypoint_SetConfigSource_Handler(srv interface{}, ctx context.Context, dec
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(WaypointServer).SetConfigSource(ctx, req.(*SetConfigSourceRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Waypoint_DeleteConfigSource_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteConfigSourceRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(WaypointServer).DeleteConfigSource(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/hashicorp.waypoint.Waypoint/DeleteConfigSource",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(WaypointServer).DeleteConfigSource(ctx, req.(*DeleteConfigSourceRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -4347,6 +4381,10 @@ var Waypoint_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SetConfigSource",
 			Handler:    _Waypoint_SetConfigSource_Handler,
+		},
+		{
+			MethodName: "DeleteConfigSource",
+			Handler:    _Waypoint_DeleteConfigSource_Handler,
 		},
 		{
 			MethodName: "GetConfigSource",
