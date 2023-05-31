@@ -220,6 +220,11 @@ func Commands(
 				baseCommand: baseCommand,
 			}, nil
 		},
+		"config delete": func() (cli.Command, error) {
+			return &ConfigDeleteCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
 		"config source-get": func() (cli.Command, error) {
 			return &ConfigSourceGetCommand{
 				baseCommand: baseCommand,
