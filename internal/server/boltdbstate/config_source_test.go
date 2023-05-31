@@ -2,8 +2,9 @@ package boltdbstate
 
 import (
 	"context"
-	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	"testing"
+
+	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 
 	"github.com/stretchr/testify/require"
 )
@@ -34,6 +35,50 @@ func TestGlobalConfigSource(t *testing.T) {
 	require.True(len(source) > 0)
 	require.Equal(source[0].Type, "test")
 	require.Equal(source[0].Scope, &pb.ConfigSource_Global{Global: &pb.Ref_Global{}})
+}
+
+func TestGlobalConfigSourceDelete(t *testing.T) {
+	ctx := context.Background()
+	require := require.New(t)
+
+	s := TestState(t)
+	defer s.Close()
+
+	err := s.ConfigSourceSet(ctx, &pb.ConfigSource{
+		Delete:    false,
+		Scope:     &pb.ConfigSource_Global{Global: &pb.Ref_Global{}},
+		Workspace: &pb.Ref_Workspace{Workspace: "default"},
+		Type:      "test",
+	})
+
+	require.NoError(err)
+
+	source, err := s.ConfigSourceGet(ctx, &pb.GetConfigSourceRequest{
+		Scope:     &pb.GetConfigSourceRequest_Global{Global: &pb.Ref_Global{}},
+		Workspace: &pb.Ref_Workspace{Workspace: "default"},
+		Type:      "test",
+	})
+
+	require.NoError(err)
+	require.True(len(source) > 0)
+	require.Equal(source[0].Type, "test")
+	require.Equal(source[0].Scope, &pb.ConfigSource_Global{Global: &pb.Ref_Global{}})
+
+	err = s.ConfigSourceDelete(ctx, &pb.ConfigSource{
+		Scope:     &pb.ConfigSource_Global{Global: &pb.Ref_Global{}},
+		Workspace: &pb.Ref_Workspace{Workspace: "default"},
+		Type:      "test",
+	})
+	require.NoError(err)
+
+	source, err = s.ConfigSourceGet(ctx, &pb.GetConfigSourceRequest{
+		Scope:     &pb.GetConfigSourceRequest_Global{Global: &pb.Ref_Global{}},
+		Workspace: &pb.Ref_Workspace{Workspace: "default"},
+		Type:      "test",
+	})
+
+	require.NoError(err)
+	require.True(len(source) == 0)
 }
 
 func TestProjectConfigSource(t *testing.T) {
