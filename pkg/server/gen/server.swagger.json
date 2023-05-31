@@ -1921,6 +1921,45 @@
         ]
       }
     },
+    "/project-template/by-name/{project_template.name}": {
+      "get": {
+        "summary": "GetProjectTemplate returns a projecttemplate by the projecttemplate name or id",
+        "operationId": "Waypoint_GetProjectTemplate2",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/hashicorp.waypoint.GetProjectTemplateResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/grpc.gateway.runtime.Error"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "project_template.name",
+            "description": "Name of the ProjectTemplate",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "project_template.id",
+            "description": "ID of the ProjectTemplate.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "Waypoint"
+        ]
+      }
+    },
     "/project-template/{project_template.id}": {
       "get": {
         "summary": "GetProjectTemplate returns a projecttemplate by the projecttemplate name or id",

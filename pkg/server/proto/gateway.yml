@@ -524,6 +524,9 @@ http:
   - selector: hashicorp.waypoint.Waypoint.GetProjectTemplate
     get: /project-template/{project_template.id}
 
+  - selector: hashicorp.waypoint.Waypoint.GetProjectTemplate
+    get: /project-template/by-name/{project_template.name}
+
   - selector: hashicorp.waypoint.Waypoint.DeleteProjectTemplate
     delete: /project-template/{project_template.id}
 
