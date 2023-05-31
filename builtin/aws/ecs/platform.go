@@ -1315,14 +1315,24 @@ func (p *Platform) resourceTargetGroupCreate(
 		HealthCheckEnabled: aws.Bool(true),
 		Name:               &targetGroupName,
 		Port:               &state.Port,
-		Protocol:           aws.String("HTTP"),
 		TargetType:         aws.String("ip"),
 		VpcId:              &subnets.Subnets.VpcId,
+		Matcher:            &elbv2.Matcher{},
+	}
+
+	// default to HTTP
+	createTargetGroupInput.Protocol = aws.String("HTTP")
+	if p.config.Protocol != "" {
+		createTargetGroupInput.Protocol = aws.String(p.config.Protocol)
+	}
+
+	if p.config.ProtocolVersion != "" {
+		createTargetGroupInput.ProtocolVersion = aws.String(p.config.ProtocolVersion)
 	}
 
 	if p.config.HealthCheck != nil {
 		if p.config.HealthCheck.Protocol != "" {
-			createTargetGroupInput.Protocol = aws.String(p.config.HealthCheck.Protocol)
+			createTargetGroupInput.HealthCheckProtocol = aws.String(p.config.HealthCheck.Protocol)
 		}
 
 		if p.config.HealthCheck.Path != "" {
@@ -1398,7 +1408,7 @@ func (p *Platform) resourceTargetGroupDestroy(
 	})
 	if err != nil {
 		return status.Errorf(codes.Internal, "failed to describe target group %s (ARN: %q): %s", state.Name, state.Arn, err)
-	} else if len(groups.TargetGroups) > 0 {
+	} else if len(groups.TargetGroups) > 1 {
 		return status.Errorf(codes.FailedPrecondition, "only one target group should be returned for ARN %q, but found %d matching target groups", state.Arn, len(groups.TargetGroups))
 	}
 
@@ -1426,10 +1436,13 @@ func (p *Platform) resourceTargetGroupDestroy(
 			}
 
 			listeners, err := elbsrv.DescribeListeners(describeListenersInput)
+
+			log.Debug("inspecting listeners", "alb_arn", lb)
 			if err != nil {
 				return status.Errorf(codes.Internal, "failed to describe listeners for ALB (ARN: %q): %s", *lb, err)
 			}
 			for _, listener := range listeners.Listeners {
+				log.Debug("inspecting listener", "listener_arn", listener.ListenerArn)
 				for _, defaultAction := range listener.DefaultActions {
 					if *defaultAction.TargetGroupArn == state.Arn {
 						s.Update("Found active ALB listener with ARN " + *listener.ListenerArn)
@@ -1869,15 +1882,47 @@ func (p *Platform) resourceAlbDestroy(
 		return nil
 	}
 
-	s := sg.Add("Initializing ALB deletion")
+	s := sg.Add("Checking if ALB is managed by Waypoint")
 	defer s.Abort()
-
-	s.Update("Deleting ALB %s", state.DnsName)
 
 	elbsrv := elbv2.New(sess)
 	input := elbv2.DeleteLoadBalancerInput{LoadBalancerArn: &state.Arn}
 
-	_, err := elbsrv.DeleteLoadBalancer(&input)
+	loadBalancers, err := elbsrv.DescribeLoadBalancers(&elbv2.DescribeLoadBalancersInput{
+		LoadBalancerArns: []*string{&state.Arn},
+	})
+	if err != nil {
+		log.Error("error getting ALB details", "err", err.Error())
+		return status.Errorf(codes.Internal, "failed to get ALB details: %s", err)
+	}
+	for _, loadBalancer := range loadBalancers.LoadBalancers {
+		tdo, err := elbsrv.DescribeTags(&elbv2.DescribeTagsInput{ResourceArns: aws.StringSlice([]string{
+			*loadBalancer.LoadBalancerArn,
+		})})
+		if err != nil {
+			return status.Errorf(codes.Internal, "failed to get ALB with ARN %s tags: %s", *loadBalancer.LoadBalancerArn, err)
+		}
+
+		for _, tagDescription := range tdo.TagDescriptions {
+			for _, tag := range tagDescription.Tags {
+				if *tag.Key == "waypoint_managed" && *tag.Value == "true" {
+					goto DELETE_ALB
+				}
+			}
+		}
+		// If we reach this point, we've checked all of the tags on the ALB,
+		// and none of them indicate the ALB is managed by Waypoint
+		log.Debug("ALB not created by Waypoint - skipping ALB deletion")
+		s.Update("ALB is not managed by Waypoint - skipping ALB deletion")
+		s.Done()
+		return nil
+	}
+DELETE_ALB:
+	s.Update("ALB is managed by Waypoint - proceeding with deletion")
+	s.Done()
+
+	s = sg.Add("Deleting ALB %s", state.DnsName)
+	_, err = elbsrv.DeleteLoadBalancer(&input)
 	if err != nil {
 		return status.Errorf(codes.Internal, "failed to remove ALB %s: %s", state.DnsName, err)
 	}
@@ -2893,7 +2938,14 @@ type Config struct {
 
 	Logging *Logging `hcl:"logging,block"`
 
+	// Health check configurations for the target group
 	HealthCheck *AppHealthCheck `hcl:"health_check,block"`
+
+	// The protocol to use for routing traffic to the targets
+	Protocol string `hcl:"target_group_protocol,optional"`
+
+	// The version of the protocol to use for routing traffic to the targets
+	ProtocolVersion string `hcl:"target_group_protocol_version,optional"`
 }
 
 type AppHealthCheck struct {
@@ -3302,6 +3354,25 @@ deploy {
 		"architecture",
 		"the instruction set CPU architecture that the Amazon ECS supports. Valid values are: \"x86_64\", \"arm64\"",
 	)
+
+	doc.SetField(
+		"target_group_protocol",
+		"The protocol to use for routing traffic to the targets.",
+		docs.Default("HTTP"),
+		docs.Summary("The protocol to use for routing traffic to the targets. "+
+			"For Application Load Balancers, the supported protocols are HTTP "+
+			"and HTTPS. For Network Load Balancers, the supported protocols are"+
+			" TCP, TLS, UDP, or TCP_UDP. For Gateway Load Balancers, the supported"+
+			" protocol is GENEVE. A TCP_UDP listener must be associated with a "+
+			"TCP_UDP target group. If the target is a Lambda function, this "+
+			"parameter does not apply."))
+
+	doc.SetField("target_group_protocol_version",
+		"The version of the protocol to use for routing traffic to the targets.",
+		docs.Summary("[HTTP/HTTPS protocol] The protocol version. Specify GRPC "+
+			"to send requests to targets using gRPC. Specify HTTP2 to send requests"+
+			" to targets using HTTP/2. The default is HTTP1, which sends requests "+
+			"to targets using HTTP/1.1."))
 
 	return doc, nil
 }

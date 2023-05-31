@@ -396,6 +396,21 @@ parameter {
 }
 
 parameter {
+  key           = "target_group_protocol"
+  description   = "The protocol to use for routing traffic to the targets.\nThe protocol to use for routing traffic to the targets. For Application Load Balancers, the supported protocols are HTTP and HTTPS. For Network Load Balancers, the supported protocols are TCP, TLS, UDP, or TCP_UDP. For Gateway Load Balancers, the supported protocol is GENEVE. A TCP_UDP listener must be associated with a TCP_UDP target group. If the target is a Lambda function, this parameter does not apply."
+  type          = "string"
+  required      = false
+  default_value = "HTTP"
+}
+
+parameter {
+  key         = "target_group_protocol_version"
+  description = "The version of the protocol to use for routing traffic to the targets.\n[HTTP/HTTPS protocol] The protocol version. Specify GRPC to send requests to targets using gRPC. Specify HTTP2 to send requests to targets using HTTP/2. The default is HTTP1, which sends requests to targets using HTTP/1.1."
+  type        = "string"
+  required    = false
+}
+
+parameter {
   key         = "task_role_name"
   description = "the name of the task IAM role to assign.\nIf no role exists and a one or more task role policies are requested, a role with this name will be created."
   type        = "string"
