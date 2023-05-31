@@ -102,7 +102,7 @@ func (c *ConfigSourceDeleteCommand) Flags() *flag.Sets {
 		f.StringVar(&flag.StringVar{
 			Name:   "type",
 			Target: &c.flagType,
-			Usage:  "Dynamic source type to configure, such as 'vault'.",
+			Usage:  "Dynamic source type to delete, such as 'vault'.",
 		})
 		f.StringVar(&flag.StringVar{
 			Name:   "scope",
@@ -134,8 +134,8 @@ Usage: waypoint config source-delete [options]
   Delete the configuration for a dynamic configuration source plugin.
 
   To use this command, you should specify a "-type" flag. Please see the
-	documentation for the config source type you're configuring for details on
-	what configuration fields are available.
+  documentation for the config source type you're configuring for details on
+  what configuration fields are available.
 
   Configuration for this command is global. The "-app", "-project", and
   "-workspace" flags are ignored on this command.
