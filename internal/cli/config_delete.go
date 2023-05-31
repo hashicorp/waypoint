@@ -33,7 +33,23 @@ func (c *ConfigDeleteCommand) Run(args []string) int {
 		// Don't allow a local in-mem server because configuration
 		// makes no sense with the local server.
 		WithNoLocalServer(),
-		WithNoConfig(), // no waypoint.hcl
+	}
+
+	// We parse our flags twice in this command because we need to
+	// determine if we're loading a config or not.
+	//
+	// NOTE we specifically ignore errors here because if we have errors
+	// they'll happen again on Init and Init will output to the CLI.
+	if err := c.Flags().Parse(args); err == nil {
+		// If we're global scoped OR we have a project explicitly set
+		// then we do not need a config. If we're not global scoped and
+		// we do not have a project explicitly set, we need a config because
+		// we need a way to load that project name.
+		if c.flagScope == "global" || c.flagProject != "" {
+			initOpts = append(initOpts,
+				WithNoConfig(), // no waypoint.hcl
+			)
+		}
 	}
 
 	// Initialize. If we fail, we just exit since Init handles the UI.
