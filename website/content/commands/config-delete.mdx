@@ -28,9 +28,8 @@ Delete a config variable from the system. This cannot be undone.
 
 #### Command Options
 
-- `-scope=<string>` - The scope for this configuration. The configuration will only appear within this scope. This can be one of 'global', 'project', or 'app'. The default is project.
-- `-workspace-scope=<string>` - Specify that the configuration is only available within a specific workspace. This configuration will only be set for deployments or operations (if -runner is set) when the workspace matches this.
-- `-label-scope=<string>` - If set, configuration will only be set if the deployment or operation (if -runner is set) has a matching label set.
-- `-runner` - Expose this configuration on runners. This can be used to set things such as credentials to cloud platforms for remote runners. This configuration will not be exposed to deployed applications. If this is specified in the context of a project, this will apply only to runners operating on jobs for the specific project or application. The default is false.
+- `-scope=<string>` - The scope for this configuration to delete. The configuration will only delete within this scope. This can be one of 'global', 'project', or 'app'. The default is project.
+- `-workspace-scope=<string>` - Specify that the configuration is only available within a specific workspace. This configuration will only be deleted for deployments or operations when the workspace matches this.
+- `-label-scope=<string>` - If set, configuration will only be deleted if the deployment or operation has a matching label set.
 
 @include "commands/config-delete_more.mdx"

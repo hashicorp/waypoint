@@ -8,18 +8,18 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/posener/complete"
+
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/internal/clierrors"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
-	"github.com/posener/complete"
 )
 
 type ConfigDeleteCommand struct {
 	*baseCommand
 
 	flagGlobal         bool
-	flagRunner         bool
 	flagScope          string
 	flagWorkspaceScope string
 	flagLabelScope     string
@@ -127,15 +127,6 @@ func (c *ConfigDeleteCommand) Run(args []string) int {
 			return 1
 		}
 
-		// If we're targeting a runner, set that
-		if c.flagRunner {
-			configVar.Target.Runner = &pb.Ref_Runner{
-				Target: &pb.Ref_Runner_Any{
-					Any: &pb.Ref_RunnerAny{},
-				},
-			}
-		}
-
 		// If we have a workspace flag set, set that.
 		if v := c.flagWorkspaceScope; v != "" {
 			configVar.Target.Workspace = &pb.Ref_Workspace{
@@ -167,8 +158,8 @@ func (c *ConfigDeleteCommand) Flags() *flag.Sets {
 		f.StringVar(&flag.StringVar{
 			Name:   "scope",
 			Target: &c.flagScope,
-			Usage: "The scope for this configuration. The configuration will only " +
-				"appear within this scope. This can be one of 'global', 'project', or " +
+			Usage: "The scope for this configuration to delete. The configuration will only " +
+				"delete within this scope. This can be one of 'global', 'project', or " +
 				"'app'.",
 			Default: "project",
 		})
@@ -177,8 +168,8 @@ func (c *ConfigDeleteCommand) Flags() *flag.Sets {
 			Name:   "workspace-scope",
 			Target: &c.flagWorkspaceScope,
 			Usage: "Specify that the configuration is only available within a " +
-				"specific workspace. This configuration will only be set for " +
-				"deployments or operations (if -runner is set) when the workspace " +
+				"specific workspace. This configuration will only be deleted for " +
+				"deployments or operations when the workspace " +
 				"matches this.",
 			Default: "",
 		})
@@ -186,21 +177,9 @@ func (c *ConfigDeleteCommand) Flags() *flag.Sets {
 		f.StringVar(&flag.StringVar{
 			Name:   "label-scope",
 			Target: &c.flagLabelScope,
-			Usage: "If set, configuration will only be set if the deployment " +
-				"or operation (if -runner is set) has a matching label set.",
+			Usage: "If set, configuration will only be deleted if the deployment " +
+				"or operation has a matching label set.",
 			Default: "",
-		})
-
-		f.BoolVar(&flag.BoolVar{
-			Name:   "runner",
-			Target: &c.flagRunner,
-			Usage: "Expose this configuration on runners. This can be used " +
-				"to set things such as credentials to cloud platforms " +
-				"for remote runners. This configuration will not be exposed " +
-				"to deployed applications. If this is specified in the context " +
-				"of a project, this will apply only to runners operating on jobs " +
-				"for the specific project or application.",
-			Default: false,
 		})
 	})
 }
