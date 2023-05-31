@@ -13,6 +13,13 @@ func ValidateSetConfigSourceRequest(v *pb.SetConfigSourceRequest) error {
 	))
 }
 
+// ValidateDeleteConfigSourceRequest
+func ValidateDeleteConfigSourceRequest(v *pb.DeleteConfigSourceRequest) error {
+	return validationext.Error(validation.ValidateStruct(v,
+		validation.Field(&v.ConfigSource, validation.Required),
+	))
+}
+
 // ValidateGetConfigSourceRequest
 func ValidateGetConfigSourceRequest(v *pb.GetConfigSourceRequest) error {
 	return validationext.Error(validation.ValidateStruct(v,

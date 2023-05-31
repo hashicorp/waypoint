@@ -76,6 +76,25 @@ func (s *Service) SetConfigSource(
 	return &empty.Empty{}, nil
 }
 
+func (s *Service) DeleteConfigSource(
+	ctx context.Context,
+	req *pb.DeleteConfigSourceRequest,
+) (*empty.Empty, error) {
+	if err := ptypes.ValidateDeleteConfigSourceRequest(req); err != nil {
+		return nil, err
+	}
+
+	if err := s.state(ctx).ConfigSourceDelete(ctx, req.ConfigSource); err != nil {
+		return nil, hcerr.Externalize(
+			hclog.FromContext(ctx),
+			err,
+			"failed to set config source",
+		)
+	}
+
+	return &empty.Empty{}, nil
+}
+
 func (s *Service) GetConfigSource(
 	ctx context.Context,
 	req *pb.GetConfigSourceRequest,
