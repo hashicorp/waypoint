@@ -130,6 +130,8 @@ type WaypointClient interface {
 	StartExecStream(ctx context.Context, opts ...grpc.CallOption) (Waypoint_StartExecStreamClient, error)
 	// Set one or more configuration variables for applications or runners.
 	SetConfig(ctx context.Context, in *ConfigSetRequest, opts ...grpc.CallOption) (*ConfigSetResponse, error)
+	// Delete one or more configuration variables for applications or runners.
+	DeleteConfig(ctx context.Context, in *ConfigDeleteRequest, opts ...grpc.CallOption) (*ConfigDeleteResponse, error)
 	// Retrieve merged configuration values for a specific scope. You can determine
 	// where a configuration variable was set by looking at the scope field on
 	// each variable.
@@ -747,6 +749,15 @@ func (x *waypointStartExecStreamClient) Recv() (*ExecStreamResponse, error) {
 func (c *waypointClient) SetConfig(ctx context.Context, in *ConfigSetRequest, opts ...grpc.CallOption) (*ConfigSetResponse, error) {
 	out := new(ConfigSetResponse)
 	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/SetConfig", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *waypointClient) DeleteConfig(ctx context.Context, in *ConfigDeleteRequest, opts ...grpc.CallOption) (*ConfigDeleteResponse, error) {
+	out := new(ConfigDeleteResponse)
+	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/DeleteConfig", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1634,6 +1645,8 @@ type WaypointServer interface {
 	StartExecStream(Waypoint_StartExecStreamServer) error
 	// Set one or more configuration variables for applications or runners.
 	SetConfig(context.Context, *ConfigSetRequest) (*ConfigSetResponse, error)
+	// Delete one or more configuration variables for applications or runners.
+	DeleteConfig(context.Context, *ConfigDeleteRequest) (*ConfigDeleteResponse, error)
 	// Retrieve merged configuration values for a specific scope. You can determine
 	// where a configuration variable was set by looking at the scope field on
 	// each variable.
@@ -1962,6 +1975,9 @@ func (UnimplementedWaypointServer) StartExecStream(Waypoint_StartExecStreamServe
 }
 func (UnimplementedWaypointServer) SetConfig(context.Context, *ConfigSetRequest) (*ConfigSetResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SetConfig not implemented")
+}
+func (UnimplementedWaypointServer) DeleteConfig(context.Context, *ConfigDeleteRequest) (*ConfigDeleteResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteConfig not implemented")
 }
 func (UnimplementedWaypointServer) GetConfig(context.Context, *ConfigGetRequest) (*ConfigGetResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetConfig not implemented")
@@ -2916,6 +2932,24 @@ func _Waypoint_SetConfig_Handler(srv interface{}, ctx context.Context, dec func(
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(WaypointServer).SetConfig(ctx, req.(*ConfigSetRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Waypoint_DeleteConfig_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ConfigDeleteRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(WaypointServer).DeleteConfig(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/hashicorp.waypoint.Waypoint/DeleteConfig",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(WaypointServer).DeleteConfig(ctx, req.(*ConfigDeleteRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -4301,6 +4335,10 @@ var Waypoint_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SetConfig",
 			Handler:    _Waypoint_SetConfig_Handler,
+		},
+		{
+			MethodName: "DeleteConfig",
+			Handler:    _Waypoint_DeleteConfig_Handler,
 		},
 		{
 			MethodName: "GetConfig",
