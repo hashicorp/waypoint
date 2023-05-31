@@ -7683,6 +7683,9 @@
       "default": "UNKNOWN",
       "description": "Supported component types, the values here MUST match the enum values\nin the Go sdk/component package exactly. A test in internal/server\nvalidates this."
     },
+    "hashicorp.waypoint.ConfigDeleteResponse": {
+      "type": "object"
+    },
     "hashicorp.waypoint.ConfigGetResponse": {
       "type": "object",
       "properties": {
