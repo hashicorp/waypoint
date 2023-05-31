@@ -76,6 +76,7 @@ type Interface interface {
 	// Config (App, Runner, etc.)
 
 	ConfigSet(context.Context, ...*pb.ConfigVar) error
+	ConfigDelete(context.Context, ...*pb.ConfigVar) error
 	ConfigGet(context.Context, *pb.ConfigGetRequest) ([]*pb.ConfigVar, error)
 	ConfigGetWatch(context.Context, *pb.ConfigGetRequest, memdb.WatchSet) ([]*pb.ConfigVar, error)
 

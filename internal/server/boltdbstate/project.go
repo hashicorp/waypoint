@@ -212,6 +212,7 @@ func (s *State) ProjectDelete(ctx context.Context, ref *pb.Ref_Project) error {
 		}
 
 		// Unset all configs we retrieved
+		// TODO(briancain): Update this to s.configDelete(...)
 		for _, config := range configVars {
 			if err = s.configSet(dbTxn, memTxn, &pb.ConfigVar{
 				Target:     config.Target,

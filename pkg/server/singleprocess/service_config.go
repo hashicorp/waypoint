@@ -18,11 +18,30 @@ func (s *Service) SetConfig(
 	ctx context.Context,
 	req *pb.ConfigSetRequest,
 ) (*pb.ConfigSetResponse, error) {
+	if err := ptypes.ValidateSetConfigRequest(req); err != nil {
+		return nil, err
+	}
+
 	if err := s.state(ctx).ConfigSet(ctx, req.Variables...); err != nil {
 		return nil, hcerr.Externalize(hclog.FromContext(ctx), err, "failed to set config")
 	}
 
 	return &pb.ConfigSetResponse{}, nil
+}
+
+func (s *Service) DeleteConfig(
+	ctx context.Context,
+	req *pb.ConfigDeleteRequest,
+) (*pb.ConfigDeleteResponse, error) {
+	if err := ptypes.ValidateDeleteConfigRequest(req); err != nil {
+		return nil, err
+	}
+
+	if err := s.state(ctx).ConfigDelete(ctx, req.Variables...); err != nil {
+		return nil, hcerr.Externalize(hclog.FromContext(ctx), err, "failed to delete config")
+	}
+
+	return &pb.ConfigDeleteResponse{}, nil
 }
 
 func (s *Service) GetConfig(
