@@ -99,6 +99,10 @@
     "path": "config-source-set"
   },
   {
+    "title": "config source-delete",
+    "path": "config-source-delete"
+  },
+  {
     "title": "config sync",
     "path": "config-sync"
   },
