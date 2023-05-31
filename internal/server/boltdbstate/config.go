@@ -40,11 +40,10 @@ func init() {
 // static value i.e. ConfigVar_Static is empty string. It then calls through
 // to configSet to delete it.
 func (s *State) ConfigDelete(ctx context.Context, vs ...*pb.ConfigVar) error {
+	// Automatically unset all requested config vars for deletion
 	for i, v := range vs {
-		if !isConfigVarDelete(vs[i]) {
-			return fmt.Errorf("config var is not set to delete: %s. "+
-				"Its value must be set to empty string if static or ConfigVar_Unset", v.Name)
-		}
+		v.Value = &pb.ConfigVar_Unset{}
+		vs[i] = v
 	}
 
 	memTxn := s.inmem.Txn(true)
