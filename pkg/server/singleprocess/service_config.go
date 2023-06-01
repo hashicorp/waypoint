@@ -88,7 +88,7 @@ func (s *Service) DeleteConfigSource(
 		return nil, hcerr.Externalize(
 			hclog.FromContext(ctx),
 			err,
-			"failed to set config source",
+			"failed to delete config source",
 		)
 	}
 
