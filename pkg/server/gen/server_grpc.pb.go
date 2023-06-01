@@ -130,6 +130,8 @@ type WaypointClient interface {
 	StartExecStream(ctx context.Context, opts ...grpc.CallOption) (Waypoint_StartExecStreamClient, error)
 	// Set one or more configuration variables for applications or runners.
 	SetConfig(ctx context.Context, in *ConfigSetRequest, opts ...grpc.CallOption) (*ConfigSetResponse, error)
+	// Delete one or more configuration variables for applications or runners.
+	DeleteConfig(ctx context.Context, in *ConfigDeleteRequest, opts ...grpc.CallOption) (*ConfigDeleteResponse, error)
 	// Retrieve merged configuration values for a specific scope. You can determine
 	// where a configuration variable was set by looking at the scope field on
 	// each variable.
@@ -137,6 +139,8 @@ type WaypointClient interface {
 	// Set the configuration for a dynamic configuration source. If you're looking
 	// to set application configuration, you probably want SetConfig instead.
 	SetConfigSource(ctx context.Context, in *SetConfigSourceRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	// Delete the configuration for a dynamic configuration source
+	DeleteConfigSource(ctx context.Context, in *DeleteConfigSourceRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	// Get the matching configuration source for the request. This will return
 	// the most specific matching config source given the scope in the request.
 	// For example, if you search for an app-specific config source and only
@@ -753,6 +757,15 @@ func (c *waypointClient) SetConfig(ctx context.Context, in *ConfigSetRequest, op
 	return out, nil
 }
 
+func (c *waypointClient) DeleteConfig(ctx context.Context, in *ConfigDeleteRequest, opts ...grpc.CallOption) (*ConfigDeleteResponse, error) {
+	out := new(ConfigDeleteResponse)
+	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/DeleteConfig", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *waypointClient) GetConfig(ctx context.Context, in *ConfigGetRequest, opts ...grpc.CallOption) (*ConfigGetResponse, error) {
 	out := new(ConfigGetResponse)
 	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/GetConfig", in, out, opts...)
@@ -765,6 +778,15 @@ func (c *waypointClient) GetConfig(ctx context.Context, in *ConfigGetRequest, op
 func (c *waypointClient) SetConfigSource(ctx context.Context, in *SetConfigSourceRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	out := new(emptypb.Empty)
 	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/SetConfigSource", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *waypointClient) DeleteConfigSource(ctx context.Context, in *DeleteConfigSourceRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/DeleteConfigSource", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1634,6 +1656,8 @@ type WaypointServer interface {
 	StartExecStream(Waypoint_StartExecStreamServer) error
 	// Set one or more configuration variables for applications or runners.
 	SetConfig(context.Context, *ConfigSetRequest) (*ConfigSetResponse, error)
+	// Delete one or more configuration variables for applications or runners.
+	DeleteConfig(context.Context, *ConfigDeleteRequest) (*ConfigDeleteResponse, error)
 	// Retrieve merged configuration values for a specific scope. You can determine
 	// where a configuration variable was set by looking at the scope field on
 	// each variable.
@@ -1641,6 +1665,8 @@ type WaypointServer interface {
 	// Set the configuration for a dynamic configuration source. If you're looking
 	// to set application configuration, you probably want SetConfig instead.
 	SetConfigSource(context.Context, *SetConfigSourceRequest) (*emptypb.Empty, error)
+	// Delete the configuration for a dynamic configuration source
+	DeleteConfigSource(context.Context, *DeleteConfigSourceRequest) (*emptypb.Empty, error)
 	// Get the matching configuration source for the request. This will return
 	// the most specific matching config source given the scope in the request.
 	// For example, if you search for an app-specific config source and only
@@ -1963,11 +1989,17 @@ func (UnimplementedWaypointServer) StartExecStream(Waypoint_StartExecStreamServe
 func (UnimplementedWaypointServer) SetConfig(context.Context, *ConfigSetRequest) (*ConfigSetResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SetConfig not implemented")
 }
+func (UnimplementedWaypointServer) DeleteConfig(context.Context, *ConfigDeleteRequest) (*ConfigDeleteResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteConfig not implemented")
+}
 func (UnimplementedWaypointServer) GetConfig(context.Context, *ConfigGetRequest) (*ConfigGetResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetConfig not implemented")
 }
 func (UnimplementedWaypointServer) SetConfigSource(context.Context, *SetConfigSourceRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SetConfigSource not implemented")
+}
+func (UnimplementedWaypointServer) DeleteConfigSource(context.Context, *DeleteConfigSourceRequest) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteConfigSource not implemented")
 }
 func (UnimplementedWaypointServer) GetConfigSource(context.Context, *GetConfigSourceRequest) (*GetConfigSourceResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetConfigSource not implemented")
@@ -2920,6 +2952,24 @@ func _Waypoint_SetConfig_Handler(srv interface{}, ctx context.Context, dec func(
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Waypoint_DeleteConfig_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ConfigDeleteRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(WaypointServer).DeleteConfig(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/hashicorp.waypoint.Waypoint/DeleteConfig",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(WaypointServer).DeleteConfig(ctx, req.(*ConfigDeleteRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Waypoint_GetConfig_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ConfigGetRequest)
 	if err := dec(in); err != nil {
@@ -2952,6 +3002,24 @@ func _Waypoint_SetConfigSource_Handler(srv interface{}, ctx context.Context, dec
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(WaypointServer).SetConfigSource(ctx, req.(*SetConfigSourceRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Waypoint_DeleteConfigSource_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteConfigSourceRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(WaypointServer).DeleteConfigSource(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/hashicorp.waypoint.Waypoint/DeleteConfigSource",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(WaypointServer).DeleteConfigSource(ctx, req.(*DeleteConfigSourceRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -4303,12 +4371,20 @@ var Waypoint_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Waypoint_SetConfig_Handler,
 		},
 		{
+			MethodName: "DeleteConfig",
+			Handler:    _Waypoint_DeleteConfig_Handler,
+		},
+		{
 			MethodName: "GetConfig",
 			Handler:    _Waypoint_GetConfig_Handler,
 		},
 		{
 			MethodName: "SetConfigSource",
 			Handler:    _Waypoint_SetConfigSource_Handler,
+		},
+		{
+			MethodName: "DeleteConfigSource",
+			Handler:    _Waypoint_DeleteConfigSource_Handler,
 		},
 		{
 			MethodName: "GetConfigSource",

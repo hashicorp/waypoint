@@ -217,6 +217,11 @@ func Commands(
 				baseCommand: baseCommand,
 			}, nil
 		},
+		"config delete": func() (cli.Command, error) {
+			return &ConfigDeleteCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
 		"config source-get": func() (cli.Command, error) {
 			return &ConfigSourceGetCommand{
 				baseCommand: baseCommand,
@@ -224,6 +229,11 @@ func Commands(
 		},
 		"config source-set": func() (cli.Command, error) {
 			return &ConfigSourceSetCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
+		"config source-delete": func() (cli.Command, error) {
+			return &ConfigSourceDeleteCommand{
 				baseCommand: baseCommand,
 			}, nil
 		},

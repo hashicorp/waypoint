@@ -2,7 +2,7 @@ FROM golang:1.19
 
 ARG PROTOC_VERSION="3.17.3"
 
-RUN apt-get update; apt-get install unzip
+RUN apt-get update; apt-get install unzip jq -y
 
 # Protoc
 # TODO(izaak): discover the protoc version from the nix files

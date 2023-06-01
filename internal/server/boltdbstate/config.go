@@ -35,6 +35,36 @@ func init() {
 	schemas = append(schemas, configIndexSchema)
 }
 
+// ConfigDelete looks at each passed in ConfigVar and checks to see if it has
+// been properly set for deletion either through ConfigVar_Unset or when its
+// static value i.e. ConfigVar_Static is empty string. It then calls through
+// to configSet to delete it.
+func (s *State) ConfigDelete(ctx context.Context, vs ...*pb.ConfigVar) error {
+	// Automatically unset all requested config vars for deletion
+	for i, v := range vs {
+		v.Value = &pb.ConfigVar_Unset{}
+		vs[i] = v
+	}
+
+	memTxn := s.inmem.Txn(true)
+	defer memTxn.Abort()
+
+	err := s.db.Update(func(dbTxn *bolt.Tx) error {
+		for _, v := range vs {
+			if err := s.configSet(dbTxn, memTxn, v); err != nil {
+				return err
+			}
+		}
+
+		return nil
+	})
+	if err == nil {
+		memTxn.Commit()
+	}
+
+	return err
+}
+
 // ConfigSet writes a configuration variable to the data store. Deletes
 // are always ordered before writes so that you can't delete a new value
 // in a single ConfigSet (you should never want to do this).

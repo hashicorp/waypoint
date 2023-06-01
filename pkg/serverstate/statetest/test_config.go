@@ -100,6 +100,98 @@ func TestConfig(t *testing.T, factory Factory, restartF RestartFactory) {
 		}
 	})
 
+	t.Run("explicit delete", func(t *testing.T) {
+		require := require.New(t)
+
+		s := factory(t)
+		defer s.Close()
+
+		// Create a config
+		require.NoError(s.ConfigSet(ctx, &pb.ConfigVar{
+			UnusedScope: &pb.ConfigVar_Project{
+				Project: &pb.Ref_Project{
+					Project: "foo",
+				},
+			},
+
+			Name:  "foo",
+			Value: &pb.ConfigVar_Static{Static: "bar"},
+		}))
+
+		require.NoError(s.ConfigSet(ctx, &pb.ConfigVar{
+			UnusedScope: &pb.ConfigVar_Project{
+				Project: &pb.Ref_Project{
+					Project: "foo",
+				},
+			},
+
+			Name:  "barbar",
+			Value: &pb.ConfigVar_Static{Static: "barbar"},
+		}))
+
+		// Create a runner config, we should never get this
+		require.NoError(s.ConfigSet(ctx, &pb.ConfigVar{
+			Target: &pb.ConfigVar_Target{
+				AppScope: &pb.ConfigVar_Target_Project{
+					Project: &pb.Ref_Project{
+						Project: "foo",
+					},
+				},
+
+				Runner: &pb.Ref_Runner{
+					Target: &pb.Ref_Runner_Any{
+						Any: &pb.Ref_RunnerAny{},
+					},
+				},
+			},
+
+			Name:  "bar",
+			Value: &pb.ConfigVar_Static{Static: "bar"},
+		}))
+
+		{
+			// Get it exactly
+			vs, err := s.ConfigGet(ctx, &pb.ConfigGetRequest{
+				Scope: &pb.ConfigGetRequest_Project{
+					Project: &pb.Ref_Project{Project: "foo"},
+				},
+
+				Prefix: "foo",
+			})
+			require.NoError(err)
+			require.Len(vs, 1)
+		}
+
+		{
+			// delete it
+			var vars []*pb.ConfigVar
+			vars = append(vars, &pb.ConfigVar{
+				Target: &pb.ConfigVar_Target{
+					AppScope: &pb.ConfigVar_Target_Project{
+						Project: &pb.Ref_Project{
+							Project: "foo",
+						},
+					},
+				},
+
+				Name: "foo",
+			})
+			err := s.ConfigDelete(ctx, vars...)
+			require.NoError(err)
+
+			// It's gone
+			vs, err := s.ConfigGet(ctx, &pb.ConfigGetRequest{
+				Scope: &pb.ConfigGetRequest_Project{
+					Project: &pb.Ref_Project{Project: "foo"},
+				},
+
+				Prefix: "foo",
+			})
+			require.NoError(err)
+			require.Len(vs, 0)
+		}
+	})
+
 	t.Run("deletes before writes", func(t *testing.T) {
 		require := require.New(t)
 

@@ -87,12 +87,20 @@
     "path": "config-set"
   },
   {
+    "title": "config delete",
+    "path": "config-delete"
+  },
+  {
     "title": "config source-get",
     "path": "config-source-get"
   },
   {
     "title": "config source-set",
     "path": "config-source-set"
+  },
+  {
+    "title": "config source-delete",
+    "path": "config-source-delete"
   },
   {
     "title": "config sync",
