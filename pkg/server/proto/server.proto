@@ -175,6 +175,9 @@ service Waypoint {
   // Set one or more configuration variables for applications or runners.
   rpc SetConfig(ConfigSetRequest) returns (ConfigSetResponse);
 
+  // Delete one or more configuration variables for applications or runners.
+  rpc DeleteConfig(ConfigDeleteRequest) returns (ConfigDeleteResponse);
+
   // Retrieve merged configuration values for a specific scope. You can determine
   // where a configuration variable was set by looking at the scope field on
   // each variable.
@@ -183,6 +186,9 @@ service Waypoint {
   // Set the configuration for a dynamic configuration source. If you're looking
   // to set application configuration, you probably want SetConfig instead.
   rpc SetConfigSource(SetConfigSourceRequest) returns (google.protobuf.Empty);
+
+  // Delete the configuration for a dynamic configuration source
+  rpc DeleteConfigSource(DeleteConfigSourceRequest) returns (google.protobuf.Empty);
 
   // Get the matching configuration source for the request. This will return
   // the most specific matching config source given the scope in the request.
@@ -4656,6 +4662,12 @@ message ConfigSetRequest {
 
 message ConfigSetResponse {}
 
+message ConfigDeleteRequest {
+  repeated ConfigVar variables = 1;
+}
+
+message ConfigDeleteResponse {}
+
 message ConfigGetRequest {
   // scope is the scoping for this config variable. This describes the
   // target environment requesting configuration. For runners, this may still
@@ -4737,6 +4749,10 @@ message ConfigSource {
 }
 
 message SetConfigSourceRequest {
+  ConfigSource config_source = 1;
+}
+
+message DeleteConfigSourceRequest {
   ConfigSource config_source = 1;
 }
 
