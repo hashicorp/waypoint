@@ -1331,17 +1331,23 @@ message Ref {
   }
 
   message PipelineStep {
-    // ID of the pipeline
+    // ID of the current pipeline (the one containing the current step)
     string pipeline_id = 1;
 
-    // Name of the pipeline
+    // Name of the current pipeline
     string pipeline_name = 2;
 
-    // Step name within the pipeline.
+    // Step name within the current pipeline
     string step = 3;
 
-    // Pipeline run sequence
+    // Run sequence for the root pipeline
     uint64 run_sequence = 4;
+
+    // Name of the root pipeline (the one invoked in `waypoint pipeline run <pipeline>`)
+    string root_pipeline_id = 5;
+
+    // Name of the root pipeline
+    string root_pipeline_name = 6;
   }
 
   message ProjectTemplate {

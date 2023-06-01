@@ -12,6 +12,7 @@ import (
 	"google.golang.org/protobuf/proto"
 
 	"github.com/hashicorp/go-hclog"
+
 	"github.com/hashicorp/waypoint/internal/pkg/graph"
 	"github.com/hashicorp/waypoint/pkg/server"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
@@ -166,7 +167,7 @@ func (s *Service) RunPipeline(
 
 	// Build out all of the queued job requests for running this pipeline's steps
 	stepJobs, pipelineRun, stepIds, err := s.buildStepJobs(ctx, log, req,
-		make(map[string]interface{}), nodeToStepRef, make(map[string][]string), pipeline, pipelineRun)
+		make(map[string]interface{}), nodeToStepRef, make(map[string][]string), pipeline, pipelineRun, pipeline)
 	if err != nil {
 		return nil, hcerr.Externalize(
 			log,
@@ -281,6 +282,7 @@ func (s *Service) buildStepJobs(
 	parentDep map[string][]string,
 	pipeline *pb.Pipeline,
 	pipelineRun *pb.PipelineRun,
+	rootPipeline *pb.Pipeline,
 ) ([]*pb.QueueJobRequest, *pb.PipelineRun, map[string]string, error) {
 	if len(visitedPipelines) != 0 {
 		// Determine if we've already visited this pipeline and included its jobs.
@@ -363,10 +365,12 @@ func (s *Service) buildStepJobs(
 		job.Id = stepIds[nodeId]
 		job.DependsOn = append(job.DependsOn, dependsOn...)
 		job.Pipeline = &pb.Ref_PipelineStep{
-			PipelineId:   pipeline.Id,
-			PipelineName: pipeline.Name,
-			Step:         step.Name,
-			RunSequence:  pipelineRun.Sequence,
+			PipelineId:       pipeline.Id,
+			PipelineName:     pipeline.Name,
+			Step:             step.Name,
+			RootPipelineId:   rootPipeline.Id,
+			RootPipelineName: rootPipeline.Name,
+			RunSequence:      pipelineRun.Sequence,
 		}
 
 		// step has a specific workspace set, update the job to use that
@@ -464,7 +468,7 @@ func (s *Service) buildStepJobs(
 			parentStepDep := map[string][]string{pipeline.Id: job.DependsOn}
 
 			embedJobs, embedRun, embedStepIds, err := s.buildStepJobs(ctx, log, req,
-				visitedPipelines, nodeStepRef, parentStepDep, embeddedPipeline, pipelineRun)
+				visitedPipelines, nodeStepRef, parentStepDep, embeddedPipeline, pipelineRun, rootPipeline)
 			if err != nil {
 				return nil, nil, nil, err
 			}

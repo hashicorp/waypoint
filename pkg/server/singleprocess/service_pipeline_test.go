@@ -486,6 +486,24 @@ func TestServicePipeline_Run(t *testing.T) {
 		// We should have all the job IDs
 		require.Len(resp.JobMap, 6)
 		require.Len(resp.AllJobIds, 6)
+
+		// Jobs should have the correct Ref.PipelineStep info
+		for _, jobId := range resp.AllJobIds {
+			job, err := client.GetJob(ctx, &pb.GetJobRequest{JobId: jobId})
+			require.NoError(err)
+			switch job.Pipeline.Step {
+			case "first", "second":
+				require.Equal("test", job.Pipeline.RootPipelineId)
+				require.Equal("test", job.Pipeline.RootPipelineName)
+				require.Equal("embed", job.Pipeline.PipelineId)
+				require.Equal("embed", job.Pipeline.PipelineName)
+			default:
+				require.Equal("test", job.Pipeline.RootPipelineId)
+				require.Equal("test", job.Pipeline.RootPipelineName)
+				require.Equal("test", job.Pipeline.PipelineId)
+				require.Equal("test", job.Pipeline.PipelineName)
+			}
+		}
 	})
 
 	t.Run("runs a pipeline with embedded pipeline and workspace", func(t *testing.T) {
