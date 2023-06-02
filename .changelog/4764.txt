@@ -1,0 +1,4 @@
+```release-note:improvement
+ceb: Validate Deployment ID associated with the entrypoint token to ensure it is authorized to perform actions on the
+current deployment.
+```
