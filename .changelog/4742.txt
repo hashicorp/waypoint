@@ -1,0 +1,21 @@
+```release-note:improvement
+plugin/aws-ecs: Add config options for the target group protocol and protocol
+version.
+```
+```release-note:bug
+plugin/aws-ecs: Set the protocol of a health check correctly.
+```
+```release-note:bug
+plugin/aws-ecs: Fix panic when settings `grpc_code` or `http_code` for a health
+check.
+```
+```release-note:bug
+plugin/aws-ecs: Fix failure when destroying the target group during a release
+destroy operation.
+```
+```release-note:bug
+plugin/aws-ecs: Destroy the ALB only if it is managed by Waypoint.
+```
+```release-note:bug
+runnerinstall/aws-ecs: Add missing permission to on-demand runner IAM policy.
+```
