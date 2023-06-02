@@ -36,7 +36,7 @@ func (s *Service) EntrypointConfig(
 	// Validate CEB token is valid for this deployment
 	if tok := s.decodedTokenFromContext(ctx); tok != nil {
 		if tok.UnusedEntrypoint != nil && tok.UnusedEntrypoint.DeploymentId != req.DeploymentId {
-			log.Error("entrypoint token invalid for this deployment ID", "deployment_id")
+			return status.Errorf(codes.PermissionDenied, "entrypoint token invalid for this deployment ID: %s", req.DeploymentId)
 		}
 	}
 
