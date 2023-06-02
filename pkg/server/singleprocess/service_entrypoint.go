@@ -22,7 +22,6 @@ import (
 	"github.com/hashicorp/waypoint/pkg/serverstate"
 )
 
-// TODO: test
 func (s *Service) EntrypointConfig(
 	req *pb.EntrypointConfigRequest,
 	srv pb.Waypoint_EntrypointConfigServer,
