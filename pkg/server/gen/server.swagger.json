@@ -314,6 +314,39 @@
         ]
       }
     },
+    "/config-source/delete": {
+      "put": {
+        "summary": "Delete the configuration for a dynamic configuration source",
+        "operationId": "Waypoint_DeleteConfigSource",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "properties": {}
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/grpc.gateway.runtime.Error"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/hashicorp.waypoint.DeleteConfigSourceRequest"
+            }
+          }
+        ],
+        "tags": [
+          "Waypoint"
+        ]
+      }
+    },
     "/deployment/{deployment.id}/status-report": {
       "put": {
         "summary": "ExpediteStatusReport returns the queued status report job id",
@@ -2216,6 +2249,39 @@
             "required": true,
             "schema": {
               "$ref": "#/definitions/hashicorp.waypoint.ConfigSetRequest"
+            }
+          }
+        ],
+        "tags": [
+          "Waypoint"
+        ]
+      }
+    },
+    "/project/config/delete": {
+      "put": {
+        "summary": "Delete one or more configuration variables for applications or runners.",
+        "operationId": "Waypoint_DeleteConfig",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/hashicorp.waypoint.ConfigDeleteResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/grpc.gateway.runtime.Error"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/hashicorp.waypoint.ConfigDeleteRequest"
             }
           }
         ],
@@ -7683,6 +7749,17 @@
       "default": "UNKNOWN",
       "description": "Supported component types, the values here MUST match the enum values\nin the Go sdk/component package exactly. A test in internal/server\nvalidates this."
     },
+    "hashicorp.waypoint.ConfigDeleteRequest": {
+      "type": "object",
+      "properties": {
+        "variables": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/hashicorp.waypoint.ConfigVar"
+          }
+        }
+      }
+    },
     "hashicorp.waypoint.ConfigDeleteResponse": {
       "type": "object"
     },
@@ -7995,6 +8072,14 @@
         "transport": {
           "$ref": "#/definitions/hashicorp.waypoint.TokenTransport",
           "description": "Transport is the wrapper around the token. This may be useful\nto look into the metadata around the token."
+        }
+      }
+    },
+    "hashicorp.waypoint.DeleteConfigSourceRequest": {
+      "type": "object",
+      "properties": {
+        "config_source": {
+          "$ref": "#/definitions/hashicorp.waypoint.ConfigSource"
         }
       }
     },
