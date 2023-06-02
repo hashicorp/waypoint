@@ -157,13 +157,23 @@ func (s *Service) UI_GetPipelineRun(
 	}
 	metrics.MeasureOperation(ctx, start, "fetch_latest_status_reports_for_ui_get_pipeline_run")
 
+	runBundle := &pb.UI_PipelineRunBundle{
+		PipelineRun: run,
+	}
+	if len(jobs) > 0 {
+		j := jobs[0]
+		runBundle.Application = j.Application
+		runBundle.DataSourceRef = j.DataSourceRef
+		runBundle.QueueTime = j.QueueTime
+	}
+
 	rootNode, err := serverptypes.UI_PipelineRunTreeFromJobs(jobs, statusReports)
 	if err != nil {
 		return nil, err
 	}
 
 	return &pb.UI_GetPipelineRunResponse{
-		PipelineRun:  run,
-		RootTreeNode: rootNode,
+		PipelineRunBundle: runBundle,
+		RootTreeNode:      rootNode,
 	}, nil
 }

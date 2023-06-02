@@ -12675,10 +12675,14 @@
       "type": "object",
       "properties": {
         "pipeline_run": {
-          "$ref": "#/definitions/hashicorp.waypoint.PipelineRun"
+          "$ref": "#/definitions/hashicorp.waypoint.PipelineRun",
+          "description": "deprecated in favor of pipeline_run_bundle."
         },
         "root_tree_node": {
           "$ref": "#/definitions/hashicorp.waypoint.UI.PipelineRunTreeNode"
+        },
+        "pipeline_run_bundle": {
+          "$ref": "#/definitions/hashicorp.waypoint.UI.PipelineRunBundle"
         }
       }
     },
