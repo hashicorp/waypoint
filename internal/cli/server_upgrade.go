@@ -204,8 +204,9 @@ func (c *ServerUpgradeCommand) Run(args []string) int {
 		}
 
 		err = clisnapshot.WriteSnapshot(c.Ctx, c.project.Client(), writer)
-		writer.Close()
-
+		if err == nil {
+			err = writer.Close()
+		}
 		if err != nil {
 			s.Update("Failed to take server snapshot\n")
 			s.Status(terminal.StatusError)
