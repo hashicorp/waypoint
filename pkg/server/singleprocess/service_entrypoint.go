@@ -29,6 +29,13 @@ func (s *Service) EntrypointConfig(
 	log := hclog.FromContext(srv.Context())
 	ctx := srv.Context()
 
+	// Validate CEB token is valid for this deployment
+	if tok := s.decodedTokenFromContext(ctx); tok != nil {
+		if tok.UnusedEntrypoint != nil && tok.UnusedEntrypoint.DeploymentId != req.DeploymentId {
+			log.Error("entrypoint token invalid for this deployment ID", "deployment_id")
+		}
+	}
+
 	// Fetch the deployment info so we can calculate the config variables to send.
 	// This also verifies this deployment exists.
 	deployment, err := s.GetDeployment(srv.Context(), &pb.GetDeploymentRequest{
@@ -44,17 +51,6 @@ func (s *Service) EntrypointConfig(
 			"deployment_id",
 			req.DeploymentId,
 		)
-	}
-
-	if tok := s.decodedTokenFromContext(ctx); tok != nil {
-		if tok.UnusedEntrypoint != nil && tok.UnusedEntrypoint.DeploymentId != req.DeploymentId {
-			return hcerr.Externalize(
-				log,
-				err,
-				"entrypoint token invalid for this deployment ID", "deployment_id",
-				req.DeploymentId,
-			)
-		}
 	}
 
 	// Create our record
