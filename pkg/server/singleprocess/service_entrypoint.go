@@ -51,6 +51,17 @@ func (s *Service) EntrypointConfig(
 		)
 	}
 
+	if tok := s.decodedTokenFromContext(ctx); tok != nil {
+		if tok.UnusedEntrypoint.DeploymentId != req.DeploymentId {
+			return hcerr.Externalize(
+				log,
+				err,
+				"entrypoint token invalid for this deployment ID", "deployment_id",
+				req.DeploymentId,
+			)
+		}
+	}
+
 	// Create our record
 	log = log.With("deployment_id", req.DeploymentId, "instance_id", req.InstanceId)
 	log.Trace("registering entrypoint")
