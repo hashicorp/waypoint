@@ -1,0 +1,3 @@
+```release-note:bug
+plugin/azure-aci: Update plugin to attempt CLI auth if environment auth fails.
+```
