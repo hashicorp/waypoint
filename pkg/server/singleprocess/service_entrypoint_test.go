@@ -60,6 +60,43 @@ func TestServiceEntrypointConfig(t *testing.T) {
 		require.Equal("testapp", cfgResp.Config.Deployment.Component.Name)
 	})
 
+	t.Run("deployment info mismatch", func(t *testing.T) {
+		require := require.New(t)
+
+		// Create our server
+		impl, err := New(WithDB(testDB(t)))
+		require.NoError(err)
+		client := server.TestServer(t, impl)
+
+		// Create a deployment
+		resp, err := client.UpsertDeployment(ctx, &pb.UpsertDeploymentRequest{
+			Deployment: serverptypes.TestValidDeployment(t, &pb.Deployment{
+				Component: &pb.Component{
+					Name: "testapp",
+				},
+			}),
+		})
+		require.NoError(err)
+		dep := resp.Deployment
+
+		// Create the config
+		instanceId, err := server.Id()
+		require.NoError(err)
+		stream, err := client.EntrypointConfig(ctx, &pb.EntrypointConfigRequest{
+			InstanceId:   instanceId,
+			DeploymentId: dep.Id,
+		})
+		require.NoError(err)
+
+		// Wait for the first config so that we know we're registered
+		cfgResp, err := stream.Recv()
+		require.NoError(err)
+
+		// Validate config
+		require.NotNil(cfgResp.Config.Deployment)
+		require.Equal("testapp", cfgResp.Config.Deployment.Component.Name)
+	})
+
 	t.Run("no URL service", func(t *testing.T) {
 		require := require.New(t)
 
