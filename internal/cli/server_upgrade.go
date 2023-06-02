@@ -211,6 +211,7 @@ func (c *ServerUpgradeCommand) Run(args []string) int {
 		if err == nil && closeErr != nil {
 			err = closeErr
 		}
+
 		if err != nil {
 			s.Update("Failed to take server snapshot\n")
 			s.Status(terminal.StatusError)
