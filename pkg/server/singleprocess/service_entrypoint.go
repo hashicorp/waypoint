@@ -51,7 +51,7 @@ func (s *Service) EntrypointConfig(
 	}
 
 	if tok := s.decodedTokenFromContext(ctx); tok != nil {
-		if tok.UnusedEntrypoint.DeploymentId != req.DeploymentId {
+		if tok.UnusedEntrypoint != nil && tok.UnusedEntrypoint.DeploymentId != req.DeploymentId {
 			return hcerr.Externalize(
 				log,
 				err,
