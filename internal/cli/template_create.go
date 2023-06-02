@@ -54,11 +54,15 @@ func (c *ProjectTemplateCreateCommand) Run(args []string) int {
 
 	if c.flagReadmeMarkdownTemplatePath != "" {
 		rmt, err := os.ReadFile(c.flagReadmeMarkdownTemplatePath)
-		if err == os.ErrNotExist {
-			c.ui.Output("Readme template file does not exist: %s", clierrors.Humanize(err), terminal.WithErrorStyle())
-			return 1
-		} else if err != nil {
-			c.ui.Output("Unable to read readme.md template file: %s", clierrors.Humanize(err), terminal.WithErrorStyle())
+		if err != nil {
+		  // general error message
+		  errMsg := "Unable to read readme.md template file: %s"
+		  if err == os.ErrNotExist {
+			  // give specific error message if the file does not exist
+			  errMsg = "Readme template file does not exist: %s"
+			} 
+		
+			c.ui.Output(errMsg, clierrors.Humanize(err), terminal.WithErrorStyle())
 			return 1
 		}
 		template.ReadmeMarkdownTemplate = rmt
