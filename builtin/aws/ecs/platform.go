@@ -1336,10 +1336,12 @@ func (p *Platform) resourceTargetGroupCreate(
 			createTargetGroupInput.HealthCheckPath = aws.String(p.config.HealthCheck.Path)
 		}
 
+		createTargetGroupInput.HealthCheckTimeoutSeconds = aws.Int64(5)
 		if p.config.HealthCheck.Timeout != 0 {
 			createTargetGroupInput.HealthCheckTimeoutSeconds = aws.Int64(p.config.HealthCheck.Timeout)
 		}
 
+		createTargetGroupInput.HealthCheckIntervalSeconds = aws.Int64(30)
 		if p.config.HealthCheck.Interval != 0 {
 			createTargetGroupInput.HealthCheckIntervalSeconds = aws.Int64(p.config.HealthCheck.Interval)
 		}
@@ -3212,6 +3214,9 @@ deploy {
 
 	doc.SetField("health_check",
 		"Health check settings for the app.",
+		docs.Summary("These settings configure a health check for the application"+
+			"target group."),
+
 		docs.SubFields(func(doc *docs.SubFieldDoc) {
 			doc.SetField("protocol",
 				"The protocol for the health check to use.",
@@ -3222,10 +3227,12 @@ deploy {
 
 			doc.SetField("timeout",
 				"The amount of time, in seconds, for which no target response "+
-					"means a failure.")
+					"means a failure. Must be lower than the interval.",
+				docs.Default("5"))
 
 			doc.SetField("interval",
-				"The amount of time, in seconds, between health checks.")
+				"The amount of time, in seconds, between health checks.",
+				docs.Default("30"))
 
 			doc.SetField("healthy_threshold_count",
 				"The number of consecutive successful health checks required to"+

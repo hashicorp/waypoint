@@ -123,7 +123,7 @@ parameter {
 
 parameter {
   key         = "health_check"
-  description = "Health check settings for the app."
+  description = "Health check settings for the app.\nThese settings configure a health check for the applicationtarget group."
   type        = "category"
   required    = false
 }
@@ -151,10 +151,11 @@ parameter {
 }
 
 parameter {
-  key         = "health_check.interval"
-  description = "The amount of time, in seconds, between health checks."
-  type        = "int64"
-  required    = false
+  key           = "health_check.interval"
+  description   = "The amount of time, in seconds, between health checks."
+  type          = "int64"
+  required      = false
+  default_value = "30"
 }
 
 parameter {
@@ -180,10 +181,11 @@ parameter {
 }
 
 parameter {
-  key         = "health_check.timeout"
-  description = "The amount of time, in seconds, for which no target response means a failure."
-  type        = "int64"
-  required    = false
+  key           = "health_check.timeout"
+  description   = "The amount of time, in seconds, for which no target response means a failure. Must be lower than the interval."
+  type          = "int64"
+  required      = false
+  default_value = "5"
 }
 
 parameter {

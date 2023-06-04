@@ -1,0 +1,4 @@
+```release-note:bug
+plugin/ecs: Set health check timeout and interval values to compatible default
+values.
+```
