@@ -1349,6 +1349,10 @@ func (p *Platform) resourceTargetGroupCreate(
 			createTargetGroupInput.HealthCheckIntervalSeconds = aws.Int64(p.config.HealthCheck.Interval)
 		}
 
+		if *createTargetGroupInput.HealthCheckIntervalSeconds < *createTargetGroupInput.HealthCheckTimeoutSeconds {
+			return status.Errorf(codes.InvalidArgument, fmt.Sprintf("Health check interval cannot be shorter than the timeout"))
+		}
+
 		if p.config.HealthCheck.HealthyThresholdCount != 0 {
 			createTargetGroupInput.HealthyThresholdCount = aws.Int64(p.config.HealthCheck.HealthyThresholdCount)
 		} else {
@@ -3217,7 +3221,7 @@ deploy {
 
 	doc.SetField("health_check",
 		"Health check settings for the app.",
-		docs.Summary("These settings configure a health check for the application"+
+		docs.Summary("These settings configure a health check for the application "+
 			"target group."),
 
 		docs.SubFields(func(doc *docs.SubFieldDoc) {
