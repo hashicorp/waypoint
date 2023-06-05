@@ -1,0 +1,4 @@
+```release-note:improvement
+cli: Use -w flag for workspace scoping on `config set` and `config delete`,
+instead of `workspace-scope`.
+```
