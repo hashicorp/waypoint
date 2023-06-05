@@ -12,6 +12,8 @@ import (
 	"github.com/Azure/azure-sdk-for-go/services/resources/mgmt/2015-11-01/subscriptions"
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/azure/auth"
+	"github.com/hashicorp/go-hclog"
+
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 )
 
@@ -27,14 +29,14 @@ func (d *Deployment) containerInstanceGroupsClient(auth autorest.Authorizer) (*c
 }
 
 // init sets up the authorizer and fetches the locations
-func (d *Deployment) authenticate(ctx context.Context) (autorest.Authorizer, error) {
+func (d *Deployment) authenticate(ctx context.Context, log hclog.Logger) (autorest.Authorizer, error) {
 	// create an authorizer from env vars or Azure Managed Service Identity
 	//authorizer, err := auth.NewAuthorizerFromCLI()
 
 	// first try and create an environment
 	authorizer, err := auth.NewAuthorizerFromEnvironment()
 	if err != nil {
-		return nil, fmt.Errorf("Unable to create subscriptions client: %s", err)
+		log.Warn("unable to create subscriptions client", "error", err)
 	}
 
 	// we need to timeout this request as this request never fails when we have
@@ -51,6 +53,7 @@ func (d *Deployment) authenticate(ctx context.Context) (autorest.Authorizer, err
 	defer cf2()
 
 	// the environment variable auth has failed fall back to CLI auth
+	log.Info("attempting CLI auth")
 	authorizer, err = auth.NewAuthorizerFromCLI()
 	if err != nil {
 		return authorizer, err
@@ -61,7 +64,7 @@ func (d *Deployment) authenticate(ctx context.Context) (autorest.Authorizer, err
 	}
 
 	return nil, fmt.Errorf(
-		"Unable to authenticate with the Azure API, ensure you have your credentials set as environment variables, " +
+		"unable to authenticate with the Azure API, ensure you have your credentials set as environment variables, " +
 			"or you have logged in using the 'az' command line tool",
 	)
 }
