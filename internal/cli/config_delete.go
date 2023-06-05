@@ -19,10 +19,9 @@ import (
 type ConfigDeleteCommand struct {
 	*baseCommand
 
-	flagGlobal         bool
-	flagScope          string
-	flagWorkspaceScope string
-	flagLabelScope     string
+	flagGlobal     bool
+	flagScope      string
+	flagLabelScope string
 }
 
 func (c *ConfigDeleteCommand) Run(args []string) int {
@@ -128,7 +127,7 @@ func (c *ConfigDeleteCommand) Run(args []string) int {
 		}
 
 		// If we have a workspace flag set, set that.
-		if v := c.flagWorkspaceScope; v != "" {
+		if v := c.flagWorkspace; v != "" {
 			configVar.Target.Workspace = &pb.Ref_Workspace{
 				Workspace: v,
 			}
@@ -162,16 +161,6 @@ func (c *ConfigDeleteCommand) Flags() *flag.Sets {
 				"delete within this scope. This can be one of 'global', 'project', or " +
 				"'app'.",
 			Default: "project",
-		})
-
-		f.StringVar(&flag.StringVar{
-			Name:   "workspace-scope",
-			Target: &c.flagWorkspaceScope,
-			Usage: "Specify that the configuration is only available within a " +
-				"specific workspace. This configuration will only be deleted for " +
-				"deployments or operations when the workspace " +
-				"matches this.",
-			Default: "",
 		})
 
 		f.StringVar(&flag.StringVar{
