@@ -80,7 +80,7 @@ func (p *Platform) Deploy(
 		},
 	}
 
-	auth, err := deployment.authenticate(ctx)
+	auth, err := deployment.authenticate(ctx, log)
 	if err != nil {
 		return nil, status.Error(
 			codes.Unauthenticated,
