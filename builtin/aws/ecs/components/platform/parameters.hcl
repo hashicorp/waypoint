@@ -123,7 +123,7 @@ parameter {
 
 parameter {
   key         = "health_check"
-  description = "Health check settings for the app.\nThese settings configure a health check for the applicationtarget group."
+  description = "Health check settings for the app.\nThese settings configure a health check for the application target group."
   type        = "category"
   required    = false
 }
