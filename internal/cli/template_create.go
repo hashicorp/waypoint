@@ -55,13 +55,11 @@ func (c *ProjectTemplateCreateCommand) Run(args []string) int {
 	if c.flagReadmeMarkdownTemplatePath != "" {
 		rmt, err := os.ReadFile(c.flagReadmeMarkdownTemplatePath)
 		if err != nil {
-		  // general error message
-		  errMsg := "Unable to read readme.md template file: %s"
-		  if err == os.ErrNotExist {
-			  // give specific error message if the file does not exist
-			  errMsg = "Readme template file does not exist: %s"
-			} 
-		
+			errMsg := "Unable to read readme.md template file: %s"
+			if err == os.ErrNotExist {
+				errMsg = "Readme template file does not exist: %s"
+			}
+
 			c.ui.Output(errMsg, clierrors.Humanize(err), terminal.WithErrorStyle())
 			return 1
 		}
@@ -71,7 +69,12 @@ func (c *ProjectTemplateCreateCommand) Run(args []string) int {
 	if c.flagWaypointHCLTemplatePath != "" {
 		wpt, err := os.ReadFile(c.flagWaypointHCLTemplatePath)
 		if err != nil {
-			c.ui.Output("Unable to read waypoint.hcl template file: %s", clierrors.Humanize(err), terminal.WithErrorStyle())
+			errMsg := "Unable to read waypoint.hcl template file: %s"
+			if err == os.ErrNotExist {
+				errMsg = "Waypoint.hcl template file does not exist: %s"
+			}
+
+			c.ui.Output(errMsg, clierrors.Humanize(err), terminal.WithErrorStyle())
 			return 1
 		}
 		template.WaypointProject = &pb.ProjectTemplate_WaypointProject{
