@@ -30,45 +30,34 @@ type ProjectTemplateUpdateCommand struct {
 }
 
 func (c *ProjectTemplateUpdateCommand) Run(args []string) int {
-	flagSet := c.Flags()
 	if err := c.Init(
-		WithArgs(args),
-		WithFlags(flagSet),
+		WithFlags(c.Flags()),
 		WithNoConfig(),
 	); err != nil {
 		return 1
 	}
-	args = flagSet.Args()
 	ctx := c.Ctx
 
-	if len(args) > 1 {
-		c.ui.Output("Only one project template may be specified at a time.\n\n"+c.Help(), terminal.WithErrorStyle())
+	if c.flagID == "" && c.flagName == "" {
+		c.ui.Output("Missing project template name or id.\n\n"+c.Help(), terminal.WithErrorStyle())
 		return 1
 	}
 
 	name := ""
-	if len(args) == 1 {
-		name = args[0]
-	}
-
 	var tref pb.Ref_ProjectTemplate
-	if name != "" {
-		tref.Ref = &pb.Ref_ProjectTemplate_Name{
-			Name: name,
-		}
-	} else if c.flagID != "" {
-		tref.Ref = &pb.Ref_ProjectTemplate_Id{
-			Id: c.flagID,
-		}
-		name = c.flagID
-	} else if c.flagName != "" {
+	// First look up template by name
+	if c.flagName != "" {
 		tref.Ref = &pb.Ref_ProjectTemplate_Name{
 			Name: c.flagName,
 		}
 		name = c.flagName
-	} else {
-		c.ui.Output("Missing project template name or id.\n\n"+c.Help(), terminal.WithErrorStyle())
-		return 1
+	}
+	// Always use ID if specified
+	if c.flagID != "" {
+		tref.Ref = &pb.Ref_ProjectTemplate_Id{
+			Id: c.flagID,
+		}
+		name = c.flagID
 	}
 
 	checkResp, err := c.project.Client().GetProjectTemplate(ctx, &pb.GetProjectTemplateRequest{
@@ -235,7 +224,7 @@ func (c *ProjectTemplateUpdateCommand) Synopsis() string {
 
 func (c *ProjectTemplateUpdateCommand) Help() string {
 	return formatHelp(`
-Usage: waypoint template create [options] [NAME]
+Usage: waypoint template create [options]
 
   Update a project template.
 

@@ -47,16 +47,16 @@ func (c *ProjectTemplateDeleteCommand) Run(args []string) int {
 	}
 
 	var tref pb.Ref_ProjectTemplate
+	if name != "" {
+		tref.Ref = &pb.Ref_ProjectTemplate_Name{
+			Name: name,
+		}
+	}
 	if c.flagID != "" {
 		tref.Ref = &pb.Ref_ProjectTemplate_Id{
 			Id: c.flagID,
 		}
 		name = c.flagID
-	}
-	if name != "" {
-		tref.Ref = &pb.Ref_ProjectTemplate_Name{
-			Name: name,
-		}
 	}
 
 	_, err := c.project.Client().DeleteProjectTemplate(ctx, &pb.DeleteProjectTemplateRequest{
@@ -67,7 +67,7 @@ func (c *ProjectTemplateDeleteCommand) Run(args []string) int {
 		return 1
 	}
 
-	c.ui.Output("template %q deleted", name, terminal.WithSuccessStyle())
+	c.ui.Output("Template %q deleted", name, terminal.WithSuccessStyle())
 
 	return 0
 }

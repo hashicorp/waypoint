@@ -62,16 +62,16 @@ func (c *ProjectTemplateInspectCommand) Run(args []string) int {
 	}
 
 	var tref pb.Ref_ProjectTemplate
+	if name != "" {
+		tref.Ref = &pb.Ref_ProjectTemplate_Name{
+			Name: name,
+		}
+	}
 	if c.flagID != "" {
 		tref.Ref = &pb.Ref_ProjectTemplate_Id{
 			Id: c.flagID,
 		}
 		name = c.flagID
-	}
-	if name != "" {
-		tref.Ref = &pb.Ref_ProjectTemplate_Name{
-			Name: name,
-		}
 	}
 
 	tr, err := c.project.Client().GetProjectTemplate(ctx, &pb.GetProjectTemplateRequest{
@@ -79,8 +79,8 @@ func (c *ProjectTemplateInspectCommand) Run(args []string) int {
 	})
 	if err != nil {
 		errMsg := clierrors.Humanize(err)
-		if status.Code(err) == codes.NotFound || checkResp.ProjectTemplate == nil {
-			errMsg = fmt.Sprintf("Project template %q does not exist", checkResp.ProjectTemplate.Name)
+		if status.Code(err) == codes.NotFound || tr.ProjectTemplate == nil {
+			errMsg = fmt.Sprintf("Project template %q does not exist", name)
 		}
 		c.ui.Output(errMsg, terminal.WithErrorStyle())
 		return 1
