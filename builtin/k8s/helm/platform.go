@@ -127,6 +127,8 @@ func (p *Platform) Deploy(
 		client.Description = ""
 		client.CreateNamespace = p.config.CreateNamespace
 
+		log.Info("install client: %#v", client)
+
 		s.Update("Installing Chart...")
 		rel, err := client.Run(c, values)
 		if err != nil {

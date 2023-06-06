@@ -535,9 +535,9 @@ func configureContainer(
 
 	// Only define liveliness & readiness checks if container binds to a port
 	if defaultPort > 0 {
-		var handler corev1.Handler
+		var handler corev1.ProbeHandler
 		if c.ProbePath != "" {
-			handler = corev1.Handler{
+			handler = corev1.ProbeHandler{
 				HTTPGet: &corev1.HTTPGetAction{
 					Path: c.ProbePath,
 					Port: intstr.FromInt(defaultPort),
@@ -546,7 +546,7 @@ func configureContainer(
 		} else {
 			// If no probe path is defined, assume app will bind to default TCP port
 			// TODO: handle apps that aren't socket listeners
-			handler = corev1.Handler{
+			handler = corev1.ProbeHandler{
 				TCPSocket: &corev1.TCPSocketAction{
 					Port: intstr.FromInt(defaultPort),
 				},
@@ -554,13 +554,13 @@ func configureContainer(
 		}
 
 		container.LivenessProbe = &corev1.Probe{
-			Handler:             handler,
+			ProbeHandler:             handler,
 			InitialDelaySeconds: initialDelaySeconds,
 			TimeoutSeconds:      timeoutSeconds,
 			FailureThreshold:    failureThreshold,
 		}
 		container.ReadinessProbe = &corev1.Probe{
-			Handler:             handler,
+			ProbeHandler:             handler,
 			InitialDelaySeconds: initialDelaySeconds,
 			TimeoutSeconds:      timeoutSeconds,
 			FailureThreshold:    failureThreshold,

@@ -85,15 +85,22 @@ func (k *restClientGetter) ToRawKubeConfigLoader() clientcmd.ClientConfig {
 	return config
 }
 
-func SettingsInit() (*cli.EnvSettings, error) {
-	return cli.New(), nil
+func SettingsInit(ns string) (*cli.EnvSettings, error) {
+	cli := cli.New()
+	if ns != "" {
+	    cli.SetNamespace(ns)
+	}
+	return cli, nil
 }
 
-func ActionInit(log hclog.Logger, kubeConfigPath string, context string) (*action.Configuration, error) {
+func ActionInit(log hclog.Logger, kubeConfigPath string, context string, namespace string) (*action.Configuration, error) {
 	// Get our K8S API
 	_, ns, rc, err := k8s.Clientset(kubeConfigPath, context)
 	if err != nil {
 		return nil, err
+	}
+	if (namespace != "") {
+		ns = namespace
 	}
 	driver := "secret"
 

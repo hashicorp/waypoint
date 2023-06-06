@@ -52,13 +52,13 @@ func (i *K8sRunnerInstaller) Install(ctx context.Context, opts *InstallOpts) err
 
 	s := sg.Add("Getting Helm configs...")
 	defer func() { s.Abort() }()
-	settings, err := helminstallutil.SettingsInit()
+	settings, err := helminstallutil.SettingsInit(i.Config.Namespace)
 	if err != nil {
 		opts.UI.Output("Unable to retrieve Helm configuration.", terminal.WithErrorStyle())
 		return err
 	}
 
-	actionConfig, err := helminstallutil.ActionInit(opts.Log, i.Config.KubeconfigPath, i.Config.K8sContext)
+	actionConfig, err := helminstallutil.ActionInit(opts.Log, i.Config.KubeconfigPath, i.Config.K8sContext, i.Config.Namespace)
 	if err != nil {
 		opts.UI.Output("Unable to initialize Helm.", terminal.WithErrorStyle())
 		return err
@@ -437,7 +437,7 @@ func (i *K8sRunnerInstaller) uninstallWithHelm(ctx context.Context, opts *Instal
 	s := sg.Add("Preparing Helm...")
 	defer func() { s.Abort() }()
 
-	actionConfig, err := helminstallutil.ActionInit(opts.Log, i.Config.KubeconfigPath, i.Config.K8sContext)
+	actionConfig, err := helminstallutil.ActionInit(opts.Log, i.Config.KubeconfigPath, i.Config.K8sContext, i.Config.Namespace)
 	if err != nil {
 		s.Update("Unable to setup Helm.")
 		s.Status(terminal.StatusError)
