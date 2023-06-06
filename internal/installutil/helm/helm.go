@@ -99,7 +99,7 @@ func ActionInit(log hclog.Logger, kubeConfigPath string, context string, namespa
 	if err != nil {
 		return nil, err
 	}
-	if (namespace != "") {
+	if namespace != "" {
 		ns = namespace
 	}
 	driver := "secret"
