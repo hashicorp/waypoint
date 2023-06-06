@@ -2793,7 +2793,7 @@ type ALBConfig struct {
 
 	// When set, waypoint will configure the target group into the load balancer.
 	// This allows for usage of existing ALBs.
-	LoadBalancerArn string `hcl:"load_balancer_arn"`
+	LoadBalancerArn string `hcl:"load_balancer_arn,optional"`
 
 	// Indicates, when creating an ALB, that it should be internal rather than
 	// internet facing.
