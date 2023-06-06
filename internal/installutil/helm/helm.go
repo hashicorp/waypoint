@@ -85,7 +85,7 @@ func (k *restClientGetter) ToRawKubeConfigLoader() clientcmd.ClientConfig {
 func SettingsInit(ns string) (*cli.EnvSettings, error) {
 	cli := cli.New()
 	if ns != "" {
-	    cli.SetNamespace(ns)
+		cli.SetNamespace(ns)
 	}
 	return cli, nil
 }
