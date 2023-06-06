@@ -248,7 +248,7 @@ func TestConfigSource(t *testing.T, factory Factory, restartF RestartFactory) {
 		}
 	})
 
-	t.Run("put and get workspace scope", func(t *testing.T) {
+	t.Run("put and get workspace scoped global config sources", func(t *testing.T) {
 		require := require.New(t)
 
 		s := factory(t)
@@ -310,6 +310,87 @@ func TestConfigSource(t *testing.T, factory Factory, restartF RestartFactory) {
 		pcs, err := s.ConfigSourceGet(ctx, &pb.GetConfigSourceRequest{
 			Scope: &pb.GetConfigSourceRequest_Global{
 				Global: &pb.Ref_Global{},
+			},
+			Workspace: &pb.Ref_Workspace{Workspace: "prod"},
+			Type:      "vault",
+		})
+
+		// Verify that we got back the expected config
+		require.NoError(err)
+		require.NotNil(pcs)
+		require.Equal(pcs[0].Config["token"], "123")
+	})
+
+	t.Run("put and get workspace scoped project config sources", func(t *testing.T) {
+		require := require.New(t)
+
+		s := factory(t)
+		defer s.Close()
+
+		require.NoError(s.ProjectPut(ctx, &pb.Project{
+			Name: "testProject",
+		}))
+
+		require.NoError(s.WorkspacePut(ctx, &pb.Workspace{
+			Name: "dev",
+		}))
+
+		require.NoError(s.WorkspacePut(ctx, &pb.Workspace{
+			Name: "prod",
+		}))
+
+		// Create dev Vault config source for the test project
+		require.NoError(s.ConfigSourceSet(ctx, &pb.ConfigSource{
+			Scope: &pb.ConfigSource_Project{
+				Project: &pb.Ref_Project{Project: "testProject"},
+			},
+
+			Type: "vault",
+			Config: map[string]string{
+				"token": "abc",
+			},
+			Workspace: &pb.Ref_Workspace{
+				Workspace: "dev",
+			},
+		}))
+
+		// Create prod Vault config source for the test project
+		require.NoError(s.ConfigSourceSet(ctx, &pb.ConfigSource{
+			Scope: &pb.ConfigSource_Project{
+				Project: &pb.Ref_Project{Project: "testProject"},
+			},
+
+			Type: "vault",
+			Config: map[string]string{
+				"token": "123",
+			},
+			Workspace: &pb.Ref_Workspace{
+				Workspace: "prod",
+			},
+		}))
+
+		// Get the dev Vault config source
+		dcs, err := s.ConfigSourceGet(ctx, &pb.GetConfigSourceRequest{
+			Scope: &pb.GetConfigSourceRequest_Project{
+				Project: &pb.Ref_Project{
+					Project: "testProject",
+				},
+			},
+			Workspace: &pb.Ref_Workspace{Workspace: "dev"},
+			Type:      "vault",
+		})
+
+		// Verify that we got back the expected config
+		require.NoError(err)
+		require.NotNil(dcs)
+		require.Equal(dcs[0].Config["token"], "abc")
+
+		// Get the prod Vault config source
+		pcs, err := s.ConfigSourceGet(ctx, &pb.GetConfigSourceRequest{
+			Scope: &pb.GetConfigSourceRequest_Project{
+				Project: &pb.Ref_Project{
+					Project: "testProject",
+				},
 			},
 			Workspace: &pb.Ref_Workspace{Workspace: "prod"},
 			Type:      "vault",
