@@ -124,7 +124,7 @@ func (p *Platform) Deploy(
 		client.Description = ""
 		client.CreateNamespace = p.config.CreateNamespace
 
-		s.Update("installing client...")
+		log.Debug("installing client in namespace", "namespace", client.Namespace)
 
 		s.Update("Installing Chart...")
 		rel, err := client.Run(c, values)
