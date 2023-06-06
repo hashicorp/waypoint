@@ -67,7 +67,7 @@ func (c *ProjectTemplateDeleteCommand) Run(args []string) int {
 		return 1
 	}
 
-	c.ui.Output("Template %q deleted", name, terminal.WithSuccessStyle())
+	c.ui.Output("template %q deleted", name, terminal.WithSuccessStyle())
 
 	return 0
 }
