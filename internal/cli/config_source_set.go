@@ -162,8 +162,5 @@ Usage: waypoint config source-set [options]
   source plugin. When modifying an existing configuration, all desired
   "-config" flags will need to be set each time the command is ran.
 
-  Configuration for this command is global. The "-app", "-project", and
-  "-workspace" flags are ignored on this command.
-
 ` + c.Flags().Help())
 }

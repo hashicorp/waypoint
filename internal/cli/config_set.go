@@ -9,21 +9,21 @@ import (
 	"os"
 	"strings"
 
+	"github.com/posener/complete"
+
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/internal/clierrors"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
-	"github.com/posener/complete"
 )
 
 type ConfigSetCommand struct {
 	*baseCommand
 
-	flagGlobal         bool
-	flagRunner         bool
-	flagScope          string
-	flagWorkspaceScope string
-	flagLabelScope     string
+	flagGlobal     bool
+	flagRunner     bool
+	flagScope      string
+	flagLabelScope string
 }
 
 func (c *ConfigSetCommand) Run(args []string) int {
@@ -147,7 +147,7 @@ func (c *ConfigSetCommand) Run(args []string) int {
 		//TODO: update to add flag to target runner by workspace and labels
 
 		// If we have a workspace flag set, set that.
-		if v := c.flagWorkspaceScope; v != "" {
+		if v := c.flagWorkspace; v != "" {
 			configVar.Target.Workspace = &pb.Ref_Workspace{
 				Workspace: v,
 			}
@@ -181,16 +181,6 @@ func (c *ConfigSetCommand) Flags() *flag.Sets {
 				"appear within this scope. This can be one of 'global', 'project', or " +
 				"'app'.",
 			Default: "project",
-		})
-
-		f.StringVar(&flag.StringVar{
-			Name:   "workspace-scope",
-			Target: &c.flagWorkspaceScope,
-			Usage: "Specify that the configuration is only available within a " +
-				"specific workspace. This configuration will only be set for " +
-				"deployments or operations (if -runner is set) when the workspace " +
-				"matches this.",
-			Default: "",
 		})
 
 		f.StringVar(&flag.StringVar{

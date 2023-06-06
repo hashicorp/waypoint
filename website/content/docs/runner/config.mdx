@@ -46,7 +46,7 @@ secrets on the Waypoint server, you must set the environment variables manually 
 [manually running the runner](/waypoint/docs/runner/run-manual).
 
 You can use the `-scope` flag paired with flags such as `-project`,
-`-label-scope`, and `-workspace-scope` to set runner variables that are only
+`-label-scope`, and `-workspace` to set runner variables that are only
 available within certain scoped situations. Unscoped variables are globally sent to
 all runners.
 
@@ -62,9 +62,9 @@ submit jobs to the `prod` namespace for the `prod` Waypoint workspace. Here's wh
 that could look like:
 
 ```shell-session
-$ waypoint config set -runner -workspace-scope=dev NOMAD_TOKEN=abc123
+$ waypoint config set -runner -workspace=dev NOMAD_TOKEN=abc123
 
-$ waypoint config set -runner -workspace-scope=prod NOMAD_TOKEN=def456
+$ waypoint config set -runner -workspace=prod NOMAD_TOKEN=def456
 
 $ waypoint config get -runner
    SCOPE  |    NAME     |                VALUE                 | WORKSPACE | LABELS
