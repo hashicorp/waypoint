@@ -72,14 +72,11 @@ func (c *ProjectTemplateUpdateCommand) Run(args []string) int {
 		ProjectTemplate: tref,
 	})
 	if err != nil {
-		c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
-		return 1
-	}
-	if checkResp.ProjectTemplate == nil {
-		c.ui.Output(
-			"Project template %q does not exist", checkResp.ProjectTemplate.Name,
-			terminal.WithErrorStyle(),
-		)
+	  errMsg := clierrors.Humanize(err)
+	  if status.Code(err) == codes.NotFound || checkResp.ProjectTemplate == nil {
+			errMsg = fmt.Sprintf("Project template %q does not exist", checkResp.ProjectTemplate.Name),
+	  }
+		c.ui.Output(errMsg, terminal.WithErrorStyle())
 		return 1
 	}
 
