@@ -38,10 +38,14 @@ func (c *ProjectTemplateUpdateCommand) Run(args []string) int {
 	args = flagSet.Args()
 	ctx := c.Ctx
 
+	if len(args) > 1 {
+		c.ui.Output("Only one project template may be specified at a time.\n\n"+c.Help(), terminal.WithErrorStyle())
+		return 1
+	}
+
 	name := ""
 	if len(args) == 1 {
 		name = args[0]
-		return 1
 	}
 
 	var tref pb.Ref_ProjectTemplate

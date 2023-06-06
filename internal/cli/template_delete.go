@@ -12,8 +12,7 @@ import (
 type ProjectTemplateDeleteCommand struct {
 	*baseCommand
 
-	flagName string
-	flagID   string
+	flagID string
 }
 
 func (c *ProjectTemplateDeleteCommand) Run(args []string) int {
@@ -28,29 +27,36 @@ func (c *ProjectTemplateDeleteCommand) Run(args []string) int {
 	args = flagSet.Args()
 	ctx := c.Ctx
 
+	if len(args) > 1 {
+		c.ui.Output("Only one project template may be specified at a time.\n\n"+c.Help(), terminal.WithErrorStyle())
+		return 1
+	}
+
 	name := ""
 	if len(args) == 1 {
 		name = args[0]
 	}
 
+	if name != "" && c.flagID != "" {
+		c.ui.Output("Name argument and id flag may not be specified together.\n\n"+c.Help(), terminal.WithErrorStyle())
+		return 1
+	}
+	if name == "" && c.flagID == "" {
+		c.ui.Output("Missing project template name or id.\n\n"+c.Help(), terminal.WithErrorStyle())
+		return 1
+	}
+
 	var tref pb.Ref_ProjectTemplate
-	if name != "" {
-		tref.Ref = &pb.Ref_ProjectTemplate_Name{
-			Name: name,
-		}
-	} else if c.flagID != "" {
+	if c.flagID != "" {
 		tref.Ref = &pb.Ref_ProjectTemplate_Id{
 			Id: c.flagID,
 		}
 		name = c.flagID
-	} else if c.flagName != "" {
+	}
+	if name != "" {
 		tref.Ref = &pb.Ref_ProjectTemplate_Name{
-			Name: c.flagName,
+			Name: name,
 		}
-		name = c.flagName
-	} else {
-		c.ui.Output("Missing project template name or id.\n\n"+c.Help(), terminal.WithErrorStyle())
-		return 1
 	}
 
 	_, err := c.project.Client().DeleteProjectTemplate(ctx, &pb.DeleteProjectTemplateRequest{
@@ -71,17 +77,10 @@ func (c *ProjectTemplateDeleteCommand) Flags() *flag.Sets {
 		f := sets.NewSet("Command Options")
 
 		f.StringVar(&flag.StringVar{
-			Name:    "name",
-			Target:  &c.flagName,
-			Default: "",
-			Usage:   "Name of the project template to delete",
-		})
-
-		f.StringVar(&flag.StringVar{
 			Name:    "id",
 			Target:  &c.flagID,
 			Default: "",
-			Usage:   "Id of the project template to delete",
+			Usage:   "Id of the project template to delete. Mutually exclusive with Name argument.",
 		})
 	})
 }

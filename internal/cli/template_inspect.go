@@ -18,8 +18,7 @@ type ProjectTemplateInspectCommand struct {
 
 	flagJson bool
 
-	flagID   string
-	flagName string
+	flagID string
 }
 
 func (c *ProjectTemplateInspectCommand) Run(args []string) int {
@@ -34,9 +33,23 @@ func (c *ProjectTemplateInspectCommand) Run(args []string) int {
 	args = flagSet.Args()
 	ctx := c.Ctx
 
+	if len(args) > 1 {
+		c.ui.Output("Only one project template may be specified at a time.\n\n"+c.Help(), terminal.WithErrorStyle())
+		return 1
+	}
+
 	name := ""
 	if len(args) == 1 {
 		name = args[0]
+	}
+
+	if name != "" && c.flagID != "" {
+		c.ui.Output("Name argument and id flag may not be specified together.\n\n"+c.Help(), terminal.WithErrorStyle())
+		return 1
+	}
+	if name == "" && c.flagID == "" {
+		c.ui.Output("Missing project template name or id.\n\n"+c.Help(), terminal.WithErrorStyle())
+		return 1
 	}
 
 	out, _, err := c.ui.OutputWriters()
@@ -46,21 +59,16 @@ func (c *ProjectTemplateInspectCommand) Run(args []string) int {
 	}
 
 	var tref pb.Ref_ProjectTemplate
+	if c.flagID != "" {
+		tref.Ref = &pb.Ref_ProjectTemplate_Id{
+			Id: c.flagID,
+		}
+		name = c.flagID
+	}
 	if name != "" {
 		tref.Ref = &pb.Ref_ProjectTemplate_Name{
 			Name: name,
 		}
-	} else if c.flagID != "" {
-		tref.Ref = &pb.Ref_ProjectTemplate_Id{
-			Id: c.flagID,
-		}
-	} else if c.flagName != "" {
-		tref.Ref = &pb.Ref_ProjectTemplate_Name{
-			Name: c.flagName,
-		}
-	} else {
-		c.ui.Output("Missing project template name or id.\n\n"+c.Help(), terminal.WithErrorStyle())
-		return 1
 	}
 
 	tr, err := c.project.Client().GetProjectTemplate(ctx, &pb.GetProjectTemplateRequest{
@@ -127,17 +135,10 @@ func (c *ProjectTemplateInspectCommand) Flags() *flag.Sets {
 		})
 
 		f.StringVar(&flag.StringVar{
-			Name:    "name",
-			Target:  &c.flagName,
-			Default: "",
-			Usage:   "Name of project template",
-		})
-
-		f.StringVar(&flag.StringVar{
 			Name:    "id",
 			Target:  &c.flagID,
 			Default: "",
-			Usage:   "Id of project template",
+			Usage:   "Id of project template. Mutually exclusive with name argument.",
 		})
 	})
 
