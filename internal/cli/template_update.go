@@ -1,9 +1,12 @@
 package cli
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/posener/complete"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/internal/clierrors"
@@ -69,13 +72,13 @@ func (c *ProjectTemplateUpdateCommand) Run(args []string) int {
 	}
 
 	checkResp, err := c.project.Client().GetProjectTemplate(ctx, &pb.GetProjectTemplateRequest{
-		ProjectTemplate: tref,
+		ProjectTemplate: &tref,
 	})
 	if err != nil {
-	  errMsg := clierrors.Humanize(err)
-	  if status.Code(err) == codes.NotFound || checkResp.ProjectTemplate == nil {
-			errMsg = fmt.Sprintf("Project template %q does not exist", checkResp.ProjectTemplate.Name),
-	  }
+		errMsg := clierrors.Humanize(err)
+		if status.Code(err) == codes.NotFound || checkResp.ProjectTemplate == nil {
+			errMsg = fmt.Sprintf("Project template %q does not exist", checkResp.ProjectTemplate.Name)
+		}
 		c.ui.Output(errMsg, terminal.WithErrorStyle())
 		return 1
 	}

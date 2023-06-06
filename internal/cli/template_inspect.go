@@ -1,10 +1,13 @@
 package cli
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/olekukonko/tablewriter"
 	"github.com/posener/complete"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/encoding/protojson"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
@@ -75,7 +78,11 @@ func (c *ProjectTemplateInspectCommand) Run(args []string) int {
 		ProjectTemplate: &tref,
 	})
 	if err != nil {
-		c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+		errMsg := clierrors.Humanize(err)
+		if status.Code(err) == codes.NotFound || checkResp.ProjectTemplate == nil {
+			errMsg = fmt.Sprintf("Project template %q does not exist", checkResp.ProjectTemplate.Name)
+		}
+		c.ui.Output(errMsg, terminal.WithErrorStyle())
 		return 1
 	}
 	template := tr.ProjectTemplate
