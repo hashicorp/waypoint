@@ -1,0 +1,4 @@
+```release-note:bug
+config-sources: Return correct workspace-scoped config sources at the global
+scope, when a workspace is specified.
+```
