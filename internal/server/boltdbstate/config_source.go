@@ -150,7 +150,7 @@ func (s *State) configSourceGetMerged(
 
 	switch scope := req.Scope.(type) {
 	case *pb.GetConfigSourceRequest_Global:
-		return sources, nil
+		// Do nothing, because we already got the global config sources
 
 	case *pb.GetConfigSourceRequest_Project:
 		// Project scope, grab our project scope vars and only those
