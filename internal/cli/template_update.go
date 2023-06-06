@@ -69,11 +69,7 @@ func (c *ProjectTemplateUpdateCommand) Run(args []string) int {
 	}
 
 	checkResp, err := c.project.Client().GetProjectTemplate(ctx, &pb.GetProjectTemplateRequest{
-		ProjectTemplate: &pb.Ref_ProjectTemplate{
-			Ref: &pb.Ref_ProjectTemplate_Name{
-				Name: name,
-			},
-		},
+		ProjectTemplate: tref,
 	})
 	if err != nil {
 		c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
