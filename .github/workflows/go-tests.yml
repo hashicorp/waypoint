@@ -17,8 +17,8 @@ jobs:
         run: go mod download
       - name: Install golangci-lint
         run: |-
-          download=https://raw.githubusercontent.com/golangci/golangci-lint/9a8a056e9fe49c0e9ed2287aedce1022c79a115b/install.sh  # v1.52.2
-          curl -sSf "$download" | sh -s v1.50.1
+          download=https://raw.githubusercontent.com/golangci/golangci-lint/829af927217a21ea5483757d4c1f7bbbfa30a032/install.sh # v1.53.2
+          curl -sSf "$download" | sh -s v1.53.2
       - run: go mod download
       - name: lint
         run: |-
@@ -54,7 +54,7 @@ jobs:
         env:
           runner_count: 8
         run: ./.github/scripts/split-tests.sh
-                
+
   go-test:
     name: go-test-${{ matrix.id }}
     runs-on: ubuntu-latest
