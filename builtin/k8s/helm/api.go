@@ -23,7 +23,7 @@ import (
 func (p *Platform) settingsInit() (*cli.EnvSettings, error) {
 	cli := cli.New()
 	if p.config.Namespace != "" {
-	    cli.SetNamespace(p.config.Namespace)
+		cli.SetNamespace(p.config.Namespace)
 	}
 	return cli, nil
 }

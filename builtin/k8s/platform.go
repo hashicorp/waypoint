@@ -554,13 +554,13 @@ func configureContainer(
 		}
 
 		container.LivenessProbe = &corev1.Probe{
-			ProbeHandler:             handler,
+			ProbeHandler:        handler,
 			InitialDelaySeconds: initialDelaySeconds,
 			TimeoutSeconds:      timeoutSeconds,
 			FailureThreshold:    failureThreshold,
 		}
 		container.ReadinessProbe = &corev1.Probe{
-			ProbeHandler:             handler,
+			ProbeHandler:        handler,
 			InitialDelaySeconds: initialDelaySeconds,
 			TimeoutSeconds:      timeoutSeconds,
 			FailureThreshold:    failureThreshold,
