@@ -26,19 +26,13 @@ import (
 	"github.com/hashicorp/waypoint/pkg/serverstate"
 )
 
+// TODO: test
 func (s *Service) EntrypointConfig(
 	req *pb.EntrypointConfigRequest,
 	srv pb.Waypoint_EntrypointConfigServer,
 ) error {
 	log := hclog.FromContext(srv.Context())
 	ctx := srv.Context()
-
-	// Validate CEB token is valid for this deployment
-	if tok := s.decodedTokenFromContext(ctx); tok != nil {
-		if tok.UnusedEntrypoint != nil && tok.UnusedEntrypoint.DeploymentId != req.DeploymentId {
-			return status.Errorf(codes.PermissionDenied, "entrypoint token invalid for this deployment ID: %s", req.DeploymentId)
-		}
-	}
 
 	// Fetch the deployment info so we can calculate the config variables to send.
 	// This also verifies this deployment exists.
