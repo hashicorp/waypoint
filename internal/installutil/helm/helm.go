@@ -85,7 +85,7 @@ func (k *restClientGetter) ToRawKubeConfigLoader() clientcmd.ClientConfig {
 func SettingsInit(ns string) (*cli.EnvSettings, error) {
 	cli := cli.New()
 	if ns != "" {
-	    cli.SetNamespace(ns)
+		cli.SetNamespace(ns)
 	}
 	return cli, nil
 }
@@ -96,7 +96,7 @@ func ActionInit(log hclog.Logger, kubeConfigPath string, context string, namespa
 	if err != nil {
 		return nil, err
 	}
-	if (namespace != "") {
+	if namespace != "" {
 		ns = namespace
 	}
 	driver := "secret"
