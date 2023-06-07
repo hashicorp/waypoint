@@ -11,7 +11,6 @@ import (
 
 	"github.com/google/go-github/github"
 	"github.com/hashicorp/go-hclog"
-	"github.com/hashicorp/waypoint/builtin/k8s"
 	"helm.sh/helm/v3/pkg/action"
 	"helm.sh/helm/v3/pkg/chart"
 	"helm.sh/helm/v3/pkg/chart/loader"
@@ -23,6 +22,8 @@ import (
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/restmapper"
 	"k8s.io/client-go/tools/clientcmd"
+
+	"github.com/hashicorp/waypoint/builtin/k8s"
 )
 
 // restClientGetter is a RESTClientGetter interface implementation for the
