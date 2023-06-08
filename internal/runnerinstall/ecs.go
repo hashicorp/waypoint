@@ -356,86 +356,110 @@ func (i *ECSRunnerInstaller) Uninstall(ctx context.Context, opts *InstallOpts) e
 			return err
 		}
 
-		s.Update("Runner uninstalled")
+		s.Update("Waypoint runner AWS ECS service deleted")
 	}
 	s.Done()
 
 	// TODO: Still attempt to delete the EFS volume if the ECS service
 	// uninstall fails
+	s = sg.Add("Deleting runner file system")
 	efsSvc := efs.New(sess)
 	marker := ""
 	done := false
 	var fileSystems []*efs.FileSystemDescription
 	for !done {
-		fileSystemsResp, err := efsSvc.DescribeFileSystems(&efs.DescribeFileSystemsInput{
-			Marker:   aws.String(marker),
+		req := &efs.DescribeFileSystemsInput{
 			MaxItems: aws.Int64(100),
-		})
+		}
+		if marker != "" {
+			req.Marker = aws.String(marker)
+		}
+		fileSystemsResp, err := efsSvc.DescribeFileSystems(req)
 		if err != nil {
 			return err
 		}
-		if marker == *fileSystemsResp.Marker {
+
+		if fileSystemsResp.NextMarker == nil {
 			done = true
+		} else {
+			marker = *fileSystemsResp.NextMarker
+			time.Sleep(5 * time.Second)
 		}
 		fileSystems = append(fileSystems, fileSystemsResp.FileSystems...)
 	}
 
-	var fileSystemId *string
-	for _, fileSystem := range fileSystems {
-		// Check if tags match ID, if so then delete things
-		for _, tag := range fileSystem.Tags {
-			if *tag.Key == "runner-id" && *tag.Value == opts.Id {
-				fileSystemId = fileSystem.FileSystemId
-				goto DeleteFileSystem
-			}
-		}
-	}
-
-DeleteFileSystem:
-	describeAccessPointsResp, err := efsSvc.DescribeAccessPoints(&efs.DescribeAccessPointsInput{
-		FileSystemId: fileSystemId,
-	})
-	if err != nil {
-		return err
-	}
-	for _, accessPoint := range describeAccessPointsResp.AccessPoints {
-		_, err = efsSvc.DeleteAccessPoint(&efs.DeleteAccessPointInput{AccessPointId: accessPoint.AccessPointId})
-		if err != nil {
-			return err
-		}
-	}
-
-	describeMountTargetsResp, err := efsSvc.DescribeMountTargets(&efs.DescribeMountTargetsInput{
-		FileSystemId: fileSystemId,
-	})
-	for _, mountTarget := range describeMountTargetsResp.MountTargets {
-		_, err = efsSvc.DeleteMountTarget(&efs.DeleteMountTargetInput{MountTargetId: mountTarget.MountTargetId})
-		if err != nil {
-			return err
-		}
-	}
-
-	for {
-		ctx, cancel := context.WithTimeout(ctx, 5*time.Minute)
-		defer cancel()
-		select {
-		case <-ctx.Done():
-			return errors.New("after 5 minutes, the file system could" +
-				"not be deleted, because the mount targets weren't deleted")
-		default:
-			_, err = efsSvc.DeleteFileSystem(&efs.DeleteFileSystemInput{FileSystemId: fileSystemId})
-			if err != nil {
-				if strings.Contains(err.Error(), "because it has mount targets") {
-					// sleep here for 5 seconds to avoid slamming the API
-					time.Sleep(5 * time.Second)
-					continue
+	if len(fileSystems) == 0 {
+		s.Update("No file systems detected, skipping deletion")
+	} else {
+		var fileSystemId *string
+		for _, fileSystem := range fileSystems {
+			// Check if tags match ID, if so then delete things
+			for _, tag := range fileSystem.Tags {
+				if *tag.Key == "runner-id" && *tag.Value == opts.Id {
+					fileSystemId = fileSystem.FileSystemId
+					// This goto skips to the logic for deleting the file system -
+					// we know which one we need to delete now, so there's no need
+					// to iterate through any additional fileSystems
+					goto DeleteFileSystem
 				}
-				return err
 			}
-			// if we reach this point, we're done
+		}
+
+		if *fileSystemId == "" {
+			s.Update("File system with tag key `runner-id` and value " + opts.Id + " not detected, skipping deletion")
+			s.Done()
 			return nil
 		}
+
+	DeleteFileSystem:
+		describeAccessPointsResp, err := efsSvc.DescribeAccessPoints(&efs.DescribeAccessPointsInput{
+			FileSystemId: fileSystemId,
+		})
+		if err != nil {
+			return err
+		}
+		for _, accessPoint := range describeAccessPointsResp.AccessPoints {
+			_, err = efsSvc.DeleteAccessPoint(&efs.DeleteAccessPointInput{AccessPointId: accessPoint.AccessPointId})
+			if err != nil {
+				return err
+			}
+		}
+
+		describeMountTargetsResp, err := efsSvc.DescribeMountTargets(&efs.DescribeMountTargetsInput{
+			FileSystemId: fileSystemId,
+		})
+		for _, mountTarget := range describeMountTargetsResp.MountTargets {
+			_, err = efsSvc.DeleteMountTarget(&efs.DeleteMountTargetInput{MountTargetId: mountTarget.MountTargetId})
+			if err != nil {
+				return err
+			}
+		}
+
+		ctx, cancel := context.WithTimeout(ctx, 5*time.Minute)
+		defer cancel()
+		for {
+			select {
+			case <-ctx.Done():
+				return errors.New("after 5 minutes, the file system could" +
+					"not be deleted, because the mount targets weren't deleted")
+			default:
+				_, err = efsSvc.DeleteFileSystem(&efs.DeleteFileSystemInput{FileSystemId: fileSystemId})
+				if err != nil {
+					if strings.Contains(err.Error(), "because it has mount targets") {
+						// sleep here for 5 seconds to avoid slamming the API
+						time.Sleep(5 * time.Second)
+						continue
+					}
+					return err
+				}
+				// if we reach this point, we're done
+				s.Update("Runner file system deleted")
+				s.Done()
+				return nil
+			}
+		}
 	}
+	return nil
 }
 
 func (i *ECSRunnerInstaller) UninstallFlags(set *flag.Set) {
@@ -541,7 +565,7 @@ func launchRunner(
 		ExecutionRoleArn:        aws.String(executionRoleArn),
 		Cpu:                     aws.String(cpu),
 		Memory:                  aws.String(memory),
-		Family:                  aws.String(defaultRunnerTagName),
+		Family:                  aws.String(installutil.DefaultRunnerName(id)),
 		TaskRoleArn:             &taskRoleArn,
 		NetworkMode:             aws.String("awsvpc"),
 		RequiresCompatibilities: []*string{aws.String(defaultTaskRuntime)},
