@@ -592,8 +592,10 @@ message UI {
   }
 
   message GetPipelineRunResponse {
+    // deprecated in favor of pipeline_run_bundle.
     PipelineRun pipeline_run = 1;
     PipelineRunTreeNode root_tree_node = 2;
+    PipelineRunBundle pipeline_run_bundle = 3;
   }
 
   message PipelineBundle {

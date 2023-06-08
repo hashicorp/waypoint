@@ -191,8 +191,10 @@ func TestServiceUI_GetPipelineRun(t *testing.T, factory Factory) {
 		Sequence: seq,
 	})
 	require.NoError(err)
-	require.NotNil(resp.PipelineRun)
-	require.Equal(seq, resp.PipelineRun.Sequence)
+	require.NotNil(resp.PipelineRunBundle)
+	require.Equal(seq, resp.PipelineRunBundle.PipelineRun.Sequence)
+	require.NotNil(resp.PipelineRunBundle.Application)
+	require.NotNil(resp.PipelineRunBundle.QueueTime)
 
 	hello := resp.RootTreeNode
 	require.NotNil(hello)
