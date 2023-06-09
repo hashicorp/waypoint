@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package runnerinstall
 
 import (
@@ -364,102 +367,89 @@ func (i *ECSRunnerInstaller) Uninstall(ctx context.Context, opts *InstallOpts) e
 	// uninstall fails
 	s = sg.Add("Deleting runner file system")
 	efsSvc := efs.New(sess)
-	marker := ""
-	done := false
 	var fileSystems []*efs.FileSystemDescription
-	for !done {
-		req := &efs.DescribeFileSystemsInput{
-			MaxItems: aws.Int64(100),
-		}
-		if marker != "" {
-			req.Marker = aws.String(marker)
-		}
-		fileSystemsResp, err := efsSvc.DescribeFileSystems(req)
-		if err != nil {
-			return err
-		}
-
-		if fileSystemsResp.NextMarker == nil {
-			done = true
-		} else {
-			marker = *fileSystemsResp.NextMarker
-			time.Sleep(5 * time.Second)
-		}
-		fileSystems = append(fileSystems, fileSystemsResp.FileSystems...)
+	err = efsSvc.DescribeFileSystemsPages(&efs.DescribeFileSystemsInput{},
+		func(page *efs.DescribeFileSystemsOutput, lastPage bool) bool {
+			fileSystems = append(fileSystems, page.FileSystems...)
+			return !lastPage
+		})
+	if err != nil {
+		return err
 	}
 
 	if len(fileSystems) == 0 {
 		s.Update("No file systems detected, skipping deletion")
-	} else {
-		var fileSystemId *string
-		for _, fileSystem := range fileSystems {
-			// Check if tags match ID, if so then delete things
-			for _, tag := range fileSystem.Tags {
-				if *tag.Key == "runner-id" && *tag.Value == opts.Id {
-					fileSystemId = fileSystem.FileSystemId
-					// This goto skips to the logic for deleting the file system -
-					// we know which one we need to delete now, so there's no need
-					// to iterate through any additional fileSystems
-					goto DeleteFileSystem
-				}
-			}
-		}
+		s.Done()
+		return nil
+	}
 
-		if *fileSystemId == "" {
-			s.Update("File system with tag key `runner-id` and value " + opts.Id + " not detected, skipping deletion")
-			s.Done()
-			return nil
-		}
-
-	DeleteFileSystem:
-		describeAccessPointsResp, err := efsSvc.DescribeAccessPoints(&efs.DescribeAccessPointsInput{
-			FileSystemId: fileSystemId,
-		})
-		if err != nil {
-			return err
-		}
-		for _, accessPoint := range describeAccessPointsResp.AccessPoints {
-			_, err = efsSvc.DeleteAccessPoint(&efs.DeleteAccessPointInput{AccessPointId: accessPoint.AccessPointId})
-			if err != nil {
-				return err
-			}
-		}
-
-		describeMountTargetsResp, err := efsSvc.DescribeMountTargets(&efs.DescribeMountTargetsInput{
-			FileSystemId: fileSystemId,
-		})
-		for _, mountTarget := range describeMountTargetsResp.MountTargets {
-			_, err = efsSvc.DeleteMountTarget(&efs.DeleteMountTargetInput{MountTargetId: mountTarget.MountTargetId})
-			if err != nil {
-				return err
-			}
-		}
-
-		ctx, cancel := context.WithTimeout(ctx, 5*time.Minute)
-		defer cancel()
-		for {
-			select {
-			case <-ctx.Done():
-				return errors.New("after 5 minutes, the file system could" +
-					"not be deleted, because the mount targets weren't deleted")
-			default:
-				_, err = efsSvc.DeleteFileSystem(&efs.DeleteFileSystemInput{FileSystemId: fileSystemId})
-				if err != nil {
-					if strings.Contains(err.Error(), "because it has mount targets") {
-						// sleep here for 5 seconds to avoid slamming the API
-						time.Sleep(5 * time.Second)
-						continue
-					}
-					return err
-				}
-				// if we reach this point, we're done
-				s.Update("Runner file system deleted")
-				s.Done()
-				return nil
+	var fileSystemId *string
+	for _, fileSystem := range fileSystems {
+		// Check if tags match ID, if so then delete things
+		for _, tag := range fileSystem.Tags {
+			if *tag.Key == "runner-id" && *tag.Value == opts.Id {
+				fileSystemId = fileSystem.FileSystemId
+				// This goto skips to the logic for deleting the file system -
+				// we know which one we need to delete now, so there's no need
+				// to iterate through any additional fileSystems
+				goto DeleteFileSystem
 			}
 		}
 	}
-	return nil
+
+	if *fileSystemId == "" {
+		s.Update("File system with tag key `runner-id` and value " + opts.Id + " not detected, skipping deletion")
+		s.Done()
+		return nil
+	}
+
+DeleteFileSystem:
+	describeAccessPointsResp, err := efsSvc.DescribeAccessPoints(&efs.DescribeAccessPointsInput{
+		FileSystemId: fileSystemId,
+	})
+	if err != nil {
+		return err
+	}
+	for _, accessPoint := range describeAccessPointsResp.AccessPoints {
+		_, err = efsSvc.DeleteAccessPoint(&efs.DeleteAccessPointInput{AccessPointId: accessPoint.AccessPointId})
+		if err != nil {
+			return err
+		}
+	}
+
+	describeMountTargetsResp, err := efsSvc.DescribeMountTargets(&efs.DescribeMountTargetsInput{
+		FileSystemId: fileSystemId,
+	})
+	for _, mountTarget := range describeMountTargetsResp.MountTargets {
+		_, err = efsSvc.DeleteMountTarget(&efs.DeleteMountTargetInput{MountTargetId: mountTarget.MountTargetId})
+		if err != nil {
+			return err
+		}
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Minute)
+	defer cancel()
+	for {
+		select {
+		case <-ctx.Done():
+			return errors.New("after 5 minutes, the file system could" +
+				"not be deleted, because the mount targets weren't deleted")
+		default:
+			_, err = efsSvc.DeleteFileSystem(&efs.DeleteFileSystemInput{FileSystemId: fileSystemId})
+			if err != nil {
+				if strings.Contains(err.Error(), "because it has mount targets") {
+					// sleep here for 5 seconds to avoid slamming the API
+					time.Sleep(5 * time.Second)
+					continue
+				}
+				return err
+			}
+			// if we reach this point, we're done
+			s.Update("Runner file system deleted")
+			s.Done()
+			return nil
+		}
+	}
 }
 
 func (i *ECSRunnerInstaller) UninstallFlags(set *flag.Set) {
@@ -565,7 +555,7 @@ func launchRunner(
 		ExecutionRoleArn:        aws.String(executionRoleArn),
 		Cpu:                     aws.String(cpu),
 		Memory:                  aws.String(memory),
-		Family:                  aws.String(installutil.DefaultRunnerName(id)),
+		Family:                  aws.String(defaultRunnerTagName),
 		TaskRoleArn:             &taskRoleArn,
 		NetworkMode:             aws.String("awsvpc"),
 		RequiresCompatibilities: []*string{aws.String(defaultTaskRuntime)},
