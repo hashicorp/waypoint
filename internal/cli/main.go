@@ -52,8 +52,9 @@ var (
 
 	// hiddenCommands are not shown in CLI help output.
 	hiddenCommands = map[string]struct{}{
-		"plugin": {},
-		"k8s":    {},
+		"plugin":   {},
+		"k8s":      {},
+		"template": {},
 
 		// Deprecated:
 		"token": {}, // replaced by "user"
@@ -799,6 +800,37 @@ func Commands(
 				baseCommand: baseCommand,
 			}, nil
 		},
+		"template": func() (cli.Command, error) {
+			return &helpCommand{
+				SynopsisText: helpText["template"][0],
+				HelpText:     helpText["template"][1],
+			}, nil
+		},
+		"template create": func() (cli.Command, error) {
+			return &ProjectTemplateCreateCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
+		"template inspect": func() (cli.Command, error) {
+			return &ProjectTemplateInspectCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
+		"template list": func() (cli.Command, error) {
+			return &ProjectTemplateListCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
+		"template update": func() (cli.Command, error) {
+			return &ProjectTemplateUpdateCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
+		"template delete": func() (cli.Command, error) {
+			return &ProjectTemplateDeleteCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
 	}
 
 	// register our aliases
@@ -1193,6 +1225,15 @@ runners (i.e. on-demand runners) when needed using the configured plugin.
 		"Manage workspaces",
 		`
 List and inspect Workspaces for this context.
+`,
+	},
+	"template": {
+		"Project Template management",
+		`
+Manage project templates stored within Waypoint server. These templates are
+used to create Waypoint projects with defaults defined as well as with
+associated infrastructure that a deployed application may need through
+Terraform no-code modules.
 `,
 	},
 }
