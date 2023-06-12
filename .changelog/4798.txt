@@ -1,0 +1,3 @@
+```release-note:improvement
+runnerinstall/nomad: Add CLI flags for setting custom CPU and memory resources.
+```
