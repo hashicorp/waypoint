@@ -7,6 +7,7 @@ import (
 	"context"
 
 	"github.com/hashicorp/go-hclog"
+
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	"github.com/hashicorp/waypoint/pkg/server/hcerr"
 	serverptypes "github.com/hashicorp/waypoint/pkg/server/ptypes"
@@ -20,7 +21,7 @@ func (s *Service) ListPipelineRuns(
 		return nil, err
 	}
 
-	result, err := s.state(ctx).PipelineRunList(ctx, req.Pipeline)
+	result, err := s.state(ctx).PipelineRunList(ctx, req.Pipeline, nil)
 	if err != nil {
 		return nil, hcerr.Externalize(
 			hclog.FromContext(ctx),

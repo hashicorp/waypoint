@@ -210,7 +210,8 @@ type Interface interface {
 	PipelineRunGet(context.Context, *pb.Ref_Pipeline, uint64) (*pb.PipelineRun, error)
 	PipelineRunGetLatest(context.Context, string) (*pb.PipelineRun, error)
 	PipelineRunGetById(context.Context, string) (*pb.PipelineRun, error)
-	PipelineRunList(context.Context, *pb.Ref_Pipeline) ([]*pb.PipelineRun, error)
+	// Runs are returned in insertion order by default. Pass `sequence desc` for reverse order.
+	PipelineRunList(context.Context, *pb.Ref_Pipeline, *pb.SortingRequest) ([]*pb.PipelineRun, error)
 
 	//---------------------------------------------------------------
 	// Templates
