@@ -10,7 +10,7 @@ jobs:
     outputs:
       yarn-cache-key: ${{ steps.set-cache-key.outputs.cache-key}}
     steps:
-      - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
+      - uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
 
       - name: set-cache-key
         id: set-cache-key
@@ -46,7 +46,7 @@ jobs:
     needs:
       - build-frontend
     steps:
-      - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
+      - uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
       - uses: actions/setup-go@fac708d6674e30b6ba41289acaab6d4b75aa0753 # v4.0.1
         with:
           go-version-file: go.mod
@@ -80,7 +80,7 @@ jobs:
       - dev-build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
+      - uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
       - name: Setup k3s
         run: |-
           curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION="v1.26.3+k3s1" INSTALL_K3S_EXEC="--docker --disable=traefik --write-kubeconfig-mode=664" sh -
