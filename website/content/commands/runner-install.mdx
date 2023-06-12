@@ -84,6 +84,8 @@ the install, the command would be:
 
 - `-nomad-dc=<string>` - Datacenters to install to for Nomad. The default is dc1.
 - `-nomad-runner-image=<string>` - Docker image for the Waypoint runner. The default is hashicorp/waypoint.
+- `-nomad-runner-cpu=<string>` - CPU required to run the runner task in MHz.
+- `-nomad-runner-memory=<string>` - MB of Memory to allocate to the runner job task.
 - `-nomad-host-volume=<string>` - Nomad host volume name.
 - `-nomad-csi-volume-plugin-id=<string>` - The ID of the CSI plugin that manages the volume, required for volume type 'csi'.
 - `-nomad-csi-volume-provider=<string>` - Nomad CSI volume provider, required for volume type 'csi'.

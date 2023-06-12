@@ -250,6 +250,18 @@ func (i *NomadRunnerInstaller) InstallFlags(set *flag.Set) {
 	})
 
 	set.StringVar(&flag.StringVar{
+		Name:   "nomad-runner-cpu",
+		Target: &i.Config.RunnerResourcesCPU,
+		Usage:  "CPU required to run the runner task in MHz.",
+	})
+
+	set.StringVar(&flag.StringVar{
+		Name:   "nomad-runner-memory",
+		Target: &i.Config.RunnerResourcesMemory,
+		Usage:  "MB of Memory to allocate to the runner job task.",
+	})
+
+	set.StringVar(&flag.StringVar{
 		Name:   "nomad-host-volume",
 		Target: &i.Config.HostVolume,
 		Usage:  "Nomad host volume name.",
