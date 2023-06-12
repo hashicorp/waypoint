@@ -359,28 +359,28 @@ func (i *ECSRunnerInstaller) Uninstall(ctx context.Context, opts *InstallOpts) e
 			return err
 		}
 
-		s.Update("Runner uninstalled")
+		s.Update("Waypoint runner AWS ECS service deleted")
 	}
 	s.Done()
 
 	// TODO: Still attempt to delete the EFS volume if the ECS service
 	// uninstall fails
+	s = sg.Add("Deleting runner file system")
 	efsSvc := efs.New(sess)
-	marker := ""
-	done := false
 	var fileSystems []*efs.FileSystemDescription
-	for !done {
-		fileSystemsResp, err := efsSvc.DescribeFileSystems(&efs.DescribeFileSystemsInput{
-			Marker:   aws.String(marker),
-			MaxItems: aws.Int64(100),
+	err = efsSvc.DescribeFileSystemsPages(&efs.DescribeFileSystemsInput{},
+		func(page *efs.DescribeFileSystemsOutput, lastPage bool) bool {
+			fileSystems = append(fileSystems, page.FileSystems...)
+			return !lastPage
 		})
-		if err != nil {
-			return err
-		}
-		if marker == *fileSystemsResp.Marker {
-			done = true
-		}
-		fileSystems = append(fileSystems, fileSystemsResp.FileSystems...)
+	if err != nil {
+		return err
+	}
+
+	if len(fileSystems) == 0 {
+		s.Update("No file systems detected, skipping deletion")
+		s.Done()
+		return nil
 	}
 
 	var fileSystemId *string
@@ -389,9 +389,18 @@ func (i *ECSRunnerInstaller) Uninstall(ctx context.Context, opts *InstallOpts) e
 		for _, tag := range fileSystem.Tags {
 			if *tag.Key == "runner-id" && *tag.Value == opts.Id {
 				fileSystemId = fileSystem.FileSystemId
+				// This goto skips to the logic for deleting the file system -
+				// we know which one we need to delete now, so there's no need
+				// to iterate through any additional fileSystems
 				goto DeleteFileSystem
 			}
 		}
+	}
+
+	if *fileSystemId == "" {
+		s.Update("File system with tag key `runner-id` and value " + opts.Id + " not detected, skipping deletion")
+		s.Done()
+		return nil
 	}
 
 DeleteFileSystem:
@@ -421,9 +430,9 @@ DeleteFileSystem:
 		}
 	}
 
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Minute)
+	defer cancel()
 	for {
-		ctx, cancel := context.WithTimeout(ctx, 5*time.Minute)
-		defer cancel()
 		select {
 		case <-ctx.Done():
 			return errors.New("after 5 minutes, the file system could" +
@@ -439,6 +448,8 @@ DeleteFileSystem:
 				return err
 			}
 			// if we reach this point, we're done
+			s.Update("Runner file system deleted")
+			s.Done()
 			return nil
 		}
 	}
