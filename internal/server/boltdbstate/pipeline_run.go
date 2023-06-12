@@ -14,6 +14,7 @@ import (
 	"google.golang.org/protobuf/proto"
 
 	"github.com/hashicorp/go-memdb"
+
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	"github.com/hashicorp/waypoint/pkg/server/ptypes"
 )
@@ -247,7 +248,7 @@ func (s *State) pipelineRunGetById(
 	return &result, dbGet(b, []byte(strings.ToLower(Id)), &result)
 }
 
-func (s *State) PipelineRunList(ctx context.Context, pRef *pb.Ref_Pipeline) ([]*pb.PipelineRun, error) {
+func (s *State) PipelineRunList(ctx context.Context, pRef *pb.Ref_Pipeline, sorting *pb.SortingRequest) ([]*pb.PipelineRun, error) {
 	memTxn := s.inmem.Txn(false)
 	defer memTxn.Abort()
 
@@ -259,7 +260,7 @@ func (s *State) PipelineRunList(ctx context.Context, pRef *pb.Ref_Pipeline) ([]*
 
 	var out []*pb.PipelineRun
 	err := s.db.View(func(dbTxn *bolt.Tx) error {
-		rrs, err := s.pipelineRunList(memTxn, pId.Id)
+		rrs, err := s.pipelineRunList(memTxn, pId.Id, sorting)
 		if err != nil {
 			return err
 		}
@@ -284,8 +285,17 @@ func (s *State) PipelineRunList(ctx context.Context, pRef *pb.Ref_Pipeline) ([]*
 func (s *State) pipelineRunList(
 	memTxn *memdb.Txn,
 	pId string,
+	sorting *pb.SortingRequest,
 ) ([]*pipelineRunIndexRecord, error) {
-	iter, err := memTxn.Get(pipelineRunIndexTableName, pipelineRunIndexPId+"_prefix", pId)
+	get := memTxn.Get
+
+	for _, d := range sorting.GetOrderBy() {
+		if d == "sequence desc" {
+			get = memTxn.GetReverse
+		}
+	}
+
+	iter, err := get(pipelineRunIndexTableName, pipelineRunIndexPIdBySeq+"_prefix", pId)
 	if err != nil {
 		return nil, err
 	}

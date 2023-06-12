@@ -216,7 +216,7 @@ func TestPipelineRun(t *testing.T, factory Factory, restartF RestartFactory) {
 
 		// List all runs, check that sequence increments
 		{
-			resp, err := s.PipelineRunList(ctx, pipeline)
+			resp, err := s.PipelineRunList(ctx, pipeline, nil)
 			require.NoError(err)
 			require.NotNil(resp)
 			require.Len(resp, 3)
@@ -226,6 +226,55 @@ func TestPipelineRun(t *testing.T, factory Factory, restartF RestartFactory) {
 			require.Equal(uint64(2), resp[1].Sequence)
 			require.Equal(r3.Id, resp[2].Id)
 			require.Equal(uint64(3), resp[2].Sequence)
+		}
+	})
+
+	t.Run("List by sequence, descending", func(t *testing.T) {
+		require := require.New(t)
+
+		s := factory(t)
+		defer s.Close()
+
+		// Write project
+		ref := &pb.Ref_Project{Project: "project"}
+		require.NoError(s.ProjectPut(ctx, serverptypes.TestProject(t, &pb.Project{
+			Name: ref.Project,
+		})))
+
+		// Set Pipeline
+		p := ptypes.TestPipeline(t, nil)
+		err := s.PipelinePut(ctx, p)
+		require.NoError(err)
+
+		pipeline := &pb.Ref_Pipeline{Ref: &pb.Ref_Pipeline_Id{Id: p.Id}}
+
+		// Set Pipeline Run
+		r := ptypes.TestPipelineRun(t, &pb.PipelineRun{Id: "test1", Pipeline: pipeline})
+		err = s.PipelineRunPut(ctx, r)
+		require.NoError(err)
+
+		// Set Another Pipeline Run
+		r2 := ptypes.TestPipelineRun(t, &pb.PipelineRun{Id: "test2", Pipeline: pipeline})
+		err = s.PipelineRunPut(ctx, r2)
+		require.NoError(err)
+
+		// Set Another Pipeline Run
+		r3 := ptypes.TestPipelineRun(t, &pb.PipelineRun{Id: "test3", Pipeline: pipeline})
+		err = s.PipelineRunPut(ctx, r3)
+		require.NoError(err)
+
+		// List all runs by sequence, descending, check that sequence descends
+		{
+			resp, err := s.PipelineRunList(ctx, pipeline, &pb.SortingRequest{OrderBy: []string{"sequence desc"}})
+			require.NoError(err)
+			require.NotNil(resp)
+			require.Len(resp, 3)
+			require.Equal(r3.Id, resp[0].Id)
+			require.Equal(uint64(3), resp[0].Sequence)
+			require.Equal(r2.Id, resp[1].Id)
+			require.Equal(uint64(2), resp[1].Sequence)
+			require.Equal(r.Id, resp[2].Id)
+			require.Equal(uint64(1), resp[2].Sequence)
 		}
 	})
 }

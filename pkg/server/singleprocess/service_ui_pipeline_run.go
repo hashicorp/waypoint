@@ -32,7 +32,11 @@ func (s *Service) UI_ListPipelineRuns(
 	var allPipelineRuns []*pb.UI_PipelineRunBundle
 
 	// Get list of all pipeline runs
-	pipelineRunListResponse, err := s.state(ctx).PipelineRunList(ctx, req.Pipeline)
+	pipelineRunListResponse, err := s.state(ctx).PipelineRunList(
+		ctx,
+		req.Pipeline,
+		&pb.SortingRequest{OrderBy: []string{"sequence desc"}},
+	)
 	if err != nil {
 		return nil, hcerr.Externalize(
 			log,
