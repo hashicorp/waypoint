@@ -1,0 +1,3 @@
+```release-note:bug
+runneruninstall/aws-ecs: Fix deletion of file system for AWS ECS runner.
+```
