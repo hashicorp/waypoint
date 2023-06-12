@@ -21,7 +21,7 @@ func (s *Service) ListPipelineRuns(
 		return nil, err
 	}
 
-	result, err := s.state(ctx).PipelineRunList(ctx, req.Pipeline, nil)
+	result, err := s.state(ctx).PipelineRunList(ctx, req.Pipeline, &pb.SortingRequest{})
 	if err != nil {
 		return nil, hcerr.Externalize(
 			hclog.FromContext(ctx),
