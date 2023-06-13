@@ -49,6 +49,7 @@ type nomadConfig struct {
 	serviceBackendTags []string `hcl:"service_backend_tags:optional"`
 	serviceAddress     string   `hcl:"service_address,optional"`
 	networkMode        string   `hcl:"network_mode,optional"`
+	hostNetwork        string   `hcl:"host_network,optional"`
 
 	consulService            bool     `hcl:"consul_service,optional"`
 	consulServiceUITags      []string `hcl:"consul_service_ui_tags:optional"`
@@ -908,20 +909,27 @@ func waypointNomadJob(c nomadConfig, rawRunFlags []string, upgrade bool) *api.Jo
 	}
 	tg.Services = services
 
+	hostNetwork := "default"
+	if c.hostNetwork != "" {
+		hostNetwork = c.hostNetwork
+	}
+
 	tg.Networks = []*api.NetworkResource{
 		{
 			Mode: c.networkMode,
 			// currently set to static; when ui command can be dynamic - update this
 			ReservedPorts: []api.Port{
 				{
-					Label: "ui",
-					Value: httpPort,
-					To:    httpPort,
+					Label:       "ui",
+					Value:       httpPort,
+					To:          httpPort,
+					HostNetwork: hostNetwork,
 				},
 				{
-					Label: "server",
-					To:    grpcPort,
-					Value: grpcPort,
+					Label:       "server",
+					To:          grpcPort,
+					Value:       grpcPort,
+					HostNetwork: hostNetwork,
 				},
 			},
 		},
@@ -1176,6 +1184,14 @@ func (i *NomadInstaller) InstallFlags(set *flag.Set) {
 		Target:  &i.config.networkMode,
 		Usage:   "Nomad task group network mode.",
 		Default: "host",
+	})
+
+	set.StringVar(&flag.StringVar{
+		Name:   "nomad-host-network",
+		Target: &i.config.hostNetwork,
+		Usage: "Designates the host network name to use when allocating the" +
+			" ports of the Waypoint server.",
+		Default: "default",
 	})
 
 	set.StringVar(&flag.StringVar{
@@ -1464,6 +1480,14 @@ func (i *NomadInstaller) UpgradeFlags(set *flag.Set) {
 		Target:  &i.config.networkMode,
 		Usage:   "Nomad task group network mode.",
 		Default: "host",
+	})
+
+	set.StringVar(&flag.StringVar{
+		Name:   "nomad-host-network",
+		Target: &i.config.hostNetwork,
+		Usage: "Designates the host network name to use when allocating the" +
+			" ports of the Waypoint server.",
+		Default: "default",
 	})
 
 	set.StringVar(&flag.StringVar{
