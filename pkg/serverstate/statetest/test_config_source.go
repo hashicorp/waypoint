@@ -404,6 +404,192 @@ func TestConfigSource(t *testing.T, factory Factory, restartF RestartFactory) {
 		require.NotNil(pcs)
 		require.Equal(pcs[0].Config["token"], "123")
 	})
+
+	// this test verifies that if there is no workspace-project scoped config
+	// source but there is a global one, then we get the global one back when
+	// requesting a workspace-project scoped config source
+	t.Run("put global config source and get workspace-project scoped config source", func(t *testing.T) {
+		require := require.New(t)
+
+		s := factory(t)
+		defer s.Close()
+
+		require.NoError(s.ProjectPut(ctx, &pb.Project{
+			Name: "testProject",
+		}))
+
+		require.NoError(s.WorkspacePut(ctx, &pb.Workspace{
+			Name: "dev",
+		}))
+
+		// Create a config source at the global scope, no workspace
+		require.NoError(s.ConfigSourceSet(ctx, &pb.ConfigSource{
+			Scope: &pb.ConfigSource_Global{
+				Global: &pb.Ref_Global{},
+			},
+
+			Type:   "vault",
+			Config: map[string]string{},
+		}))
+
+		// Use a workspace and project scoped config source get request
+		// There is no config source with that scope set, but we should still
+		// get the global config source back
+		resp, err := s.ConfigSourceGet(ctx, &pb.GetConfigSourceRequest{
+			Scope: &pb.GetConfigSourceRequest_Project{
+				Project: &pb.Ref_Project{
+					Project: "testProject",
+				},
+			},
+			Workspace: &pb.Ref_Workspace{
+				Workspace: "dev",
+			},
+			Type: "vault",
+		})
+		require.NoError(err)
+		require.NotNil(resp)
+		require.Equal(1, len(resp))
+	})
+
+	// this test verifies that if we have a global config source not scoped to
+	// any workspace, and we request a config source for a given project in a
+	// specific workspace, then we get the more-tightly scoped config source
+	t.Run("put global & workspace-project scoped config source and get workspace-project config source", func(t *testing.T) {
+		require := require.New(t)
+
+		s := factory(t)
+		defer s.Close()
+
+		require.NoError(s.ProjectPut(ctx, &pb.Project{
+			Name: "testProject",
+		}))
+
+		require.NoError(s.WorkspacePut(ctx, &pb.Workspace{
+			Name: "dev",
+		}))
+
+		// Create a config source at the global scope, no workspace
+		require.NoError(s.ConfigSourceSet(ctx, &pb.ConfigSource{
+			Scope: &pb.ConfigSource_Global{
+				Global: &pb.Ref_Global{},
+			},
+
+			Type: "vault",
+			Config: map[string]string{
+				"token": "global",
+			},
+		}))
+
+		// Create a config source at the project scope in dev workspace
+		require.NoError(s.ConfigSourceSet(ctx, &pb.ConfigSource{
+			Scope: &pb.ConfigSource_Project{
+				Project: &pb.Ref_Project{
+					Project: "testProject",
+				},
+			},
+			Workspace: &pb.Ref_Workspace{
+				Workspace: "dev",
+			},
+
+			Type: "vault",
+			Config: map[string]string{
+				"token": "dev",
+			},
+		}))
+
+		// Use a workspace and project scoped config source get request
+		// We should get back the workspace-project scoped config source as
+		// the first result in our slice of config sources
+		resp, err := s.ConfigSourceGet(ctx, &pb.GetConfigSourceRequest{
+			Scope: &pb.GetConfigSourceRequest_Project{
+				Project: &pb.Ref_Project{
+					Project: "testProject",
+				},
+			},
+			Workspace: &pb.Ref_Workspace{
+				Workspace: "dev",
+			},
+			Type: "vault",
+		})
+		require.NoError(err)
+		require.NotNil(resp)
+		require.Equal(2, len(resp))
+		require.Equal("global", resp[0].Config["token"])
+		require.Equal("dev", resp[1].Config["token"])
+	})
+
+	// this test verifies that if we have a global config source not scoped to
+	// any workspace, and we request a config source for a given app in a
+	// specific workspace, then we get the more-tightly scoped config source
+	t.Run("put global & workspace-project scoped config source and get workspace-app config source", func(t *testing.T) {
+		require := require.New(t)
+
+		s := factory(t)
+		defer s.Close()
+
+		require.NoError(s.ProjectPut(ctx, &pb.Project{
+			Name: "testProject",
+		}))
+
+		_, err := s.AppPut(ctx, &pb.Application{
+			Project: &pb.Ref_Project{Project: "testProject"},
+			Name:    "testApp",
+		})
+		require.NoError(err)
+
+		require.NoError(s.WorkspacePut(ctx, &pb.Workspace{
+			Name: "dev",
+		}))
+
+		// Create a config source at the global scope, no workspace
+		require.NoError(s.ConfigSourceSet(ctx, &pb.ConfigSource{
+			Scope: &pb.ConfigSource_Global{
+				Global: &pb.Ref_Global{},
+			},
+
+			Type: "vault",
+			Config: map[string]string{
+				"token": "abc",
+			},
+		}))
+
+		// Create a config source at the app scope in dev workspace
+		require.NoError(s.ConfigSourceSet(ctx, &pb.ConfigSource{
+			Scope: &pb.ConfigSource_Application{Application: &pb.Ref_Application{
+				Application: "testApp",
+				Project:     "testProject",
+			}},
+			Workspace: &pb.Ref_Workspace{
+				Workspace: "dev",
+			},
+
+			Type: "vault",
+			Config: map[string]string{
+				"token": "123",
+			},
+		}))
+
+		// Use a workspace and app scoped config source get request
+		// We should get back the workspace-app scoped config source as
+		// the first result in our slice of config sources
+		resp, err := s.ConfigSourceGet(ctx, &pb.GetConfigSourceRequest{
+			Scope: &pb.GetConfigSourceRequest_Application{
+				Application: &pb.Ref_Application{
+					Application: "testApp",
+					Project:     "testProject",
+				},
+			},
+			Workspace: &pb.Ref_Workspace{
+				Workspace: "dev",
+			},
+			Type: "vault",
+		})
+		require.NoError(err)
+		require.NotNil(resp)
+		require.Equal(2, len(resp))
+		require.Equal("abc", resp[0].Config["token"])
+		require.Equal("123", resp[1].Config["token"])
+	})
 }
 
 func TestConfigSourceWatch(t *testing.T, factory Factory, restartF RestartFactory) {
