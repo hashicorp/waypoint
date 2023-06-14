@@ -137,6 +137,10 @@ service Waypoint {
   // GetDeployment returns a deployment
   rpc GetDeployment(GetDeploymentRequest) returns (Deployment) {}
 
+  // GetLatestDeployment returns the most recent successfully completed deployment
+  // for an app.
+  rpc GetLatestDeployment(GetLatestDeploymentRequest) returns (GetDeploymentResponse) {}
+
   // ListInstances returns the running instances of deployments.
   rpc ListInstances(ListInstancesRequest) returns (ListInstancesResponse);
 
@@ -3712,6 +3716,22 @@ message PushedArtifact {
 /********************************************************************
 * Platform
 ********************************************************************/
+
+message GetLatestDeploymentRequest {
+  // application that this belongs to
+  Ref.Application application = 1;
+
+  // workspace for the artifact, any workspace if empty
+  Ref.Workspace workspace = 2;
+
+  // Load additional details about the deployment. These will become available
+  // in the Preload section.
+  Deployment.LoadDetails load_details = 3;
+}
+
+message GetDeploymentResponse {
+  Deployment deployment = 1;
+}
 
 message GetDeploymentRequest {
   Ref.Operation ref = 1;

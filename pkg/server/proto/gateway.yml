@@ -160,6 +160,12 @@ http:
   - selector: hashicorp.waypoint.Waypoint.GetDeployment
     get: /project/{ref.sequence.application.project}/application/{ref.sequence.application.application}/deployment/{ref.sequence.number}
 
+  - selector: hashicorp.waypoint.Waypoint.GetLatestDeployment
+    get: /project/{application.project}/application/{application.application}/deployment/latest
+
+  - selector: hashicorp.waypoint.Waypoint.GetLatestDeployment
+    get: /project/{application.project}/application/{application.application}/workspace/{workspace.workspace}/deployment/latest
+
   # Instances
   - selector: hashicorp.waypoint.Waypoint.ListInstances
     get: /instances/{deployment_id}

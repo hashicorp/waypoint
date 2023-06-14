@@ -81,3 +81,10 @@ func ValidateGetDeploymentRequest(v *pb.GetDeploymentRequest) error {
 		}),
 	))
 }
+
+// ValidateGetLatestDeploymentRequest
+func ValidateGetLatestDeploymentRequest(v *pb.GetLatestDeploymentRequest) error {
+	return validationext.Error(validation.ValidateStruct(v,
+		validation.Field(&v.Application, validation.Required),
+	))
+}
