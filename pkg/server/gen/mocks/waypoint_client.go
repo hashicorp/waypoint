@@ -1189,7 +1189,7 @@ func (_m *WaypointClient) GetLatestBuild(ctx context.Context, in *gen.GetLatestB
 }
 
 // GetLatestDeployment provides a mock function with given fields: ctx, in, opts
-func (_m *WaypointClient) GetLatestDeployment(ctx context.Context, in *gen.GetLatestDeploymentRequest, opts ...grpc.CallOption) (*gen.Deployment, error) {
+func (_m *WaypointClient) GetLatestDeployment(ctx context.Context, in *gen.GetLatestDeploymentRequest, opts ...grpc.CallOption) (*gen.GetDeploymentResponse, error) {
 	_va := make([]interface{}, len(opts))
 	for _i := range opts {
 		_va[_i] = opts[_i]
@@ -1199,12 +1199,12 @@ func (_m *WaypointClient) GetLatestDeployment(ctx context.Context, in *gen.GetLa
 	_ca = append(_ca, _va...)
 	ret := _m.Called(_ca...)
 
-	var r0 *gen.Deployment
-	if rf, ok := ret.Get(0).(func(context.Context, *gen.GetLatestDeploymentRequest, ...grpc.CallOption) *gen.Deployment); ok {
+	var r0 *gen.GetDeploymentResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.GetLatestDeploymentRequest, ...grpc.CallOption) *gen.GetDeploymentResponse); ok {
 		r0 = rf(ctx, in, opts...)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*gen.Deployment)
+			r0 = ret.Get(0).(*gen.GetDeploymentResponse)
 		}
 	}
 

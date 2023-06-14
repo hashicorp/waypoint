@@ -137,9 +137,9 @@ service Waypoint {
   // GetDeployment returns a deployment
   rpc GetDeployment(GetDeploymentRequest) returns (Deployment) {}
 
-  // GetLatestDeployment returns the most recent successfully completed build
+  // GetLatestDeployment returns the most recent successfully completed deployment
   // for an app.
-  rpc GetLatestDeployment(GetLatestDeploymentRequest) returns (Deployment) {}
+  rpc GetLatestDeployment(GetLatestDeploymentRequest) returns (GetDeploymentResponse) {}
 
   // ListInstances returns the running instances of deployments.
   rpc ListInstances(ListInstancesRequest) returns (ListInstancesResponse);
@@ -3727,6 +3727,10 @@ message GetLatestDeploymentRequest {
   // Load additional details about the deployment. These will become available
   // in the Preload section.
   Deployment.LoadDetails load_details = 3;
+}
+
+message GetDeploymentResponse {
+  Deployment deployment = 1;
 }
 
 message GetDeploymentRequest {

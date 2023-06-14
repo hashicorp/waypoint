@@ -124,16 +124,15 @@ func setDeploymentUrlIfNeeded(d *pb.Deployment) {
 	}
 }
 
-// TODO: test
 func (s *Service) GetLatestDeployment(
 	ctx context.Context,
 	req *pb.GetLatestDeploymentRequest,
-) (*pb.Deployment, error) {
+) (*pb.GetDeploymentResponse, error) {
 	if err := ptypes.ValidateGetLatestDeploymentRequest(req); err != nil {
 		return nil, err
 	}
 
-	r, err := s.state(ctx).DeploymentLatest(ctx, req.Application, req.Workspace)
+	deployment, err := s.state(ctx).DeploymentLatest(ctx, req.Application, req.Workspace)
 	if err != nil {
 		return nil, hcerr.Externalize(
 			hclog.FromContext(ctx),
@@ -142,7 +141,7 @@ func (s *Service) GetLatestDeployment(
 		)
 	}
 
-	if err := s.deploymentPreloadDetails(ctx, req.LoadDetails, r); err != nil {
+	if err := s.deploymentPreloadDetails(ctx, req.LoadDetails, deployment); err != nil {
 		return nil, hcerr.Externalize(
 			hclog.FromContext(ctx),
 			err,
@@ -150,7 +149,9 @@ func (s *Service) GetLatestDeployment(
 		)
 	}
 
-	return r, nil
+	return &pb.GetDeploymentResponse{
+		Deployment: deployment,
+	}, nil
 }
 
 // GetDeployment returns a Deployment based on ID

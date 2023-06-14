@@ -869,15 +869,15 @@ func (_m *WaypointServer) GetLatestBuild(_a0 context.Context, _a1 *gen.GetLatest
 }
 
 // GetLatestDeployment provides a mock function with given fields: _a0, _a1
-func (_m *WaypointServer) GetLatestDeployment(_a0 context.Context, _a1 *gen.GetLatestDeploymentRequest) (*gen.Deployment, error) {
+func (_m *WaypointServer) GetLatestDeployment(_a0 context.Context, _a1 *gen.GetLatestDeploymentRequest) (*gen.GetDeploymentResponse, error) {
 	ret := _m.Called(_a0, _a1)
 
-	var r0 *gen.Deployment
-	if rf, ok := ret.Get(0).(func(context.Context, *gen.GetLatestDeploymentRequest) *gen.Deployment); ok {
+	var r0 *gen.GetDeploymentResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.GetLatestDeploymentRequest) *gen.GetDeploymentResponse); ok {
 		r0 = rf(_a0, _a1)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*gen.Deployment)
+			r0 = ret.Get(0).(*gen.GetDeploymentResponse)
 		}
 	}
 

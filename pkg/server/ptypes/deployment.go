@@ -82,7 +82,6 @@ func ValidateGetDeploymentRequest(v *pb.GetDeploymentRequest) error {
 	))
 }
 
-// TODO: Make this generic w/ build + release?
 // ValidateGetLatestDeploymentRequest
 func ValidateGetLatestDeploymentRequest(v *pb.GetLatestDeploymentRequest) error {
 	return validationext.Error(validation.ValidateStruct(v,

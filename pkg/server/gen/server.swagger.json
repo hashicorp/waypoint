@@ -2883,6 +2883,62 @@
         ]
       }
     },
+    "/project/{application.project}/application/{application.application}/deployment/latest": {
+      "get": {
+        "summary": "GetLatestDeployment returns the most recent successfully completed deployment\nfor an app.",
+        "operationId": "Waypoint_GetLatestDeployment",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/hashicorp.waypoint.GetDeploymentResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/grpc.gateway.runtime.Error"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "application.project",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "application.application",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "workspace.workspace",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "load_details",
+            "description": "Load additional details about the deployment. These will become available\nin the Preload section.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "NONE",
+              "ARTIFACT",
+              "BUILD"
+            ],
+            "default": "NONE"
+          }
+        ],
+        "tags": [
+          "Waypoint"
+        ]
+      }
+    },
     "/project/{application.project}/application/{application.application}/deployments": {
       "get": {
         "summary": "ListDeployments returns the deployments.",
@@ -3572,6 +3628,62 @@
             "required": false,
             "type": "integer",
             "format": "int64"
+          }
+        ],
+        "tags": [
+          "Waypoint"
+        ]
+      }
+    },
+    "/project/{application.project}/application/{application.application}/workspace/{workspace.workspace}/deployment/latest": {
+      "get": {
+        "summary": "GetLatestDeployment returns the most recent successfully completed deployment\nfor an app.",
+        "operationId": "Waypoint_GetLatestDeployment2",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/hashicorp.waypoint.GetDeploymentResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/grpc.gateway.runtime.Error"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "application.project",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "application.application",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "workspace.workspace",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "load_details",
+            "description": "Load additional details about the deployment. These will become available\nin the Preload section.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "NONE",
+              "ARTIFACT",
+              "BUILD"
+            ],
+            "default": "NONE"
           }
         ],
         "tags": [
@@ -8704,6 +8816,14 @@
           "items": {
             "$ref": "#/definitions/hashicorp.waypoint.ConfigSource"
           }
+        }
+      }
+    },
+    "hashicorp.waypoint.GetDeploymentResponse": {
+      "type": "object",
+      "properties": {
+        "deployment": {
+          "$ref": "#/definitions/hashicorp.waypoint.Deployment"
         }
       }
     },

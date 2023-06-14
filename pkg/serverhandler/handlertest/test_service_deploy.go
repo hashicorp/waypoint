@@ -152,7 +152,6 @@ func TestServiceDeployment_GetLatestDeployment(t *testing.T, factory Factory) {
 	// Upsert some deployments
 	depNum := []int{1, 2, 3}
 	for index := range depNum {
-		// for i := 0; i < 3; i++ {
 		buildresp, err := client.UpsertBuild(ctx, &pb.UpsertBuildRequest{
 			Build: serverptypes.TestValidBuild(t, nil),
 		})
@@ -198,15 +197,15 @@ func TestServiceDeployment_GetLatestDeployment(t *testing.T, factory Factory) {
 	t.Run("get latest", func(t *testing.T) {
 		require := require.New(t)
 
-		deployment, err := client.GetLatestDeployment(ctx, &Req{
+		latestDeploymentResponse, err := client.GetLatestDeployment(ctx, &Req{
 			Application: application,
 			Workspace:   workspace,
 		})
 
-		// GetLatest, should return the latest succesful deployment
+		// GetLatest, should return the latest successful deployment
 		require.NoError(err)
-		require.NotEmpty(deployment)
-		require.Equal(deployment.Id, latestSuccessfulDepResp.Deployment.Id)
+		require.NotEmpty(latestDeploymentResponse)
+		require.Equal(latestDeploymentResponse.Deployment.Id, latestSuccessfulDepResp.Deployment.Id)
 	})
 }
 
