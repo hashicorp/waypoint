@@ -1,0 +1,4 @@
+```release-note:improvement
+serverinstall/nomad: Add config flag `-nomad-host-network` for specifying the
+host network of the Waypoint server Nomad job's gRPC and HTTP (UI) ports.
+```
