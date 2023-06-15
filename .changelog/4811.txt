@@ -1,0 +1,3 @@
+```release-note:bug
+plugin/aws-ecs: Allow cancelling server install command when waiting on health.
+```
