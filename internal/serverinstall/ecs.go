@@ -26,6 +26,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/elbv2"
 	"github.com/aws/aws-sdk-go/service/resourcegroups"
 	"github.com/hashicorp/go-hclog"
+
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/builtin/aws/utils"
 	"github.com/hashicorp/waypoint/internal/clicontext"
@@ -429,7 +430,12 @@ func (i *ECSInstaller) Launch(
 				break
 			}
 		}
-		time.Sleep(5 * time.Second)
+
+		select {
+		case <-time.After(5 * time.Second):
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		}
 	}
 
 	if !healthy {
