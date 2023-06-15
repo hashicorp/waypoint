@@ -6,6 +6,41 @@ IMPROVEMENTS:
 
 BUG FIXES:
 
+## 0.11.2 (June 15, 2023)
+
+IMPROVEMENTS:
+
+* cli,server: Introduce explicit `delete` endpoint for CLI and Server for Config
+  and Config Sourcers. [[GH-4754](https://github.com/hashicorp/waypoint/issues/4754)]
+* cli: Use -w flag for workspace scoping on `config set` and `config delete`,
+  instead of `workspace-scope`. [[GH-4770](https://github.com/hashicorp/waypoint/issues/4770)]
+* plugin/aws-ecs: Add config options for the target group protocol and protocol
+  version. [[GH-4742](https://github.com/hashicorp/waypoint/issues/4742)]
+* runnerinstall/nomad: Add CLI flags for setting custom CPU and memory resources. [[GH-4798](https://github.com/hashicorp/waypoint/issues/4798)]
+* serverinstall/nomad: Add config flag `-nomad-host-network` for specifying the
+  host network of the Waypoint server Nomad job's gRPC and HTTP (UI) ports. [[GH-4804](https://github.com/hashicorp/waypoint/issues/4804)]
+
+BUG FIXES:
+
+* auth: Prevent a runner token from generating a new token for a different runner [[GH-4707](https://github.com/hashicorp/waypoint/issues/4707)]
+* builtin: de-dupe various hcl annotation keys [[GH-4701](https://github.com/hashicorp/waypoint/issues/4701)]
+* cli: Honor runner install -platform arg [[GH-4699](https://github.com/hashicorp/waypoint/issues/4699)]
+* config-sources: Return correct workspace-scoped config sources at the global
+  scope, when a workspace is specified. [[GH-4774](https://github.com/hashicorp/waypoint/issues/4774)]
+* config: Remove extra eval context append for parsing configs which caused a slowdown during pipeline config parsing. [[GH-4744](https://github.com/hashicorp/waypoint/issues/4744)]
+* plugin/aws-ecs: Destroy the ALB only if it is managed by Waypoint. [[GH-4742](https://github.com/hashicorp/waypoint/issues/4742)]
+* plugin/aws-ecs: Fix failure when destroying the target group during a release
+  destroy operation. [[GH-4742](https://github.com/hashicorp/waypoint/issues/4742)]
+* plugin/aws-ecs: Fix panic when settings `grpc_code` or `http_code` for a health
+  check. [[GH-4742](https://github.com/hashicorp/waypoint/issues/4742)]
+* plugin/aws-ecs: Set the protocol of a health check correctly. [[GH-4742](https://github.com/hashicorp/waypoint/issues/4742)]
+* plugin/azure-aci: Update plugin to attempt CLI auth if environment auth fails. [[GH-4763](https://github.com/hashicorp/waypoint/issues/4763)]
+* plugin/ecs: Make `alb.load_balancer_arn` optional [[GH-4729](https://github.com/hashicorp/waypoint/issues/4729)]
+* plugin/ecs: Set health check timeout and interval values to compatible default
+  values. [[GH-4767](https://github.com/hashicorp/waypoint/issues/4767)]
+* runnerinstall/aws-ecs: Add missing permission to on-demand runner IAM policy. [[GH-4742](https://github.com/hashicorp/waypoint/issues/4742)]
+* runneruninstall/aws-ecs: Fix deletion of file system for AWS ECS runner. [[GH-4792](https://github.com/hashicorp/waypoint/issues/4792)]
+
 ## 0.11.1 (May 11, 2023)
 
 IMPROVEMENTS:
