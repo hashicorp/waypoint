@@ -79,6 +79,7 @@ func (s *stream) Run(ctx context.Context) (*pb.Job_Result, error) {
 	// too long and show a UI message. For example, if we're queued for a long
 	// time we notify the user we're queued.
 	var stateEventTimer *time.Timer
+	var jobWaitTimer *time.Timer
 
 	// The UI that will translate terminal events into UI calls.
 	ui := s.ui
@@ -171,6 +172,10 @@ func (s *stream) Run(ctx context.Context) (*pb.Job_Result, error) {
 				stateEventTimer.Stop()
 				stateEventTimer = nil
 			}
+			if jobWaitTimer != nil {
+				jobWaitTimer.Stop()
+				jobWaitTimer = nil
+			}
 
 			// Check if this job has been assigned a runner for the first time
 			if event.State != nil &&
@@ -230,6 +235,27 @@ func (s *stream) Run(ctx context.Context) (*pb.Job_Result, error) {
 							"If you interrupt this command, the job will still run in the background.",
 							terminal.WithInfoStyle())
 					})
+
+					// We're waiting, let's give more context to the user
+					jobWaitTimer = time.AfterFunc(noRunnerAckEventPause, func() {
+						ui.Output("")
+						ui.Output(
+							"The system has waited a long time (> 60 seconds) with no runner activity \n"+
+								"accepting the job. There could be many reasons for this, one of which \n"+
+								"could be that the selected runner profile is no longer valid or the runner \n"+
+								"on the platform is stuck or unavailable.",
+							terminal.WithWarningStyle())
+						ui.Output("")
+						ui.Output(
+							"If this command continues to be stuck, double check that the selected \n"+
+								"runner profile is still valid, and that the runner exists within your \n"+
+								"selected platform and is available to receieve and execute jobs.",
+							terminal.WithWarningStyle())
+						ui.Output("")
+						ui.Output(
+							"Runner profiles can be managed and inspected with \"waypoint runner profile\".",
+							terminal.WithWarningStyle())
+					})
 				}
 
 			case pb.Job_WAITING:
@@ -266,3 +292,9 @@ func (s *stream) Run(ctx context.Context) (*pb.Job_Result, error) {
 // to accomidate the additional time before the job was picked up when testing in
 // local Docker.
 const stateEventPause = 3000 * time.Millisecond
+
+// If no runner has accepted a job after 1 minute, it might be that the runner
+// profile selected is no longer valid or the runner no longer exists. Generally
+// active runners should be picking up tasks right away. Our jobs have a 2 minute
+// timeout, so if it's taken at least 1 minute, something is probably up.
+const noRunnerAckEventPause = 1 * time.Minute
