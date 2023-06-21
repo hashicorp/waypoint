@@ -84,6 +84,7 @@ const odrRolePolicy = `{
         "ecs:DeregisterTaskDefinition",
         "ecs:RunTask",
         "ecs:StopTask",
+	"elasticloadbalancing:AddTags",
         "elasticloadbalancing:CreateListener",
         "elasticloadbalancing:CreateLoadBalancer",
         "elasticloadbalancing:CreateRule",
