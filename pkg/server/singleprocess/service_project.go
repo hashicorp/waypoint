@@ -301,7 +301,7 @@ func (s *Service) serverSideProjectInit(ctx context.Context, project *pb.Project
 
 	for _, b := range content.Blocks.ByType()["app"] {
 		name := b.Labels[0]
-		_, err := s.UpsertApplication(ctx, &pb.UpsertApplicationRequest{
+		_, err := s.state(ctx).AppPut(ctx, &pb.Application{
 			Project: projRef,
 			Name:    name,
 		})
@@ -316,9 +316,7 @@ func (s *Service) serverSideProjectInit(ctx context.Context, project *pb.Project
 	}
 
 	// Reload the project to populate the newly-added apps
-	resp, err := s.GetProject(ctx, &pb.GetProjectRequest{
-		Project: projRef,
-	})
+	result, err := s.state(ctx).ProjectGet(ctx, projRef)
 	if err != nil {
 		return nil, hcerr.Externalize(
 			hclog.FromContext(ctx),
@@ -327,7 +325,6 @@ func (s *Service) serverSideProjectInit(ctx context.Context, project *pb.Project
 			project.GetName(),
 		)
 	}
-	project = resp.Project
 
-	return project, nil
+	return result, nil
 }
