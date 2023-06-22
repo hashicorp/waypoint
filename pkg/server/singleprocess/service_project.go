@@ -5,8 +5,11 @@ package singleprocess
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/hashicorp/go-hclog"
+	"github.com/hashicorp/hcl/v2"
+	"github.com/hashicorp/hcl/v2/hclsyntax"
 
 	empty "google.golang.org/protobuf/types/known/emptypb"
 
@@ -34,7 +37,13 @@ func (s *Service) UpsertProject(
 		)
 	}
 
-	if projectNeedsRemoteInit(result) {
+	if hasUsableWaypointHCL(result) {
+		proj, err := s.serverSideProjectInit(ctx, result)
+		if err != nil {
+			return nil, err // already externalized
+		}
+		result = proj
+	} else if projectNeedsRemoteInit(result) {
 		// The project is connected to a data source but doesn’t use
 		// automatic polling, so let’s queue some remote init operations
 		// to ensure the application list is populated.
@@ -265,4 +274,60 @@ func projectNeedsRemoteInit(project *pb.Project) bool {
 	}
 
 	return true
+}
+
+// hasUsableWaypointHCL verifies that a project has waypoint.hcl contents
+// of type HCL
+func hasUsableWaypointHCL(project *pb.Project) bool {
+	return len(project.WaypointHcl) > 0 && project.WaypointHclFormat == pb.Hcl_HCL
+}
+
+// serverSideProjectInit initializes a project that directly contains a waypoint.hcl.
+// "init" currently consists of getting the list of apps on a project, and upserting each one.
+// If the waypoint.hcl is not on the project but is in VCS, you must enqueue an init job
+// rather than attempting a serverside init.
+// Returns externalized errors
+func (s *Service) serverSideProjectInit(ctx context.Context, project *pb.Project) (*pb.Project, error) {
+	if !hasUsableWaypointHCL(project) {
+		return nil, fmt.Errorf("cannot init a project without a stored waypoint.hcl with hcl type contents serverside")
+	}
+	file, _ := hclsyntax.ParseConfig(project.WaypointHcl, "<waypoint-hcl>", hcl.Pos{})
+	content, _ := file.Body.Content(&hcl.BodySchema{
+		Blocks: []hcl.BlockHeaderSchema{
+			{Type: "app", LabelNames: []string{"name"}},
+		},
+	})
+	projRef := &pb.Ref_Project{Project: project.Name}
+
+	for _, b := range content.Blocks.ByType()["app"] {
+		name := b.Labels[0]
+		_, err := s.UpsertApplication(ctx, &pb.UpsertApplicationRequest{
+			Project: projRef,
+			Name:    name,
+		})
+		if err != nil {
+			return nil, hcerr.Externalize(
+				hclog.FromContext(ctx),
+				err,
+				"failed to register app %q while creating project %q",
+				name, project.GetName(),
+			)
+		}
+	}
+
+	// Reload the project to populate the newly-added apps
+	resp, err := s.GetProject(ctx, &pb.GetProjectRequest{
+		Project: projRef,
+	})
+	if err != nil {
+		return nil, hcerr.Externalize(
+			hclog.FromContext(ctx),
+			err,
+			"failed to reload project %q",
+			project.GetName(),
+		)
+	}
+	project = resp.Project
+
+	return project, nil
 }
