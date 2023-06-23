@@ -1,0 +1,3 @@
+```release-note:improvement
+server: Perform project init without requiring a runner if waypoint.hcl is stored serverside
+```

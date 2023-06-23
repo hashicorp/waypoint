@@ -19,6 +19,7 @@ func init() {
 		TestServiceProject_GetApplication,
 		TestServiceProject_UpsertApplication,
 		TestServiceProject_InvalidName,
+		TestServiceProject_AutoPopulateApps,
 	}
 }
 
@@ -274,4 +275,54 @@ func TestServiceProject_InvalidName(t *testing.T, factory Factory) {
 		Project: project,
 	})
 	require.Error(err)
+}
+
+func TestServiceProject_AutoPopulateApps(t *testing.T, factory Factory) {
+	ctx := context.Background()
+	require := require.New(t)
+	client, _ := factory(t)
+
+	project := ptypes.TestProject(t, &pb.Project{
+		WaypointHcl: []byte(`
+			project = "test"
+
+			variable "vartest" {
+			  type = string
+			  default = ""
+			}
+
+			app "website" {
+			  build {
+			    use "docker" {}
+			  }
+			  deploy {
+			    use "kubernetes" {}
+			  }
+			  release {
+			    use "kubernetes" {}
+			  }
+			}
+
+			app "api" {
+			  build {
+			    use "docker" {}
+			  }
+			  deploy {
+			    use "kubernetes" {}
+			  }
+			  release {
+			    use "kubernetes" {}
+			  }
+			}
+		`),
+	})
+
+	resp, err := client.UpsertProject(ctx, &pb.UpsertProjectRequest{
+		Project: project,
+	})
+	require.NoError(err)
+	require.NotNil(resp)
+	require.Len(resp.Project.Applications, 2)
+	require.Equal("website", resp.Project.Applications[0].Name)
+	require.Equal("api", resp.Project.Applications[1].Name)
 }
