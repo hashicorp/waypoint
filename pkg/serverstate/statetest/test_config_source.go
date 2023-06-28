@@ -590,6 +590,51 @@ func TestConfigSource(t *testing.T, factory Factory, restartF RestartFactory) {
 		require.Equal("abc", resp[0].Config["token"])
 		require.Equal("123", resp[1].Config["token"])
 	})
+
+	t.Run("app scoped config source inheritance from project", func(t *testing.T) {
+		require := require.New(t)
+
+		s := factory(t)
+		defer s.Close()
+
+		require.NoError(s.ProjectPut(ctx, &pb.Project{
+			Name: "testProject",
+		}))
+
+		_, err := s.AppPut(ctx, &pb.Application{
+			Project: &pb.Ref_Project{Project: "testProject"},
+			Name:    "testApp",
+		})
+		require.NoError(err)
+
+		// Create a config source at the project scope
+		require.NoError(s.ConfigSourceSet(ctx, &pb.ConfigSource{
+			Scope: &pb.ConfigSource_Project{
+				Project: &pb.Ref_Project{
+					Project: "testProject",
+				},
+			},
+
+			Type: "vault",
+			Config: map[string]string{
+				"token": "project",
+			},
+		}))
+
+		// do a config source get request at the app scope
+		resp, err := s.ConfigSourceGet(ctx, &pb.GetConfigSourceRequest{
+			Scope: &pb.GetConfigSourceRequest_Application{
+				Application: &pb.Ref_Application{
+					Application: "testApp",
+					Project:     "testProject",
+				},
+			},
+			Type: "vault",
+		})
+		require.NoError(err)
+		require.Equal(1, len(resp))
+		require.Equal("project", resp[0].Config["token"])
+	})
 }
 
 func TestConfigSourceWatch(t *testing.T, factory Factory, restartF RestartFactory) {
