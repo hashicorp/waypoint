@@ -1,0 +1,8 @@
+```release-note:improvement
+cli: Add option `all` to flag `-scope` on `waypoint config source-get` command
+to output all config sources.
+```
+```release-note:improvement
+cli: Add config source's plugin type, scope, project, app, and workspace to
+output of `waypoint config-source get` when getting a specific config source.
+```

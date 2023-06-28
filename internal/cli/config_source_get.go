@@ -97,10 +97,50 @@ func (c *ConfigSourceGetCommand) Run(args []string) int {
 	}
 
 	var table *terminal.Table
+	var scope, project, app, workspace string
 	if c.flagScope != "all" {
 		// we use the first value because this will be the most specific since
 		// we do a prefix search.
 		cs := resp.ConfigSources[len(resp.ConfigSources)-1]
+		switch ref := cs.Scope.(type) {
+		case *pb.ConfigSource_Global:
+			scope = "global"
+		case *pb.ConfigSource_Project:
+			scope = "project"
+			project = ref.Project.Project
+		case *pb.ConfigSource_Application:
+			scope = "app"
+			project = ref.Application.Project
+			app = ref.Application.Application
+		}
+
+		if cs.Workspace != nil {
+			workspace = cs.Workspace.Workspace
+		}
+		// Show config source info in a flat list where each project option
+		//is its own row
+		c.ui.Output("Config Source Info:", terminal.WithHeaderStyle())
+
+		// Unset value strings will be omitted automatically
+		c.ui.NamedValues([]terminal.NamedValue{
+			{
+				Name: "Type", Value: cs.Type,
+			},
+			{
+				Name: "Scope", Value: scope,
+			},
+			{
+				Name: "Project", Value: project,
+			},
+			{
+				Name: "App", Value: app,
+			},
+			{
+				Name: "Workspace", Value: workspace,
+			},
+		}, terminal.WithInfoStyle())
+		c.ui.Output("")
+
 		table = terminal.NewTable("Key", "Value")
 		for k, v := range cs.Config {
 			table.Rich([]string{
@@ -114,7 +154,6 @@ func (c *ConfigSourceGetCommand) Run(args []string) int {
 	} else {
 		table = terminal.NewTable("Type", "Scope", "Project", "App", "Workspace")
 		for _, cs := range resp.ConfigSources {
-			var scope, project, app, workspace string
 			switch ref := cs.Scope.(type) {
 			case *pb.ConfigSource_Global:
 				scope = "global"
