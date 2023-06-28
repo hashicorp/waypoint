@@ -175,6 +175,12 @@ func (s *State) configSourceGetMerged(
 
 		sources = append(sources, appSources...)
 
+	case *pb.GetConfigSourceRequest_All:
+		sources, err = s.configSourceGetExact(dbTxn, memTxn, ws, nil, "")
+		if err != nil {
+			return nil, err
+		}
+		goto SORT
 	default:
 		panic("unknown scope")
 	}
@@ -189,13 +195,13 @@ func (s *State) configSourceGetMerged(
 		}
 	}
 
+SORT:
 	var result []*pb.ConfigSource
 	for _, source := range sources {
 		if source != nil {
 			result = append(result, source)
 		}
 	}
-
 	sort.Sort(serversort.ConfigSource(result))
 
 	return result, nil
@@ -213,47 +219,57 @@ func (s *State) configSourceGetExact(
 	// We have to get the correct iterator based on the scope. We check the
 	// scope and use the proper index to get the iterator here.
 	var iter memdb.ResultIterator
-	switch ref := ref.(type) {
-	case *pb.Ref_Global:
-		var err error
+	var err error
+	if ref != nil {
+		switch ref := ref.(type) {
+		case *pb.Ref_Global:
+			iter, err = memTxn.Get(
+				configSourceIndexTableName,
+				configSourceIndexGlobalIndexName+"_prefix",
+				true,
+				typeVal,
+			)
+			if err != nil {
+				return nil, err
+			}
+
+		case *pb.Ref_Project:
+			iter, err = memTxn.Get(
+				configSourceIndexTableName,
+				configIndexProjectIndexName+"_prefix",
+				ref.Project,
+				true,
+				typeVal,
+			)
+			if err != nil {
+				return nil, err
+			}
+
+		case *pb.Ref_Application:
+			iter, err = memTxn.Get(
+				configSourceIndexTableName,
+				configSourceIndexApplicationIndexName+"_prefix",
+				ref.Project,
+				ref.Application,
+				typeVal,
+			)
+			if err != nil {
+				return nil, err
+			}
+
+		default:
+			panic("unknown scope")
+		}
+	} else {
+		// if no scope was passed in here, we want all config sources, so we'll
+		// use the ID index
 		iter, err = memTxn.Get(
 			configSourceIndexTableName,
-			configSourceIndexGlobalIndexName+"_prefix",
-			true,
-			typeVal,
-		)
+			configSourceIndexIdIndexName+"_prefix",
+			"")
 		if err != nil {
 			return nil, err
 		}
-
-	case *pb.Ref_Project:
-		var err error
-		iter, err = memTxn.Get(
-			configSourceIndexTableName,
-			configIndexProjectIndexName+"_prefix",
-			ref.Project,
-			true,
-			typeVal,
-		)
-		if err != nil {
-			return nil, err
-		}
-
-	case *pb.Ref_Application:
-		var err error
-		iter, err = memTxn.Get(
-			configSourceIndexTableName,
-			configSourceIndexApplicationIndexName+"_prefix",
-			ref.Project,
-			ref.Application,
-			typeVal,
-		)
-		if err != nil {
-			return nil, err
-		}
-
-	default:
-		panic("unknown scope")
 	}
 
 	// Add to our watchset

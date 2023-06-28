@@ -29,7 +29,7 @@ func (c *ConfigSourceGetCommand) Run(args []string) int {
 	}
 
 	// type is required
-	if c.flagType == "" {
+	if c.flagScope != "all" && c.flagType == "" {
 		c.ui.Output("A source type must be specified with '-type'.\n"+c.Help(), terminal.WithErrorStyle())
 		return 1
 	}
@@ -67,6 +67,9 @@ func (c *ConfigSourceGetCommand) Run(args []string) int {
 			},
 		}
 
+	case "all":
+		getConfigSourceRequest.Scope = &pb.GetConfigSourceRequest_All{All: true}
+
 	default:
 		err := fmt.Errorf("-scope needs to be one of 'global', 'project', or 'app'")
 		c.project.UI.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
@@ -90,19 +93,56 @@ func (c *ConfigSourceGetCommand) Run(args []string) int {
 		return 1
 	}
 
-	// we use the first value because this will be the most specific since
-	// we do a prefix search.
-	cs := resp.ConfigSources[len(resp.ConfigSources)-1]
-	table := terminal.NewTable("Key", "Value")
-	for k, v := range cs.Config {
-		table.Rich([]string{
-			k,
-			v,
-		}, []string{
-			"",
-			"",
-		})
+	var table *terminal.Table
+	if c.flagScope != "all" {
+		// we use the first value because this will be the most specific since
+		// we do a prefix search.
+		cs := resp.ConfigSources[len(resp.ConfigSources)-1]
+		table = terminal.NewTable("Key", "Value")
+		for k, v := range cs.Config {
+			table.Rich([]string{
+				k,
+				v,
+			}, []string{
+				"",
+				"",
+			})
+		}
+	} else {
+		table = terminal.NewTable("Type", "Scope", "Project", "App", "Workspace")
+		for _, cs := range resp.ConfigSources {
+			var scope, project, app, workspace string
+			switch ref := cs.Scope.(type) {
+			case *pb.ConfigSource_Global:
+				scope = "global"
+			case *pb.ConfigSource_Project:
+				scope = "project"
+				project = ref.Project.Project
+			case *pb.ConfigSource_Application:
+				scope = "app"
+				project = ref.Application.Project
+				app = ref.Application.Application
+			}
+
+			if cs.Workspace != nil {
+				workspace = cs.Workspace.Workspace
+			}
+			table.Rich([]string{
+				cs.Type,
+				scope,
+				project,
+				app,
+				workspace,
+			}, []string{
+				"",
+				"",
+				"",
+				"",
+				"",
+			})
+		}
 	}
+
 	c.ui.Table(table)
 	return 0
 }

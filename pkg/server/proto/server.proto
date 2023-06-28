@@ -4537,6 +4537,7 @@ message GetConfigSourceRequest {
     Ref.Global global = 50;
     Ref.Project project = 51;
     Ref.Application application = 52;
+    bool all = 53;
   }
 
   // Workspace that the target environment is in. This will limit configuration
