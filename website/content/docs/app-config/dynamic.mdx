@@ -137,18 +137,33 @@ config source corresponding with the specified `scope`.
 
 ```shell-session
 $ waypoint config source-get -scope=global -type=vault
+» Config Source Info:
+   Type: vault
+  Scope: global
+
   KEY  |           VALUE
 --------+----------------------------
   addr  | https://vault.service.consul:8200
   token | waypoint-global-token
 
 $ waypoint config source-get -scope=project -p=foo -type=vault
+Config Source Info:
+       Type: vault
+      Scope: project
+    Project: foo
+
   KEY  |           VALUE
 --------+----------------------------
   addr  | https://vault.service.consul:8200
   token | foo-project-token
 
 $ waypoint config source-get -scope=app -p=foo -a=bar -type=vault
+Config Source Info:
+       Type: vault
+      Scope: app
+    Project: foo
+        App: bar
+
   KEY  |           VALUE
 --------+----------------------------
   addr  | https://vault.service.consul:8200
@@ -158,6 +173,17 @@ $ waypoint config source-get -scope=app -p=foo -a=bar -type=vault
 In the third of the series of commands above, were the app-scoped config source
 absent, the project-scoped source would be returned. Were the project-scoped
 config source absent as well, the global-scoped config source would be returned.
+
+To view all config sources, the `all` value can be set for the scope:
+
+```shell-session
+$ waypoint config source-get -scope=all
+       TYPE       |  SCOPE  | PROJECT | APP | WORKSPACE
+------------------+---------+---------+-----+------------
+  vault           | global  |         |     |
+  vault           | project | foo     |     |
+  vault           | app     | foo     | bar |
+```
 
 The Waypoint Entrypoint will always attempt to retrieve configuration for the
 scope of the deployed app.
@@ -171,6 +197,13 @@ will be used only for operations and app instances deployed within that workspac
 $ waypoint config source-set -scope=app -p=foo -a=bar -w=foobar -type=vault -config=addr=https://vault.service.consul:8200 -config=token=bar-app-foobar-workspace-token
 
 $ waypoint config source-get -scope=app -p=foo -a=bar -w=foobar -type=vault
+Config Source Info:
+       Type: vault
+      Scope: app
+    Project: foo
+        App: bar
+  Workspace: foobar
+
   KEY  |           VALUE
 --------+----------------------------
   addr  | https://vault.service.consul:8200
