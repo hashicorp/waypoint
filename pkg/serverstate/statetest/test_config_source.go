@@ -677,8 +677,14 @@ func TestConfigSource(t *testing.T, factory Factory, restartF RestartFactory) {
 		require.Equal(4, len(sources))
 		require.Equal("vault-global", sources[0].Config["token"])
 		require.Equal("terraform-cloud-project", sources[1].Config["token"])
+		require.Equal(projectName, sources[1].Scope.(*pb.ConfigSource_Project).Project.Project)
 		require.Equal("packer-app", sources[2].Config["token"])
+		require.Equal(projectName, sources[2].Scope.(*pb.ConfigSource_Application).Application.Project)
+		require.Equal(appName, sources[2].Scope.(*pb.ConfigSource_Application).Application.Application)
 		require.Equal("consul-app-dev-workspace", sources[3].Config["token"])
+		require.Equal(projectName, sources[3].Scope.(*pb.ConfigSource_Application).Application.Project)
+		require.Equal(appName, sources[3].Scope.(*pb.ConfigSource_Application).Application.Application)
+		require.Equal("dev", sources[3].Workspace.Workspace)
 	})
 }
 
