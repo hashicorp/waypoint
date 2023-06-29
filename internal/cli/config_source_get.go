@@ -87,18 +87,16 @@ func (c *ConfigSourceGetCommand) Run(args []string) int {
 		return 1
 	}
 
-	if len(resp.ConfigSources) == 0 {
-		c.project.UI.Output(
-			"Dynamic config source %q is not configured.\n\n"+
-				"Note that this doesn't mean that this config source is not usable.\n"+
-				"Many config sources work with no explicitly set configurations.",
-			c.flagType, terminal.WithErrorStyle())
-		return 1
-	}
-
 	var table *terminal.Table
 	var scope, project, app, workspace string
 	if c.flagScope == "all" {
+		if len(resp.ConfigSources) == 0 {
+			c.project.UI.Output(
+				"No dynamic config sources are configured.\nUse the command "+
+					"\"waypoint config source-set\" to add config sources.",
+				terminal.WithWarningStyle())
+			return 0
+		}
 		table = terminal.NewTable("Type", "Scope", "Project", "App", "Workspace")
 		for _, cs := range resp.ConfigSources {
 			switch ref := cs.Scope.(type) {
@@ -131,6 +129,15 @@ func (c *ConfigSourceGetCommand) Run(args []string) int {
 			})
 		}
 	} else {
+		if len(resp.ConfigSources) == 0 {
+			c.project.UI.Output(
+				"Dynamic config source %q is not configured.\n\n"+
+					"Note that this doesn't mean that this config source is not usable.\n"+
+					"Many config sources work with no explicitly set configurations.",
+				c.flagType, terminal.WithErrorStyle())
+			return 1
+		}
+
 		// we use the first value because this will be the most specific since
 		// we do a prefix search.
 		cs := resp.ConfigSources[len(resp.ConfigSources)-1]
