@@ -28,7 +28,7 @@ func (c *ConfigSourceGetCommand) Run(args []string) int {
 		return 1
 	}
 
-	// type is required
+	// type is required if not all config sources are being retrieved
 	if c.flagScope != "all" && c.flagType == "" {
 		c.ui.Output("A source type must be specified with '-type'.\n"+c.Help(), terminal.WithErrorStyle())
 		return 1

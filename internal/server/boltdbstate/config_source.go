@@ -176,7 +176,7 @@ func (s *State) configSourceGetMerged(
 		sources = append(sources, appSources...)
 
 	case *pb.GetConfigSourceRequest_All:
-		sources, err = s.configSourceGetExact(dbTxn, memTxn, ws, nil, "")
+		sources, err = s.configSourceGetExact(dbTxn, memTxn, ws, nil, req.Type)
 		if err != nil {
 			return nil, err
 		}
@@ -261,12 +261,19 @@ func (s *State) configSourceGetExact(
 			panic("unknown scope")
 		}
 	} else {
-		// if no scope was passed in here, we want all config sources, so we'll
-		// use the ID index
-		iter, err = memTxn.Get(
-			configSourceIndexTableName,
-			configSourceIndexIdIndexName+"_prefix",
-			"")
+		// if no scope was passed in here, we're either getting all config
+		// sources, or getting all config sources of a certain type
+		if typeVal != "" {
+			iter, err = memTxn.Get(
+				configSourceIndexTableName,
+				configSourceIndexTypeIndexName+"_prefix",
+				typeVal)
+		} else {
+			iter, err = memTxn.Get(
+				configSourceIndexTableName,
+				configSourceIndexIdIndexName+"_prefix",
+				"")
+		}
 		if err != nil {
 			return nil, err
 		}
@@ -394,6 +401,16 @@ func configSourceIndexSchema() *memdb.TableSchema {
 				},
 			},
 
+			configSourceIndexTypeIndexName: {
+				Name:         configSourceIndexTypeIndexName,
+				AllowMissing: false,
+				Unique:       false,
+				Indexer: &memdb.StringFieldIndex{
+					Field:     "Type",
+					Lowercase: true,
+				},
+			},
+
 			configSourceIndexGlobalIndexName: {
 				Name:         configSourceIndexGlobalIndexName,
 				AllowMissing: true,
@@ -465,6 +482,7 @@ func configSourceIndexSchema() *memdb.TableSchema {
 const (
 	configSourceIndexTableName            = "config-source-index"
 	configSourceIndexIdIndexName          = "id"
+	configSourceIndexTypeIndexName        = "type"
 	configSourceIndexGlobalIndexName      = "global"
 	configSourceIndexProjectIndexName     = "project"
 	configSourceIndexApplicationIndexName = "application"
