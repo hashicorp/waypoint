@@ -434,6 +434,25 @@ You may set a list of private subnets here to prevent your tasks from being dire
 - **Optional**
 - Default: public subnets in the default VPC
 
+#### target_group_protocol
+
+The protocol to use for routing traffic to the targets.
+
+The protocol to use for routing traffic to the targets. For Application Load Balancers, the supported protocols are HTTP and HTTPS. For Network Load Balancers, the supported protocols are TCP, TLS, UDP, or TCP_UDP. For Gateway Load Balancers, the supported protocol is GENEVE. A TCP_UDP listener must be associated with a TCP_UDP target group. If the target is a Lambda function, this parameter does not apply.
+
+- Type: **string**
+- **Optional**
+- Default: HTTP
+
+#### target_group_protocol_version
+
+The version of the protocol to use for routing traffic to the targets.
+
+[HTTP/HTTPS protocol] The protocol version. Specify GRPC to send requests to targets using gRPC. Specify HTTP2 to send requests to targets using HTTP/2. The default is HTTP1, which sends requests to targets using HTTP/1.1.
+
+- Type: **string**
+- **Optional**
+
 #### task_role_name
 
 The name of the task IAM role to assign.
