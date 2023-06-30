@@ -265,6 +265,12 @@
             "type": "string"
           },
           {
+            "name": "all",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          },
+          {
             "name": "workspace.workspace",
             "in": "query",
             "required": false,

@@ -31,8 +31,8 @@ func (c *ConfigSourceGetCommand) Run(args []string) int {
 		return 1
 	}
 
-	// type is required
-	if c.flagType == "" {
+	// type is required if not all config sources are being retrieved
+	if c.flagScope != "all" && c.flagType == "" {
 		c.ui.Output("A source type must be specified with '-type'.\n"+c.Help(), terminal.WithErrorStyle())
 		return 1
 	}
@@ -70,6 +70,9 @@ func (c *ConfigSourceGetCommand) Run(args []string) int {
 			},
 		}
 
+	case "all":
+		getConfigSourceRequest.Scope = &pb.GetConfigSourceRequest_All{All: true}
+
 	default:
 		err := fmt.Errorf("-scope needs to be one of 'global', 'project', or 'app'")
 		c.project.UI.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
@@ -84,28 +87,111 @@ func (c *ConfigSourceGetCommand) Run(args []string) int {
 		return 1
 	}
 
-	if len(resp.ConfigSources) == 0 {
-		c.project.UI.Output(
-			"Dynamic config source %q is not configured.\n\n"+
-				"Note that this doesn't mean that this config source is not usable.\n"+
-				"Many config sources work with no explicitly set configurations.",
-			c.flagType, terminal.WithErrorStyle())
-		return 1
+	var table *terminal.Table
+	var scope, project, app, workspace string
+	if c.flagScope == "all" {
+		if len(resp.ConfigSources) == 0 {
+			c.project.UI.Output(
+				"No dynamic config sources are configured.\nUse the command "+
+					"\"waypoint config source-set\" to add config sources.",
+				terminal.WithWarningStyle())
+			return 0
+		}
+		table = terminal.NewTable("Type", "Scope", "Project", "App", "Workspace")
+		for _, cs := range resp.ConfigSources {
+			switch ref := cs.Scope.(type) {
+			case *pb.ConfigSource_Global:
+				scope = "global"
+			case *pb.ConfigSource_Project:
+				scope = "project"
+				project = ref.Project.Project
+			case *pb.ConfigSource_Application:
+				scope = "app"
+				project = ref.Application.Project
+				app = ref.Application.Application
+			}
+
+			if cs.Workspace != nil {
+				workspace = cs.Workspace.Workspace
+			}
+			table.Rich([]string{
+				cs.Type,
+				scope,
+				project,
+				app,
+				workspace,
+			}, []string{
+				"",
+				"",
+				"",
+				"",
+				"",
+			})
+		}
+	} else {
+		if len(resp.ConfigSources) == 0 {
+			c.project.UI.Output(
+				"Dynamic config source %q is not configured.\n\n"+
+					"Note that this doesn't mean that this config source is not usable.\n"+
+					"Many config sources work with no explicitly set configurations.",
+				c.flagType, terminal.WithErrorStyle())
+			return 1
+		}
+
+		// we use the first value because this will be the most specific since
+		// we do a prefix search.
+		cs := resp.ConfigSources[len(resp.ConfigSources)-1]
+		switch ref := cs.Scope.(type) {
+		case *pb.ConfigSource_Global:
+			scope = "global"
+		case *pb.ConfigSource_Project:
+			scope = "project"
+			project = ref.Project.Project
+		case *pb.ConfigSource_Application:
+			scope = "app"
+			project = ref.Application.Project
+			app = ref.Application.Application
+		}
+
+		if cs.Workspace != nil {
+			workspace = cs.Workspace.Workspace
+		}
+		// Show config source info in a flat list where each project option
+		//is its own row
+		c.ui.Output("Config Source Info:", terminal.WithHeaderStyle())
+
+		// Unset value strings will be omitted automatically
+		c.ui.NamedValues([]terminal.NamedValue{
+			{
+				Name: "Type", Value: cs.Type,
+			},
+			{
+				Name: "Scope", Value: scope,
+			},
+			{
+				Name: "Project", Value: project,
+			},
+			{
+				Name: "App", Value: app,
+			},
+			{
+				Name: "Workspace", Value: workspace,
+			},
+		}, terminal.WithInfoStyle())
+		c.ui.Output("")
+
+		table = terminal.NewTable("Key", "Value")
+		for k, v := range cs.Config {
+			table.Rich([]string{
+				k,
+				v,
+			}, []string{
+				"",
+				"",
+			})
+		}
 	}
 
-	// we use the first value because this will be the most specific since
-	// we do a prefix search.
-	cs := resp.ConfigSources[len(resp.ConfigSources)-1]
-	table := terminal.NewTable("Key", "Value")
-	for k, v := range cs.Config {
-		table.Rich([]string{
-			k,
-			v,
-		}, []string{
-			"",
-			"",
-		})
-	}
 	c.ui.Table(table)
 	return 0
 }
@@ -122,8 +208,8 @@ func (c *ConfigSourceGetCommand) Flags() *flag.Sets {
 		f.StringVar(&flag.StringVar{
 			Name: "scope",
 			Usage: "The scope for this configuration source. The configuration source " +
-				"will only appear within this scope. This can be one of 'global', 'project'," +
-				" or 'app'.",
+				"will only appear within this scope. This can be one of 'all', " +
+				"'global', 'project', or 'app'.",
 			Default: "project",
 			Target:  &c.flagScope,
 		})
