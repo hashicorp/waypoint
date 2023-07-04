@@ -9,6 +9,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"github.com/hashicorp/waypoint/version"
 	"io"
 	"io/ioutil"
 	"os"
@@ -18,13 +19,12 @@ import (
 
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
-	"github.com/mitchellh/cli"
 	"github.com/mitchellh/go-glint"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/internal/env"
 	"github.com/hashicorp/waypoint/internal/pkg/signalcontext"
-	"github.com/hashicorp/waypoint/internal/version"
+	"github.com/mitchellh/cli"
 )
 
 const (

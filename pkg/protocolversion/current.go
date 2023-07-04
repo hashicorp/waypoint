@@ -4,8 +4,8 @@
 package protocolversion
 
 import (
-	"github.com/hashicorp/waypoint/internal/version"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
+	"github.com/hashicorp/waypoint/version"
 )
 
 // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

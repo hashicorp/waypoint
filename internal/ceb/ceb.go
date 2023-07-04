@@ -9,6 +9,7 @@ package ceb
 import (
 	"context"
 	"fmt"
+	"github.com/hashicorp/waypoint/version"
 	"os"
 	"os/exec"
 	"strconv"
@@ -22,7 +23,6 @@ import (
 	"github.com/hashicorp/waypoint/internal/env"
 	"github.com/hashicorp/waypoint/internal/pkg/gatedwriter"
 	"github.com/hashicorp/waypoint/internal/plugin"
-	"github.com/hashicorp/waypoint/internal/version"
 	"github.com/hashicorp/waypoint/pkg/server"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 )

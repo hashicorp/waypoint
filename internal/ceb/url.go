@@ -6,6 +6,7 @@ package ceb
 import (
 	"context"
 	"fmt"
+	"github.com/hashicorp/waypoint/version"
 
 	"github.com/certifi/gocertifi"
 	"github.com/hashicorp/horizon/pkg/agent"
@@ -13,7 +14,6 @@ import (
 	hznpb "github.com/hashicorp/horizon/pkg/pb"
 	"github.com/pkg/errors"
 
-	"github.com/hashicorp/waypoint/internal/version"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 )
 

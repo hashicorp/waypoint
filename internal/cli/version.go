@@ -6,12 +6,12 @@ package cli
 import (
 	"context"
 	"errors"
+	"github.com/hashicorp/waypoint/version"
 	"time"
 
 	"github.com/posener/complete"
 
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
-	"github.com/hashicorp/waypoint/internal/version"
 	"github.com/hashicorp/waypoint/pkg/serverclient"
 )
 
