@@ -587,6 +587,157 @@ func TestConfigSource(t *testing.T, factory Factory, restartF RestartFactory) {
 		require.Equal("abc", resp[0].Config["token"])
 		require.Equal("123", resp[1].Config["token"])
 	})
+
+	t.Run("get all config sources", func(t *testing.T) {
+		require := require.New(t)
+
+		s := factory(t)
+		defer s.Close()
+
+		projectName := "testProject"
+		appName := "testApp"
+
+		require.NoError(s.ProjectPut(ctx, &pb.Project{
+			Name: projectName,
+		}))
+
+		_, err := s.AppPut(ctx, &pb.Application{
+			Project: &pb.Ref_Project{Project: projectName},
+			Name:    appName,
+		})
+		require.NoError(err)
+
+		require.NoError(s.WorkspacePut(ctx, &pb.Workspace{
+			Name: "dev",
+		}))
+
+		// Create a config source at the global scope, no workspace
+		require.NoError(s.ConfigSourceSet(ctx, &pb.ConfigSource{
+			Scope: &pb.ConfigSource_Global{
+				Global: &pb.Ref_Global{},
+			},
+
+			Type: "vault",
+			Config: map[string]string{
+				"token": "vault-global",
+			},
+		}))
+
+		// Create a config source at the project scope, no workspace
+		require.NoError(s.ConfigSourceSet(ctx, &pb.ConfigSource{
+			Scope: &pb.ConfigSource_Project{
+				Project: &pb.Ref_Project{
+					Project: projectName,
+				},
+			},
+
+			Type: "terraform-cloud",
+			Config: map[string]string{
+				"token": "terraform-cloud-project",
+			},
+		}))
+
+		// Create a config source at the app scope, no workspace
+		require.NoError(s.ConfigSourceSet(ctx, &pb.ConfigSource{
+			Scope: &pb.ConfigSource_Application{Application: &pb.Ref_Application{
+				Application: appName,
+				Project:     projectName,
+			}},
+
+			Type: "packer",
+			Config: map[string]string{
+				"token": "packer-app",
+			},
+		}))
+
+		// Create a config source at the app scope in dev workspace
+		require.NoError(s.ConfigSourceSet(ctx, &pb.ConfigSource{
+			Scope: &pb.ConfigSource_Application{Application: &pb.Ref_Application{
+				Application: appName,
+				Project:     projectName,
+			}},
+			Workspace: &pb.Ref_Workspace{
+				Workspace: "dev",
+			},
+
+			Type: "consul",
+			Config: map[string]string{
+				"token": "consul-app-dev-workspace",
+			},
+		}))
+
+		// get all of the config sources we made
+		sources, err := s.ConfigSourceGet(ctx, &pb.GetConfigSourceRequest{
+			Scope: &pb.GetConfigSourceRequest_All{
+				All: true,
+			},
+		})
+
+		require.NoError(err)
+		require.Equal(4, len(sources))
+		require.Equal("vault-global", sources[0].Config["token"])
+		require.Equal("terraform-cloud-project", sources[1].Config["token"])
+		require.Equal(projectName, sources[1].Scope.(*pb.ConfigSource_Project).Project.Project)
+		require.Equal("packer-app", sources[2].Config["token"])
+		require.Equal(projectName, sources[2].Scope.(*pb.ConfigSource_Application).Application.Project)
+		require.Equal(appName, sources[2].Scope.(*pb.ConfigSource_Application).Application.Application)
+		require.Equal("consul-app-dev-workspace", sources[3].Config["token"])
+		require.Equal(projectName, sources[3].Scope.(*pb.ConfigSource_Application).Application.Project)
+		require.Equal(appName, sources[3].Scope.(*pb.ConfigSource_Application).Application.Application)
+		require.Equal("dev", sources[3].Workspace.Workspace)
+	})
+
+	t.Run("get all config sources of specific type", func(t *testing.T) {
+		require := require.New(t)
+
+		s := factory(t)
+		defer s.Close()
+
+		projectName := "testProject"
+
+		require.NoError(s.ProjectPut(ctx, &pb.Project{
+			Name: projectName,
+		}))
+
+		// Create a config source at the global scope, no workspace
+		require.NoError(s.ConfigSourceSet(ctx, &pb.ConfigSource{
+			Scope: &pb.ConfigSource_Global{
+				Global: &pb.Ref_Global{},
+			},
+
+			Type: "vault",
+			Config: map[string]string{
+				"token": "vault-global",
+			},
+		}))
+
+		// Create a config source at the project scope, no workspace
+		require.NoError(s.ConfigSourceSet(ctx, &pb.ConfigSource{
+			Scope: &pb.ConfigSource_Project{
+				Project: &pb.Ref_Project{
+					Project: projectName,
+				},
+			},
+
+			Type: "terraform-cloud",
+			Config: map[string]string{
+				"token": "terraform-cloud-project",
+			},
+		}))
+
+		// get all the config sources of type "vault"
+		sources, err := s.ConfigSourceGet(ctx, &pb.GetConfigSourceRequest{
+			Scope: &pb.GetConfigSourceRequest_All{
+				All: true,
+			},
+
+			Type: "vault",
+		})
+
+		require.NoError(err)
+		require.Equal(1, len(sources))
+		require.Equal("vault-global", sources[0].Config["token"])
+	})
 }
 
 func TestConfigSourceWatch(t *testing.T, factory Factory, restartF RestartFactory) {

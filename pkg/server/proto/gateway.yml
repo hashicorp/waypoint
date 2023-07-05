@@ -256,7 +256,7 @@ http:
     body: "*"
 
   - selector: hashicorp.waypoint.Waypoint.DeleteConfig
-    put: /project/config
+    put: /project/config/delete
     body: "*"
 
   - selector: hashicorp.waypoint.Waypoint.SetConfigSource
@@ -264,7 +264,7 @@ http:
     body: "*"
 
   - selector: hashicorp.waypoint.Waypoint.DeleteConfigSource
-    put: /config-source
+    put: /config-source/delete
     body: "*"
 
   - selector: hashicorp.waypoint.Waypoint.GetConfigSource
