@@ -397,7 +397,7 @@ func (i *ECSRunnerInstaller) Uninstall(ctx context.Context, opts *InstallOpts) e
 		}
 	}
 
-	if *fileSystemId == "" {
+	if fileSystemId == nil || *fileSystemId == "" {
 		s.Update("File system with tag key `runner-id` and value " + opts.Id + " not detected, skipping deletion")
 		s.Done()
 		return nil
