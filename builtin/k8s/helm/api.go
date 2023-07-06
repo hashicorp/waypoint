@@ -80,8 +80,10 @@ func (p *Platform) chartPathOptions() (*action.ChartPathOptions, string, error) 
 
 	// Initialize our chart options
 	return &action.ChartPathOptions{
-		RepoURL: repositoryURL,
-		Version: version,
+		RepoURL:  repositoryURL,
+		Version:  version,
+		Username: p.config.Username,
+		Password: p.config.Password,
 	}, chartName, nil
 }
 

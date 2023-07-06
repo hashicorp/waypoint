@@ -58,6 +58,13 @@ parameter {
 }
 
 parameter {
+  key         = "password"
+  description = "Chart repository password."
+  type        = "string"
+  required    = false
+}
+
+parameter {
   key         = "repository"
   description = "URL of the Helm repository that contains the chart.\nThis only needs to be set if you're NOT using a local chart."
   type        = "string"
@@ -75,6 +82,13 @@ parameter {
   key         = "skip_crds"
   description = "Do not create CRDs\nThis option will tell Helm to skip the creation of CRDs."
   type        = "bool"
+  required    = false
+}
+
+parameter {
+  key         = "username"
+  description = "Chart repository username."
+  type        = "string"
   required    = false
 }
 

@@ -1,0 +1,3 @@
+```release-note:improvement
+plugin/helm: Add username and password options for private Helm chart auth.
+```

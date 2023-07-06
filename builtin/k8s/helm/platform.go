@@ -9,10 +9,11 @@ import (
 	"time"
 
 	"github.com/hashicorp/go-hclog"
+	"helm.sh/helm/v3/pkg/action"
+
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint-plugin-sdk/docs"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
-	"helm.sh/helm/v3/pkg/action"
 )
 
 // Platform is the Platform implementation
@@ -240,6 +241,8 @@ type Config struct {
 	Context         string `hcl:"context,optional"`
 	CreateNamespace bool   `hcl:"create_namespace,optional"`
 	SkipCRDs        bool   `hcl:"skip_crds,optional"`
+	Username        string `hcl:"username,optional"`
+	Password        string `hcl:"password,optional"`
 }
 
 func (p *Platform) Documentation() (*docs.Documentation, error) {
@@ -418,6 +421,16 @@ deploy {
 	doc.SetField(
 		"context",
 		"The kubectl context to use, as defined in the kubeconfig file.",
+	)
+
+	doc.SetField(
+		"username",
+		"Chart repository username.",
+	)
+
+	doc.SetField(
+		"password",
+		"Chart repository password.",
 	)
 
 	return doc, nil

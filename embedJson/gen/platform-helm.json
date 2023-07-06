@@ -78,6 +78,18 @@
          "SubFields": null
       },
       {
+         "Field": "password",
+         "Type": "string",
+         "Synopsis": "Chart repository password.",
+         "Summary": "",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "Example": "",
+         "SubFields": null
+      },
+      {
          "Field": "repository",
          "Type": "string",
          "Synopsis": "URL of the Helm repository that contains the chart.",
@@ -94,6 +106,18 @@
          "Type": "bool",
          "Synopsis": "Do not create CRDs",
          "Summary": "This option will tell Helm to skip the creation of CRDs.",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "Example": "",
+         "SubFields": null
+      },
+      {
+         "Field": "username",
+         "Type": "string",
+         "Synopsis": "Chart repository username.",
+         "Summary": "",
          "Optional": true,
          "Default": "",
          "EnvVar": "",
