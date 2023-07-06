@@ -16,6 +16,29 @@ type WaypointServer struct {
 	mock.Mock
 }
 
+// AddAddOn provides a mock function with given fields: _a0, _a1
+func (_m *WaypointServer) AddAddOn(_a0 context.Context, _a1 *gen.AddAddOnRequest) (*gen.AddAddOnResponse, error) {
+	ret := _m.Called(_a0, _a1)
+
+	var r0 *gen.AddAddOnResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.AddAddOnRequest) *gen.AddAddOnResponse); ok {
+		r0 = rf(_a0, _a1)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gen.AddAddOnResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.AddAddOnRequest) error); ok {
+		r1 = rf(_a0, _a1)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // AdoptRunner provides a mock function with given fields: _a0, _a1
 func (_m *WaypointServer) AdoptRunner(_a0 context.Context, _a1 *gen.AdoptRunnerRequest) (*emptypb.Empty, error) {
 	ret := _m.Called(_a0, _a1)
@@ -177,6 +200,29 @@ func (_m *WaypointServer) ConvertInviteToken(_a0 context.Context, _a1 *gen.Conve
 	return r0, r1
 }
 
+// CreateAddOnDefinition provides a mock function with given fields: _a0, _a1
+func (_m *WaypointServer) CreateAddOnDefinition(_a0 context.Context, _a1 *gen.CreateAddOnDefinitionRequest) (*gen.CreateAddOnDefinitionResponse, error) {
+	ret := _m.Called(_a0, _a1)
+
+	var r0 *gen.CreateAddOnDefinitionResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.CreateAddOnDefinitionRequest) *gen.CreateAddOnDefinitionResponse); ok {
+		r0 = rf(_a0, _a1)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gen.CreateAddOnDefinitionResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.CreateAddOnDefinitionRequest) error); ok {
+		r1 = rf(_a0, _a1)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // CreateHostname provides a mock function with given fields: _a0, _a1
 func (_m *WaypointServer) CreateHostname(_a0 context.Context, _a1 *gen.CreateHostnameRequest) (*gen.CreateHostnameResponse, error) {
 	ret := _m.Called(_a0, _a1)
@@ -275,6 +321,29 @@ func (_m *WaypointServer) DecodeToken(_a0 context.Context, _a1 *gen.DecodeTokenR
 
 	var r1 error
 	if rf, ok := ret.Get(1).(func(context.Context, *gen.DecodeTokenRequest) error); ok {
+		r1 = rf(_a0, _a1)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// DeleteAddOnDefinition provides a mock function with given fields: _a0, _a1
+func (_m *WaypointServer) DeleteAddOnDefinition(_a0 context.Context, _a1 *gen.DeleteAddOnDefinitionRequest) (*emptypb.Empty, error) {
+	ret := _m.Called(_a0, _a1)
+
+	var r0 *emptypb.Empty
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.DeleteAddOnDefinitionRequest) *emptypb.Empty); ok {
+		r0 = rf(_a0, _a1)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*emptypb.Empty)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.DeleteAddOnDefinitionRequest) error); ok {
 		r1 = rf(_a0, _a1)
 	} else {
 		r1 = ret.Error(1)
@@ -467,6 +536,29 @@ func (_m *WaypointServer) DeleteUser(_a0 context.Context, _a1 *gen.DeleteUserReq
 	return r0, r1
 }
 
+// DestroyAddOn provides a mock function with given fields: _a0, _a1
+func (_m *WaypointServer) DestroyAddOn(_a0 context.Context, _a1 *gen.DestroyAddOnRequest) (*emptypb.Empty, error) {
+	ret := _m.Called(_a0, _a1)
+
+	var r0 *emptypb.Empty
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.DestroyAddOnRequest) *emptypb.Empty); ok {
+		r0 = rf(_a0, _a1)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*emptypb.Empty)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.DestroyAddOnRequest) error); ok {
+		r1 = rf(_a0, _a1)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // DestroyProject provides a mock function with given fields: _a0, _a1
 func (_m *WaypointServer) DestroyProject(_a0 context.Context, _a1 *gen.DestroyProjectRequest) (*emptypb.Empty, error) {
 	ret := _m.Called(_a0, _a1)
@@ -639,6 +731,52 @@ func (_m *WaypointServer) GenerateRunnerToken(_a0 context.Context, _a1 *gen.Gene
 
 	var r1 error
 	if rf, ok := ret.Get(1).(func(context.Context, *gen.GenerateRunnerTokenRequest) error); ok {
+		r1 = rf(_a0, _a1)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetAddOn provides a mock function with given fields: _a0, _a1
+func (_m *WaypointServer) GetAddOn(_a0 context.Context, _a1 *gen.GetAddOnRequest) (*gen.GetAddOnResponse, error) {
+	ret := _m.Called(_a0, _a1)
+
+	var r0 *gen.GetAddOnResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.GetAddOnRequest) *gen.GetAddOnResponse); ok {
+		r0 = rf(_a0, _a1)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gen.GetAddOnResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.GetAddOnRequest) error); ok {
+		r1 = rf(_a0, _a1)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetAddOnDefinition provides a mock function with given fields: _a0, _a1
+func (_m *WaypointServer) GetAddOnDefinition(_a0 context.Context, _a1 *gen.GetAddOnDefinitionRequest) (*gen.GetAddOnDefinitionResponse, error) {
+	ret := _m.Called(_a0, _a1)
+
+	var r0 *gen.GetAddOnDefinitionResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.GetAddOnDefinitionRequest) *gen.GetAddOnDefinitionResponse); ok {
+		r0 = rf(_a0, _a1)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gen.GetAddOnDefinitionResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.GetAddOnDefinitionRequest) error); ok {
 		r1 = rf(_a0, _a1)
 	} else {
 		r1 = ret.Error(1)
@@ -1273,6 +1411,29 @@ func (_m *WaypointServer) GetTFCRunStatus(_a0 context.Context, _a1 *gen.GetTFCRu
 	return r0, r1
 }
 
+// GetTFRunStatus provides a mock function with given fields: _a0, _a1
+func (_m *WaypointServer) GetTFRunStatus(_a0 context.Context, _a1 *gen.GetTFRunStatusRequest) (*gen.GetTFRunStatusResponse, error) {
+	ret := _m.Called(_a0, _a1)
+
+	var r0 *gen.GetTFRunStatusResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.GetTFRunStatusRequest) *gen.GetTFRunStatusResponse); ok {
+		r0 = rf(_a0, _a1)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gen.GetTFRunStatusResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.GetTFRunStatusRequest) error); ok {
+		r1 = rf(_a0, _a1)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetTask provides a mock function with given fields: _a0, _a1
 func (_m *WaypointServer) GetTask(_a0 context.Context, _a1 *gen.GetTaskRequest) (*gen.GetTaskResponse, error) {
 	ret := _m.Called(_a0, _a1)
@@ -1403,6 +1564,52 @@ func (_m *WaypointServer) INTERNAL_AdditionalMessages(_a0 context.Context, _a1 *
 
 	var r1 error
 	if rf, ok := ret.Get(1).(func(context.Context, *emptypb.Empty) error); ok {
+		r1 = rf(_a0, _a1)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// ListAddOnDefinitions provides a mock function with given fields: _a0, _a1
+func (_m *WaypointServer) ListAddOnDefinitions(_a0 context.Context, _a1 *gen.ListAddOnDefinitionsRequest) (*gen.ListAddOnDefinitionsResponse, error) {
+	ret := _m.Called(_a0, _a1)
+
+	var r0 *gen.ListAddOnDefinitionsResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.ListAddOnDefinitionsRequest) *gen.ListAddOnDefinitionsResponse); ok {
+		r0 = rf(_a0, _a1)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gen.ListAddOnDefinitionsResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.ListAddOnDefinitionsRequest) error); ok {
+		r1 = rf(_a0, _a1)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// ListAddOns provides a mock function with given fields: _a0, _a1
+func (_m *WaypointServer) ListAddOns(_a0 context.Context, _a1 *gen.ListAddOnsRequest) (*gen.ListAddOnsResponse, error) {
+	ret := _m.Called(_a0, _a1)
+
+	var r0 *gen.ListAddOnsResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.ListAddOnsRequest) *gen.ListAddOnsResponse); ok {
+		r0 = rf(_a0, _a1)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gen.ListAddOnsResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.ListAddOnsRequest) error); ok {
 		r1 = rf(_a0, _a1)
 	} else {
 		r1 = ret.Error(1)
@@ -2333,6 +2540,29 @@ func (_m *WaypointServer) UI_ListReleases(_a0 context.Context, _a1 *gen.UI_ListR
 
 	var r1 error
 	if rf, ok := ret.Get(1).(func(context.Context, *gen.UI_ListReleasesRequest) error); ok {
+		r1 = rf(_a0, _a1)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// UpdateAddOnDefinition provides a mock function with given fields: _a0, _a1
+func (_m *WaypointServer) UpdateAddOnDefinition(_a0 context.Context, _a1 *gen.UpdateAddOnDefinitionRequest) (*gen.UpdateAddOnDefinitionResponse, error) {
+	ret := _m.Called(_a0, _a1)
+
+	var r0 *gen.UpdateAddOnDefinitionResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.UpdateAddOnDefinitionRequest) *gen.UpdateAddOnDefinitionResponse); ok {
+		r0 = rf(_a0, _a1)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gen.UpdateAddOnDefinitionResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.UpdateAddOnDefinitionRequest) error); ok {
 		r1 = rf(_a0, _a1)
 	} else {
 		r1 = ret.Error(1)

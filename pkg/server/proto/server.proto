@@ -496,9 +496,41 @@ service Waypoint {
   // Waypoint project to the database
   rpc CreateProjectFromTemplate(CreateProjectFromTemplateRequest) returns (CreateProjectFromTemplateResponse);
 
+  // Deprecated in favor of GetTFRunStatus
   // GetTFCRunStatus is in BETA. It returns the status of a TFC run, which was
   // run to render a project template.
   rpc GetTFCRunStatus(GetTFCRunStatusRequest) returns (GetTFCRunStatusResponse);
+
+  // CreateAddOnDefinition creates a new Add On definition
+  rpc CreateAddOnDefinition(CreateAddOnDefinitionRequest) returns (CreateAddOnDefinitionResponse);
+
+  // GetAddOnDefinition returns an Add On definition, referenced by name or ID
+  rpc GetAddOnDefinition(GetAddOnDefinitionRequest) returns (GetAddOnDefinitionResponse);
+
+  // ListAddOns returns all existing Add On definitions
+  rpc ListAddOnDefinitions(ListAddOnDefinitionsRequest) returns (ListAddOnDefinitionsResponse);
+
+  // UpdateAddOnDefinition updates an existing Add On definition
+  rpc UpdateAddOnDefinition(UpdateAddOnDefinitionRequest) returns (UpdateAddOnDefinitionResponse);
+
+  // DeleteAddOnDefinition deletes an existing Add On definition
+  rpc DeleteAddOnDefinition(DeleteAddOnDefinitionRequest) returns (google.protobuf.Empty);
+
+  // AddAddOn adds an Add On to a project from an Add On definition
+  rpc AddAddOn(AddAddOnRequest) returns (AddAddOnResponse);
+
+  // DestroyAddOn destroys an existing Add On
+  rpc DestroyAddOn(DestroyAddOnRequest) returns (google.protobuf.Empty);
+
+  // GetAddOn returns an existing Add On
+  rpc GetAddOn(GetAddOnRequest) returns (GetAddOnResponse);
+
+  // ListAddOns returns all existing Add Ons
+  rpc ListAddOns(ListAddOnsRequest) returns (ListAddOnsResponse);
+
+  // GetTFRunStatus returns the status of the latest run of a Terraform
+  // workspace
+  rpc GetTFRunStatus(GetTFRunStatusRequest) returns (GetTFRunStatusResponse);
 
   //----------------------------------------------------------------------
   // UI endpoints. The endpoints below are convenience methods for Waypoint's
@@ -780,6 +812,7 @@ message UI {
       BUILD = 0;
       DEPLOYMENT = 1;
       RELEASE = 2;
+      ADDON = 3;
     }
     //generic so looser contract for activity feed between backend and UI
   }
@@ -811,6 +844,12 @@ message UI {
     Status status = 5;
     uint64 deployment_sequence = 6;
   }
+
+  message EventAddOn {
+    string add_on_id = 1;
+    string name = 2;
+  }
+
 /* NOTE(Cassie): This should be implemented once pipeline_runs are app scoped
   message EventPipelineRun {
     string pipelineRun_id = 1;
@@ -823,6 +862,7 @@ message UI {
     UI.EventBuild event_build_schema = 1;
     UI.EventDeployment event_deployment_schema = 2;
     UI.EventRelease event_release_schema = 3;
+    UI.EventAddOn event_add_on_schema = 4;
     //UI.EventPipelineRun event_pipeline_run_schema = 4;
   }
 }
@@ -1370,6 +1410,17 @@ message Ref {
       // Name of the ProjectTemplate
       string name = 2;
     }
+  }
+
+  message AddOnDefinition {
+    oneof ref {
+      string id = 1;
+      string name = 2;
+    }
+  }
+
+  message AddOn {
+    string id = 1;
   }
 }
 
@@ -5411,6 +5462,7 @@ message ProjectTemplate {
     bytes waypoint_hcl_template = 1;
   }
 
+  // Deprecated in favor of TerraformNocodeModule, declared outside of the ProjectTemplate message
   message TerraformNocodeModule {
     // The module name for the Terraform no-code module.
     string source = 1;
@@ -5418,6 +5470,169 @@ message ProjectTemplate {
     // The version of the Terraform no-code module.
     string version = 2;
   }
+}
+
+message TerraformNocodeModule {
+  // The module name for the Terraform no-code module.
+  string source = 1;
+
+  // The version of the Terraform no-code module.
+  string version = 2;
+}
+
+/********************************************************************
+* Add Ons - the features using these protos are in BETA
+********************************************************************/
+// GetAddOnDefinitionRequest is the request used for getting an existing Add On
+// definition
+message GetAddOnDefinitionRequest {
+  Ref.AddOnDefinition add_on_definition = 1;
+}
+
+// GetAddOnDefinitionResponse is the response used to return an existing Add On
+// Definition
+message GetAddOnDefinitionResponse {
+  AddOnDefinition add_on_definition = 1;
+}
+
+// ListAddOnDefinitionsRequest is the request used to get all Add On
+// definitions
+message ListAddOnDefinitionsRequest {
+  PaginationRequest pagination = 1;
+}
+
+// ListAddOnDefinitionsResponse is the response used to return all Add On
+// definitions
+message ListAddOnDefinitionsResponse {
+  repeated AddOnDefinition add_on_definitions = 1;
+  PaginationResponse pagination = 2;
+  uint64 total_count = 3;
+}
+
+// CreateAddOnDefinitionRequest is the request used to create an Add On
+// definition
+message CreateAddOnDefinitionRequest {
+  AddOnDefinition add_on_definition = 1;
+}
+
+// CreateAddOnDefinitionResponse is the response containing the just-created
+// Add On definition
+message CreateAddOnDefinitionResponse {
+  AddOnDefinition add_on_definition = 1;
+}
+
+// UpdateAddOnDefinitionRequest is the request used to update an existing
+// Add On definition
+message UpdateAddOnDefinitionRequest {
+  AddOnDefinition add_on_definition = 1;
+}
+
+// UpdateAddOnDefinitionResponse is the response containing the just-updated
+// Add On definition
+message UpdateAddOnDefinitionResponse {
+  AddOnDefinition add_on_definition = 1;
+}
+
+// DeleteAddOnDefinitionRequest is the request used to delete an existing Add
+// On definition
+message DeleteAddOnDefinitionRequest {
+  Ref.AddOnDefinition add_on_definition = 1;
+}
+
+// AddAddOnRequest is the request used to add an Add On to a project
+message AddAddOnRequest {
+  AddOn add_on = 1;
+}
+
+// AddAddOnResponse is the response containing the just-added Add On
+message AddAddOnResponse {
+  AddOn add_on = 1;
+}
+
+// DestroyAddOnRequest is the request used to destroy an existing Add On
+message DestroyAddOnRequest {
+  Ref.AddOn add_on = 1;
+}
+
+// GetAddOnRequest is the request used to get an existing Add On
+message GetAddOnRequest {
+  Ref.AddOn add_on = 1;
+}
+
+// GetAddOnResponse is the response containing the just-requested existing Add
+// On
+message GetAddOnResponse {
+  AddOn add_on = 1;
+}
+
+// ListAddOnsRequest is the request used to get all existing Add Ons
+message ListAddOnsRequest {
+  PaginationRequest pagination = 1;
+}
+
+// ListAddOnsResponse is the response containing all existing Add Ons
+message ListAddOnsResponse {
+  repeated AddOnDefinition definitions = 1;
+  PaginationResponse pagination = 2;
+}
+
+// GetTFRunStatusRequest is the request used to get the status of the latest
+// run of a Terraform workspace
+message GetTFRunStatusRequest {
+  string workspace_name = 1;
+}
+
+// GetTFRunStatusResponse is the response containing the status of the latest
+// run of a Terraform workspace
+message GetTFRunStatusResponse {
+  // the URL of the TF run
+  string url = 1;
+
+  // the state of the TF run
+  State state = 2;
+
+  enum State {
+    UNKNOWN = 0;
+    RUNNING = 1;
+    SUCCESS = 2;
+    ERROR   = 3;
+  }
+}
+
+// AddOn is an add-on definition rendered for a project
+message AddOn {
+  string id = 1;
+  string name = 2;
+  Ref.Project project = 3;
+  Ref.AddOnDefinition definition = 4;
+  string tf_workspace_name = 5;
+  bytes readme_markdown = 6;
+  repeated string tags = 7;
+  Type type = 8;
+
+  enum Type {
+    other = 0;
+    database = 1;
+    search = 2;
+    monitor = 3;
+    storage = 4;
+  }
+
+  // the add-on does not include the short/long
+  // summary, because this information is available in the
+  // add-on definition and there's no need to dupe the data
+}
+
+// AddOnDefinition is the template for an add-on
+message AddOnDefinition {
+  string id = 1;
+  string name = 2;
+  TerraformNocodeModule terraform_nocode_module = 3;
+  string short_summary = 4;
+  string long_summary = 5;
+  bytes readme_markdown_template = 6;
+  repeated string tags = 7;
+  repeated string tf_variable_set_id = 8;
 }
 
 /********************************************************************

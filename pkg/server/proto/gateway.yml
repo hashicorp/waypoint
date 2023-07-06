@@ -551,8 +551,50 @@ http:
     post: /project/from-template
     body: "*"
 
+    # Deprecated
   - selector: hashicorp.waypoint.Waypoint.GetTFCRunStatus
     get: /project/{project.project}/tfc-run-status
+
+  - selector: hashicorp.waypoint.Waypoint.GetTFRunStatus
+    get: /tf-run-status/{workspace_name}
+
+    # Add On Definitions
+  - selector: hashicorp.waypoint.Waypoint.CreateAddOnDefinition
+    post: /add-on-definition
+    body: "*"
+
+  - selector: hashicorp.waypoint.Waypoint.GetAddOnDefinition
+    get: /add-on-definition/by-id/{add_on_definition.id}
+
+  - selector: hashicorp.waypoint.Waypoint.GetAddOnDefinition
+    get: /add-on-definition/by-name/{add_on_definition.name}
+
+  - selector: hashicorp.waypoint.Waypoint.ListAddOnDefinitions
+    get: /add-on-definitions
+
+  - selector: hashicorp.waypoint.Waypoint.UpdateAddOnDefinition
+    put: /add-on-definition
+    body: "*"
+
+  - selector: hashicorp.waypoint.Waypoint.DeleteAddOnDefinition
+    delete: /add-on-definition/by-id/{add_on_definition.id}
+
+  - selector: hashicorp.waypoint.Waypoint.DeleteAddOnDefinition
+    delete: /add-on-definition/by-name/{add_on_definition.name}
+
+    # Add Ons
+  - selector: hashicorp.waypoint.Waypoint.AddAddOn
+    post: /add-on
+    body: "*"
+
+  - selector: hashicorp.waypoint.Waypoint.DestroyAddOn
+    delete: /add-on/{add_on.id}
+
+  - selector: hashicorp.waypoint.Waypoint.GetAddOn
+    get: /add-on/{add_on.id}
+
+  - selector: hashicorp.waypoint.Waypoint.ListAddOns
+    get: /add-ons
 
     # Events
   - selector: hashicorp.waypoint.Waypoint.UI_ListEvents
