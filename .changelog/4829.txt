@@ -1,0 +1,3 @@
+```release-note:bug
+runneruninstall/aws-ecs: Fix panic when uninstalling ECS runner after failing to find EFS
+```
