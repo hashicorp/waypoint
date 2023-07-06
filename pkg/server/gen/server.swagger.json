@@ -8031,32 +8031,40 @@
       "type": "object",
       "properties": {
         "id": {
-          "type": "string"
+          "type": "string",
+          "title": "Unique identifier of the Add On"
         },
         "name": {
-          "type": "string"
+          "type": "string",
+          "title": "Name of the Add On"
         },
         "project": {
-          "$ref": "#/definitions/hashicorp.waypoint.Ref.Project"
+          "$ref": "#/definitions/hashicorp.waypoint.Ref.Project",
+          "title": "The project for which the Add On was created"
         },
         "definition": {
-          "$ref": "#/definitions/hashicorp.waypoint.Ref.AddOnDefinition"
+          "$ref": "#/definitions/hashicorp.waypoint.Ref.AddOnDefinition",
+          "title": "The Add On definition from which this Add On was created"
         },
         "tf_workspace_name": {
-          "type": "string"
+          "type": "string",
+          "title": "Name of the Add On's Terraform workspace"
         },
         "readme_markdown": {
           "type": "string",
-          "format": "byte"
+          "format": "byte",
+          "title": "Rendered README markdown template for Add On"
         },
         "tags": {
           "type": "array",
           "items": {
             "type": "string"
-          }
+          },
+          "title": "A list of descriptive tags for an Add On"
         },
         "type": {
-          "$ref": "#/definitions/hashicorp.waypoint.AddOn.Type"
+          "$ref": "#/definitions/hashicorp.waypoint.AddOn.Type",
+          "title": "The type of the Add On"
         }
       },
       "title": "AddOn is an add-on definition rendered for a project"
@@ -8076,35 +8084,43 @@
       "type": "object",
       "properties": {
         "id": {
-          "type": "string"
+          "type": "string",
+          "title": "Unique identifer of the Add On definition"
         },
         "name": {
-          "type": "string"
+          "type": "string",
+          "title": "Name of the Add On definition"
         },
         "terraform_nocode_module": {
-          "$ref": "#/definitions/hashicorp.waypoint.TerraformNocodeModule"
+          "$ref": "#/definitions/hashicorp.waypoint.TerraformNocodeModule",
+          "title": "Terraform No Code module used for provisioning the Add On"
         },
         "short_summary": {
-          "type": "string"
+          "type": "string",
+          "title": "Short description of the Add On"
         },
         "long_summary": {
-          "type": "string"
+          "type": "string",
+          "title": "Longer description of the Add On"
         },
         "readme_markdown_template": {
           "type": "string",
-          "format": "byte"
+          "format": "byte",
+          "title": "A templated README describing the Add On"
         },
         "tags": {
           "type": "array",
           "items": {
             "type": "string"
-          }
+          },
+          "title": "A list of descriptive tags for an Add On"
         },
         "tf_variable_set_id": {
           "type": "array",
           "items": {
             "type": "string"
-          }
+          },
+          "title": "The TF variable set to apply to the Add On's No Code workspace"
         }
       },
       "title": "AddOnDefinition is the template for an add-on"

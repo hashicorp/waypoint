@@ -1413,7 +1413,7 @@ message Ref {
   }
 
   message AddOnDefinition {
-    oneof ref {
+    oneof identifier {
       string id = 1;
       string name = 2;
     }
@@ -5601,13 +5601,28 @@ message GetTFRunStatusResponse {
 
 // AddOn is an add-on definition rendered for a project
 message AddOn {
+  // Unique identifier of the Add On
   string id = 1;
+
+  // Name of the Add On
   string name = 2;
+
+  // The project for which the Add On was created
   Ref.Project project = 3;
+
+  // The Add On definition from which this Add On was created
   Ref.AddOnDefinition definition = 4;
+
+  // Name of the Add On's Terraform workspace
   string tf_workspace_name = 5;
+
+  // Rendered README markdown template for Add On
   bytes readme_markdown = 6;
+
+  // A list of descriptive tags for an Add On
   repeated string tags = 7;
+
+  // The type of the Add On
   Type type = 8;
 
   enum Type {
@@ -5617,21 +5632,32 @@ message AddOn {
     monitor = 3;
     storage = 4;
   }
-
-  // the add-on does not include the short/long
-  // summary, because this information is available in the
-  // add-on definition and there's no need to dupe the data
 }
 
 // AddOnDefinition is the template for an add-on
 message AddOnDefinition {
+  // Unique identifer of the Add On definition
   string id = 1;
+
+  // Name of the Add On definition
   string name = 2;
+
+  // Terraform No Code module used for provisioning the Add On
   TerraformNocodeModule terraform_nocode_module = 3;
+
+  // Short description of the Add On
   string short_summary = 4;
+
+  // Longer description of the Add On
   string long_summary = 5;
+
+  // A templated README describing the Add On
   bytes readme_markdown_template = 6;
+
+  // A list of descriptive tags for an Add On
   repeated string tags = 7;
+
+  // The TF variable set to apply to the Add On's No Code workspace
   repeated string tf_variable_set_id = 8;
 }
 
