@@ -10990,10 +10990,10 @@
     "hashicorp.waypoint.ListAddOnsResponse": {
       "type": "object",
       "properties": {
-        "definitions": {
+        "add_ons": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/hashicorp.waypoint.AddOnDefinition"
+            "$ref": "#/definitions/hashicorp.waypoint.AddOn"
           }
         },
         "pagination": {

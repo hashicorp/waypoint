@@ -5572,7 +5572,7 @@ message ListAddOnsRequest {
 
 // ListAddOnsResponse is the response containing all existing Add Ons
 message ListAddOnsResponse {
-  repeated AddOnDefinition definitions = 1;
+  repeated AddOn add_ons = 1;
   PaginationResponse pagination = 2;
 }
 
