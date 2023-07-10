@@ -507,7 +507,7 @@ service Waypoint {
   // GetAddOnDefinition returns an Add On definition, referenced by name or ID
   rpc GetAddOnDefinition(GetAddOnDefinitionRequest) returns (GetAddOnDefinitionResponse);
 
-  // ListAddOns returns all existing Add On definitions
+  // ListAddOnDefinitions returns all existing Add On definitions
   rpc ListAddOnDefinitions(ListAddOnDefinitionsRequest) returns (ListAddOnDefinitionsResponse);
 
   // UpdateAddOnDefinition updates an existing Add On definition
@@ -516,8 +516,8 @@ service Waypoint {
   // DeleteAddOnDefinition deletes an existing Add On definition
   rpc DeleteAddOnDefinition(DeleteAddOnDefinitionRequest) returns (google.protobuf.Empty);
 
-  // AddAddOn adds an Add On to a project from an Add On definition
-  rpc AddAddOn(AddAddOnRequest) returns (AddAddOnResponse);
+  // CreateAddOn adds an Add On to a project from an Add On definition
+  rpc CreateAddOn(CreateAddOnRequest) returns (CreateAddOnResponse);
 
   // DestroyAddOn destroys an existing Add On
   rpc DestroyAddOn(DestroyAddOnRequest) returns (google.protobuf.Empty);
@@ -5512,7 +5512,29 @@ message ListAddOnDefinitionsResponse {
 // CreateAddOnDefinitionRequest is the request used to create an Add On
 // definition
 message CreateAddOnDefinitionRequest {
-  AddOnDefinition add_on_definition = 1;
+  // Name of the Add On definition
+  string name = 1;
+
+  // Terraform No Code module used for provisioning the Add On
+  TerraformNocodeModule terraform_nocode_module = 2;
+
+  // Short description of the Add On
+  string short_summary = 3;
+
+  // Longer description of the Add On
+  string long_summary = 4;
+
+  // A templated README describing the Add On
+  bytes readme_markdown_template = 5;
+
+  // A list of descriptive tags for an Add On
+  repeated string tags = 6;
+
+  // The TF variable set to apply to the Add On's No Code workspace
+  repeated string tf_variable_set_id = 7;
+
+  // The type of the Add On
+  AddOnType type = 8;
 }
 
 // CreateAddOnDefinitionResponse is the response containing the just-created
@@ -5524,7 +5546,32 @@ message CreateAddOnDefinitionResponse {
 // UpdateAddOnDefinitionRequest is the request used to update an existing
 // Add On definition
 message UpdateAddOnDefinitionRequest {
-  AddOnDefinition add_on_definition = 1;
+  // Reference to an existing Add On
+  Ref.AddOnDefinition definition = 1;
+
+  // Name of the Add On definition
+  string name = 2;
+
+  // Terraform No Code module used for provisioning the Add On
+  TerraformNocodeModule terraform_nocode_module = 3;
+
+  // Short description of the Add On
+  string short_summary = 4;
+
+  // Longer description of the Add On
+  string long_summary = 5;
+
+  // A templated README describing the Add On
+  bytes readme_markdown_template = 6;
+
+  // A list of descriptive tags for an Add On
+  repeated string tags = 7;
+
+  // The TF variable set to apply to the Add On's No Code workspace
+  repeated string tf_variable_set_id = 8;
+
+  // The type of the Add On
+  AddOnType type = 9;
 }
 
 // UpdateAddOnDefinitionResponse is the response containing the just-updated
@@ -5539,13 +5586,39 @@ message DeleteAddOnDefinitionRequest {
   Ref.AddOnDefinition add_on_definition = 1;
 }
 
-// AddAddOnRequest is the request used to add an Add On to a project
-message AddAddOnRequest {
-  AddOn add_on = 1;
+// CreateAddOnRequest is the request used to add an Add On to a project
+message CreateAddOnRequest {
+  string name = 1;
+
+  // The project for which the Add On is to be created
+  Ref.Project project = 3;
+
+  // The Add On definition from which this Add On is to be created
+  Ref.AddOnDefinition definition = 4;
+
+  // Name of the Add On's Terraform workspace
+  string tf_workspace_name = 5;
+
+  // Rendered README markdown template for Add On
+  bytes readme_markdown = 6;
+
+  // A list of descriptive tags for an Add On
+  repeated string tags = 7;
+
+  // The type of the Add On
+  AddOnType type = 8;
 }
 
-// AddAddOnResponse is the response containing the just-added Add On
-message AddAddOnResponse {
+enum AddOnType {
+  other = 0;
+  database = 1;
+  search = 2;
+  monitor = 3;
+  storage = 4;
+}
+
+// CreateAddOnResponse is the response containing the just-added Add On
+message CreateAddOnResponse {
   AddOn add_on = 1;
 }
 
@@ -5567,7 +5640,8 @@ message GetAddOnResponse {
 
 // ListAddOnsRequest is the request used to get all existing Add Ons
 message ListAddOnsRequest {
-  PaginationRequest pagination = 1;
+  Ref.Project project = 1;
+  PaginationRequest pagination = 2;
 }
 
 // ListAddOnsResponse is the response containing all existing Add Ons
@@ -5623,15 +5697,7 @@ message AddOn {
   repeated string tags = 7;
 
   // The type of the Add On
-  Type type = 8;
-
-  enum Type {
-    other = 0;
-    database = 1;
-    search = 2;
-    monitor = 3;
-    storage = 4;
-  }
+  AddOnType type = 8;
 }
 
 // AddOnDefinition is the template for an add-on
@@ -5659,6 +5725,9 @@ message AddOnDefinition {
 
   // The TF variable set to apply to the Add On's No Code workspace
   repeated string tf_variable_set_id = 8;
+
+  // The type of the Add On
+  AddOnType type = 9;
 }
 
 /********************************************************************

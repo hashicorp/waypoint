@@ -18,36 +18,6 @@ type WaypointClient struct {
 	mock.Mock
 }
 
-// AddAddOn provides a mock function with given fields: ctx, in, opts
-func (_m *WaypointClient) AddAddOn(ctx context.Context, in *gen.AddAddOnRequest, opts ...grpc.CallOption) (*gen.AddAddOnResponse, error) {
-	_va := make([]interface{}, len(opts))
-	for _i := range opts {
-		_va[_i] = opts[_i]
-	}
-	var _ca []interface{}
-	_ca = append(_ca, ctx, in)
-	_ca = append(_ca, _va...)
-	ret := _m.Called(_ca...)
-
-	var r0 *gen.AddAddOnResponse
-	if rf, ok := ret.Get(0).(func(context.Context, *gen.AddAddOnRequest, ...grpc.CallOption) *gen.AddAddOnResponse); ok {
-		r0 = rf(ctx, in, opts...)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*gen.AddAddOnResponse)
-		}
-	}
-
-	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, *gen.AddAddOnRequest, ...grpc.CallOption) error); ok {
-		r1 = rf(ctx, in, opts...)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
 // AdoptRunner provides a mock function with given fields: ctx, in, opts
 func (_m *WaypointClient) AdoptRunner(ctx context.Context, in *gen.AdoptRunnerRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	_va := make([]interface{}, len(opts))
@@ -250,6 +220,36 @@ func (_m *WaypointClient) ConvertInviteToken(ctx context.Context, in *gen.Conver
 
 	var r1 error
 	if rf, ok := ret.Get(1).(func(context.Context, *gen.ConvertInviteTokenRequest, ...grpc.CallOption) error); ok {
+		r1 = rf(ctx, in, opts...)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// CreateAddOn provides a mock function with given fields: ctx, in, opts
+func (_m *WaypointClient) CreateAddOn(ctx context.Context, in *gen.CreateAddOnRequest, opts ...grpc.CallOption) (*gen.CreateAddOnResponse, error) {
+	_va := make([]interface{}, len(opts))
+	for _i := range opts {
+		_va[_i] = opts[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx, in)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
+
+	var r0 *gen.CreateAddOnResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.CreateAddOnRequest, ...grpc.CallOption) *gen.CreateAddOnResponse); ok {
+		r0 = rf(ctx, in, opts...)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gen.CreateAddOnResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.CreateAddOnRequest, ...grpc.CallOption) error); ok {
 		r1 = rf(ctx, in, opts...)
 	} else {
 		r1 = ret.Error(1)

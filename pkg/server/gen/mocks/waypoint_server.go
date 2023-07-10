@@ -16,29 +16,6 @@ type WaypointServer struct {
 	mock.Mock
 }
 
-// AddAddOn provides a mock function with given fields: _a0, _a1
-func (_m *WaypointServer) AddAddOn(_a0 context.Context, _a1 *gen.AddAddOnRequest) (*gen.AddAddOnResponse, error) {
-	ret := _m.Called(_a0, _a1)
-
-	var r0 *gen.AddAddOnResponse
-	if rf, ok := ret.Get(0).(func(context.Context, *gen.AddAddOnRequest) *gen.AddAddOnResponse); ok {
-		r0 = rf(_a0, _a1)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*gen.AddAddOnResponse)
-		}
-	}
-
-	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, *gen.AddAddOnRequest) error); ok {
-		r1 = rf(_a0, _a1)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
 // AdoptRunner provides a mock function with given fields: _a0, _a1
 func (_m *WaypointServer) AdoptRunner(_a0 context.Context, _a1 *gen.AdoptRunnerRequest) (*emptypb.Empty, error) {
 	ret := _m.Called(_a0, _a1)
@@ -192,6 +169,29 @@ func (_m *WaypointServer) ConvertInviteToken(_a0 context.Context, _a1 *gen.Conve
 
 	var r1 error
 	if rf, ok := ret.Get(1).(func(context.Context, *gen.ConvertInviteTokenRequest) error); ok {
+		r1 = rf(_a0, _a1)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// CreateAddOn provides a mock function with given fields: _a0, _a1
+func (_m *WaypointServer) CreateAddOn(_a0 context.Context, _a1 *gen.CreateAddOnRequest) (*gen.CreateAddOnResponse, error) {
+	ret := _m.Called(_a0, _a1)
+
+	var r0 *gen.CreateAddOnResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.CreateAddOnRequest) *gen.CreateAddOnResponse); ok {
+		r0 = rf(_a0, _a1)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gen.CreateAddOnResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.CreateAddOnRequest) error); ok {
 		r1 = rf(_a0, _a1)
 	} else {
 		r1 = ret.Error(1)

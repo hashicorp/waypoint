@@ -6760,7 +6760,7 @@ func (msg *DeleteAddOnDefinitionRequest) UnmarshalJSON(b []byte) error {
 }
 
 // MarshalJSON implements json.Marshaler
-func (msg *AddAddOnRequest) MarshalJSON() ([]byte, error) {
+func (msg *CreateAddOnRequest) MarshalJSON() ([]byte, error) {
 	return protojson.MarshalOptions{
 		UseEnumNumbers:  false,
 		EmitUnpopulated: false,
@@ -6769,14 +6769,14 @@ func (msg *AddAddOnRequest) MarshalJSON() ([]byte, error) {
 }
 
 // UnmarshalJSON implements json.Unmarshaler
-func (msg *AddAddOnRequest) UnmarshalJSON(b []byte) error {
+func (msg *CreateAddOnRequest) UnmarshalJSON(b []byte) error {
 	return protojson.UnmarshalOptions{
 		DiscardUnknown: false,
 	}.Unmarshal(b, msg)
 }
 
 // MarshalJSON implements json.Marshaler
-func (msg *AddAddOnResponse) MarshalJSON() ([]byte, error) {
+func (msg *CreateAddOnResponse) MarshalJSON() ([]byte, error) {
 	return protojson.MarshalOptions{
 		UseEnumNumbers:  false,
 		EmitUnpopulated: false,
@@ -6785,7 +6785,7 @@ func (msg *AddAddOnResponse) MarshalJSON() ([]byte, error) {
 }
 
 // UnmarshalJSON implements json.Unmarshaler
-func (msg *AddAddOnResponse) UnmarshalJSON(b []byte) error {
+func (msg *CreateAddOnResponse) UnmarshalJSON(b []byte) error {
 	return protojson.UnmarshalOptions{
 		DiscardUnknown: false,
 	}.Unmarshal(b, msg)

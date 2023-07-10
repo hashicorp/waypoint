@@ -583,7 +583,7 @@ http:
     delete: /add-on-definition/by-name/{add_on_definition.name}
 
     # Add Ons
-  - selector: hashicorp.waypoint.Waypoint.AddAddOn
+  - selector: hashicorp.waypoint.Waypoint.CreateAddOn
     post: /add-on
     body: "*"
 

@@ -9922,8 +9922,8 @@ func local_request_Waypoint_DeleteAddOnDefinition_1(ctx context.Context, marshal
 
 }
 
-func request_Waypoint_AddAddOn_0(ctx context.Context, marshaler runtime.Marshaler, client WaypointClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq AddAddOnRequest
+func request_Waypoint_CreateAddOn_0(ctx context.Context, marshaler runtime.Marshaler, client WaypointClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq CreateAddOnRequest
 	var metadata runtime.ServerMetadata
 
 	newReader, berr := utilities.IOReaderFactory(req.Body)
@@ -9934,13 +9934,13 @@ func request_Waypoint_AddAddOn_0(ctx context.Context, marshaler runtime.Marshale
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.AddAddOn(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.CreateAddOn(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
 
-func local_request_Waypoint_AddAddOn_0(ctx context.Context, marshaler runtime.Marshaler, server WaypointServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq AddAddOnRequest
+func local_request_Waypoint_CreateAddOn_0(ctx context.Context, marshaler runtime.Marshaler, server WaypointServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq CreateAddOnRequest
 	var metadata runtime.ServerMetadata
 
 	newReader, berr := utilities.IOReaderFactory(req.Body)
@@ -9951,7 +9951,7 @@ func local_request_Waypoint_AddAddOn_0(ctx context.Context, marshaler runtime.Ma
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := server.AddAddOn(ctx, &protoReq)
+	msg, err := server.CreateAddOn(ctx, &protoReq)
 	return msg, metadata, err
 
 }
@@ -14629,19 +14629,19 @@ func RegisterWaypointHandlerServer(ctx context.Context, mux *runtime.ServeMux, s
 
 	})
 
-	mux.Handle("POST", pattern_Waypoint_AddAddOn_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("POST", pattern_Waypoint_CreateAddOn_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
-		ctx, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/AddAddOn", runtime.WithHTTPPathPattern("/add-on"))
+		ctx, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/CreateAddOn", runtime.WithHTTPPathPattern("/add-on"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Waypoint_AddAddOn_0(ctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Waypoint_CreateAddOn_0(ctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -14649,7 +14649,7 @@ func RegisterWaypointHandlerServer(ctx context.Context, mux *runtime.ServeMux, s
 			return
 		}
 
-		forward_Waypoint_AddAddOn_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_Waypoint_CreateAddOn_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -18147,24 +18147,24 @@ func RegisterWaypointHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 
 	})
 
-	mux.Handle("POST", pattern_Waypoint_AddAddOn_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("POST", pattern_Waypoint_CreateAddOn_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
-		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/AddAddOn", runtime.WithHTTPPathPattern("/add-on"))
+		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/hashicorp.waypoint.Waypoint/CreateAddOn", runtime.WithHTTPPathPattern("/add-on"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Waypoint_AddAddOn_0(ctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Waypoint_CreateAddOn_0(ctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_Waypoint_AddAddOn_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_Waypoint_CreateAddOn_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -18819,7 +18819,7 @@ var (
 
 	pattern_Waypoint_DeleteAddOnDefinition_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"add-on-definition", "by-name", "add_on_definition.name"}, ""))
 
-	pattern_Waypoint_AddAddOn_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"add-on"}, ""))
+	pattern_Waypoint_CreateAddOn_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"add-on"}, ""))
 
 	pattern_Waypoint_DestroyAddOn_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"add-on", "add_on.id"}, ""))
 
@@ -19147,7 +19147,7 @@ var (
 
 	forward_Waypoint_DeleteAddOnDefinition_1 = runtime.ForwardResponseMessage
 
-	forward_Waypoint_AddAddOn_0 = runtime.ForwardResponseMessage
+	forward_Waypoint_CreateAddOn_0 = runtime.ForwardResponseMessage
 
 	forward_Waypoint_DestroyAddOn_0 = runtime.ForwardResponseMessage
 
