@@ -5531,7 +5531,7 @@ message CreateAddOnDefinitionRequest {
   repeated string tags = 6;
 
   // The TF variable set to apply to the Add On's No Code workspace
-  repeated string tf_variable_set_id = 7;
+  repeated string tf_variable_set_ids = 7;
 
   // The type of the Add On
   AddOnType type = 8;
