@@ -5568,7 +5568,7 @@ message UpdateAddOnDefinitionRequest {
   repeated string tags = 7;
 
   // The TF variable set to apply to the Add On's No Code workspace
-  repeated string tf_variable_set_id = 8;
+  repeated string tf_variable_set_ids = 8;
 
   // The type of the Add On
   AddOnType type = 9;
@@ -5724,7 +5724,7 @@ message AddOnDefinition {
   repeated string tags = 7;
 
   // The TF variable set to apply to the Add On's No Code workspace
-  repeated string tf_variable_set_id = 8;
+  repeated string tf_variable_set_ids = 8;
 
   // The type of the Add On
   AddOnType type = 9;

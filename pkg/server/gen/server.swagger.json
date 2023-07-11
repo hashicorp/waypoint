@@ -8092,7 +8092,7 @@
           },
           "title": "A list of descriptive tags for an Add On"
         },
-        "tf_variable_set_id": {
+        "tf_variable_set_ids": {
           "type": "array",
           "items": {
             "type": "string"
@@ -13842,7 +13842,7 @@
           },
           "title": "A list of descriptive tags for an Add On"
         },
-        "tf_variable_set_id": {
+        "tf_variable_set_ids": {
           "type": "array",
           "items": {
             "type": "string"
