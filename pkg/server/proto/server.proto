@@ -1420,7 +1420,10 @@ message Ref {
   }
 
   message AddOn {
-    string id = 1;
+    oneof identifier {
+      string id = 1;
+      string name = 2;
+    }
   }
 }
 

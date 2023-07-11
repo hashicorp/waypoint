@@ -323,6 +323,12 @@
             "in": "path",
             "required": true,
             "type": "string"
+          },
+          {
+            "name": "add_on.name",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -351,6 +357,12 @@
             "name": "add_on.id",
             "in": "path",
             "required": true,
+            "type": "string"
+          },
+          {
+            "name": "add_on.name",
+            "in": "query",
+            "required": false,
             "type": "string"
           }
         ],
@@ -11999,6 +12011,9 @@
       "type": "object",
       "properties": {
         "id": {
+          "type": "string"
+        },
+        "name": {
           "type": "string"
         }
       }
