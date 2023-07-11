@@ -229,7 +229,7 @@ type Interface interface {
 	AddOnDefinitionUpdate(ctx context.Context, definition *pb.AddOnDefinition) (*pb.AddOnDefinition, error)
 	AddOnDefinitionGet(ctx context.Context, definition *pb.Ref_AddOnDefinition) (*pb.AddOnDefinition, error)
 	AddOnDefinitionDelete(ctx context.Context, definition *pb.Ref_AddOnDefinition) error
-	AddOnDefinitionList(ctx context.Context, request *pb.PaginationRequest) ([]*pb.AddOnDefinition, error)
+	AddOnDefinitionList(ctx context.Context, request *pb.ListAddOnDefinitionsRequest) ([]*pb.AddOnDefinition, error)
 
 	//---------------------------------------------------------------
 	// Add Ons
@@ -238,7 +238,7 @@ type Interface interface {
 	AddOnUpdate(ctx context.Context, addOn *pb.AddOn) (*pb.AddOn, error)
 	AddOnGet(ctx context.Context, addOn *pb.Ref_AddOn) (*pb.AddOn, error)
 	AddOnDelete(ctx context.Context, addOn *pb.Ref_AddOn) error
-	AddOnList(ctx context.Context, request *pb.PaginationRequest) ([]*pb.AddOn, error)
+	AddOnList(ctx context.Context, request *pb.ListAddOnsRequest) ([]*pb.AddOn, error)
 }
 
 // Pruner is implemented by state storage implementations that require

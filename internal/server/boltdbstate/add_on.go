@@ -28,7 +28,7 @@ func (s *State) AddOnDefinitionDelete(ctx context.Context, definition *pb.Ref_Ad
 	return status.Errorf(codes.Unimplemented, "Add On Unimplemented")
 }
 
-func (s *State) AddOnDefinitionList(ctx context.Context, request *pb.PaginationRequest) ([]*pb.AddOnDefinition, error) {
+func (s *State) AddOnDefinitionList(ctx context.Context, request *pb.ListAddOnDefinitionsRequest) ([]*pb.AddOnDefinition, error) {
 	return nil, status.Errorf(codes.Unimplemented, "Add On Unimplemented")
 }
 
@@ -48,6 +48,6 @@ func (s *State) AddOnDelete(ctx context.Context, addOn *pb.Ref_AddOn) error {
 	return status.Errorf(codes.Unimplemented, "Add On Unimplemented")
 }
 
-func (s *State) AddOnList(ctx context.Context, request *pb.PaginationRequest) ([]*pb.AddOn, error) {
+func (s *State) AddOnList(ctx context.Context, request *pb.ListAddOnsRequest) ([]*pb.AddOn, error) {
 	return nil, status.Errorf(codes.Unimplemented, "Add On Unimplemented")
 }
