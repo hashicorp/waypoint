@@ -8121,13 +8121,13 @@
     "hashicorp.waypoint.AddOnType": {
       "type": "string",
       "enum": [
-        "other",
-        "database",
-        "search",
-        "monitor",
-        "storage"
+        "ADDON_OTHER",
+        "ADDON_DATABASE",
+        "ADDON_SEARCH",
+        "ADDON_MONITOR",
+        "ADDON_STORAGE"
       ],
-      "default": "other"
+      "default": "ADDON_OTHER"
     },
     "hashicorp.waypoint.AdoptRunnerRequest": {
       "type": "object",
@@ -13160,7 +13160,7 @@
       "properties": {
         "source": {
           "type": "string",
-          "description": "The module name for the Terraform no-code module."
+          "title": "The source of the Terraform no-code module.\nhttps://developer.hashicorp.com/terraform/language/modules/sources"
         },
         "version": {
           "type": "string",

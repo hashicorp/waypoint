@@ -5476,7 +5476,8 @@ message ProjectTemplate {
 }
 
 message TerraformNocodeModule {
-  // The module name for the Terraform no-code module.
+  // The source of the Terraform no-code module.
+  // https://developer.hashicorp.com/terraform/language/modules/sources
   string source = 1;
 
   // The version of the Terraform no-code module.
@@ -5613,11 +5614,11 @@ message CreateAddOnRequest {
 }
 
 enum AddOnType {
-  other = 0;
-  database = 1;
-  search = 2;
-  monitor = 3;
-  storage = 4;
+  ADDON_OTHER = 0;
+  ADDON_DATABASE = 1;
+  ADDON_SEARCH = 2;
+  ADDON_MONITOR = 3;
+  ADDON_STORAGE = 4;
 }
 
 // CreateAddOnResponse is the response containing the just-added Add On
