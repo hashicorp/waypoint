@@ -16,7 +16,7 @@ func (s *State) AddOnDefinitionPut(ctx context.Context, definition *pb.AddOnDefi
 	return nil, status.Errorf(codes.Unimplemented, "Add On Unimplemented")
 }
 
-func (s *State) AddOnDefinitionUpdate(ctx context.Context, definition *pb.AddOnDefinition) (*pb.AddOnDefinition, error) {
+func (s *State) AddOnDefinitionUpdate(ctx context.Context, definition *pb.AddOnDefinition, existingDefinition *pb.Ref_AddOnDefinition) (*pb.AddOnDefinition, error) {
 	return nil, status.Errorf(codes.Unimplemented, "Add On Unimplemented")
 }
 

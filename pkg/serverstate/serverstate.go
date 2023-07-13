@@ -226,7 +226,7 @@ type Interface interface {
 	// Add On Definitions
 
 	AddOnDefinitionPut(ctx context.Context, definition *pb.AddOnDefinition) (*pb.AddOnDefinition, error)
-	AddOnDefinitionUpdate(ctx context.Context, definition *pb.AddOnDefinition) (*pb.AddOnDefinition, error)
+	AddOnDefinitionUpdate(ctx context.Context, definition *pb.AddOnDefinition, existingDefinition *pb.Ref_AddOnDefinition) (*pb.AddOnDefinition, error)
 	AddOnDefinitionGet(ctx context.Context, definition *pb.Ref_AddOnDefinition) (*pb.AddOnDefinition, error)
 	AddOnDefinitionDelete(ctx context.Context, definition *pb.Ref_AddOnDefinition) error
 	AddOnDefinitionList(ctx context.Context, request *pb.ListAddOnDefinitionsRequest) ([]*pb.AddOnDefinition, *pb.PaginationResponse, error)
