@@ -33,7 +33,6 @@ func TestAddOnFeatures(t *testing.T, factory Factory, restartF RestartFactory) {
 	proj := serverptypes.TestProject(t, &pb.Project{
 		Name: pn,
 	})
-	// Can save by ID
 	err := s.ProjectPut(ctx, proj)
 	require.NoError(err)
 
@@ -299,7 +298,7 @@ func TestAddOnPagination(t *testing.T, factory Factory, restartF RestartFactory)
 		})
 		require.NoError(err)
 		require.Len(aods, 5)
-		expectedPageToken, _ := pagination.EncodeAndSerializePageToken("external_id", "e")
+		expectedPageToken, _ := pagination.EncodeAndSerializePageToken("name", "e")
 		require.Equal(expectedPageToken, pr.NextPageToken)
 		require.Empty(pr.PreviousPageToken)
 
@@ -315,9 +314,9 @@ func TestAddOnPagination(t *testing.T, factory Factory, restartF RestartFactory)
 		)
 		require.NoError(err)
 		require.Len(aods, 5)
-		expectedPrevPageToken, _ := pagination.EncodeAndSerializePageToken("external_id", "f")
+		expectedPrevPageToken, _ := pagination.EncodeAndSerializePageToken("name", "f")
 		require.Equal(expectedPrevPageToken, pr.PreviousPageToken)
-		expectedNextPageToken, _ := pagination.EncodeAndSerializePageToken("external_id", "j")
+		expectedNextPageToken, _ := pagination.EncodeAndSerializePageToken("name", "j")
 		require.Equal(expectedNextPageToken, pr.NextPageToken)
 
 		// list k-m
@@ -331,13 +330,20 @@ func TestAddOnPagination(t *testing.T, factory Factory, restartF RestartFactory)
 			},
 		)
 		require.NoError(err)
-		require.Len(aods, 5)
-		expectedPrevPageToken, _ = pagination.EncodeAndSerializePageToken("external_id", "k")
+		require.Len(aods, 3)
+		expectedPrevPageToken, _ = pagination.EncodeAndSerializePageToken("name", "k")
 		require.Equal(expectedPrevPageToken, pr.PreviousPageToken)
 		require.Empty(pr.NextPageToken)
 	})
 
 	t.Run("List Add-Ons", func(t *testing.T) {
+		pn := "my-test-project"
+		proj := serverptypes.TestProject(t, &pb.Project{
+			Name: pn,
+		})
+		err := s.ProjectPut(ctx, proj)
+		require.NoError(err)
+
 		startChar := 'a'
 		endChar := 'm'
 		//addOnDefinitionsCount := endChar - startChar + 1
@@ -351,12 +357,14 @@ func TestAddOnPagination(t *testing.T, factory Factory, restartF RestartFactory)
 			chars[i], chars[j] = chars[j], chars[i]
 		})
 		for _, char := range chars {
-			aod, err := s.AddOnDefinitionPut(ctx, &pb.AddOnDefinition{
-				Id:   char,
+			addOn, err := s.AddOnPut(ctx, &pb.AddOn{
 				Name: char,
+				// "a" - "m" were already created in the previous test, so just using definition "a" for all
+				Definition: &pb.Ref_AddOnDefinition{Identifier: &pb.Ref_AddOnDefinition_Name{Name: "a"}},
+				Project:    &pb.Ref_Project{Project: pn},
 			})
 			require.NoError(err)
-			require.NotNil(aod)
+			require.NotNil(addOn)
 		}
 
 		// list a-e
@@ -367,7 +375,7 @@ func TestAddOnPagination(t *testing.T, factory Factory, restartF RestartFactory)
 		})
 		require.NoError(err)
 		require.Len(addOns, 5)
-		expectedPageToken, _ := pagination.EncodeAndSerializePageToken("external_id", "e")
+		expectedPageToken, _ := pagination.EncodeAndSerializePageToken("name", "e")
 		require.Equal(expectedPageToken, pr.NextPageToken)
 		require.Empty(pr.PreviousPageToken)
 
@@ -383,9 +391,9 @@ func TestAddOnPagination(t *testing.T, factory Factory, restartF RestartFactory)
 		)
 		require.NoError(err)
 		require.Len(addOns, 5)
-		expectedPrevPageToken, _ := pagination.EncodeAndSerializePageToken("external_id", "f")
+		expectedPrevPageToken, _ := pagination.EncodeAndSerializePageToken("name", "f")
 		require.Equal(expectedPrevPageToken, pr.PreviousPageToken)
-		expectedNextPageToken, _ := pagination.EncodeAndSerializePageToken("external_id", "j")
+		expectedNextPageToken, _ := pagination.EncodeAndSerializePageToken("name", "j")
 		require.Equal(expectedNextPageToken, pr.NextPageToken)
 
 		// list k-m
@@ -399,8 +407,8 @@ func TestAddOnPagination(t *testing.T, factory Factory, restartF RestartFactory)
 			},
 		)
 		require.NoError(err)
-		require.Len(addOns, 5)
-		expectedPrevPageToken, _ = pagination.EncodeAndSerializePageToken("external_id", "k")
+		require.Len(addOns, 3)
+		expectedPrevPageToken, _ = pagination.EncodeAndSerializePageToken("name", "k")
 		require.Equal(expectedPrevPageToken, pr.PreviousPageToken)
 		require.Empty(pr.NextPageToken)
 	})
