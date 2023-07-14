@@ -374,12 +374,17 @@ func (r *Runner) waitState(state *uint64) bool {
 // v. This can be used with the fields such as stateConfig to detect
 // when a reconnect occurs.
 func (r *Runner) waitStateGreater(state *uint64, v uint64) bool {
+	log := r.logger
+	log.Debug("Acquiring state condition lock")
 	r.stateCond.L.Lock()
 	defer r.stateCond.L.Unlock()
+	log.Debug("state condition lock acquired", "state", state, "r.stateExit", r.stateExit)
 	for *state <= v && r.stateExit == 0 {
+		log.Debug("waiting on state condition...", "state", state, "r.stateExit", r.stateExit)
 		r.stateCond.Wait()
 	}
 
+	log.Debug("done waiting on state condition...", "state", state, "r.stateExit", r.stateExit)
 	return r.stateExit > 0
 }
 

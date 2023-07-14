@@ -18,6 +18,7 @@ import (
 
 	serverpkg "github.com/hashicorp/waypoint/pkg/server"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
+	serverptypes "github.com/hashicorp/waypoint/pkg/server/ptypes"
 	"github.com/hashicorp/waypoint/pkg/server/singleprocess"
 )
 
@@ -168,6 +169,121 @@ func TestRunnerStart_serverDown(t *testing.T) {
 		_, err = impl.GetRunner(ctx, &pb.GetRunnerRequest{RunnerId: runner.Id()})
 		return err == nil
 	}, 5*time.Second, 10*time.Millisecond)
+}
+
+// Test how the runner behaves on start if the server is down after initial syncing is complete.
+func TestRunnerStart_serverDownPostRegistration(t *testing.T) {
+	require := require.New(t)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	restartCh := make(chan struct{})
+	impl := singleprocess.TestImpl(t)
+	client := serverpkg.TestServer(t, impl,
+		serverpkg.TestWithContext(ctx),
+		serverpkg.TestWithRestart(restartCh),
+	)
+	cookie := testCookie(t, client)
+
+	// Initialize our runner
+	runner, err := New(
+		WithClient(client),
+		WithCookie(cookie),
+	)
+	require.NoError(err)
+	defer runner.Close()
+
+	// Move into a temporary directory
+	td := testTempDir(t)
+	testChdir(t, td)
+
+	// Start the runner
+	errCh := make(chan error, 1)
+	go func() {
+		errCh <- runner.Start(ctx)
+	}()
+
+	// Start should return
+	select {
+	case err := <-errCh:
+		require.NoError(err)
+	case <-time.After(5 * time.Second):
+		t.Fatal("start never returned")
+	}
+
+	// Begin accepting jobs
+	go runner.AcceptParallel(ctx, 1)
+
+	// Initialize our app
+	projectName := serverptypes.TestJobNew(t, nil).Application.Project
+	appName := serverptypes.TestJobNew(t, nil).Application.Application
+	{
+		_, err := client.UpsertProject(context.Background(), &pb.UpsertProjectRequest{
+			Project: &pb.Project{
+				Name: projectName,
+				//				WaypointHcl: []byte(fmt.Sprintf(`
+				//project = "%s"
+				//app "%s" {
+				//  build {
+				//    use "docker" {
+				//    }
+				//  }
+				//
+				//  deploy {
+				//    use "docker" {
+				//    }
+				//  }
+				//}
+				//`, projectName, appName)),
+			},
+		})
+		require.NoError(err)
+
+		_, err = client.UpsertApplication(context.Background(), &pb.UpsertApplicationRequest{
+			Project: &pb.Ref_Project{Project: projectName},
+			Name:    appName,
+		})
+		require.NoError(err)
+	}
+
+	// Ensure jobs can run
+	{
+		// Queue the job
+		queueResp, err := client.QueueJob(ctx, &pb.QueueJobRequest{Job: serverptypes.TestJobNew(t, nil)})
+		require.NoError(err)
+		require.NotNil(queueResp)
+		require.NotEmpty(queueResp.JobId)
+
+		// Wait for the job to execute
+		require.Eventually(func() bool {
+			jobResp, err := client.GetJob(ctx, &pb.GetJobRequest{
+				JobId: queueResp.JobId,
+			})
+			require.NoError(err)
+			require.Nil(jobResp.Error)
+			return jobResp.State == pb.Job_SUCCESS
+		}, 999999*time.Second, 5*time.Second)
+	}
+
+	//// Shut down the server
+	//cancel()
+	//ctx, cancel = context.WithCancel(context.Background())
+	//defer cancel()
+	//
+	//// Wait to get an unavailable error from the runner so that we know the server is down
+	//require.Eventually(func() bool {
+	//	_, err := client.GetRunner(ctx, &pb.GetRunnerRequest{RunnerId: "A"})
+	//	return status.Code(err) == codes.Unavailable
+	//}, 5*time.Second, 10*time.Millisecond)
+	//
+	//// Restart the server
+	//restartCh <- struct{}{}
+	//
+	//// We should get re-registered eventually
+	//require.Eventually(func() bool {
+	//	_, err = impl.GetRunner(ctx, &pb.GetRunnerRequest{RunnerId: runner.Id()})
+	//	return err == nil
+	//}, 5*time.Second, 10*time.Millisecond)
 }
 
 func TestRunnerStart_adoption(t *testing.T) {

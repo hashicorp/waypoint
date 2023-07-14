@@ -126,17 +126,27 @@ func (r *Runner) watchConfig(
 	defer w.Close()
 
 	for {
+		log.Debug("watchConfig entering the select case. Waiting on something from ch or appCfgCh...")
 		select {
 		case <-ctx.Done():
 			log.Warn("exiting due to context ended")
 			return
 
 		case config := <-ch:
+			log.Debug("watchConfig pulled something from ch!", "config", config)
 			// Update our app config watcher with the latest vars and sources.
-			w.UpdateSources(ctx, config.ConfigSources)
-			w.UpdateVars(ctx, config.ConfigVars)
+			if err := w.UpdateSources(ctx, config.ConfigSources); err != nil {
+				log.Debug("error in w.UpdateSources", "err", err)
+			}
+			log.Debug("Done updating sources, now updating vars...")
+
+			if err := w.UpdateVars(ctx, config.ConfigVars); err != nil {
+				log.Debug("error in w.UpdateVars", "err", err)
+			}
+			log.Debug("done processing config from ch")
 
 		case appCfg := <-appCfgCh:
+			log.Debug("watchConfig pulled something from appCfgCh!", "config", appCfg)
 			log.Trace("received new app config")
 
 			// This will keep track of our error setting config. For the CEB,
@@ -166,7 +176,9 @@ func (r *Runner) watchConfig(
 			// Note that we processed our config at least once. People can
 			// wait on this state to know that success or fail, one config
 			// was received.
+			log.Debug("Attempting to increment state...", "r.stateConfigOnce", r.stateConfigOnce)
 			r.incrState(&r.stateConfigOnce)
+			log.Debug("state incremented")
 
 			// If we have an error, then we exit our loop. For runners,
 			// not being able to set config is a fatal error. We do this so
@@ -175,6 +187,7 @@ func (r *Runner) watchConfig(
 				log.Warn("error setting app config for runner", "err", merr)
 				return
 			}
+			log.Debug("Done processing appCfg")
 
 		}
 	}
@@ -315,5 +328,6 @@ func (r *Runner) recvConfig(
 
 		log.Info("new configuration received")
 		ch <- resp.Config
+		log.Debug("new configuration delivered to ch")
 	}
 }

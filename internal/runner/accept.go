@@ -196,6 +196,7 @@ RESTART_JOB_STREAM:
 		log.Warn("server down before accepting a job, will reconnect")
 
 		if client != nil {
+			log.Debug("closing client send")
 			client.CloseSend()
 		}
 	}
@@ -206,11 +207,14 @@ RESTART_JOB_STREAM:
 	// Note: we disable the lostcancel linter for streamCancel because
 	// golangci-lint is not detecting that we have the defer above the
 	// label as well as the retry block above.
+	log.Debug("acquiring stream ctx lock")
 	streamCtxLock.Lock()
 	if streamCancel != nil {
+		log.Debug("canceling stream context")
 		streamCancel()
 	}
 	if atomic.LoadInt32(&canceled) > 0 {
+		log.Debug("stream context is canceled - unlocking and returning")
 		streamCtxLock.Unlock()
 		return ErrTimeout
 	}
@@ -221,10 +225,15 @@ RESTART_JOB_STREAM:
 	// RunnerConfig stream to re-establish. We wait for the config
 	// generation to increment.
 	if retry {
+		log.Debug("waiting for state greater than", "r.stateConfig", r.stateConfig, "stateGen", stateGen)
 		if r.waitStateGreater(&r.stateConfig, stateGen) {
+			log.Debug("early exit while waiting for reconnect")
 			return status.Error(codes.Internal, "early exit while waiting for reconnect")
 		}
+		log.Debug("I bet we don't see this log line! If you see this, it means we're not getting stuck in waitStateGreater")
 	}
+
+	log.Debug("Stream re-established")
 
 	// Get our configuration state value. We use this so that we can detect
 	// when we've reconnected during failures.
