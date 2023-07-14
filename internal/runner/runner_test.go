@@ -222,20 +222,6 @@ func TestRunnerStart_serverDownPostRegistration(t *testing.T) {
 		_, err := client.UpsertProject(context.Background(), &pb.UpsertProjectRequest{
 			Project: &pb.Project{
 				Name: projectName,
-				//				WaypointHcl: []byte(fmt.Sprintf(`
-				//project = "%s"
-				//app "%s" {
-				//  build {
-				//    use "docker" {
-				//    }
-				//  }
-				//
-				//  deploy {
-				//    use "docker" {
-				//    }
-				//  }
-				//}
-				//`, projectName, appName)),
 			},
 		})
 		require.NoError(err)
@@ -263,28 +249,45 @@ func TestRunnerStart_serverDownPostRegistration(t *testing.T) {
 			require.NoError(err)
 			require.Nil(jobResp.Error)
 			return jobResp.State == pb.Job_SUCCESS
-		}, 999999*time.Second, 5*time.Second)
+		}, 10*time.Second, 5*time.Second)
 	}
 
-	//// Shut down the server
-	//cancel()
-	//ctx, cancel = context.WithCancel(context.Background())
-	//defer cancel()
+	// Shut down the server
+	cancel()
+	ctx, cancel = context.WithCancel(context.Background())
+	defer cancel()
 	//
-	//// Wait to get an unavailable error from the runner so that we know the server is down
-	//require.Eventually(func() bool {
-	//	_, err := client.GetRunner(ctx, &pb.GetRunnerRequest{RunnerId: "A"})
-	//	return status.Code(err) == codes.Unavailable
-	//}, 5*time.Second, 10*time.Millisecond)
-	//
-	//// Restart the server
-	//restartCh <- struct{}{}
-	//
-	//// We should get re-registered eventually
-	//require.Eventually(func() bool {
-	//	_, err = impl.GetRunner(ctx, &pb.GetRunnerRequest{RunnerId: runner.Id()})
-	//	return err == nil
-	//}, 5*time.Second, 10*time.Millisecond)
+	//Wait to get an unavailable error from the runner so that we know the server is down
+	require.Eventually(func() bool {
+		_, err := client.GetRunner(ctx, &pb.GetRunnerRequest{RunnerId: "A"})
+		return status.Code(err) == codes.Unavailable
+	}, 5*time.Second, 10*time.Millisecond)
+
+	// Restart the server
+	restartCh <- struct{}{}
+
+	// We should get re-registered eventually
+	require.Eventually(func() bool {
+		_, err = impl.GetRunner(ctx, &pb.GetRunnerRequest{RunnerId: runner.Id()})
+		return err == nil
+	}, 5*time.Second, 10*time.Millisecond)
+
+	// Queue the job
+	queueResp, err := client.QueueJob(ctx, &pb.QueueJobRequest{Job: serverptypes.TestJobNew(t, nil)})
+	require.NoError(err)
+	require.NotNil(queueResp)
+	require.NotEmpty(queueResp.JobId)
+
+	// Wait for the job to execute
+	require.Eventually(func() bool {
+		jobResp, err := client.GetJob(ctx, &pb.GetJobRequest{
+			JobId: queueResp.JobId,
+		})
+		require.NoError(err)
+		require.Nil(jobResp.Error)
+		return jobResp.State == pb.Job_SUCCESS
+	}, 30*time.Second, 5*time.Second)
+
 }
 
 func TestRunnerStart_adoption(t *testing.T) {
