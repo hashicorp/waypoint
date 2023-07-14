@@ -16,6 +16,7 @@ import (
 	"google.golang.org/grpc/status"
 	empty "google.golang.org/protobuf/types/known/emptypb"
 
+	configpkg "github.com/hashicorp/waypoint/internal/config"
 	serverpkg "github.com/hashicorp/waypoint/pkg/server"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	serverptypes "github.com/hashicorp/waypoint/pkg/server/ptypes"
@@ -196,7 +197,7 @@ func TestRunnerStart_serverDownPostRegistration(t *testing.T) {
 	// Move into a temporary directory
 	td := testTempDir(t)
 	testChdir(t, td)
-
+	configpkg.TestConfigFile(t, configpkg.TestSource(t))
 	// Start the runner
 	errCh := make(chan error, 1)
 	go func() {
