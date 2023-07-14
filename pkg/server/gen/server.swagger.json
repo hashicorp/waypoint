@@ -8061,10 +8061,6 @@
             "type": "string"
           },
           "title": "A list of descriptive tags for an Add On"
-        },
-        "type": {
-          "$ref": "#/definitions/hashicorp.waypoint.AddOnType",
-          "title": "The type of the Add On"
         }
       },
       "title": "AddOn is an add-on definition rendered for a project"
@@ -8110,24 +8106,9 @@
             "type": "string"
           },
           "title": "The TF variable set to apply to the Add On's No Code workspace"
-        },
-        "type": {
-          "$ref": "#/definitions/hashicorp.waypoint.AddOnType",
-          "title": "The type of the Add On"
         }
       },
       "title": "AddOnDefinition is the template for an add-on"
-    },
-    "hashicorp.waypoint.AddOnType": {
-      "type": "string",
-      "enum": [
-        "ADDON_OTHER",
-        "ADDON_DATABASE",
-        "ADDON_SEARCH",
-        "ADDON_MONITOR",
-        "ADDON_STORAGE"
-      ],
-      "default": "ADDON_OTHER"
     },
     "hashicorp.waypoint.AdoptRunnerRequest": {
       "type": "object",
@@ -8647,10 +8628,6 @@
             "type": "string"
           },
           "title": "The TF variable set to apply to the Add On's No Code workspace"
-        },
-        "type": {
-          "$ref": "#/definitions/hashicorp.waypoint.AddOnType",
-          "title": "The type of the Add On"
         }
       },
       "title": "CreateAddOnDefinitionRequest is the request used to create an Add On\ndefinition"
@@ -8678,10 +8655,6 @@
           "$ref": "#/definitions/hashicorp.waypoint.Ref.AddOnDefinition",
           "title": "The Add On definition from which this Add On is to be created"
         },
-        "tf_workspace_name": {
-          "type": "string",
-          "title": "Name of the Add On's Terraform workspace"
-        },
         "readme_markdown": {
           "type": "string",
           "format": "byte",
@@ -8693,10 +8666,6 @@
             "type": "string"
           },
           "title": "A list of descriptive tags for an Add On"
-        },
-        "type": {
-          "$ref": "#/definitions/hashicorp.waypoint.AddOnType",
-          "title": "The type of the Add On"
         }
       },
       "title": "CreateAddOnRequest is the request used to add an Add On to a project"
@@ -11065,10 +11034,6 @@
         },
         "pagination": {
           "$ref": "#/definitions/hashicorp.waypoint.PaginationResponse"
-        },
-        "total_count": {
-          "type": "string",
-          "format": "uint64"
         }
       },
       "title": "ListAddOnDefinitionsResponse is the response used to return all Add On\ndefinitions"
@@ -13863,10 +13828,6 @@
             "type": "string"
           },
           "title": "The TF variable set to apply to the Add On's No Code workspace"
-        },
-        "type": {
-          "$ref": "#/definitions/hashicorp.waypoint.AddOnType",
-          "title": "The type of the Add On"
         }
       },
       "title": "UpdateAddOnDefinitionRequest is the request used to update an existing\nAdd On definition"

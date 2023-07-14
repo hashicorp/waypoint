@@ -5510,7 +5510,6 @@ message ListAddOnDefinitionsRequest {
 message ListAddOnDefinitionsResponse {
   repeated AddOnDefinition add_on_definitions = 1;
   PaginationResponse pagination = 2;
-  uint64 total_count = 3;
 }
 
 // CreateAddOnDefinitionRequest is the request used to create an Add On
@@ -5536,9 +5535,6 @@ message CreateAddOnDefinitionRequest {
 
   // The TF variable set to apply to the Add On's No Code workspace
   repeated string tf_variable_set_ids = 7;
-
-  // The type of the Add On
-  AddOnType type = 8;
 }
 
 // CreateAddOnDefinitionResponse is the response containing the just-created
@@ -5573,9 +5569,6 @@ message UpdateAddOnDefinitionRequest {
 
   // The TF variable set to apply to the Add On's No Code workspace
   repeated string tf_variable_set_ids = 8;
-
-  // The type of the Add On
-  AddOnType type = 9;
 }
 
 // UpdateAddOnDefinitionResponse is the response containing the just-updated
@@ -5600,25 +5593,11 @@ message CreateAddOnRequest {
   // The Add On definition from which this Add On is to be created
   Ref.AddOnDefinition definition = 4;
 
-  // Name of the Add On's Terraform workspace
-  string tf_workspace_name = 5;
-
   // Rendered README markdown template for Add On
-  bytes readme_markdown = 6;
+  bytes readme_markdown = 5;
 
   // A list of descriptive tags for an Add On
-  repeated string tags = 7;
-
-  // The type of the Add On
-  AddOnType type = 8;
-}
-
-enum AddOnType {
-  ADDON_OTHER = 0;
-  ADDON_DATABASE = 1;
-  ADDON_SEARCH = 2;
-  ADDON_MONITOR = 3;
-  ADDON_STORAGE = 4;
+  repeated string tags = 6;
 }
 
 // CreateAddOnResponse is the response containing the just-added Add On
@@ -5699,9 +5678,6 @@ message AddOn {
 
   // A list of descriptive tags for an Add On
   repeated string tags = 7;
-
-  // The type of the Add On
-  AddOnType type = 8;
 }
 
 // AddOnDefinition is the template for an add-on
@@ -5729,9 +5705,6 @@ message AddOnDefinition {
 
   // The TF variable set to apply to the Add On's No Code workspace
   repeated string tf_variable_set_ids = 8;
-
-  // The type of the Add On
-  AddOnType type = 9;
 }
 
 /********************************************************************
