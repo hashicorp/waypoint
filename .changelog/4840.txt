@@ -1,0 +1,3 @@
+```release-note:bug
+runnerinstall/ecs: Add IAM permission required for project destruction
+```
