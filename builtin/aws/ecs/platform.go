@@ -1171,7 +1171,7 @@ func (p *Platform) resourceAlbListenerDestroy(
 		return nil
 	}
 	if !state.Managed {
-		log.Debug("Skipping destroy of unmanaged ALB listener with ARN %q", state.Arn)
+		log.Debug("Skipping destroy of unmanaged ALB listener", "ARN", state.Arn)
 		return nil
 	}
 	if state.Arn == "" {
@@ -1409,7 +1409,7 @@ func (p *Platform) resourceTargetGroupDestroy(
 
 	elbsrv := elbv2.New(sess)
 
-	groups, err := elbsrv.DescribeTargetGroups(&elbv2.DescribeTargetGroupsInput{
+	groups, err := elbsrv.DescribeTargetGroupsWithContext(ctx, &elbv2.DescribeTargetGroupsInput{
 		TargetGroupArns: aws.StringSlice([]string{state.Arn}),
 	})
 	if err != nil {
@@ -1441,7 +1441,7 @@ func (p *Platform) resourceTargetGroupDestroy(
 				describeListenersInput.LoadBalancerArn = lb
 			}
 
-			listeners, err := elbsrv.DescribeListeners(describeListenersInput)
+			listeners, err := elbsrv.DescribeListenersWithContext(ctx, describeListenersInput)
 
 			log.Debug("inspecting listeners", "alb_arn", lb)
 			if err != nil {

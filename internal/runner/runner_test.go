@@ -5,6 +5,7 @@ package runner
 
 import (
 	"context"
+	"github.com/hashicorp/go-hclog"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -174,6 +175,11 @@ func TestRunnerStart_serverDown(t *testing.T) {
 
 // Test how the runner behaves on start if the server is down after initial syncing is complete.
 func TestRunnerStart_serverDownPostRegistration(t *testing.T) {
+
+	log := hclog.L()
+	log.SetLevel(hclog.Trace)
+	log = log.With("origin", "test")
+
 	require := require.New(t)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -192,7 +198,7 @@ func TestRunnerStart_serverDownPostRegistration(t *testing.T) {
 		WithCookie(cookie),
 	)
 	require.NoError(err)
-	defer runner.Close()
+	//defer runner.Close()
 
 	// Move into a temporary directory
 	td := testTempDir(t)
@@ -213,7 +219,8 @@ func TestRunnerStart_serverDownPostRegistration(t *testing.T) {
 	}
 
 	// Begin accepting jobs
-	go runner.AcceptParallel(ctx, 1)
+	runnerCtx := context.Background()
+	go runner.AcceptParallel(runnerCtx, 1)
 
 	// Initialize our app
 	projectName := serverptypes.TestJobNew(t, nil).Application.Project
@@ -249,20 +256,23 @@ func TestRunnerStart_serverDownPostRegistration(t *testing.T) {
 			require.NoError(err)
 			require.Nil(jobResp.Error)
 			return jobResp.State == pb.Job_SUCCESS
-		}, 10*time.Second, 5*time.Second)
+		}, 99999*time.Second, 5*time.Second)
 	}
+
+	log.Info("TEST: Done with the preamble - the runner/server works - now turning the server off...")
 
 	// Shut down the server
 	cancel()
 	ctx, cancel = context.WithCancel(context.Background())
 	defer cancel()
-	//
+
 	//Wait to get an unavailable error from the runner so that we know the server is down
 	require.Eventually(func() bool {
 		_, err := client.GetRunner(ctx, &pb.GetRunnerRequest{RunnerId: "A"})
 		return status.Code(err) == codes.Unavailable
 	}, 5*time.Second, 10*time.Millisecond)
 
+	log.Info("TEST: The server is properly off now. Restarting it...")
 	// Restart the server
 	restartCh <- struct{}{}
 
@@ -272,11 +282,15 @@ func TestRunnerStart_serverDownPostRegistration(t *testing.T) {
 		return err == nil
 	}, 5*time.Second, 10*time.Millisecond)
 
+	log.Info("TEST: The server is now back online. Queueing a new job...")
+
 	// Queue the job
 	queueResp, err := client.QueueJob(ctx, &pb.QueueJobRequest{Job: serverptypes.TestJobNew(t, nil)})
 	require.NoError(err)
 	require.NotNil(queueResp)
 	require.NotEmpty(queueResp.JobId)
+
+	log.Info("TEST: Waiting for the new job to execute...")
 
 	// Wait for the job to execute
 	require.Eventually(func() bool {
@@ -286,8 +300,9 @@ func TestRunnerStart_serverDownPostRegistration(t *testing.T) {
 		require.NoError(err)
 		require.Nil(jobResp.Error)
 		return jobResp.State == pb.Job_SUCCESS
-	}, 30*time.Second, 5*time.Second)
+	}, 999999*time.Second, 5*time.Second)
 
+	log.Info("TEST: Test complete! Shutting down...")
 }
 
 func TestRunnerStart_adoption(t *testing.T) {

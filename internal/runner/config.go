@@ -73,7 +73,7 @@ func (r *Runner) initConfigStreamReceiver(
 	}
 
 	// Start the goroutine that receives messages from the stream.
-	// This will detect any stream disconections and perform a retry.
+	// This will detect any stream disconnections and perform a retry.
 	go r.recvConfig(ctx, client, ch, func() error {
 		return r.initConfigStreamReceiver(ctx, log, ch, true)
 	})
@@ -279,7 +279,9 @@ func (r *Runner) recvConfig(
 	reconnect func() error,
 ) {
 	log := r.logger.Named("config_recv")
-	defer log.Trace("exiting receive goroutine")
+	defer func() {
+		log.Trace("exiting receive goroutine")
+	}()
 
 	// Keep track of our first receive
 	first := true
