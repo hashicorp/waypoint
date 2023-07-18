@@ -1,5 +1,12 @@
 # This file was generated via `make gen/integrations-hcl`
 parameter {
+  key         = "disable_entrypoint"
+  description = ""
+  type        = "bool"
+  required    = false
+}
+
+parameter {
   key           = "force_architecture"
   description   = "**Note**: This is a temporary field that enables overriding the `architecture` output attribute. Valid values are: `\"x86_64\"`, `\"arm64\"`"
   type          = "string"
