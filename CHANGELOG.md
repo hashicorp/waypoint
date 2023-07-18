@@ -6,6 +6,22 @@ IMPROVEMENTS:
 
 BUG FIXES:
 
+## 0.11.3 (July 18, 2023)
+
+IMPROVEMENTS:
+
+* cli: Add config source's plugin type, scope, project, app, and workspace to
+  output of `waypoint config source-get` when getting a specific config source. [[GH-4822](https://github.com/hashicorp/waypoint/issues/4822)]
+* cli: Add option `all` to flag `-scope` on `waypoint config source-get` command
+  to output all config sources. [[GH-4822](https://github.com/hashicorp/waypoint/issues/4822)]
+
+BUG FIXES:
+
+* runnerinstall/aws-ecs: Fix ODR policy for AWS ECS runners to enable adding tags
+  to an ALB. [[GH-4818](https://github.com/hashicorp/waypoint/issues/4818)]
+* runnerinstall/ecs: Add IAM permission required for project destruction [[GH-4840](https://github.com/hashicorp/waypoint/issues/4840)]
+* runneruninstall/aws-ecs: Fix panic when uninstalling ECS runner after failing to find EFS [[GH-4829](https://github.com/hashicorp/waypoint/issues/4829)]
+
 ## 0.11.2 (June 15, 2023)
 
 IMPROVEMENTS:
