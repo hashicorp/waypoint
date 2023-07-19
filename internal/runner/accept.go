@@ -233,7 +233,7 @@ RESTART_JOB_STREAM:
 		log.Debug("I bet we don't see this log line! If you see this, it means we're not getting stuck in waitStateGreater")
 	}
 
-	log.Debug("Stream re-established")
+	log.Debug("Stream (re)-established")
 
 	// Get our configuration state value. We use this so that we can detect
 	// when we've reconnected during failures.
@@ -254,6 +254,8 @@ RESTART_JOB_STREAM:
 			// Throttle ourselves so that we don't hammer the server in the case that
 			// we've been deleted and are not likely to return.
 			time.Sleep(time.Duration(2+rand.Intn(3)) * time.Second)
+
+			log.Trace("Restarting the accept loop due to a cancellation and we got an error establishing the runner job stream. I don't think we'll see this.", "err", err)
 			goto RESTART_JOB_STREAM
 		}
 
@@ -272,6 +274,7 @@ RESTART_JOB_STREAM:
 		if atomic.LoadInt32(&canceled) > 0 ||
 			status.Code(err) == codes.Unavailable ||
 			status.Code(err) == codes.NotFound {
+			log.Trace("Restarting the accept loop due to a cancellation and we got an error sending on the job stream. I don't think we'll see this.", "err", err)
 			goto RESTART_JOB_STREAM
 		}
 
@@ -289,6 +292,7 @@ RESTART_JOB_STREAM:
 		if atomic.LoadInt32(&canceled) > 0 ||
 			status.Code(err) == codes.Unavailable ||
 			status.Code(err) == codes.NotFound {
+			log.Trace("Restarting the accept loop due to a cancellation and we got an error receiving the runner job stream. I don't think we'll see this.", "err", err)
 			goto RESTART_JOB_STREAM
 		}
 
@@ -382,6 +386,7 @@ RESTART_JOB_STREAM:
 		// a bad outcome since no logic is ever executed for the job.
 		if status.Code(err) == codes.Unavailable ||
 			status.Code(err) == codes.NotFound {
+			log.Trace("Congratulations, you are in an unlikely sketchy situation.", "err", err)
 			goto RESTART_JOB_STREAM
 		}
 

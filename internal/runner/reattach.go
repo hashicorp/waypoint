@@ -217,7 +217,7 @@ func (c *reattachClient) do(f func(client pb.Waypoint_RunnerJobStreamClient) err
 		}
 
 		// Wait for an assignment
-		log.Info("waiting for job assignment")
+		log.Info("waiting for job assignment from reconnect")
 		resp, err := client.Recv()
 		if err != nil {
 			if status.Code(err) == codes.Unavailable ||
