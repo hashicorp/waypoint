@@ -329,7 +329,7 @@ func (b *Builder) getErcImage(ctx context.Context, ui terminal.UI, log hclog.Log
 	cfgTag := b.config.Tag
 	cfgRepository := b.config.Repository
 
-	tokenResp, err := ecrsvc.GetAuthorizationToken(&awsecr.GetAuthorizationTokenInput{})
+	tokenResp, err := ecrsvc.GetAuthorizationTokenWithContext(ctx, &awsecr.GetAuthorizationTokenInput{})
 	if err != nil {
 		log.Error("error getting authorization token", "error", err)
 		return nil, nil, err
