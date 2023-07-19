@@ -1,0 +1,3 @@
+```release-note:improvement
+plugin/aws/ecr-pull: Support entrypoint injection in ecr-pull builder
+```
