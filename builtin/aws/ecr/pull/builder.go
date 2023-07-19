@@ -14,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	awsecr "github.com/aws/aws-sdk-go/service/ecr"
 	"github.com/aws/aws-sdk-go/service/lambda"
+
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint-plugin-sdk/docs"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
@@ -111,6 +112,16 @@ build {
 		"force_architecture",
 		"**Note**: This is a temporary field that enables overriding the `architecture` output attribute. Valid values are: `\"x86_64\"`, `\"arm64\"`",
 		docs.Default("`\"\"`"),
+	)
+
+	doc.SetField(
+		"disable_entrypoint",
+		"if set, the entrypoint binary won't be injected into the image",
+		docs.Summary(
+			"The entrypoint binary is what provides extended functionality",
+			"such as logs and exec. If it is not injected at build time",
+			"the expectation is that the image already contains it",
+		),
 	)
 
 	return doc, nil
