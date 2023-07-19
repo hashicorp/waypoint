@@ -5585,19 +5585,11 @@ message DeleteAddOnDefinitionRequest {
 
 // CreateAddOnRequest is the request used to add an Add On to a project
 message CreateAddOnRequest {
-  string name = 1;
-
   // The project for which the Add On is to be created
-  Ref.Project project = 3;
+  Ref.Project project = 1;
 
   // The Add On definition from which this Add On is to be created
-  Ref.AddOnDefinition definition = 4;
-
-  // Rendered README markdown template for Add On
-  bytes readme_markdown = 5;
-
-  // A list of descriptive tags for an Add On
-  repeated string tags = 6;
+  Ref.AddOnDefinition definition = 2;
 }
 
 // CreateAddOnResponse is the response containing the just-added Add On
@@ -5670,31 +5662,25 @@ message AddOn {
   // The Add On definition from which this Add On was created
   Ref.AddOnDefinition definition = 4;
 
-  // Name of the Add On's Terraform workspace
-  string tf_workspace_name = 5;
-
   // Rendered README markdown template for Add On
-  bytes readme_markdown = 6;
+  bytes readme_markdown = 5;
 
   // A list of descriptive tags for an Add On
-  repeated string tags = 7;
+  repeated string tags = 6;
 
   // Terraform No Code module used for provisioning the Add On
-  TerraformNocodeModule terraform_nocode_module = 8;
+  TerraformNocodeModule terraform_nocode_module = 7;
 
   // Short description of the Add On
-  string short_summary = 9;
+  string short_summary = 8;
 
   // Longer description of the Add On
-  string long_summary = 10;
+  string long_summary = 9;
 
-  oneof createdBy {
-    string user_email = 11;
-    string project_template_name = 12;
-  }
+  string created_by = 10;
 
   // The time at which the add-on was created
-  google.protobuf.Timestamp created_at = 13;
+  google.protobuf.Timestamp created_at = 11;
 }
 
 // AddOnDefinition is the template for an add-on

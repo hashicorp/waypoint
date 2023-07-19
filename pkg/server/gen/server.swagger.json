@@ -8046,10 +8046,6 @@
           "$ref": "#/definitions/hashicorp.waypoint.Ref.AddOnDefinition",
           "title": "The Add On definition from which this Add On was created"
         },
-        "tf_workspace_name": {
-          "type": "string",
-          "title": "Name of the Add On's Terraform workspace"
-        },
         "readme_markdown": {
           "type": "string",
           "format": "byte",
@@ -8074,10 +8070,7 @@
           "type": "string",
           "title": "Longer description of the Add On"
         },
-        "user_email": {
-          "type": "string"
-        },
-        "project_template_name": {
+        "created_by": {
           "type": "string"
         },
         "created_at": {
@@ -8667,9 +8660,6 @@
     "hashicorp.waypoint.CreateAddOnRequest": {
       "type": "object",
       "properties": {
-        "name": {
-          "type": "string"
-        },
         "project": {
           "$ref": "#/definitions/hashicorp.waypoint.Ref.Project",
           "title": "The project for which the Add On is to be created"
@@ -8677,18 +8667,6 @@
         "definition": {
           "$ref": "#/definitions/hashicorp.waypoint.Ref.AddOnDefinition",
           "title": "The Add On definition from which this Add On is to be created"
-        },
-        "readme_markdown": {
-          "type": "string",
-          "format": "byte",
-          "title": "Rendered README markdown template for Add On"
-        },
-        "tags": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "title": "A list of descriptive tags for an Add On"
         }
       },
       "title": "CreateAddOnRequest is the request used to add an Add On to a project"
