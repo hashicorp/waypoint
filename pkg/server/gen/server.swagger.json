@@ -8061,6 +8061,29 @@
             "type": "string"
           },
           "title": "A list of descriptive tags for an Add On"
+        },
+        "terraform_nocode_module": {
+          "$ref": "#/definitions/hashicorp.waypoint.TerraformNocodeModule",
+          "title": "Terraform No Code module used for provisioning the Add On"
+        },
+        "short_summary": {
+          "type": "string",
+          "title": "Short description of the Add On"
+        },
+        "long_summary": {
+          "type": "string",
+          "title": "Longer description of the Add On"
+        },
+        "user_email": {
+          "type": "string"
+        },
+        "project_template_name": {
+          "type": "string"
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time",
+          "title": "The time at which the add-on was created"
         }
       },
       "title": "AddOn is an add-on definition rendered for a project"

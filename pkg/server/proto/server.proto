@@ -5678,6 +5678,23 @@ message AddOn {
 
   // A list of descriptive tags for an Add On
   repeated string tags = 7;
+
+  // Terraform No Code module used for provisioning the Add On
+  TerraformNocodeModule terraform_nocode_module = 8;
+
+  // Short description of the Add On
+  string short_summary = 9;
+
+  // Longer description of the Add On
+  string long_summary = 10;
+
+  oneof createdBy {
+    string user_email = 11;
+    string project_template_name = 12;
+  }
+
+  // The time at which the add-on was created
+  google.protobuf.Timestamp created_at = 13;
 }
 
 // AddOnDefinition is the template for an add-on
