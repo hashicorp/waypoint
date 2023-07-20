@@ -6,6 +6,18 @@
    "name": "aws-ecr-pull",
    "optionalFields": [
       {
+         "Field": "disable_entrypoint",
+         "Type": "bool",
+         "Synopsis": "if set, the entrypoint binary won't be injected into the image",
+         "Summary": "The entrypoint binary is what provides extended functionality such as logs and exec. If it is not injected at build time the expectation is that the image already contains it",
+         "Optional": true,
+         "Default": "",
+         "EnvVar": "",
+         "Category": false,
+         "Example": "",
+         "SubFields": null
+      },
+      {
          "Field": "force_architecture",
          "Type": "string",
          "Synopsis": "**Note**: This is a temporary field that enables overriding the `architecture` output attribute. Valid values are: `\"x86_64\"`, `\"arm64\"`",
