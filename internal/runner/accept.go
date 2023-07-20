@@ -130,7 +130,7 @@ func (r *Runner) accept(ctx context.Context, id string) error {
 	}
 
 	log := r.logger
-
+	log.Trace("Izaak and Martina were here!!!!!!!")
 	// The runningCtx has the token that is set during runner adoption.
 	// This is required for API calls to succeed. Put the token into ctx
 	// as well so that this can be used for API calls.
