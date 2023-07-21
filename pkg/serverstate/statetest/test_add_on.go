@@ -170,7 +170,7 @@ My favorite add-on README.
 	})
 
 	testAddOn := &pb.AddOn{
-		Name: pn + "-" + addOnDefinitionName,
+		Name: pn + "-" + addOnDefinitionName + "-1",
 		Project: &pb.Ref_Project{
 			Project: pn,
 		},
@@ -179,9 +179,15 @@ My favorite add-on README.
 				Name: testUpdatedTestAddOnDefinition.Name,
 			},
 		},
-		TfWorkspaceName: pn + addOnDefinitionName,
-		ReadmeMarkdown:  readme, // this does NOT test any rendering
-		Tags:            tags,
+		ShortSummary: "My super short summary.",
+		LongSummary:  "My super long summary.",
+		TerraformNocodeModule: &pb.TerraformNocodeModule{
+			Source:  "my/test/module",
+			Version: "0.0.2",
+		},
+		ReadmeMarkdown: readme, // this does NOT test any rendering
+		Tags:           tags,
+		CreatedBy:      "foo@bar.com",
 	}
 
 	t.Run("Create, get, and delete Add-on", func(t *testing.T) {
@@ -202,12 +208,15 @@ My favorite add-on README.
 		})
 		require.NoError(err)
 		require.Equal(testAddOn.Name, actualAddOn.Name)
-		require.Equal(testAddOn.Name, actualAddOn.Name)
 		require.Equal(testAddOn.Tags, actualAddOn.Tags)
 		require.Equal(testAddOn.Project, actualAddOn.Project)
 		require.Equal(testAddOn.Definition, actualAddOn.Definition)
 		require.Equal(testAddOn.ReadmeMarkdown, actualAddOn.ReadmeMarkdown)
-		require.Equal(testAddOn.TfWorkspaceName, actualAddOn.TfWorkspaceName)
+		require.Equal(testAddOn.ShortSummary, actualAddOn.ShortSummary)
+		require.Equal(testAddOn.LongSummary, actualAddOn.LongSummary)
+		require.NotNil(actualAddOn.TerraformNocodeModule)
+		require.Equal(testAddOn.TerraformNocodeModule.Source, actualAddOn.TerraformNocodeModule.Source)
+		require.Equal(testAddOn.TerraformNocodeModule.Version, actualAddOn.TerraformNocodeModule.Version)
 
 		err = s.AddOnDelete(ctx, &pb.Ref_AddOn{
 			Identifier: &pb.Ref_AddOn_Name{
@@ -236,7 +245,6 @@ My favorite add-on README.
 		require.Equal(testAddOn.Project, addOn.Project)
 		require.Equal(testAddOn.Definition, addOn.Definition)
 		require.Equal(testAddOn.ReadmeMarkdown, addOn.ReadmeMarkdown)
-		require.Equal(testAddOn.TfWorkspaceName, addOn.TfWorkspaceName)
 
 		// Delete Add-On definition
 		err = s.AddOnDefinitionDelete(ctx, &pb.Ref_AddOnDefinition{
@@ -257,7 +265,6 @@ My favorite add-on README.
 		require.Equal(testAddOn.Project, actualAddOn.Project)
 		require.Equal(testAddOn.Definition, actualAddOn.Definition)
 		require.Equal(testAddOn.ReadmeMarkdown, actualAddOn.ReadmeMarkdown)
-		require.Equal(testAddOn.TfWorkspaceName, actualAddOn.TfWorkspaceName)
 	})
 }
 
