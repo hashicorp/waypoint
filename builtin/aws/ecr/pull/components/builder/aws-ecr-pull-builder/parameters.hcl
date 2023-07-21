@@ -1,5 +1,12 @@
 # This file was generated via `make gen/integrations-hcl`
 parameter {
+  key         = "disable_entrypoint"
+  description = "if set, the entrypoint binary won't be injected into the image\nThe entrypoint binary is what provides extended functionality such as logs and exec. If it is not injected at build time the expectation is that the image already contains it"
+  type        = "bool"
+  required    = false
+}
+
+parameter {
   key           = "force_architecture"
   description   = "**Note**: This is a temporary field that enables overriding the `architecture` output attribute. Valid values are: `\"x86_64\"`, `\"arm64\"`"
   type          = "string"
