@@ -792,6 +792,9 @@ message UI {
 
     PaginationRequest pagination = 3;
     SortingRequest sorting = 4;
+
+    // Project that the events belong to
+    Ref.Project project = 5;
   }
 
   message ListEventsResponse {
