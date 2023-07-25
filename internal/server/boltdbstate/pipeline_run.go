@@ -107,6 +107,9 @@ func (s *State) PipelineRunGetByJobId(ctx context.Context, jobId string) (*pb.Pi
 	var result *pb.PipelineRun
 	err := s.db.View(func(dbTxn *bolt.Tx) error {
 		job, err := s.jobById(dbTxn, jobId)
+		if err != nil {
+			return err
+		}
 		if job.Pipeline == nil {
 			err = status.Errorf(codes.FailedPrecondition, "no pipeline run associated with job %q", job)
 			return err
@@ -117,6 +120,9 @@ func (s *State) PipelineRunGetByJobId(ctx context.Context, jobId string) (*pb.Pi
 			},
 		}
 		p, err := s.pipelineGet(dbTxn, memTxn, ref)
+		if err != nil {
+			return err
+		}
 		result, err = s.pipelineRunGet(dbTxn, memTxn, p.Id, job.Pipeline.RunSequence)
 		return err
 	})
@@ -135,6 +141,9 @@ func (s *State) PipelineRunGet(ctx context.Context, ref *pb.Ref_Pipeline, seq ui
 	var result *pb.PipelineRun
 	err := s.db.View(func(dbTxn *bolt.Tx) error {
 		p, err := s.pipelineGet(dbTxn, memTxn, ref)
+		if err != nil {
+			return err
+		}
 		result, err = s.pipelineRunGet(dbTxn, memTxn, p.Id, seq)
 		return err
 	})
