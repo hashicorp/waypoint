@@ -14,10 +14,18 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	awsecr "github.com/aws/aws-sdk-go/service/ecr"
 	"github.com/aws/aws-sdk-go/service/lambda"
+
+	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint-plugin-sdk/docs"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/builtin/aws/ecr"
 	"github.com/hashicorp/waypoint/builtin/aws/utils"
+
+	"encoding/base64"
+	"encoding/json"
+
+	wpdocker "github.com/hashicorp/waypoint/builtin/docker"
+	wpdockerpull "github.com/hashicorp/waypoint/builtin/docker/pull"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 )
@@ -32,12 +40,22 @@ func (b *Builder) BuildFunc() interface{} {
 	return b.Build
 }
 
+// BuildFunc implements component.BuilderODR
+func (b *Builder) BuildODRFunc() interface{} {
+	return b.BuildODR
+}
+
 // Config is the configuration structure for the registry.
 type Config struct {
 	Region            string `hcl:"region,optional"`
 	Repository        string `hcl:"repository,attr"`
 	Tag               string `hcl:"tag,attr"`
 	ForceArchitecture string `hcl:"force_architecture,optional"`
+	DisableCEB        bool   `hcl:"disable_entrypoint,optional"`
+}
+
+type authInfo struct {
+	Base64Token *string
 }
 
 func (b *Builder) Documentation() (*docs.Documentation, error) {
@@ -96,6 +114,16 @@ build {
 		docs.Default("`\"\"`"),
 	)
 
+	doc.SetField(
+		"disable_entrypoint",
+		"if set, the entrypoint binary won't be injected into the image",
+		docs.Summary(
+			"The entrypoint binary is what provides extended functionality",
+			"such as logs and exec. If it is not injected at build time",
+			"the expectation is that the image already contains it",
+		),
+	)
+
 	return doc, nil
 }
 
@@ -147,7 +175,125 @@ func (b *Builder) Config() (interface{}, error) {
 
 // Build
 func (b *Builder) Build(ctx context.Context, ui terminal.UI, log hclog.Logger) (*ecr.Image, error) {
+	sg := ui.StepGroup()
+	ecrImage, buildAuthInfo, err := b.getErcImage(ctx, ui, log, sg)
+	if err != nil {
+		return nil, err
+	}
 
+	if b.config.DisableCEB {
+		return ecrImage, nil
+	}
+
+	repoUser, repoPass, err := credentialsFromEcr(*buildAuthInfo.Base64Token)
+	if err != nil {
+		return nil, err
+	}
+
+	// Use the authorization token to create the base64 package that
+	// Docker requires to perform authentication.
+	authInfo := map[string]string{
+		"username": repoUser,
+		"password": repoPass,
+	}
+
+	authData, err := json.Marshal(authInfo)
+	if err != nil {
+		return nil, err
+	}
+	encodedAuth := base64.StdEncoding.EncodeToString(authData)
+
+	pullBuilder := &wpdockerpull.Builder{}
+	raw, err := pullBuilder.Config()
+	if err != nil {
+		return nil, err
+	}
+	pullConfig := raw.(*wpdockerpull.BuilderConfig)
+	pullConfig.EncodedAuth = encodedAuth
+	pullConfig.Image = ecrImage.Image
+	pullConfig.Tag = ecrImage.Tag
+	pullConfig.DisableCEB = b.config.DisableCEB
+
+	img, err := pullBuilder.Build(wpdockerpull.BuildArgs{
+		Ctx:         ctx,
+		UI:          ui,
+		Log:         log,
+		HasRegistry: true,
+	})
+
+	if err != nil {
+		return nil, err
+	}
+	return ecr.DockerToEcrImageMapper(img), nil
+}
+
+// Build
+func (b *Builder) BuildODR(ctx context.Context, ui terminal.UI, log hclog.Logger, src *component.Source, ai *wpdocker.AccessInfo) (*ecr.Image, error) {
+	sg := ui.StepGroup()
+	ecrImage, buildAuthInfo, err := b.getErcImage(ctx, ui, log, sg)
+	if err != nil {
+		return nil, err
+	}
+
+	if b.config.DisableCEB {
+		return ecrImage, nil
+	}
+
+	repoUser, repoPass, err := credentialsFromEcr(*buildAuthInfo.Base64Token)
+	if err != nil {
+		return nil, err
+	}
+
+	// Use the authorization token to create the base64 package that
+	// Docker requires to perform authentication.
+	authInfo := map[string]string{
+		"username": repoUser,
+		"password": repoPass,
+	}
+
+	authData, err := json.Marshal(authInfo)
+	if err != nil {
+		return nil, err
+	}
+	encodedAuth := base64.StdEncoding.EncodeToString(authData)
+
+	pullBuilder := &wpdockerpull.Builder{}
+	raw, err := pullBuilder.Config()
+	if err != nil {
+		return nil, err
+	}
+	pullConfig := raw.(*wpdockerpull.BuilderConfig)
+	pullConfig.EncodedAuth = encodedAuth
+	pullConfig.Image = ecrImage.Image
+	pullConfig.Tag = ecrImage.Tag
+	pullConfig.DisableCEB = b.config.DisableCEB
+
+	img, err := pullBuilder.BuildODR(ctx, ui, src, log, ai)
+	if err != nil {
+		return nil, err
+	}
+	return ecr.DockerToEcrImageMapper(img), nil
+}
+
+// CredentialsFromEcr returns the username and password present in the encoded
+// auth string. This encoded auth string is one that users can pass as authentication
+// information to registry.
+func credentialsFromEcr(encodedAuth string) (string, string, error) {
+	// Create a reader that base64 decodes our encoded auth and then splits off USER:PASS
+	dec, err := base64.StdEncoding.DecodeString(encodedAuth)
+	if err != nil {
+		return "", "", fmt.Errorf("invalid encoded auth string: %s", encodedAuth[:5])
+	}
+
+	userPassSplit := strings.SplitN(string(dec), ":", 2)
+	if len(userPassSplit) != 2 {
+		return "", "", fmt.Errorf("ecr credentials were invalid or did not container user:password. Number of elements in split: %d", len(userPassSplit))
+	}
+
+	return userPassSplit[0], userPassSplit[1], nil
+}
+
+func (b *Builder) getErcImage(ctx context.Context, ui terminal.UI, log hclog.Logger, sg terminal.StepGroup) (*ecr.Image, *authInfo, error) {
 	// If there is no region setup. Try and load it from environment variables.
 	if b.config.Region == "" {
 		b.config.Region = os.Getenv("AWS_REGION")
@@ -158,12 +304,11 @@ func (b *Builder) Build(ctx context.Context, ui terminal.UI, log hclog.Logger) (
 	}
 
 	if b.config.Region == "" {
-		return nil, status.Error(
+		return nil, nil, status.Error(
 			codes.FailedPrecondition,
 			"Please set your aws region in the deployment config, or set the environment variable 'AWS_REGION' or 'AWS_DEFAULT_REGION'")
 	}
 
-	sg := ui.StepGroup()
 	step := sg.Add("")
 	defer func() {
 		if step != nil {
@@ -180,7 +325,7 @@ func (b *Builder) Build(ctx context.Context, ui terminal.UI, log hclog.Logger) (
 
 	if err != nil {
 		log.Error("error connecting to AWS", "error", err)
-		return nil, err
+		return nil, nil, err
 	}
 
 	step.Done()
@@ -192,6 +337,15 @@ func (b *Builder) Build(ctx context.Context, ui terminal.UI, log hclog.Logger) (
 	cfgTag := b.config.Tag
 	cfgRepository := b.config.Repository
 
+	tokenResp, err := ecrsvc.GetAuthorizationTokenWithContext(ctx, &awsecr.GetAuthorizationTokenInput{})
+	if err != nil {
+		log.Error("error getting authorization token", "error", err)
+		return nil, nil, err
+	}
+	// docs say the token is good for all registries the user has access to. so just grab the first token
+	token := tokenResp.AuthorizationData[0].AuthorizationToken
+	log.Debug("successfully retrieved authorization token")
+
 	// should be acceptable to filter images by TAGGED status
 	imgs, err := ecrsvc.DescribeImages(&awsecr.DescribeImagesInput{
 		RepositoryName: aws.String(cfgRepository),
@@ -201,12 +355,12 @@ func (b *Builder) Build(ctx context.Context, ui terminal.UI, log hclog.Logger) (
 	})
 	if err != nil {
 		log.Error("error describing images", "error", err, "repository", cfgRepository)
-		return nil, err
+		return nil, nil, err
 	}
 
 	if len(imgs.ImageDetails) == 0 {
 		log.Error("no tagged images found", "repository", cfgRepository)
-		return nil, status.Error(codes.FailedPrecondition, "No images found")
+		return nil, nil, status.Error(codes.FailedPrecondition, "No images found")
 	}
 	log.Debug("found images", "image count", len(imgs.ImageDetails))
 
@@ -245,11 +399,11 @@ func (b *Builder) Build(ctx context.Context, ui terminal.UI, log hclog.Logger) (
 	// if no image was found, return an error
 	if output.Image == "" {
 		log.Error("no matching image was found", "tag", cfgTag, "repository", cfgRepository)
-		return nil, status.Error(codes.FailedPrecondition, "No matching tags found")
+		return nil, nil, status.Error(codes.FailedPrecondition, "No matching tags found")
 	}
 
 	step.Update("Using image: " + output.Image + ":" + output.Tag)
 	step.Done()
 
-	return &output, nil
+	return &output, &authInfo{Base64Token: token}, nil
 }
