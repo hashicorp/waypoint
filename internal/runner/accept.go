@@ -72,7 +72,7 @@ func (r *Runner) AcceptMany(ctx context.Context) {
 				r.logger.Error("runner unexpectedly deregistered, exiting")
 				time.Sleep(5 * time.Second)
 				return
-			case codes.Unavailable, codes.Unimplemented:
+			case codes.Unimplemented:
 				// Server became unavailable. Unimplemented likely means that the server
 				// is running behind a proxy and is failing health checks.
 
