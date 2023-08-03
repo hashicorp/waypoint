@@ -101,7 +101,9 @@ func (c *TaskInspectCommand) Run(args []string) int {
 		return 1
 	}
 
-	var workspace, project, application string
+	var workspace string
+	project := "deleted"
+	application := "deleted"
 	if taskResp.TaskJob.Workspace != nil {
 		workspace = taskResp.TaskJob.Workspace.Workspace
 	}
@@ -257,6 +259,16 @@ func (c *TaskInspectCommand) FormatJob(job *pb.Job) error {
 		errMsg = job.Error.Message
 	}
 
+	var workspace string
+	project := "deleted"
+	application := "deleted"
+	if job.Workspace != nil {
+		workspace = job.Workspace.Workspace
+	}
+	if job.Application != nil {
+		project = job.Application.Project
+		application = job.Application.Application
+	}
 	c.ui.Output("Job Configuration:", terminal.WithInfoStyle())
 	c.ui.NamedValues([]terminal.NamedValue{
 		{
@@ -272,13 +284,13 @@ func (c *TaskInspectCommand) FormatJob(job *pb.Job) error {
 			Name: "Target Runner", Value: targetRunner,
 		},
 		{
-			Name: "Workspace", Value: job.Workspace.Workspace,
+			Name: "Workspace", Value: workspace,
 		},
 		{
-			Name: "Project", Value: job.Application.Project,
+			Name: "Project", Value: project,
 		},
 		{
-			Name: "Application", Value: job.Application.Application,
+			Name: "Application", Value: application,
 		},
 	}, terminal.WithInfoStyle())
 
