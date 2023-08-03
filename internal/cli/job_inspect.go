@@ -169,6 +169,18 @@ func (c *JobInspectCommand) Run(args []string) int {
 	}
 
 	c.ui.Output("Job Configuration", terminal.WithHeaderStyle())
+	appProjectName := resp.GetApplication().GetProject()
+	if appProjectName == "" {
+		appProjectName = "deleted"
+	}
+	appName := resp.GetApplication().GetApplication()
+	if appName == "" {
+		appName = "deleted"
+	}
+	workspaceName := resp.GetWorkspace().GetWorkspace()
+	if workspaceName == "" {
+		workspaceName = "deleted"
+	}
 	c.ui.NamedValues([]terminal.NamedValue{
 		{
 			Name: "ID", Value: resp.Id,
@@ -183,13 +195,13 @@ func (c *JobInspectCommand) Run(args []string) int {
 			Name: "Target Runner", Value: targetRunner,
 		},
 		{
-			Name: "Workspace", Value: resp.Workspace.Workspace,
+			Name: "Workspace", Value: workspaceName,
 		},
 		{
-			Name: "Project", Value: resp.Application.Project,
+			Name: "Project", Value: appProjectName,
 		},
 		{
-			Name: "Application", Value: resp.Application.Application,
+			Name: "Application", Value: appName,
 		},
 	}, terminal.WithInfoStyle())
 
