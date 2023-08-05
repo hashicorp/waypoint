@@ -37,6 +37,7 @@ type LoginCommand struct {
 	flagK8SService     string
 	flagK8STokenSecret string
 	flagK8SNamespace   string
+	flagHCP            bool
 }
 
 func (c *LoginCommand) Run(args []string) int {
@@ -126,6 +127,10 @@ func (c *LoginCommand) Run(args []string) int {
 	case c.flagToken != "":
 		log.Info("login method", "method", "token")
 		authFunc = c.loginToken
+
+	case c.flagHCP:
+		log.Info("login method", "method", "HCP")
+		authFunc = c.loginHCP
 
 	default:
 		log.Info("login method", "method", "OIDC")
@@ -466,6 +471,14 @@ func (c *LoginCommand) Flags() *flag.Sets {
 			Target: &c.flagK8SNamespace,
 			Usage: "The name of the Kubernetes namespace that has the Waypoint token " +
 				"when using the -from-kubernetes flag.",
+		})
+
+		f.BoolVar(&flag.BoolVar{
+			Name:   "from-hcp",
+			Target: &c.flagHCP,
+			Usage: "Perform the initial authentication after Waypoint is installed. " +
+				"This will enable to user to SSO via HCP." +
+				"This returns a token that lasts for the duration of the SSO session.",
 		})
 	})
 }
