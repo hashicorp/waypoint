@@ -5,6 +5,7 @@ import (
 	"github.com/imdario/mergo"
 	"github.com/mitchellh/go-testing-interface"
 	"github.com/stretchr/testify/require"
+	"regexp"
 
 	"github.com/hashicorp/waypoint/internal/pkg/validationext"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
@@ -44,7 +45,10 @@ func ValidateCreateProjectTemplateRequest(req *pb.CreateProjectTemplateRequest) 
 			return append(
 				// Rules specific to creating a project template
 				[]*validation.FieldRules{
-					validation.Field(&req.ProjectTemplate.Name, validation.Required),
+					validation.Field(&req.ProjectTemplate.Name,
+						validation.Required,
+						validation.Match(regexp.MustCompile(`\S+`)), // Disallow only whitespace
+					),
 				},
 
 				// General project template validation rules
