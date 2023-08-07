@@ -38,6 +38,15 @@ func TestValidateCreateProjectTemplateRequest(t *testing.T) {
 			},
 			wantErr: true,
 		},
+		{
+			name: "enforces name to not be empty",
+			req: &pb.CreateProjectTemplateRequest{
+				ProjectTemplate: &pb.ProjectTemplate{
+					Name: " "},
+			},
+			wantErr: true,
+		},
+
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
