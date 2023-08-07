@@ -107,10 +107,13 @@ func TestValidateUpdateProjectTemplateRequest(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			err := ValidateUpdateProjectTemplateRequest(tt.req)
-			if err != nil {
-				if !tt.wantErr {
-					t.Errorf("ValidateCreateProjectTemplateRequest() error = %v, wantErr %v", err, tt.wantErr)
-				}
+
+			if err == nil && tt.wantErr {
+				t.Errorf("expected error in ValidateUpdateProjectTemplateRequest() but got none")
+			}
+
+			if err != nil && !tt.wantErr {
+				t.Errorf("ValidateUpdateProjectTemplateRequest() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}
@@ -155,10 +158,11 @@ func TestValidateProjectTemplate(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			err := validation.ValidateStruct(tt.pt, validateProjectTemplateRules(tt.pt)...)
-			if err != nil {
-				if !tt.wantErr {
-					t.Errorf("validation error = %v, wantErr %v", err, tt.wantErr)
-				}
+			if err == nil && tt.wantErr {
+				t.Errorf("expected error in validation but got none")
+			}
+			if err != nil && !tt.wantErr {
+				t.Errorf("validation error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}
