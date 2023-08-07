@@ -42,11 +42,14 @@ func TestValidateCreateProjectTemplateRequest(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			err := ValidateCreateProjectTemplateRequest(tt.req)
-			if err != nil {
-				if !tt.wantErr {
-					t.Errorf("ValidateCreateProjectTemplateRequest() error = %v, wantErr %v", err, tt.wantErr)
-				}
+			if err == nil && tt.wantErr {
+				t.Errorf("expected error in ValidateCreateProjectTemplateRequest() but got none")
 			}
+
+			if err != nil && !tt.wantErr {
+				t.Errorf("ValidateCreateProjectTemplateRequest() error = %v, wantErr %v", err, tt.wantErr)
+			}
+
 		})
 	}
 }
