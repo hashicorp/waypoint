@@ -5,7 +5,9 @@ package version
 
 import (
 	"bytes"
+	_ "embed"
 	"fmt"
+	"strings"
 )
 
 var (
@@ -13,9 +15,12 @@ var (
 	GitCommit   string
 	GitDescribe string
 
-	Version           = "0.12.0" // Note: This value should match /version/VERSION!
-	VersionPrerelease = ""
-	VersionMetadata   = ""
+	// Version and VersionPrerelease info are now being embedded directly from the VERSION file.
+	// VersionMetadata is being passed in via ldflags in CI, otherwise the default set here is used.
+	//go:embed VERSION
+	fullVersion                   string
+	Version, VersionPrerelease, _ = strings.Cut(strings.TrimSpace(fullVersion), "-")
+	VersionMetadata               = ""
 )
 
 // VersionInfo

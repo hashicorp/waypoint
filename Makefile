@@ -5,7 +5,7 @@ GIT_DIRTY=$$(test -n "`git status --porcelain`" && echo "+CHANGES" || true)
 GIT_DESCRIBE=$$(git describe --tags --always --match "v*")
 GIT_IMPORT="github.com/hashicorp/waypoint/internal/version"
 GOLDFLAGS="-s -w -X $(GIT_IMPORT).GitCommit=$(GIT_COMMIT)$(GIT_DIRTY) -X $(GIT_IMPORT).GitDescribe=$(GIT_DESCRIBE)"
-CRT_GOLDFLAGS="-s -w -X $(GIT_IMPORT).GitCommit=$(GIT_COMMIT)$(GIT_DIRTY) -X $(GIT_IMPORT).Version=$(BASE_VERSION) -X $(GIT_IMPORT).VersionPrerelease=$(PRERELEASE)"
+CRT_GOLDFLAGS="-s -w -X $(GIT_IMPORT).GitCommit=$(GIT_COMMIT)$(GIT_DIRTY)"
 GO_CMD?=go
 CGO_ENABLED?=0
 WP_SERVER_PLATFORM?="linux/amd64"
