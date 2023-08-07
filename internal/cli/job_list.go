@@ -311,6 +311,12 @@ func (c *JobListCommand) Run(args []string) int {
 			pipeline = "name: " + j.Pipeline.PipelineName + ", run: " + strconv.FormatUint(j.Pipeline.RunSequence, 10) + ", step: " + j.Pipeline.Step
 		}
 
+		appProject := j.GetApplication().GetProject()
+		if appProject == "" {
+			appProject = "deleted"
+		}
+		appWorkspace := j.GetWorkspace().GetWorkspace()
+
 		tblColumn := []string{
 			j.Id,
 			op,
@@ -318,13 +324,13 @@ func (c *JobListCommand) Run(args []string) int {
 			queueTime,
 			completeTime,
 			targetRunner,
-			j.Application.Project,
-			j.Workspace.Workspace,
+			appProject,
+			appWorkspace,
 		}
 
 		if c.flagVerbose {
 			tblColumn = append(tblColumn, []string{
-				j.Application.Application,
+				appProject,
 				pipeline,
 			}...)
 		}
