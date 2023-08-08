@@ -1,0 +1,3 @@
+```release-note:feature
+cli: `login -with-hcp` enables users to login to HCP Waypoint via HCP SSO using the CLI
+```
