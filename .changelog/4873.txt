@@ -1,0 +1,3 @@
+```release-note:bug
+runneruninstall/aws-ecs: Fix installing runners in new AWS accounts by fixing an inline policy syntax error.
+```
