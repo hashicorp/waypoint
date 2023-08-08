@@ -501,31 +501,31 @@ service Waypoint {
   // run to render a project template.
   rpc GetTFCRunStatus(GetTFCRunStatusRequest) returns (GetTFCRunStatusResponse);
 
-  // CreateAddOnDefinition creates a new Add On definition
+  // CreateAddOnDefinition creates a new Add-on definition
   rpc CreateAddOnDefinition(CreateAddOnDefinitionRequest) returns (CreateAddOnDefinitionResponse);
 
-  // GetAddOnDefinition returns an Add On definition, referenced by name or ID
+  // GetAddOnDefinition returns an Add-on definition, referenced by name or ID
   rpc GetAddOnDefinition(GetAddOnDefinitionRequest) returns (GetAddOnDefinitionResponse);
 
-  // ListAddOnDefinitions returns all existing Add On definitions
+  // ListAddOnDefinitions returns all existing Add-on definitions
   rpc ListAddOnDefinitions(ListAddOnDefinitionsRequest) returns (ListAddOnDefinitionsResponse);
 
-  // UpdateAddOnDefinition updates an existing Add On definition
+  // UpdateAddOnDefinition updates an existing Add-on definition
   rpc UpdateAddOnDefinition(UpdateAddOnDefinitionRequest) returns (UpdateAddOnDefinitionResponse);
 
-  // DeleteAddOnDefinition deletes an existing Add On definition
+  // DeleteAddOnDefinition deletes an existing Add-on definition
   rpc DeleteAddOnDefinition(DeleteAddOnDefinitionRequest) returns (google.protobuf.Empty);
 
-  // CreateAddOn adds an Add On to a project from an Add On definition
+  // CreateAddOn adds an Add-on to a project from an Add-on definition
   rpc CreateAddOn(CreateAddOnRequest) returns (CreateAddOnResponse);
 
-  // DestroyAddOn destroys an existing Add On
+  // DestroyAddOn destroys an existing Add-on
   rpc DestroyAddOn(DestroyAddOnRequest) returns (google.protobuf.Empty);
 
-  // GetAddOn returns an existing Add On
+  // GetAddOn returns an existing Add-on
   rpc GetAddOn(GetAddOnRequest) returns (GetAddOnResponse);
 
-  // ListAddOns returns all existing Add Ons
+  // ListAddOns returns all existing Add-ons
   rpc ListAddOns(ListAddOnsRequest) returns (ListAddOnsResponse);
 
   // GetTFRunStatus returns the status of the latest run of a Terraform
@@ -5485,94 +5485,94 @@ message TerraformNocodeModule {
 }
 
 /********************************************************************
-* Add Ons - the features using these protos are in BETA
+* Add-ons - the features using these protos are in BETA
 ********************************************************************/
-// GetAddOnDefinitionRequest is the request used for getting an existing Add On
+// GetAddOnDefinitionRequest is the request used for getting an existing Add-on
 // definition
 message GetAddOnDefinitionRequest {
   Ref.AddOnDefinition add_on_definition = 1;
 }
 
-// GetAddOnDefinitionResponse is the response used to return an existing Add On
+// GetAddOnDefinitionResponse is the response used to return an existing Add-on
 // Definition
 message GetAddOnDefinitionResponse {
   AddOnDefinition add_on_definition = 1;
 }
 
-// ListAddOnDefinitionsRequest is the request used to get all Add On
+// ListAddOnDefinitionsRequest is the request used to get all Add-on
 // definitions
 message ListAddOnDefinitionsRequest {
   PaginationRequest pagination = 1;
 }
 
-// ListAddOnDefinitionsResponse is the response used to return all Add On
+// ListAddOnDefinitionsResponse is the response used to return all Add-on
 // definitions
 message ListAddOnDefinitionsResponse {
   repeated AddOnDefinition add_on_definitions = 1;
   PaginationResponse pagination = 2;
 }
 
-// CreateAddOnDefinitionRequest is the request used to create an Add On
+// CreateAddOnDefinitionRequest is the request used to create an Add-on
 // definition
 message CreateAddOnDefinitionRequest {
-  // Name of the Add On definition
+  // Name of the Add-on definition
   string name = 1;
 
-  // Terraform No Code module used for provisioning the Add On
+  // Terraform No Code module used for provisioning the Add-on
   TerraformNocodeModule terraform_nocode_module = 2;
 
-  // Short description of the Add On
+  // Short description of the Add-on
   string short_summary = 3;
 
-  // Longer description of the Add On
+  // Longer description of the Add-on
   string long_summary = 4;
 
-  // A templated README describing the Add On
+  // A templated README describing the Add-on
   bytes readme_markdown_template = 5;
 
-  // A list of descriptive tags for an Add On
+  // A list of descriptive tags for an Add-on
   repeated string tags = 6;
 
-  // The TF variable set to apply to the Add On's No Code workspace
+  // The TF variable set to apply to the Add-on's No Code workspace
   repeated string tf_variable_set_ids = 7;
 }
 
 // CreateAddOnDefinitionResponse is the response containing the just-created
-// Add On definition
+// Add-on definition
 message CreateAddOnDefinitionResponse {
   AddOnDefinition add_on_definition = 1;
 }
 
 // UpdateAddOnDefinitionRequest is the request used to update an existing
-// Add On definition
+// Add-on definition
 message UpdateAddOnDefinitionRequest {
-  // Reference to an existing Add On
+  // Reference to an existing Add-on
   Ref.AddOnDefinition definition = 1;
 
-  // Name of the Add On definition
+  // Name of the Add-on definition
   string name = 2;
 
-  // Terraform No Code module used for provisioning the Add On
+  // Terraform No Code module used for provisioning the Add-on
   TerraformNocodeModule terraform_nocode_module = 3;
 
-  // Short description of the Add On
+  // Short description of the Add-on
   string short_summary = 4;
 
-  // Longer description of the Add On
+  // Longer description of the Add-on
   string long_summary = 5;
 
-  // A templated README describing the Add On
+  // A templated README describing the Add-on
   bytes readme_markdown_template = 6;
 
-  // A list of descriptive tags for an Add On
+  // A list of descriptive tags for an Add-on
   repeated string tags = 7;
 
-  // The TF variable set to apply to the Add On's No Code workspace
+  // The TF variable set to apply to the Add-on's No Code workspace
   repeated string tf_variable_set_ids = 8;
 }
 
 // UpdateAddOnDefinitionResponse is the response containing the just-updated
-// Add On definition
+// Add-on definition
 message UpdateAddOnDefinitionResponse {
   AddOnDefinition add_on_definition = 1;
 }
@@ -5583,43 +5583,45 @@ message DeleteAddOnDefinitionRequest {
   Ref.AddOnDefinition add_on_definition = 1;
 }
 
-// CreateAddOnRequest is the request used to add an Add On to a project
+// CreateAddOnRequest is the request used to add an Add-on to a project
 message CreateAddOnRequest {
-  // The project for which the Add On is to be created
+  // The project for which the Add-on is to be created
   Ref.Project project = 1;
 
-  // The Add On definition from which this Add On is to be created
+  // The Add-on definition from which this Add-on is to be created
   Ref.AddOnDefinition definition = 2;
+
+  // name is the name of the Add-on
+  string name = 3;
 }
 
-// CreateAddOnResponse is the response containing the just-added Add On
+// CreateAddOnResponse is the response containing the just-added Add-on
 message CreateAddOnResponse {
   AddOn add_on = 1;
 }
 
-// DestroyAddOnRequest is the request used to destroy an existing Add On
+// DestroyAddOnRequest is the request used to destroy an existing Add-on
 message DestroyAddOnRequest {
   Ref.AddOn add_on = 1;
 }
 
-// GetAddOnRequest is the request used to get an existing Add On
+// GetAddOnRequest is the request used to get an existing Add-on
 message GetAddOnRequest {
   Ref.AddOn add_on = 1;
 }
 
-// GetAddOnResponse is the response containing the just-requested existing Add
-// On
+// GetAddOnResponse is the response containing the just-requested existing Add-on
 message GetAddOnResponse {
   AddOn add_on = 1;
 }
 
-// ListAddOnsRequest is the request used to get all existing Add Ons
+// ListAddOnsRequest is the request used to get all existing Add-ons
 message ListAddOnsRequest {
   Ref.Project project = 1;
   PaginationRequest pagination = 2;
 }
 
-// ListAddOnsResponse is the response containing all existing Add Ons
+// ListAddOnsResponse is the response containing all existing Add-ons
 message ListAddOnsResponse {
   repeated AddOn add_ons = 1;
   PaginationResponse pagination = 2;
@@ -5650,33 +5652,34 @@ message GetTFRunStatusResponse {
 
 // AddOn is an add-on definition rendered for a project
 message AddOn {
-  // Unique identifier of the Add On
+  // Unique identifier of the Add-on
   string id = 1;
 
-  // Name of the Add On
+  // Name of the Add-on
   string name = 2;
 
-  // The project for which the Add On was created
+  // The project for which the Add-on was created
   Ref.Project project = 3;
 
-  // The Add On definition from which this Add On was created
+  // The Add-on definition from which this Add-on was created
   Ref.AddOnDefinition definition = 4;
 
-  // Rendered README markdown template for Add On
+  // Rendered README markdown template for Add-on
   bytes readme_markdown = 5;
 
-  // A list of descriptive tags for an Add On
+  // A list of descriptive tags for an Add-on
   repeated string tags = 6;
 
-  // Terraform No Code module used for provisioning the Add On
+  // Terraform No Code module used for provisioning the Add-on
   TerraformNocodeModule terraform_nocode_module = 7;
 
-  // Short description of the Add On
+  // Short description of the Add-on
   string short_summary = 8;
 
-  // Longer description of the Add On
+  // Longer description of the Add-on
   string long_summary = 9;
 
+  // created_by indicates what created the Add-on
   string created_by = 10;
 
   // The time at which the add-on was created
@@ -5685,28 +5688,28 @@ message AddOn {
 
 // AddOnDefinition is the template for an add-on
 message AddOnDefinition {
-  // Unique identifer of the Add On definition
+  // Unique identifer of the Add-on definition
   string id = 1;
 
-  // Name of the Add On definition
+  // Name of the Add-on definition
   string name = 2;
 
-  // Terraform No Code module used for provisioning the Add On
+  // Terraform No Code module used for provisioning the Add-on
   TerraformNocodeModule terraform_nocode_module = 3;
 
-  // Short description of the Add On
+  // Short description of the Add-on
   string short_summary = 4;
 
-  // Longer description of the Add On
+  // Longer description of the Add-on
   string long_summary = 5;
 
-  // A templated README describing the Add On
+  // A templated README describing the Add-on
   bytes readme_markdown_template = 6;
 
-  // A list of descriptive tags for an Add On
+  // A list of descriptive tags for an Add-on
   repeated string tags = 7;
 
-  // The TF variable set to apply to the Add On's No Code workspace
+  // The TF variable set to apply to the Add-on's No Code workspace
   repeated string tf_variable_set_ids = 8;
 }
 

@@ -482,23 +482,23 @@ type WaypointClient interface {
 	// GetTFCRunStatus is in BETA. It returns the status of a TFC run, which was
 	// run to render a project template.
 	GetTFCRunStatus(ctx context.Context, in *GetTFCRunStatusRequest, opts ...grpc.CallOption) (*GetTFCRunStatusResponse, error)
-	// CreateAddOnDefinition creates a new Add On definition
+	// CreateAddOnDefinition creates a new Add-on definition
 	CreateAddOnDefinition(ctx context.Context, in *CreateAddOnDefinitionRequest, opts ...grpc.CallOption) (*CreateAddOnDefinitionResponse, error)
-	// GetAddOnDefinition returns an Add On definition, referenced by name or ID
+	// GetAddOnDefinition returns an Add-on definition, referenced by name or ID
 	GetAddOnDefinition(ctx context.Context, in *GetAddOnDefinitionRequest, opts ...grpc.CallOption) (*GetAddOnDefinitionResponse, error)
-	// ListAddOnDefinitions returns all existing Add On definitions
+	// ListAddOnDefinitions returns all existing Add-on definitions
 	ListAddOnDefinitions(ctx context.Context, in *ListAddOnDefinitionsRequest, opts ...grpc.CallOption) (*ListAddOnDefinitionsResponse, error)
-	// UpdateAddOnDefinition updates an existing Add On definition
+	// UpdateAddOnDefinition updates an existing Add-on definition
 	UpdateAddOnDefinition(ctx context.Context, in *UpdateAddOnDefinitionRequest, opts ...grpc.CallOption) (*UpdateAddOnDefinitionResponse, error)
-	// DeleteAddOnDefinition deletes an existing Add On definition
+	// DeleteAddOnDefinition deletes an existing Add-on definition
 	DeleteAddOnDefinition(ctx context.Context, in *DeleteAddOnDefinitionRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
-	// CreateAddOn adds an Add On to a project from an Add On definition
+	// CreateAddOn adds an Add-on to a project from an Add-on definition
 	CreateAddOn(ctx context.Context, in *CreateAddOnRequest, opts ...grpc.CallOption) (*CreateAddOnResponse, error)
-	// DestroyAddOn destroys an existing Add On
+	// DestroyAddOn destroys an existing Add-on
 	DestroyAddOn(ctx context.Context, in *DestroyAddOnRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
-	// GetAddOn returns an existing Add On
+	// GetAddOn returns an existing Add-on
 	GetAddOn(ctx context.Context, in *GetAddOnRequest, opts ...grpc.CallOption) (*GetAddOnResponse, error)
-	// ListAddOns returns all existing Add Ons
+	// ListAddOns returns all existing Add-ons
 	ListAddOns(ctx context.Context, in *ListAddOnsRequest, opts ...grpc.CallOption) (*ListAddOnsResponse, error)
 	// GetTFRunStatus returns the status of the latest run of a Terraform
 	// workspace
@@ -2268,23 +2268,23 @@ type WaypointServer interface {
 	// GetTFCRunStatus is in BETA. It returns the status of a TFC run, which was
 	// run to render a project template.
 	GetTFCRunStatus(context.Context, *GetTFCRunStatusRequest) (*GetTFCRunStatusResponse, error)
-	// CreateAddOnDefinition creates a new Add On definition
+	// CreateAddOnDefinition creates a new Add-on definition
 	CreateAddOnDefinition(context.Context, *CreateAddOnDefinitionRequest) (*CreateAddOnDefinitionResponse, error)
-	// GetAddOnDefinition returns an Add On definition, referenced by name or ID
+	// GetAddOnDefinition returns an Add-on definition, referenced by name or ID
 	GetAddOnDefinition(context.Context, *GetAddOnDefinitionRequest) (*GetAddOnDefinitionResponse, error)
-	// ListAddOnDefinitions returns all existing Add On definitions
+	// ListAddOnDefinitions returns all existing Add-on definitions
 	ListAddOnDefinitions(context.Context, *ListAddOnDefinitionsRequest) (*ListAddOnDefinitionsResponse, error)
-	// UpdateAddOnDefinition updates an existing Add On definition
+	// UpdateAddOnDefinition updates an existing Add-on definition
 	UpdateAddOnDefinition(context.Context, *UpdateAddOnDefinitionRequest) (*UpdateAddOnDefinitionResponse, error)
-	// DeleteAddOnDefinition deletes an existing Add On definition
+	// DeleteAddOnDefinition deletes an existing Add-on definition
 	DeleteAddOnDefinition(context.Context, *DeleteAddOnDefinitionRequest) (*emptypb.Empty, error)
-	// CreateAddOn adds an Add On to a project from an Add On definition
+	// CreateAddOn adds an Add-on to a project from an Add-on definition
 	CreateAddOn(context.Context, *CreateAddOnRequest) (*CreateAddOnResponse, error)
-	// DestroyAddOn destroys an existing Add On
+	// DestroyAddOn destroys an existing Add-on
 	DestroyAddOn(context.Context, *DestroyAddOnRequest) (*emptypb.Empty, error)
-	// GetAddOn returns an existing Add On
+	// GetAddOn returns an existing Add-on
 	GetAddOn(context.Context, *GetAddOnRequest) (*GetAddOnResponse, error)
-	// ListAddOns returns all existing Add Ons
+	// ListAddOns returns all existing Add-ons
 	ListAddOns(context.Context, *ListAddOnsRequest) (*ListAddOnsResponse, error)
 	// GetTFRunStatus returns the status of the latest run of a Terraform
 	// workspace
