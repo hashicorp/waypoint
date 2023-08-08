@@ -54,7 +54,6 @@ func (c *JobGetStreamCommand) Run(args []string) int {
 
 func (c *JobGetStreamCommand) Flags() *flag.Sets {
 	return c.flagSet(flagSetOperation, func(set *flag.Sets) {
-		//f := set.NewSet("Command Options")
 	})
 }
 
