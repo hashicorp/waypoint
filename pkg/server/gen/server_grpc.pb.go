@@ -134,6 +134,16 @@ const (
 	Waypoint_ListProjectTemplates_FullMethodName           = "/hashicorp.waypoint.Waypoint/ListProjectTemplates"
 	Waypoint_CreateProjectFromTemplate_FullMethodName      = "/hashicorp.waypoint.Waypoint/CreateProjectFromTemplate"
 	Waypoint_GetTFCRunStatus_FullMethodName                = "/hashicorp.waypoint.Waypoint/GetTFCRunStatus"
+	Waypoint_CreateAddOnDefinition_FullMethodName          = "/hashicorp.waypoint.Waypoint/CreateAddOnDefinition"
+	Waypoint_GetAddOnDefinition_FullMethodName             = "/hashicorp.waypoint.Waypoint/GetAddOnDefinition"
+	Waypoint_ListAddOnDefinitions_FullMethodName           = "/hashicorp.waypoint.Waypoint/ListAddOnDefinitions"
+	Waypoint_UpdateAddOnDefinition_FullMethodName          = "/hashicorp.waypoint.Waypoint/UpdateAddOnDefinition"
+	Waypoint_DeleteAddOnDefinition_FullMethodName          = "/hashicorp.waypoint.Waypoint/DeleteAddOnDefinition"
+	Waypoint_CreateAddOn_FullMethodName                    = "/hashicorp.waypoint.Waypoint/CreateAddOn"
+	Waypoint_DestroyAddOn_FullMethodName                   = "/hashicorp.waypoint.Waypoint/DestroyAddOn"
+	Waypoint_GetAddOn_FullMethodName                       = "/hashicorp.waypoint.Waypoint/GetAddOn"
+	Waypoint_ListAddOns_FullMethodName                     = "/hashicorp.waypoint.Waypoint/ListAddOns"
+	Waypoint_GetTFRunStatus_FullMethodName                 = "/hashicorp.waypoint.Waypoint/GetTFRunStatus"
 	Waypoint_UI_ListProjects_FullMethodName                = "/hashicorp.waypoint.Waypoint/UI_ListProjects"
 	Waypoint_UI_GetProject_FullMethodName                  = "/hashicorp.waypoint.Waypoint/UI_GetProject"
 	Waypoint_UI_ListPipelines_FullMethodName               = "/hashicorp.waypoint.Waypoint/UI_ListPipelines"
@@ -468,9 +478,31 @@ type WaypointClient interface {
 	// from a Project Template, provisioning infrastructure before upserting the
 	// Waypoint project to the database
 	CreateProjectFromTemplate(ctx context.Context, in *CreateProjectFromTemplateRequest, opts ...grpc.CallOption) (*CreateProjectFromTemplateResponse, error)
+	// Deprecated in favor of GetTFRunStatus
 	// GetTFCRunStatus is in BETA. It returns the status of a TFC run, which was
 	// run to render a project template.
 	GetTFCRunStatus(ctx context.Context, in *GetTFCRunStatusRequest, opts ...grpc.CallOption) (*GetTFCRunStatusResponse, error)
+	// CreateAddOnDefinition creates a new Add-on definition
+	CreateAddOnDefinition(ctx context.Context, in *CreateAddOnDefinitionRequest, opts ...grpc.CallOption) (*CreateAddOnDefinitionResponse, error)
+	// GetAddOnDefinition returns an Add-on definition, referenced by name or ID
+	GetAddOnDefinition(ctx context.Context, in *GetAddOnDefinitionRequest, opts ...grpc.CallOption) (*GetAddOnDefinitionResponse, error)
+	// ListAddOnDefinitions returns all existing Add-on definitions
+	ListAddOnDefinitions(ctx context.Context, in *ListAddOnDefinitionsRequest, opts ...grpc.CallOption) (*ListAddOnDefinitionsResponse, error)
+	// UpdateAddOnDefinition updates an existing Add-on definition
+	UpdateAddOnDefinition(ctx context.Context, in *UpdateAddOnDefinitionRequest, opts ...grpc.CallOption) (*UpdateAddOnDefinitionResponse, error)
+	// DeleteAddOnDefinition deletes an existing Add-on definition
+	DeleteAddOnDefinition(ctx context.Context, in *DeleteAddOnDefinitionRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	// CreateAddOn adds an Add-on to a project from an Add-on definition
+	CreateAddOn(ctx context.Context, in *CreateAddOnRequest, opts ...grpc.CallOption) (*CreateAddOnResponse, error)
+	// DestroyAddOn destroys an existing Add-on
+	DestroyAddOn(ctx context.Context, in *DestroyAddOnRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	// GetAddOn returns an existing Add-on
+	GetAddOn(ctx context.Context, in *GetAddOnRequest, opts ...grpc.CallOption) (*GetAddOnResponse, error)
+	// ListAddOns returns all existing Add-ons
+	ListAddOns(ctx context.Context, in *ListAddOnsRequest, opts ...grpc.CallOption) (*ListAddOnsResponse, error)
+	// GetTFRunStatus returns the status of the latest run of a Terraform
+	// workspace
+	GetTFRunStatus(ctx context.Context, in *GetTFRunStatusRequest, opts ...grpc.CallOption) (*GetTFRunStatusResponse, error)
 	// List full projects (not just refs)
 	UI_ListProjects(ctx context.Context, in *UI_ListProjectsRequest, opts ...grpc.CallOption) (*UI_ListProjectsResponse, error)
 	// Get a given project with useful related records.
@@ -1730,6 +1762,96 @@ func (c *waypointClient) GetTFCRunStatus(ctx context.Context, in *GetTFCRunStatu
 	return out, nil
 }
 
+func (c *waypointClient) CreateAddOnDefinition(ctx context.Context, in *CreateAddOnDefinitionRequest, opts ...grpc.CallOption) (*CreateAddOnDefinitionResponse, error) {
+	out := new(CreateAddOnDefinitionResponse)
+	err := c.cc.Invoke(ctx, Waypoint_CreateAddOnDefinition_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *waypointClient) GetAddOnDefinition(ctx context.Context, in *GetAddOnDefinitionRequest, opts ...grpc.CallOption) (*GetAddOnDefinitionResponse, error) {
+	out := new(GetAddOnDefinitionResponse)
+	err := c.cc.Invoke(ctx, Waypoint_GetAddOnDefinition_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *waypointClient) ListAddOnDefinitions(ctx context.Context, in *ListAddOnDefinitionsRequest, opts ...grpc.CallOption) (*ListAddOnDefinitionsResponse, error) {
+	out := new(ListAddOnDefinitionsResponse)
+	err := c.cc.Invoke(ctx, Waypoint_ListAddOnDefinitions_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *waypointClient) UpdateAddOnDefinition(ctx context.Context, in *UpdateAddOnDefinitionRequest, opts ...grpc.CallOption) (*UpdateAddOnDefinitionResponse, error) {
+	out := new(UpdateAddOnDefinitionResponse)
+	err := c.cc.Invoke(ctx, Waypoint_UpdateAddOnDefinition_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *waypointClient) DeleteAddOnDefinition(ctx context.Context, in *DeleteAddOnDefinitionRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, Waypoint_DeleteAddOnDefinition_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *waypointClient) CreateAddOn(ctx context.Context, in *CreateAddOnRequest, opts ...grpc.CallOption) (*CreateAddOnResponse, error) {
+	out := new(CreateAddOnResponse)
+	err := c.cc.Invoke(ctx, Waypoint_CreateAddOn_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *waypointClient) DestroyAddOn(ctx context.Context, in *DestroyAddOnRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, Waypoint_DestroyAddOn_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *waypointClient) GetAddOn(ctx context.Context, in *GetAddOnRequest, opts ...grpc.CallOption) (*GetAddOnResponse, error) {
+	out := new(GetAddOnResponse)
+	err := c.cc.Invoke(ctx, Waypoint_GetAddOn_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *waypointClient) ListAddOns(ctx context.Context, in *ListAddOnsRequest, opts ...grpc.CallOption) (*ListAddOnsResponse, error) {
+	out := new(ListAddOnsResponse)
+	err := c.cc.Invoke(ctx, Waypoint_ListAddOns_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *waypointClient) GetTFRunStatus(ctx context.Context, in *GetTFRunStatusRequest, opts ...grpc.CallOption) (*GetTFRunStatusResponse, error) {
+	out := new(GetTFRunStatusResponse)
+	err := c.cc.Invoke(ctx, Waypoint_GetTFRunStatus_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *waypointClient) UI_ListProjects(ctx context.Context, in *UI_ListProjectsRequest, opts ...grpc.CallOption) (*UI_ListProjectsResponse, error) {
 	out := new(UI_ListProjectsResponse)
 	err := c.cc.Invoke(ctx, Waypoint_UI_ListProjects_FullMethodName, in, out, opts...)
@@ -2142,9 +2264,31 @@ type WaypointServer interface {
 	// from a Project Template, provisioning infrastructure before upserting the
 	// Waypoint project to the database
 	CreateProjectFromTemplate(context.Context, *CreateProjectFromTemplateRequest) (*CreateProjectFromTemplateResponse, error)
+	// Deprecated in favor of GetTFRunStatus
 	// GetTFCRunStatus is in BETA. It returns the status of a TFC run, which was
 	// run to render a project template.
 	GetTFCRunStatus(context.Context, *GetTFCRunStatusRequest) (*GetTFCRunStatusResponse, error)
+	// CreateAddOnDefinition creates a new Add-on definition
+	CreateAddOnDefinition(context.Context, *CreateAddOnDefinitionRequest) (*CreateAddOnDefinitionResponse, error)
+	// GetAddOnDefinition returns an Add-on definition, referenced by name or ID
+	GetAddOnDefinition(context.Context, *GetAddOnDefinitionRequest) (*GetAddOnDefinitionResponse, error)
+	// ListAddOnDefinitions returns all existing Add-on definitions
+	ListAddOnDefinitions(context.Context, *ListAddOnDefinitionsRequest) (*ListAddOnDefinitionsResponse, error)
+	// UpdateAddOnDefinition updates an existing Add-on definition
+	UpdateAddOnDefinition(context.Context, *UpdateAddOnDefinitionRequest) (*UpdateAddOnDefinitionResponse, error)
+	// DeleteAddOnDefinition deletes an existing Add-on definition
+	DeleteAddOnDefinition(context.Context, *DeleteAddOnDefinitionRequest) (*emptypb.Empty, error)
+	// CreateAddOn adds an Add-on to a project from an Add-on definition
+	CreateAddOn(context.Context, *CreateAddOnRequest) (*CreateAddOnResponse, error)
+	// DestroyAddOn destroys an existing Add-on
+	DestroyAddOn(context.Context, *DestroyAddOnRequest) (*emptypb.Empty, error)
+	// GetAddOn returns an existing Add-on
+	GetAddOn(context.Context, *GetAddOnRequest) (*GetAddOnResponse, error)
+	// ListAddOns returns all existing Add-ons
+	ListAddOns(context.Context, *ListAddOnsRequest) (*ListAddOnsResponse, error)
+	// GetTFRunStatus returns the status of the latest run of a Terraform
+	// workspace
+	GetTFRunStatus(context.Context, *GetTFRunStatusRequest) (*GetTFRunStatusResponse, error)
 	// List full projects (not just refs)
 	UI_ListProjects(context.Context, *UI_ListProjectsRequest) (*UI_ListProjectsResponse, error)
 	// Get a given project with useful related records.
@@ -2504,6 +2648,36 @@ func (UnimplementedWaypointServer) CreateProjectFromTemplate(context.Context, *C
 }
 func (UnimplementedWaypointServer) GetTFCRunStatus(context.Context, *GetTFCRunStatusRequest) (*GetTFCRunStatusResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetTFCRunStatus not implemented")
+}
+func (UnimplementedWaypointServer) CreateAddOnDefinition(context.Context, *CreateAddOnDefinitionRequest) (*CreateAddOnDefinitionResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateAddOnDefinition not implemented")
+}
+func (UnimplementedWaypointServer) GetAddOnDefinition(context.Context, *GetAddOnDefinitionRequest) (*GetAddOnDefinitionResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetAddOnDefinition not implemented")
+}
+func (UnimplementedWaypointServer) ListAddOnDefinitions(context.Context, *ListAddOnDefinitionsRequest) (*ListAddOnDefinitionsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListAddOnDefinitions not implemented")
+}
+func (UnimplementedWaypointServer) UpdateAddOnDefinition(context.Context, *UpdateAddOnDefinitionRequest) (*UpdateAddOnDefinitionResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateAddOnDefinition not implemented")
+}
+func (UnimplementedWaypointServer) DeleteAddOnDefinition(context.Context, *DeleteAddOnDefinitionRequest) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteAddOnDefinition not implemented")
+}
+func (UnimplementedWaypointServer) CreateAddOn(context.Context, *CreateAddOnRequest) (*CreateAddOnResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateAddOn not implemented")
+}
+func (UnimplementedWaypointServer) DestroyAddOn(context.Context, *DestroyAddOnRequest) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DestroyAddOn not implemented")
+}
+func (UnimplementedWaypointServer) GetAddOn(context.Context, *GetAddOnRequest) (*GetAddOnResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetAddOn not implemented")
+}
+func (UnimplementedWaypointServer) ListAddOns(context.Context, *ListAddOnsRequest) (*ListAddOnsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListAddOns not implemented")
+}
+func (UnimplementedWaypointServer) GetTFRunStatus(context.Context, *GetTFRunStatusRequest) (*GetTFRunStatusResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetTFRunStatus not implemented")
 }
 func (UnimplementedWaypointServer) UI_ListProjects(context.Context, *UI_ListProjectsRequest) (*UI_ListProjectsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UI_ListProjects not implemented")
@@ -4606,6 +4780,186 @@ func _Waypoint_GetTFCRunStatus_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Waypoint_CreateAddOnDefinition_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateAddOnDefinitionRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(WaypointServer).CreateAddOnDefinition(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Waypoint_CreateAddOnDefinition_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(WaypointServer).CreateAddOnDefinition(ctx, req.(*CreateAddOnDefinitionRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Waypoint_GetAddOnDefinition_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetAddOnDefinitionRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(WaypointServer).GetAddOnDefinition(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Waypoint_GetAddOnDefinition_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(WaypointServer).GetAddOnDefinition(ctx, req.(*GetAddOnDefinitionRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Waypoint_ListAddOnDefinitions_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListAddOnDefinitionsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(WaypointServer).ListAddOnDefinitions(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Waypoint_ListAddOnDefinitions_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(WaypointServer).ListAddOnDefinitions(ctx, req.(*ListAddOnDefinitionsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Waypoint_UpdateAddOnDefinition_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateAddOnDefinitionRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(WaypointServer).UpdateAddOnDefinition(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Waypoint_UpdateAddOnDefinition_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(WaypointServer).UpdateAddOnDefinition(ctx, req.(*UpdateAddOnDefinitionRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Waypoint_DeleteAddOnDefinition_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteAddOnDefinitionRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(WaypointServer).DeleteAddOnDefinition(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Waypoint_DeleteAddOnDefinition_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(WaypointServer).DeleteAddOnDefinition(ctx, req.(*DeleteAddOnDefinitionRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Waypoint_CreateAddOn_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateAddOnRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(WaypointServer).CreateAddOn(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Waypoint_CreateAddOn_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(WaypointServer).CreateAddOn(ctx, req.(*CreateAddOnRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Waypoint_DestroyAddOn_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DestroyAddOnRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(WaypointServer).DestroyAddOn(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Waypoint_DestroyAddOn_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(WaypointServer).DestroyAddOn(ctx, req.(*DestroyAddOnRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Waypoint_GetAddOn_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetAddOnRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(WaypointServer).GetAddOn(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Waypoint_GetAddOn_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(WaypointServer).GetAddOn(ctx, req.(*GetAddOnRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Waypoint_ListAddOns_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListAddOnsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(WaypointServer).ListAddOns(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Waypoint_ListAddOns_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(WaypointServer).ListAddOns(ctx, req.(*ListAddOnsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Waypoint_GetTFRunStatus_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetTFRunStatusRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(WaypointServer).GetTFRunStatus(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Waypoint_GetTFRunStatus_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(WaypointServer).GetTFRunStatus(ctx, req.(*GetTFRunStatusRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Waypoint_UI_ListProjects_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(UI_ListProjectsRequest)
 	if err := dec(in); err != nil {
@@ -5196,6 +5550,46 @@ var Waypoint_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetTFCRunStatus",
 			Handler:    _Waypoint_GetTFCRunStatus_Handler,
+		},
+		{
+			MethodName: "CreateAddOnDefinition",
+			Handler:    _Waypoint_CreateAddOnDefinition_Handler,
+		},
+		{
+			MethodName: "GetAddOnDefinition",
+			Handler:    _Waypoint_GetAddOnDefinition_Handler,
+		},
+		{
+			MethodName: "ListAddOnDefinitions",
+			Handler:    _Waypoint_ListAddOnDefinitions_Handler,
+		},
+		{
+			MethodName: "UpdateAddOnDefinition",
+			Handler:    _Waypoint_UpdateAddOnDefinition_Handler,
+		},
+		{
+			MethodName: "DeleteAddOnDefinition",
+			Handler:    _Waypoint_DeleteAddOnDefinition_Handler,
+		},
+		{
+			MethodName: "CreateAddOn",
+			Handler:    _Waypoint_CreateAddOn_Handler,
+		},
+		{
+			MethodName: "DestroyAddOn",
+			Handler:    _Waypoint_DestroyAddOn_Handler,
+		},
+		{
+			MethodName: "GetAddOn",
+			Handler:    _Waypoint_GetAddOn_Handler,
+		},
+		{
+			MethodName: "ListAddOns",
+			Handler:    _Waypoint_ListAddOns_Handler,
+		},
+		{
+			MethodName: "GetTFRunStatus",
+			Handler:    _Waypoint_GetTFRunStatus_Handler,
 		},
 		{
 			MethodName: "UI_ListProjects",

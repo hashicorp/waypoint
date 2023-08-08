@@ -496,9 +496,41 @@ service Waypoint {
   // Waypoint project to the database
   rpc CreateProjectFromTemplate(CreateProjectFromTemplateRequest) returns (CreateProjectFromTemplateResponse);
 
+  // Deprecated in favor of GetTFRunStatus
   // GetTFCRunStatus is in BETA. It returns the status of a TFC run, which was
   // run to render a project template.
   rpc GetTFCRunStatus(GetTFCRunStatusRequest) returns (GetTFCRunStatusResponse);
+
+  // CreateAddOnDefinition creates a new Add-on definition
+  rpc CreateAddOnDefinition(CreateAddOnDefinitionRequest) returns (CreateAddOnDefinitionResponse);
+
+  // GetAddOnDefinition returns an Add-on definition, referenced by name or ID
+  rpc GetAddOnDefinition(GetAddOnDefinitionRequest) returns (GetAddOnDefinitionResponse);
+
+  // ListAddOnDefinitions returns all existing Add-on definitions
+  rpc ListAddOnDefinitions(ListAddOnDefinitionsRequest) returns (ListAddOnDefinitionsResponse);
+
+  // UpdateAddOnDefinition updates an existing Add-on definition
+  rpc UpdateAddOnDefinition(UpdateAddOnDefinitionRequest) returns (UpdateAddOnDefinitionResponse);
+
+  // DeleteAddOnDefinition deletes an existing Add-on definition
+  rpc DeleteAddOnDefinition(DeleteAddOnDefinitionRequest) returns (google.protobuf.Empty);
+
+  // CreateAddOn adds an Add-on to a project from an Add-on definition
+  rpc CreateAddOn(CreateAddOnRequest) returns (CreateAddOnResponse);
+
+  // DestroyAddOn destroys an existing Add-on
+  rpc DestroyAddOn(DestroyAddOnRequest) returns (google.protobuf.Empty);
+
+  // GetAddOn returns an existing Add-on
+  rpc GetAddOn(GetAddOnRequest) returns (GetAddOnResponse);
+
+  // ListAddOns returns all existing Add-ons
+  rpc ListAddOns(ListAddOnsRequest) returns (ListAddOnsResponse);
+
+  // GetTFRunStatus returns the status of the latest run of a Terraform
+  // workspace
+  rpc GetTFRunStatus(GetTFRunStatusRequest) returns (GetTFRunStatusResponse);
 
   //----------------------------------------------------------------------
   // UI endpoints. The endpoints below are convenience methods for Waypoint's
@@ -780,6 +812,7 @@ message UI {
       BUILD = 0;
       DEPLOYMENT = 1;
       RELEASE = 2;
+      ADDON = 3;
     }
     //generic so looser contract for activity feed between backend and UI
   }
@@ -811,6 +844,12 @@ message UI {
     Status status = 5;
     uint64 deployment_sequence = 6;
   }
+
+  message EventAddOn {
+    string add_on_id = 1;
+    string name = 2;
+  }
+
 /* NOTE(Cassie): This should be implemented once pipeline_runs are app scoped
   message EventPipelineRun {
     string pipelineRun_id = 1;
@@ -823,6 +862,7 @@ message UI {
     UI.EventBuild event_build_schema = 1;
     UI.EventDeployment event_deployment_schema = 2;
     UI.EventRelease event_release_schema = 3;
+    UI.EventAddOn event_add_on_schema = 4;
     //UI.EventPipelineRun event_pipeline_run_schema = 4;
   }
 }
@@ -1368,6 +1408,20 @@ message Ref {
       string id = 1;
 
       // Name of the ProjectTemplate
+      string name = 2;
+    }
+  }
+
+  message AddOnDefinition {
+    oneof identifier {
+      string id = 1;
+      string name = 2;
+    }
+  }
+
+  message AddOn {
+    oneof identifier {
+      string id = 1;
       string name = 2;
     }
   }
@@ -5411,6 +5465,7 @@ message ProjectTemplate {
     bytes waypoint_hcl_template = 1;
   }
 
+  // Deprecated in favor of TerraformNocodeModule, declared outside of the ProjectTemplate message
   message TerraformNocodeModule {
     // The module name for the Terraform no-code module.
     string source = 1;
@@ -5418,6 +5473,244 @@ message ProjectTemplate {
     // The version of the Terraform no-code module.
     string version = 2;
   }
+}
+
+message TerraformNocodeModule {
+  // The source of the Terraform no-code module.
+  // https://developer.hashicorp.com/terraform/language/modules/sources
+  string source = 1;
+
+  // The version of the Terraform no-code module.
+  string version = 2;
+}
+
+/********************************************************************
+* Add-ons - the features using these protos are in BETA
+********************************************************************/
+// GetAddOnDefinitionRequest is the request used for getting an existing Add-on
+// definition
+message GetAddOnDefinitionRequest {
+  Ref.AddOnDefinition add_on_definition = 1;
+}
+
+// GetAddOnDefinitionResponse is the response used to return an existing Add-on
+// Definition
+message GetAddOnDefinitionResponse {
+  AddOnDefinition add_on_definition = 1;
+}
+
+// ListAddOnDefinitionsRequest is the request used to get all Add-on
+// definitions
+message ListAddOnDefinitionsRequest {
+  PaginationRequest pagination = 1;
+}
+
+// ListAddOnDefinitionsResponse is the response used to return all Add-on
+// definitions
+message ListAddOnDefinitionsResponse {
+  repeated AddOnDefinition add_on_definitions = 1;
+  PaginationResponse pagination = 2;
+}
+
+// CreateAddOnDefinitionRequest is the request used to create an Add-on
+// definition
+message CreateAddOnDefinitionRequest {
+  // Name of the Add-on definition
+  string name = 1;
+
+  // Terraform No Code module used for provisioning the Add-on
+  TerraformNocodeModule terraform_nocode_module = 2;
+
+  // Short description of the Add-on
+  string short_summary = 3;
+
+  // Longer description of the Add-on
+  string long_summary = 4;
+
+  // A templated README describing the Add-on
+  bytes readme_markdown_template = 5;
+
+  // A list of descriptive tags for an Add-on
+  repeated string tags = 6;
+
+  // The TF variable set to apply to the Add-on's No Code workspace
+  repeated string tf_variable_set_ids = 7;
+}
+
+// CreateAddOnDefinitionResponse is the response containing the just-created
+// Add-on definition
+message CreateAddOnDefinitionResponse {
+  AddOnDefinition add_on_definition = 1;
+}
+
+// UpdateAddOnDefinitionRequest is the request used to update an existing
+// Add-on definition
+message UpdateAddOnDefinitionRequest {
+  // Reference to an existing Add-on
+  Ref.AddOnDefinition definition = 1;
+
+  // Name of the Add-on definition
+  string name = 2;
+
+  // Terraform No Code module used for provisioning the Add-on
+  TerraformNocodeModule terraform_nocode_module = 3;
+
+  // Short description of the Add-on
+  string short_summary = 4;
+
+  // Longer description of the Add-on
+  string long_summary = 5;
+
+  // A templated README describing the Add-on
+  bytes readme_markdown_template = 6;
+
+  // A list of descriptive tags for an Add-on
+  repeated string tags = 7;
+
+  // The TF variable set to apply to the Add-on's No Code workspace
+  repeated string tf_variable_set_ids = 8;
+}
+
+// UpdateAddOnDefinitionResponse is the response containing the just-updated
+// Add-on definition
+message UpdateAddOnDefinitionResponse {
+  AddOnDefinition add_on_definition = 1;
+}
+
+// DeleteAddOnDefinitionRequest is the request used to delete an existing Add
+// On definition
+message DeleteAddOnDefinitionRequest {
+  Ref.AddOnDefinition add_on_definition = 1;
+}
+
+// CreateAddOnRequest is the request used to add an Add-on to a project
+message CreateAddOnRequest {
+  // The project for which the Add-on is to be created
+  Ref.Project project = 1;
+
+  // The Add-on definition from which this Add-on is to be created
+  Ref.AddOnDefinition definition = 2;
+
+  // name is the name of the Add-on
+  string name = 3;
+}
+
+// CreateAddOnResponse is the response containing the just-added Add-on
+message CreateAddOnResponse {
+  AddOn add_on = 1;
+}
+
+// DestroyAddOnRequest is the request used to destroy an existing Add-on
+message DestroyAddOnRequest {
+  Ref.AddOn add_on = 1;
+}
+
+// GetAddOnRequest is the request used to get an existing Add-on
+message GetAddOnRequest {
+  Ref.AddOn add_on = 1;
+}
+
+// GetAddOnResponse is the response containing the just-requested existing Add-on
+message GetAddOnResponse {
+  AddOn add_on = 1;
+}
+
+// ListAddOnsRequest is the request used to get all existing Add-ons
+message ListAddOnsRequest {
+  Ref.Project project = 1;
+  PaginationRequest pagination = 2;
+}
+
+// ListAddOnsResponse is the response containing all existing Add-ons
+message ListAddOnsResponse {
+  repeated AddOn add_ons = 1;
+  PaginationResponse pagination = 2;
+}
+
+// GetTFRunStatusRequest is the request used to get the status of the latest
+// run of a Terraform workspace
+message GetTFRunStatusRequest {
+  string workspace_name = 1;
+}
+
+// GetTFRunStatusResponse is the response containing the status of the latest
+// run of a Terraform workspace
+message GetTFRunStatusResponse {
+  // the URL of the TF run
+  string url = 1;
+
+  // the state of the TF run
+  State state = 2;
+
+  enum State {
+    UNKNOWN = 0;
+    RUNNING = 1;
+    SUCCESS = 2;
+    ERROR   = 3;
+  }
+}
+
+// AddOn is an add-on definition rendered for a project
+message AddOn {
+  // Unique identifier of the Add-on
+  string id = 1;
+
+  // Name of the Add-on
+  string name = 2;
+
+  // The project for which the Add-on was created
+  Ref.Project project = 3;
+
+  // The Add-on definition from which this Add-on was created
+  Ref.AddOnDefinition definition = 4;
+
+  // Rendered README markdown template for Add-on
+  bytes readme_markdown = 5;
+
+  // A list of descriptive tags for an Add-on
+  repeated string tags = 6;
+
+  // Terraform No Code module used for provisioning the Add-on
+  TerraformNocodeModule terraform_nocode_module = 7;
+
+  // Short description of the Add-on
+  string short_summary = 8;
+
+  // Longer description of the Add-on
+  string long_summary = 9;
+
+  // created_by indicates what created the Add-on
+  string created_by = 10;
+
+  // The time at which the add-on was created
+  google.protobuf.Timestamp created_at = 11;
+}
+
+// AddOnDefinition is the template for an add-on
+message AddOnDefinition {
+  // Unique identifer of the Add-on definition
+  string id = 1;
+
+  // Name of the Add-on definition
+  string name = 2;
+
+  // Terraform No Code module used for provisioning the Add-on
+  TerraformNocodeModule terraform_nocode_module = 3;
+
+  // Short description of the Add-on
+  string short_summary = 4;
+
+  // Longer description of the Add-on
+  string long_summary = 5;
+
+  // A templated README describing the Add-on
+  bytes readme_markdown_template = 6;
+
+  // A list of descriptive tags for an Add-on
+  repeated string tags = 7;
+
+  // The TF variable set to apply to the Add-on's No Code workspace
+  repeated string tf_variable_set_ids = 8;
 }
 
 /********************************************************************

@@ -11,6 +11,419 @@
     "application/json"
   ],
   "paths": {
+    "/add-on": {
+      "post": {
+        "summary": "CreateAddOn adds an Add-on to a project from an Add-on definition",
+        "operationId": "Waypoint_CreateAddOn",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/hashicorp.waypoint.CreateAddOnResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/grpc.gateway.runtime.Error"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/hashicorp.waypoint.CreateAddOnRequest"
+            }
+          }
+        ],
+        "tags": [
+          "Waypoint"
+        ]
+      }
+    },
+    "/add-on-definition": {
+      "post": {
+        "summary": "CreateAddOnDefinition creates a new Add-on definition",
+        "operationId": "Waypoint_CreateAddOnDefinition",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/hashicorp.waypoint.CreateAddOnDefinitionResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/grpc.gateway.runtime.Error"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/hashicorp.waypoint.CreateAddOnDefinitionRequest"
+            }
+          }
+        ],
+        "tags": [
+          "Waypoint"
+        ]
+      },
+      "put": {
+        "summary": "UpdateAddOnDefinition updates an existing Add-on definition",
+        "operationId": "Waypoint_UpdateAddOnDefinition",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/hashicorp.waypoint.UpdateAddOnDefinitionResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/grpc.gateway.runtime.Error"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/hashicorp.waypoint.UpdateAddOnDefinitionRequest"
+            }
+          }
+        ],
+        "tags": [
+          "Waypoint"
+        ]
+      }
+    },
+    "/add-on-definition/by-id/{add_on_definition.id}": {
+      "get": {
+        "summary": "GetAddOnDefinition returns an Add-on definition, referenced by name or ID",
+        "operationId": "Waypoint_GetAddOnDefinition",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/hashicorp.waypoint.GetAddOnDefinitionResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/grpc.gateway.runtime.Error"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "add_on_definition.id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "add_on_definition.name",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "Waypoint"
+        ]
+      },
+      "delete": {
+        "summary": "DeleteAddOnDefinition deletes an existing Add-on definition",
+        "operationId": "Waypoint_DeleteAddOnDefinition",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "properties": {}
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/grpc.gateway.runtime.Error"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "add_on_definition.id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "add_on_definition.name",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "Waypoint"
+        ]
+      }
+    },
+    "/add-on-definition/by-name/{add_on_definition.name}": {
+      "get": {
+        "summary": "GetAddOnDefinition returns an Add-on definition, referenced by name or ID",
+        "operationId": "Waypoint_GetAddOnDefinition2",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/hashicorp.waypoint.GetAddOnDefinitionResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/grpc.gateway.runtime.Error"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "add_on_definition.name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "add_on_definition.id",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "Waypoint"
+        ]
+      },
+      "delete": {
+        "summary": "DeleteAddOnDefinition deletes an existing Add-on definition",
+        "operationId": "Waypoint_DeleteAddOnDefinition2",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "properties": {}
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/grpc.gateway.runtime.Error"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "add_on_definition.name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "add_on_definition.id",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "Waypoint"
+        ]
+      }
+    },
+    "/add-on-definitions": {
+      "get": {
+        "summary": "ListAddOnDefinitions returns all existing Add-on definitions",
+        "operationId": "Waypoint_ListAddOnDefinitions",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/hashicorp.waypoint.ListAddOnDefinitionsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/grpc.gateway.runtime.Error"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "pagination.page_size",
+            "description": "The max number of results per page that should be returned. If the number\nof available results is larger than `page_size`, a `next_page_token` is\nreturned which can be used to get the next page of results in subsequent\nrequests. A value of zero will cause `page_size` to be defaulted.",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "pagination.next_page_token",
+            "description": "Specifies a page token to use to retrieve the next page. Set this to the\n`next_page_token` returned by previous list requests to get the next page of\nresults. If set, `previous_page_token` must not be set.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "pagination.previous_page_token",
+            "description": "Specifies a page token to use to retrieve the previous page. Set this to\nthe `previous_page_token` returned by previous list requests to get the\nprevious page of results. If set, `next_page_token` must not be set.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "Waypoint"
+        ]
+      }
+    },
+    "/add-on/{add_on.id}": {
+      "get": {
+        "summary": "GetAddOn returns an existing Add-on",
+        "operationId": "Waypoint_GetAddOn",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/hashicorp.waypoint.GetAddOnResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/grpc.gateway.runtime.Error"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "add_on.id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "add_on.name",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "Waypoint"
+        ]
+      },
+      "delete": {
+        "summary": "DestroyAddOn destroys an existing Add-on",
+        "operationId": "Waypoint_DestroyAddOn",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "properties": {}
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/grpc.gateway.runtime.Error"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "add_on.id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "add_on.name",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "Waypoint"
+        ]
+      }
+    },
+    "/add-ons": {
+      "get": {
+        "summary": "ListAddOns returns all existing Add-ons",
+        "operationId": "Waypoint_ListAddOns",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/hashicorp.waypoint.ListAddOnsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/grpc.gateway.runtime.Error"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "project.project",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "pagination.page_size",
+            "description": "The max number of results per page that should be returned. If the number\nof available results is larger than `page_size`, a `next_page_token` is\nreturned which can be used to get the next page of results in subsequent\nrequests. A value of zero will cause `page_size` to be defaulted.",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "pagination.next_page_token",
+            "description": "Specifies a page token to use to retrieve the next page. Set this to the\n`next_page_token` returned by previous list requests to get the next page of\nresults. If set, `previous_page_token` must not be set.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "pagination.previous_page_token",
+            "description": "Specifies a page token to use to retrieve the previous page. Set this to\nthe `previous_page_token` returned by previous list requests to get the\nprevious page of results. If set, `next_page_token` must not be set.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "Waypoint"
+        ]
+      }
+    },
     "/artifact/{ref.id}": {
       "get": {
         "summary": "GetPushedArtifact returns a deployment",
@@ -4784,7 +5197,7 @@
     },
     "/project/{project.project}/tfc-run-status": {
       "get": {
-        "summary": "GetTFCRunStatus is in BETA. It returns the status of a TFC run, which was\nrun to render a project template.",
+        "summary": "Deprecated in favor of GetTFRunStatus\nGetTFCRunStatus is in BETA. It returns the status of a TFC run, which was\nrun to render a project template.",
         "operationId": "Waypoint_GetTFCRunStatus",
         "responses": {
           "200": {
@@ -5989,6 +6402,37 @@
               ]
             },
             "collectionFormat": "multi"
+          }
+        ],
+        "tags": [
+          "Waypoint"
+        ]
+      }
+    },
+    "/tf-run-status/{workspace_name}": {
+      "get": {
+        "summary": "GetTFRunStatus returns the status of the latest run of a Terraform\nworkspace",
+        "operationId": "Waypoint_GetTFRunStatus",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/hashicorp.waypoint.GetTFRunStatusResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/grpc.gateway.runtime.Error"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "workspace_name",
+            "in": "path",
+            "required": true,
+            "type": "string"
           }
         ],
         "tags": [
@@ -7583,6 +8027,106 @@
         }
       }
     },
+    "hashicorp.waypoint.AddOn": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "title": "Unique identifier of the Add-on"
+        },
+        "name": {
+          "type": "string",
+          "title": "Name of the Add-on"
+        },
+        "project": {
+          "$ref": "#/definitions/hashicorp.waypoint.Ref.Project",
+          "title": "The project for which the Add-on was created"
+        },
+        "definition": {
+          "$ref": "#/definitions/hashicorp.waypoint.Ref.AddOnDefinition",
+          "title": "The Add-on definition from which this Add-on was created"
+        },
+        "readme_markdown": {
+          "type": "string",
+          "format": "byte",
+          "title": "Rendered README markdown template for Add-on"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "A list of descriptive tags for an Add-on"
+        },
+        "terraform_nocode_module": {
+          "$ref": "#/definitions/hashicorp.waypoint.TerraformNocodeModule",
+          "title": "Terraform No Code module used for provisioning the Add-on"
+        },
+        "short_summary": {
+          "type": "string",
+          "title": "Short description of the Add-on"
+        },
+        "long_summary": {
+          "type": "string",
+          "title": "Longer description of the Add-on"
+        },
+        "created_by": {
+          "type": "string",
+          "title": "created_by indicates what created the Add-on"
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time",
+          "title": "The time at which the add-on was created"
+        }
+      },
+      "title": "AddOn is an add-on definition rendered for a project"
+    },
+    "hashicorp.waypoint.AddOnDefinition": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "title": "Unique identifer of the Add-on definition"
+        },
+        "name": {
+          "type": "string",
+          "title": "Name of the Add-on definition"
+        },
+        "terraform_nocode_module": {
+          "$ref": "#/definitions/hashicorp.waypoint.TerraformNocodeModule",
+          "title": "Terraform No Code module used for provisioning the Add-on"
+        },
+        "short_summary": {
+          "type": "string",
+          "title": "Short description of the Add-on"
+        },
+        "long_summary": {
+          "type": "string",
+          "title": "Longer description of the Add-on"
+        },
+        "readme_markdown_template": {
+          "type": "string",
+          "format": "byte",
+          "title": "A templated README describing the Add-on"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "A list of descriptive tags for an Add-on"
+        },
+        "tf_variable_set_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "The TF variable set to apply to the Add-on's No Code workspace"
+        }
+      },
+      "title": "AddOnDefinition is the template for an add-on"
+    },
     "hashicorp.waypoint.AdoptRunnerRequest": {
       "type": "object",
       "properties": {
@@ -8063,6 +8607,83 @@
         }
       },
       "description": "Passed to ConvertInviteToken to create a new token that can be used to authenticate RPCs."
+    },
+    "hashicorp.waypoint.CreateAddOnDefinitionRequest": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "title": "Name of the Add-on definition"
+        },
+        "terraform_nocode_module": {
+          "$ref": "#/definitions/hashicorp.waypoint.TerraformNocodeModule",
+          "title": "Terraform No Code module used for provisioning the Add-on"
+        },
+        "short_summary": {
+          "type": "string",
+          "title": "Short description of the Add-on"
+        },
+        "long_summary": {
+          "type": "string",
+          "title": "Longer description of the Add-on"
+        },
+        "readme_markdown_template": {
+          "type": "string",
+          "format": "byte",
+          "title": "A templated README describing the Add-on"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "A list of descriptive tags for an Add-on"
+        },
+        "tf_variable_set_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "The TF variable set to apply to the Add-on's No Code workspace"
+        }
+      },
+      "title": "CreateAddOnDefinitionRequest is the request used to create an Add-on\ndefinition"
+    },
+    "hashicorp.waypoint.CreateAddOnDefinitionResponse": {
+      "type": "object",
+      "properties": {
+        "add_on_definition": {
+          "$ref": "#/definitions/hashicorp.waypoint.AddOnDefinition"
+        }
+      },
+      "title": "CreateAddOnDefinitionResponse is the response containing the just-created\nAdd-on definition"
+    },
+    "hashicorp.waypoint.CreateAddOnRequest": {
+      "type": "object",
+      "properties": {
+        "project": {
+          "$ref": "#/definitions/hashicorp.waypoint.Ref.Project",
+          "title": "The project for which the Add-on is to be created"
+        },
+        "definition": {
+          "$ref": "#/definitions/hashicorp.waypoint.Ref.AddOnDefinition",
+          "title": "The Add-on definition from which this Add-on is to be created"
+        },
+        "name": {
+          "type": "string",
+          "title": "name is the name of the Add-on"
+        }
+      },
+      "title": "CreateAddOnRequest is the request used to add an Add-on to a project"
+    },
+    "hashicorp.waypoint.CreateAddOnResponse": {
+      "type": "object",
+      "properties": {
+        "add_on": {
+          "$ref": "#/definitions/hashicorp.waypoint.AddOn"
+        }
+      },
+      "title": "CreateAddOnResponse is the response containing the just-added Add-on"
     },
     "hashicorp.waypoint.CreateHostnameRequest": {
       "type": "object",
@@ -8798,6 +9419,24 @@
       },
       "description": "Generation is a shared message type used by operations to denote the\n\"generation\" they're a part of. A generation denotes whether shared\nphysical resources were used or whether new resources were created.\nAnother way to conceptualize generations: immutable deployment models\nwill create new generations each operation, whereas mutable models will\nreuse a generation.\n\nThe concept of a \"Generation\" was introduced in Waypoint 0.4. Operations\nfrom earlier versions will have nil generations and callers must handle\nthat scenario.\n\n== Read/Write Notes\n\nCallers inserting operations should ONLY set the generation ID. Remaining\nfields will be automatically populated.\n\nUpdates should never modify the generation."
     },
+    "hashicorp.waypoint.GetAddOnDefinitionResponse": {
+      "type": "object",
+      "properties": {
+        "add_on_definition": {
+          "$ref": "#/definitions/hashicorp.waypoint.AddOnDefinition"
+        }
+      },
+      "title": "GetAddOnDefinitionResponse is the response used to return an existing Add-on\nDefinition"
+    },
+    "hashicorp.waypoint.GetAddOnResponse": {
+      "type": "object",
+      "properties": {
+        "add_on": {
+          "$ref": "#/definitions/hashicorp.waypoint.AddOn"
+        }
+      },
+      "title": "GetAddOnResponse is the response containing the just-requested existing Add-on"
+    },
     "hashicorp.waypoint.GetApplicationResponse": {
       "type": "object",
       "properties": {
@@ -9259,6 +9898,30 @@
       "description": "GetTFCRunStatusResponse is a message intended for use in responses to requests\nfor the status of a TFC run which was ran during rendering a project template."
     },
     "hashicorp.waypoint.GetTFCRunStatusResponse.State": {
+      "type": "string",
+      "enum": [
+        "UNKNOWN",
+        "RUNNING",
+        "SUCCESS",
+        "ERROR"
+      ],
+      "default": "UNKNOWN"
+    },
+    "hashicorp.waypoint.GetTFRunStatusResponse": {
+      "type": "object",
+      "properties": {
+        "url": {
+          "type": "string",
+          "title": "the URL of the TF run"
+        },
+        "state": {
+          "$ref": "#/definitions/hashicorp.waypoint.GetTFRunStatusResponse.State",
+          "title": "the state of the TF run"
+        }
+      },
+      "title": "GetTFRunStatusResponse is the response containing the status of the latest\nrun of a Terraform workspace"
+    },
+    "hashicorp.waypoint.GetTFRunStatusResponse.State": {
       "type": "string",
       "enum": [
         "UNKNOWN",
@@ -10366,6 +11029,36 @@
         }
       }
     },
+    "hashicorp.waypoint.ListAddOnDefinitionsResponse": {
+      "type": "object",
+      "properties": {
+        "add_on_definitions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/hashicorp.waypoint.AddOnDefinition"
+          }
+        },
+        "pagination": {
+          "$ref": "#/definitions/hashicorp.waypoint.PaginationResponse"
+        }
+      },
+      "title": "ListAddOnDefinitionsResponse is the response used to return all Add-on\ndefinitions"
+    },
+    "hashicorp.waypoint.ListAddOnsResponse": {
+      "type": "object",
+      "properties": {
+        "add_ons": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/hashicorp.waypoint.AddOn"
+          }
+        },
+        "pagination": {
+          "$ref": "#/definitions/hashicorp.waypoint.PaginationResponse"
+        }
+      },
+      "title": "ListAddOnsResponse is the response containing all existing Add-ons"
+    },
     "hashicorp.waypoint.ListAuthMethodsResponse": {
       "type": "object",
       "properties": {
@@ -11178,7 +11871,8 @@
           "type": "string",
           "description": "The version of the Terraform no-code module."
         }
-      }
+      },
+      "title": "Deprecated in favor of TerraformNocodeModule, declared outside of the ProjectTemplate message"
     },
     "hashicorp.waypoint.ProjectTemplate.WaypointProject": {
       "type": "object",
@@ -11281,6 +11975,28 @@
         "job_id": {
           "type": "string",
           "description": "the job ID that was queued. This can be used with other RPC methods\nto check on the status, cancel, etc."
+        }
+      }
+    },
+    "hashicorp.waypoint.Ref.AddOn": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        }
+      }
+    },
+    "hashicorp.waypoint.Ref.AddOnDefinition": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
         }
       }
     },
@@ -12410,6 +13126,19 @@
       },
       "description": "TaskLaunchInfo gets stored on the job/operation when queued for execution.\nIt details various options required for the task it will launch."
     },
+    "hashicorp.waypoint.TerraformNocodeModule": {
+      "type": "object",
+      "properties": {
+        "source": {
+          "type": "string",
+          "title": "The source of the Terraform no-code module.\nhttps://developer.hashicorp.com/terraform/language/modules/sources"
+        },
+        "version": {
+          "type": "string",
+          "description": "The version of the Terraform no-code module."
+        }
+      }
+    },
     "hashicorp.waypoint.Token": {
       "type": "object",
       "properties": {
@@ -12683,6 +13412,17 @@
       },
       "description": "A deployment packaged alongside prefetched related messages."
     },
+    "hashicorp.waypoint.UI.EventAddOn": {
+      "type": "object",
+      "properties": {
+        "add_on_id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        }
+      }
+    },
     "hashicorp.waypoint.UI.EventBuild": {
       "type": "object",
       "properties": {
@@ -12733,7 +13473,8 @@
       "enum": [
         "BUILD",
         "DEPLOYMENT",
-        "RELEASE"
+        "RELEASE",
+        "ADDON"
       ],
       "default": "BUILD",
       "title": "Supported EventTypes"
@@ -12849,6 +13590,9 @@
         },
         "event_release_schema": {
           "$ref": "#/definitions/hashicorp.waypoint.UI.EventRelease"
+        },
+        "event_add_on_schema": {
+          "$ref": "#/definitions/hashicorp.waypoint.UI.EventAddOn"
         }
       },
       "title": "NOTE(Cassie): This should be implemented once pipeline_runs are app scoped\nmessage EventPipelineRun {\nstring pipelineRun_id = 1;\nuint64 sequence = 2;\n//    Component component = 3; //aka platform\n//    Ref.Workspace workspace = 4;\n}"
@@ -13048,6 +13792,60 @@
         }
       },
       "description": "A release packaged alongside prefetched related messages."
+    },
+    "hashicorp.waypoint.UpdateAddOnDefinitionRequest": {
+      "type": "object",
+      "properties": {
+        "definition": {
+          "$ref": "#/definitions/hashicorp.waypoint.Ref.AddOnDefinition",
+          "title": "Reference to an existing Add-on"
+        },
+        "name": {
+          "type": "string",
+          "title": "Name of the Add-on definition"
+        },
+        "terraform_nocode_module": {
+          "$ref": "#/definitions/hashicorp.waypoint.TerraformNocodeModule",
+          "title": "Terraform No Code module used for provisioning the Add-on"
+        },
+        "short_summary": {
+          "type": "string",
+          "title": "Short description of the Add-on"
+        },
+        "long_summary": {
+          "type": "string",
+          "title": "Longer description of the Add-on"
+        },
+        "readme_markdown_template": {
+          "type": "string",
+          "format": "byte",
+          "title": "A templated README describing the Add-on"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "A list of descriptive tags for an Add-on"
+        },
+        "tf_variable_set_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "The TF variable set to apply to the Add-on's No Code workspace"
+        }
+      },
+      "title": "UpdateAddOnDefinitionRequest is the request used to update an existing\nAdd-on definition"
+    },
+    "hashicorp.waypoint.UpdateAddOnDefinitionResponse": {
+      "type": "object",
+      "properties": {
+        "add_on_definition": {
+          "$ref": "#/definitions/hashicorp.waypoint.AddOnDefinition"
+        }
+      },
+      "title": "UpdateAddOnDefinitionResponse is the response containing the just-updated\nAdd-on definition"
     },
     "hashicorp.waypoint.UpdateProjectTemplateRequest": {
       "type": "object",
