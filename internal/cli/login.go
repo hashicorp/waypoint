@@ -234,6 +234,66 @@ func (c *LoginCommand) loginToken(ctx context.Context) (string, int) {
 	return convertResp.Token, 0
 }
 
+func (c *LoginCommand) loginHCP(ctx context.Context) (string, int) {
+	// Start our callback server
+	callbackSrv, err := wpoidc.NewCallbackServer()
+	if err != nil {
+		c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+		return "", 1
+	}
+
+	// Get the auth URL
+	authURL, err := c.project.Client().GetOIDCAuthURL(ctx, &pb.GetOIDCAuthURLRequest{
+		AuthMethod:  &pb.Ref_AuthMethod{Name: "HCP"},
+		RedirectUri: callbackSrv.RedirectUri(),
+		Nonce:       callbackSrv.Nonce(),
+	})
+	if err != nil {
+		c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+		return "", 1
+	}
+
+	// Open the auth URL in the user browser or ask them to visit it.
+	// We purposely use fmt here and NOT c.ui because the ui will truncate
+	// our URL (a known bug).
+	fmt.Printf(strings.TrimSpace(outVisitURL)+"\n\n", authURL.Url)
+	if err := util.OpenURL(authURL.Url); err != nil {
+		c.Log.Warn("error opening auth url", "err", err)
+	}
+
+	// Wait
+	var req *pb.CompleteOIDCAuthRequest
+	select {
+	case <-ctx.Done():
+		// User cancelled
+		return "", 1
+
+	case err := <-callbackSrv.ErrorCh():
+		c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+		return "", 1
+
+	case req = <-callbackSrv.SuccessCh():
+		// We got our data!
+	}
+
+	// Complete the auth
+	respToken, err := c.project.Client().CompleteOIDCAuth(ctx, req)
+	if err != nil {
+		c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+		return "", 1
+	}
+
+	// Output the claims in the debug log
+	c.Log.Warn("OIDC authentication complete",
+		"user_id", respToken.User.Id,
+		"username", respToken.User.Username,
+		"id_claims", respToken.IdClaimsJson,
+		"user_claims", respToken.UserClaimsJson,
+	)
+
+	return respToken.Token, 0
+}
+
 func (c *LoginCommand) loginOIDC(ctx context.Context) (string, int) {
 	// Get our OIDC auth methods
 	respList, err := c.project.Client().ListOIDCAuthMethods(ctx, &empty.Empty{})
