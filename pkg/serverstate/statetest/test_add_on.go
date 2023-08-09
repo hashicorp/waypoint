@@ -170,7 +170,7 @@ My favorite add-on README.
 	})
 
 	testAddOn := &pb.AddOn{
-		Name: pn + "-" + addOnDefinitionName + "-1",
+		Name: "your friendly neighborhood add-on",
 		Project: &pb.Ref_Project{
 			Project: pn,
 		},
