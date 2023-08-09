@@ -6,6 +6,17 @@ IMPROVEMENTS:
 
 BUG FIXES:
 
+## 0.11.4 (August 9, 2023)
+
+IMPROVEMENTS:
+
+* plugin/aws/ecr-pull: Support entrypoint injection in ecr-pull builder [[GH-4847](https://github.com/hashicorp/waypoint/issues/4847)]
+
+BUG FIXES:
+
+* cli: Fix possible issues with deleted applications or projects failing to render in output [[GH-4867](https://github.com/hashicorp/waypoint/issues/4867)]
+* runneruninstall/aws-ecs: Fix installing runners in new AWS accounts by fixing an inline policy syntax error. [[GH-4873](https://github.com/hashicorp/waypoint/issues/4873)]
+
 ## 0.11.3 (July 18, 2023)
 
 IMPROVEMENTS:
