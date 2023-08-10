@@ -1,5 +1,5 @@
 # Copyright (c) HashiCorp, Inc.
-# SPDX-License-Identifier: MPL-2.0
+# SPDX-License-Identifier: BUSL-1.1
 
 # The name of your project. A project typically maps 1:1 to a VCS repository.
 # This name must be unique for your Waypoint server. If you're running in

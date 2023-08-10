@@ -1,5 +1,5 @@
 // Copyright (c) HashiCorp, Inc.
-// SPDX-License-Identifier: MPL-2.0
+// SPDX-License-Identifier: BUSL-1.1
 
 // Package dynamic contains the HCL function, types, and logic for
 // implementing dynamic config sourcing HCL configuration. This

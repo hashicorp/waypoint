@@ -1,5 +1,5 @@
 // Copyright (c) HashiCorp, Inc.
-// SPDX-License-Identifier: MPL-2.0
+// SPDX-License-Identifier: BUSL-1.1
 
 // Package flag is a thin layer over the stdlib flag package that provides
 // some minimal features such as aliasing, autocompletion handling, improved

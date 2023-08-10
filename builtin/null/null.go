@@ -1,5 +1,5 @@
 // Copyright (c) HashiCorp, Inc.
-// SPDX-License-Identifier: MPL-2.0
+// SPDX-License-Identifier: BUSL-1.1
 
 // Package null contains components that do [almost] nothing, primarily aimed
 // to ease experimentation and testing with Waypoint. For example, the null
