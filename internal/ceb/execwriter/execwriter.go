@@ -1,5 +1,5 @@
 // Copyright (c) HashiCorp, Inc.
-// SPDX-License-Identifier: MPL-2.0
+// SPDX-License-Identifier: BUSL-1.1
 
 // Package execwriter contains helpers for writing "waypoint exec"
 // streams via an io.Writer. Data written to the io.Writer will be
