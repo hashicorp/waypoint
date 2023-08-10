@@ -178,8 +178,6 @@ func TestEvent(t *testing.T, factory Factory, restartF RestartFactory) {
 
 		require.NoError(s.EventPut(ctx, releaseEvent))
 
-		// TODO: Put add-on definition, add-on
-		// TODO: Destroy add-on
 		testAddOnDefinition := &pb.AddOnDefinition{
 			Name: "postgres",
 			TerraformNocodeModule: &pb.TerraformNocodeModule{
