@@ -236,6 +236,7 @@ type Interface interface {
 
 	AddOnPut(ctx context.Context, addOn *pb.AddOn) (*pb.AddOn, error)
 	AddOnGet(ctx context.Context, addOn *pb.Ref_AddOn) (*pb.AddOn, error)
+	AddOnUpdate(ctx context.Context, addOn *pb.AddOn, existingAddOn *pb.Ref_AddOn) (*pb.AddOn, error)
 	AddOnDelete(ctx context.Context, addOn *pb.Ref_AddOn) error
 	AddOnList(ctx context.Context, request *pb.ListAddOnsRequest) ([]*pb.AddOn, *pb.PaginationResponse, error)
 }
