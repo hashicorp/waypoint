@@ -13874,6 +13874,16 @@
       },
       "title": "UpdateAddOnDefinitionResponse is the response containing the just-updated\nAdd-on definition"
     },
+    "hashicorp.waypoint.UpdateAddOnResponse": {
+      "type": "object",
+      "properties": {
+        "add_on": {
+          "$ref": "#/definitions/hashicorp.waypoint.AddOn",
+          "description": "The newly updated Add-on."
+        }
+      },
+      "description": "UpdateAddOnResponse is the response containing the just-updated Add-on."
+    },
     "hashicorp.waypoint.UpdateProjectTemplateRequest": {
       "type": "object",
       "properties": {

@@ -519,11 +519,14 @@ service Waypoint {
   // CreateAddOn adds an Add-on to a project from an Add-on definition
   rpc CreateAddOn(CreateAddOnRequest) returns (CreateAddOnResponse);
 
-  // DestroyAddOn destroys an existing Add-on
-  rpc DestroyAddOn(DestroyAddOnRequest) returns (google.protobuf.Empty);
-
   // GetAddOn returns an existing Add-on
   rpc GetAddOn(GetAddOnRequest) returns (GetAddOnResponse);
+
+  // UpdateAddOn updates an existing Add-on
+  rpc UpdateAddOn(UpdateAddOnRequest) returns (UpdateAddOnResponse);
+
+  // DestroyAddOn destroys an existing Add-on
+  rpc DestroyAddOn(DestroyAddOnRequest) returns (google.protobuf.Empty);
 
   // ListAddOns returns all existing Add-ons
   rpc ListAddOns(ListAddOnsRequest) returns (ListAddOnsResponse);
@@ -5622,6 +5625,21 @@ message GetAddOnRequest {
 
 // GetAddOnResponse is the response containing the just-requested existing Add-on
 message GetAddOnResponse {
+  AddOn add_on = 1;
+}
+
+// UpdateAddOnRequest is the request used to update an existing Add-on.
+message UpdateAddOnRequest {
+  // The add-on to be updated.
+  Ref.AddOn add_on = 1;
+
+  // The new name of the Add-on.
+  string name = 2;
+}
+
+// UpdateAddOnResponse is the response containing the just-updated Add-on.
+message UpdateAddOnResponse {
+  // The newly updated Add-on.
   AddOn add_on = 1;
 }
 
