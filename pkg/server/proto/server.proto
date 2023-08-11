@@ -792,6 +792,9 @@ message UI {
 
     PaginationRequest pagination = 3;
     SortingRequest sorting = 4;
+
+    // Project that the events belong to
+    Ref.Project project = 5;
   }
 
   message ListEventsResponse {
@@ -812,7 +815,8 @@ message UI {
       BUILD = 0;
       DEPLOYMENT = 1;
       RELEASE = 2;
-      ADDON = 3;
+      ADDON_CREATED = 3;
+      ADDON_DESTROYED = 4;
     }
     //generic so looser contract for activity feed between backend and UI
   }
@@ -845,7 +849,12 @@ message UI {
     uint64 deployment_sequence = 6;
   }
 
-  message EventAddOn {
+  message EventAddOnCreated {
+    string add_on_id = 1;
+    string name = 2;
+  }
+
+  message EventAddOnDestroyed {
     string add_on_id = 1;
     string name = 2;
   }
@@ -862,7 +871,8 @@ message UI {
     UI.EventBuild event_build_schema = 1;
     UI.EventDeployment event_deployment_schema = 2;
     UI.EventRelease event_release_schema = 3;
-    UI.EventAddOn event_add_on_schema = 4;
+    UI.EventAddOnCreated event_add_on_created_schema = 4;
+    UI.EventAddOnDestroyed event_add_on_destroyed_schema = 5;
     //UI.EventPipelineRun event_pipeline_run_schema = 4;
   }
 }

@@ -32,6 +32,8 @@ func TestImpl(t *testing.T) {
 	// Tests for features that have not been implemented in OSS
 	unimplementedTests := []string{
 		"TestProjectTemplateFeatures",
+		"TestAddOnFeatures",
+		"TestAddOnPagination",
 	}
 
 	statetest.Test(t, func(t *testing.T) serverstate.Interface {

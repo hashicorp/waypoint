@@ -5,14 +5,17 @@ package statetest
 
 import (
 	"context"
+	"strings"
+	"testing"
+	"time"
+
+	"github.com/stretchr/testify/require"
+	"google.golang.org/protobuf/types/known/timestamppb"
+
 	"github.com/hashicorp/waypoint/internal/pkg/jsonpb"
 	pb "github.com/hashicorp/waypoint/pkg/server/gen"
 	serverptypes "github.com/hashicorp/waypoint/pkg/server/ptypes"
 	"github.com/hashicorp/waypoint/pkg/serverstate"
-	"github.com/stretchr/testify/require"
-	"google.golang.org/protobuf/types/known/timestamppb"
-	"testing"
-	"time"
 )
 
 func init() {
@@ -175,17 +178,116 @@ func TestEvent(t *testing.T, factory Factory, restartF RestartFactory) {
 
 		require.NoError(s.EventPut(ctx, releaseEvent))
 
+		testAddOnDefinition := &pb.AddOnDefinition{
+			Name: "postgres",
+			TerraformNocodeModule: &pb.TerraformNocodeModule{
+				Source:  "my/test/module",
+				Version: "0.0.1",
+			},
+			ShortSummary: "My short summary.",
+			LongSummary:  "My very long summary.",
+			ReadmeMarkdownTemplate: []byte(strings.TrimSpace(`
+My favorite add-on README.
+`)),
+			Tags: []string{
+				"tag",
+				"you're",
+				"it",
+			},
+			TfVariableSetIds: []string{
+				"varset1",
+				"varset2",
+			},
+		}
+		addOnDefinition, err := s.AddOnDefinitionPut(ctx, testAddOnDefinition)
+		require.NoError(err)
+		require.NotNil(addOnDefinition)
+
+		testAddOn := &pb.AddOn{
+			Name: refProj.Project + "-" + "postgres" + "-1",
+			Project: &pb.Ref_Project{
+				Project: refProj.Project,
+			},
+			Definition: &pb.Ref_AddOnDefinition{
+				Identifier: &pb.Ref_AddOnDefinition_Name{
+					Name: testAddOnDefinition.Name,
+				},
+			},
+			ShortSummary: "My super short summary.",
+			LongSummary:  "My super long summary.",
+			TerraformNocodeModule: &pb.TerraformNocodeModule{
+				Source:  "my/test/module",
+				Version: "0.0.2",
+			},
+			ReadmeMarkdown: []byte(strings.TrimSpace(`
+My favorite add-on README.
+`)), // this does NOT test any rendering
+			Tags: []string{
+				"tag",
+				"you're",
+				"it",
+			},
+			CreatedBy: "foo@bar.com",
+		}
+
+		addOn, err := s.AddOnPut(ctx, testAddOn)
+		require.NoError(err)
+		require.NotNil(addOn)
+
+		addOnCreatedDataSubset := &pb.UI_EventAddOnCreated{
+			AddOnId: addOn.Id,
+			Name:    addOn.Name,
+		}
+
+		var addOnCreatedBytes []byte
+		addOnCreatedBytes, err = jsonpb.Marshal(addOnCreatedDataSubset)
+		require.NoError(err)
+
+		addOnCreatedEvent := &serverstate.Event{
+			EventType:      "add_on_created",
+			Project:        refProj,
+			EventData:      addOnCreatedBytes,
+			EventTimestamp: time.Now(),
+		}
+
+		require.NoError(s.EventPut(ctx, addOnCreatedEvent))
+
+		require.NoError(s.AddOnDelete(ctx, &pb.Ref_AddOn{
+			Identifier: &pb.Ref_AddOn_Name{
+				Name: addOn.Name,
+			},
+		}))
+
+		addOnDestroyedDataSubset := &pb.UI_EventAddOnDestroyed{
+			AddOnId: addOn.Id,
+			Name:    addOn.Name,
+		}
+
+		var addOnDestroyedBytes []byte
+		addOnDestroyedBytes, err = jsonpb.Marshal(addOnDestroyedDataSubset)
+		require.NoError(err)
+
+		addOnDestroyedEvent := &serverstate.Event{
+			EventType:      "add_on_destroyed",
+			Project:        refProj,
+			EventData:      addOnDestroyedBytes,
+			EventTimestamp: time.Now(),
+		}
+
+		require.NoError(s.EventPut(ctx, addOnDestroyedEvent))
+
 		// check
 		resp, _, err := s.EventListBundles(ctx, &pb.UI_ListEventsRequest{
 			Application: refApp,
+			Project:     refProj,
 			Workspace:   ws,
 			Pagination: &pb.PaginationRequest{
-				PageSize:          3,
+				PageSize:          5,
 				NextPageToken:     "",
 				PreviousPageToken: "",
 			},
 		})
 		require.NoError(err)
-		require.Len(resp, 3)
+		require.Len(resp, 5)
 	})
 }

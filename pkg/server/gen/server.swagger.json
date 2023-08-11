@@ -7124,6 +7124,12 @@
               "type": "string"
             },
             "collectionFormat": "multi"
+          },
+          {
+            "name": "project.project",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -7284,6 +7290,12 @@
               "type": "string"
             },
             "collectionFormat": "multi"
+          },
+          {
+            "name": "project.project",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -13412,7 +13424,18 @@
       },
       "description": "A deployment packaged alongside prefetched related messages."
     },
-    "hashicorp.waypoint.UI.EventAddOn": {
+    "hashicorp.waypoint.UI.EventAddOnCreated": {
+      "type": "object",
+      "properties": {
+        "add_on_id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        }
+      }
+    },
+    "hashicorp.waypoint.UI.EventAddOnDestroyed": {
       "type": "object",
       "properties": {
         "add_on_id": {
@@ -13474,7 +13497,8 @@
         "BUILD",
         "DEPLOYMENT",
         "RELEASE",
-        "ADDON"
+        "ADDON_CREATED",
+        "ADDON_DESTROYED"
       ],
       "default": "BUILD",
       "title": "Supported EventTypes"
@@ -13591,8 +13615,11 @@
         "event_release_schema": {
           "$ref": "#/definitions/hashicorp.waypoint.UI.EventRelease"
         },
-        "event_add_on_schema": {
-          "$ref": "#/definitions/hashicorp.waypoint.UI.EventAddOn"
+        "event_add_on_created_schema": {
+          "$ref": "#/definitions/hashicorp.waypoint.UI.EventAddOnCreated"
+        },
+        "event_add_on_destroyed_schema": {
+          "$ref": "#/definitions/hashicorp.waypoint.UI.EventAddOnDestroyed"
         }
       },
       "title": "NOTE(Cassie): This should be implemented once pipeline_runs are app scoped\nmessage EventPipelineRun {\nstring pipelineRun_id = 1;\nuint64 sequence = 2;\n//    Component component = 3; //aka platform\n//    Ref.Workspace workspace = 4;\n}"
