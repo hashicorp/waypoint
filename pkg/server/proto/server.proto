@@ -613,7 +613,7 @@ message UI {
     repeated UI.PipelineBundle pipelines = 1;
     PaginationResponse pagination = 2;
   }
-  
+
   message ListPipelineRunsRequest {
     Ref.Pipeline pipeline = 1;
     PaginationRequest pagination = 2;
@@ -852,14 +852,15 @@ message UI {
     uint64 deployment_sequence = 6;
   }
 
-  message EventAddOnCreated {
+  message EventAddOn {
     string add_on_id = 1;
     string name = 2;
-  }
-
-  message EventAddOnDestroyed {
-    string add_on_id = 1;
-    string name = 2;
+    operation add_on_operation = 3;
+    enum operation {
+      CREATED = 0;
+      DESTROYED = 1;
+      MODIFIED = 2;
+    }
   }
 
 /* NOTE(Cassie): This should be implemented once pipeline_runs are app scoped
@@ -874,8 +875,7 @@ message UI {
     UI.EventBuild event_build_schema = 1;
     UI.EventDeployment event_deployment_schema = 2;
     UI.EventRelease event_release_schema = 3;
-    UI.EventAddOnCreated event_add_on_created_schema = 4;
-    UI.EventAddOnDestroyed event_add_on_destroyed_schema = 5;
+    UI.EventAddOn event_add_on_schema = 4;
     //UI.EventPipelineRun event_pipeline_run_schema = 4;
   }
 }

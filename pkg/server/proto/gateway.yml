@@ -587,11 +587,15 @@ http:
     post: /add-on
     body: "*"
 
-  - selector: hashicorp.waypoint.Waypoint.DestroyAddOn
-    delete: /add-on/{add_on.id}
-
   - selector: hashicorp.waypoint.Waypoint.GetAddOn
     get: /add-on/{add_on.id}
+
+  - selector: hashicorp.waypoint.Waypoint.UpdateAddOn
+    put: /add-on
+    body: "*"
+
+  - selector: hashicorp.waypoint.Waypoint.DestroyAddOn
+    delete: /add-on/{add_on.id}
 
   - selector: hashicorp.waypoint.Waypoint.ListAddOns
     get: /add-ons
