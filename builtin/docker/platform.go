@@ -722,7 +722,7 @@ func (p *Platform) pullImage(cli *client.Client, log hclog.Logger, ui terminal.U
 
 	var authBase64 = ""
 	//Check if auth configuration is not null
-	if (*p.config.Auth != Auth{}) {
+	if p.config.Auth != nil && *p.config.Auth != (Auth{}) {
 		auth := types.AuthConfig{
 			Username:      authConfig.Username,
 			Password:      authConfig.Password,

@@ -329,7 +329,7 @@ func (b *Builder) buildWithDocker(
 			return status.Errorf(codes.Internal, "unable to generate authentication info for registry: %s", err)
 		}
 		encodedAuth = base64.URLEncoding.EncodeToString(buf)
-	} else if *b.config.Auth != (docker.Auth{}) {
+	} else if b.config.Auth != nil && *b.config.Auth != (docker.Auth{}) {
 		//If EncodedAuth is not set, and Auth is, use Auth
 		authBytes, err := json.Marshal(types.AuthConfig{
 			Username:      authConfig.Username,
@@ -394,7 +394,7 @@ func (b *Builder) buildWithImg(
 	env := os.Environ()
 
 	//Check if auth configuration is not null
-	if (*b.config.Auth != docker.Auth{}) {
+	if b.config.Auth != nil && *b.config.Auth != (docker.Auth{}) {
 		auth, err := json.Marshal(types.AuthConfig{
 			Username:      authConfig.Username,
 			Password:      authConfig.Password,

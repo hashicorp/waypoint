@@ -115,7 +115,7 @@ func (r *Registry) pushWithDocker(
 			return status.Errorf(codes.Internal, "unable to generate authentication info for registry: %s", err)
 		}
 		encodedAuth = base64.URLEncoding.EncodeToString(buf)
-	} else if (*r.config.Auth != Auth{}) {
+	} else if r.config.Auth != nil && *r.config.Auth != (Auth{}) {
 		if authConfig.Hostname != "" {
 			return status.Errorf(codes.InvalidArgument, "hostname not supported for registry")
 		}
