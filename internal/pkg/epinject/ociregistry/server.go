@@ -175,7 +175,12 @@ func (s *Server) getClient(ctx context.Context, repoStr string) (*http.Client, e
 	// auth as well as the bearer token protocol used when the server returns WWW-Authenticate.
 	// Plus it's well tested.
 
-	repo, err := name.NewRepository(repoStr)
+	opts := []name.Option{}
+	if strings.HasPrefix(s.Upstream, "http://") {
+		opts = append(opts, name.Insecure)
+	}
+
+	repo, err := name.NewRepository(repoStr, opts...)
 	if err != nil {
 		return nil, err
 	}
