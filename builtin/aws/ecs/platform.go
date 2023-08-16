@@ -3307,6 +3307,11 @@ deploy {
 			)
 
 			doc.SetField(
+				"essential",
+				"If true, and the container stops for any reason, all other containers are stopped",
+			)
+
+			doc.SetField(
 				"static_environment",
 				"Environment variables to expose to this container",
 			)
