@@ -3,7 +3,7 @@ and wraps the existing image entrypoint with the Waypoint entrypoint.
 
 ### Components
 
-1. [Builder](/waypoint/integrations/hashicorp/docker/latest/components/builder/docker-pull-builder)
+1. [Builder](/waypoint/integrations/hashicorp/docker-pull/latest/components/builder/docker-pull-builder)
 
 ### Related Plugins
 
