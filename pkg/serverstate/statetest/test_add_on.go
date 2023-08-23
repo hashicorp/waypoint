@@ -231,6 +231,7 @@ My favorite add-on README.
 		)
 		require.NoError(err)
 		require.NotNil(updatedAddOn)
+		require.Equal(updatedAddOnName, updatedAddOn.Name)
 
 		err = s.AddOnDelete(ctx, &pb.Ref_AddOn{
 			Identifier: &pb.Ref_AddOn_Name{
