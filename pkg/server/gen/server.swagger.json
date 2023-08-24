@@ -42,6 +42,37 @@
         "tags": [
           "Waypoint"
         ]
+      },
+      "put": {
+        "summary": "UpdateAddOn updates an existing Add-on",
+        "operationId": "Waypoint_UpdateAddOn",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/hashicorp.waypoint.UpdateAddOnResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/grpc.gateway.runtime.Error"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/hashicorp.waypoint.UpdateAddOnRequest"
+            }
+          }
+        ],
+        "tags": [
+          "Waypoint"
+        ]
       }
     },
     "/add-on-definition": {
@@ -13424,7 +13455,7 @@
       },
       "description": "A deployment packaged alongside prefetched related messages."
     },
-    "hashicorp.waypoint.UI.EventAddOnCreated": {
+    "hashicorp.waypoint.UI.EventAddOn": {
       "type": "object",
       "properties": {
         "add_on_id": {
@@ -13432,19 +13463,20 @@
         },
         "name": {
           "type": "string"
+        },
+        "add_on_operation": {
+          "$ref": "#/definitions/hashicorp.waypoint.UI.EventAddOn.operation"
         }
       }
     },
-    "hashicorp.waypoint.UI.EventAddOnDestroyed": {
-      "type": "object",
-      "properties": {
-        "add_on_id": {
-          "type": "string"
-        },
-        "name": {
-          "type": "string"
-        }
-      }
+    "hashicorp.waypoint.UI.EventAddOn.operation": {
+      "type": "string",
+      "enum": [
+        "CREATED",
+        "DESTROYED",
+        "MODIFIED"
+      ],
+      "default": "CREATED"
     },
     "hashicorp.waypoint.UI.EventBuild": {
       "type": "object",
@@ -13615,11 +13647,8 @@
         "event_release_schema": {
           "$ref": "#/definitions/hashicorp.waypoint.UI.EventRelease"
         },
-        "event_add_on_created_schema": {
-          "$ref": "#/definitions/hashicorp.waypoint.UI.EventAddOnCreated"
-        },
-        "event_add_on_destroyed_schema": {
-          "$ref": "#/definitions/hashicorp.waypoint.UI.EventAddOnDestroyed"
+        "event_add_on_schema": {
+          "$ref": "#/definitions/hashicorp.waypoint.UI.EventAddOn"
         }
       },
       "title": "NOTE(Cassie): This should be implemented once pipeline_runs are app scoped\nmessage EventPipelineRun {\nstring pipelineRun_id = 1;\nuint64 sequence = 2;\n//    Component component = 3; //aka platform\n//    Ref.Workspace workspace = 4;\n}"
@@ -13873,6 +13902,30 @@
         }
       },
       "title": "UpdateAddOnDefinitionResponse is the response containing the just-updated\nAdd-on definition"
+    },
+    "hashicorp.waypoint.UpdateAddOnRequest": {
+      "type": "object",
+      "properties": {
+        "add_on": {
+          "$ref": "#/definitions/hashicorp.waypoint.Ref.AddOn",
+          "description": "The add-on to be updated."
+        },
+        "name": {
+          "type": "string",
+          "description": "The new name of the Add-on."
+        }
+      },
+      "description": "UpdateAddOnRequest is the request used to update an existing Add-on."
+    },
+    "hashicorp.waypoint.UpdateAddOnResponse": {
+      "type": "object",
+      "properties": {
+        "add_on": {
+          "$ref": "#/definitions/hashicorp.waypoint.AddOn",
+          "description": "The newly updated Add-on."
+        }
+      },
+      "description": "UpdateAddOnResponse is the response containing the just-updated Add-on."
     },
     "hashicorp.waypoint.UpdateProjectTemplateRequest": {
       "type": "object",

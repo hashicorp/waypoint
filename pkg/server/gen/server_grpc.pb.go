@@ -140,8 +140,9 @@ const (
 	Waypoint_UpdateAddOnDefinition_FullMethodName          = "/hashicorp.waypoint.Waypoint/UpdateAddOnDefinition"
 	Waypoint_DeleteAddOnDefinition_FullMethodName          = "/hashicorp.waypoint.Waypoint/DeleteAddOnDefinition"
 	Waypoint_CreateAddOn_FullMethodName                    = "/hashicorp.waypoint.Waypoint/CreateAddOn"
-	Waypoint_DestroyAddOn_FullMethodName                   = "/hashicorp.waypoint.Waypoint/DestroyAddOn"
 	Waypoint_GetAddOn_FullMethodName                       = "/hashicorp.waypoint.Waypoint/GetAddOn"
+	Waypoint_UpdateAddOn_FullMethodName                    = "/hashicorp.waypoint.Waypoint/UpdateAddOn"
+	Waypoint_DestroyAddOn_FullMethodName                   = "/hashicorp.waypoint.Waypoint/DestroyAddOn"
 	Waypoint_ListAddOns_FullMethodName                     = "/hashicorp.waypoint.Waypoint/ListAddOns"
 	Waypoint_GetTFRunStatus_FullMethodName                 = "/hashicorp.waypoint.Waypoint/GetTFRunStatus"
 	Waypoint_UI_ListProjects_FullMethodName                = "/hashicorp.waypoint.Waypoint/UI_ListProjects"
@@ -494,10 +495,12 @@ type WaypointClient interface {
 	DeleteAddOnDefinition(ctx context.Context, in *DeleteAddOnDefinitionRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	// CreateAddOn adds an Add-on to a project from an Add-on definition
 	CreateAddOn(ctx context.Context, in *CreateAddOnRequest, opts ...grpc.CallOption) (*CreateAddOnResponse, error)
-	// DestroyAddOn destroys an existing Add-on
-	DestroyAddOn(ctx context.Context, in *DestroyAddOnRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	// GetAddOn returns an existing Add-on
 	GetAddOn(ctx context.Context, in *GetAddOnRequest, opts ...grpc.CallOption) (*GetAddOnResponse, error)
+	// UpdateAddOn updates an existing Add-on
+	UpdateAddOn(ctx context.Context, in *UpdateAddOnRequest, opts ...grpc.CallOption) (*UpdateAddOnResponse, error)
+	// DestroyAddOn destroys an existing Add-on
+	DestroyAddOn(ctx context.Context, in *DestroyAddOnRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	// ListAddOns returns all existing Add-ons
 	ListAddOns(ctx context.Context, in *ListAddOnsRequest, opts ...grpc.CallOption) (*ListAddOnsResponse, error)
 	// GetTFRunStatus returns the status of the latest run of a Terraform
@@ -1816,18 +1819,27 @@ func (c *waypointClient) CreateAddOn(ctx context.Context, in *CreateAddOnRequest
 	return out, nil
 }
 
-func (c *waypointClient) DestroyAddOn(ctx context.Context, in *DestroyAddOnRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
-	out := new(emptypb.Empty)
-	err := c.cc.Invoke(ctx, Waypoint_DestroyAddOn_FullMethodName, in, out, opts...)
+func (c *waypointClient) GetAddOn(ctx context.Context, in *GetAddOnRequest, opts ...grpc.CallOption) (*GetAddOnResponse, error) {
+	out := new(GetAddOnResponse)
+	err := c.cc.Invoke(ctx, Waypoint_GetAddOn_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *waypointClient) GetAddOn(ctx context.Context, in *GetAddOnRequest, opts ...grpc.CallOption) (*GetAddOnResponse, error) {
-	out := new(GetAddOnResponse)
-	err := c.cc.Invoke(ctx, Waypoint_GetAddOn_FullMethodName, in, out, opts...)
+func (c *waypointClient) UpdateAddOn(ctx context.Context, in *UpdateAddOnRequest, opts ...grpc.CallOption) (*UpdateAddOnResponse, error) {
+	out := new(UpdateAddOnResponse)
+	err := c.cc.Invoke(ctx, Waypoint_UpdateAddOn_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *waypointClient) DestroyAddOn(ctx context.Context, in *DestroyAddOnRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, Waypoint_DestroyAddOn_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -2280,10 +2292,12 @@ type WaypointServer interface {
 	DeleteAddOnDefinition(context.Context, *DeleteAddOnDefinitionRequest) (*emptypb.Empty, error)
 	// CreateAddOn adds an Add-on to a project from an Add-on definition
 	CreateAddOn(context.Context, *CreateAddOnRequest) (*CreateAddOnResponse, error)
-	// DestroyAddOn destroys an existing Add-on
-	DestroyAddOn(context.Context, *DestroyAddOnRequest) (*emptypb.Empty, error)
 	// GetAddOn returns an existing Add-on
 	GetAddOn(context.Context, *GetAddOnRequest) (*GetAddOnResponse, error)
+	// UpdateAddOn updates an existing Add-on
+	UpdateAddOn(context.Context, *UpdateAddOnRequest) (*UpdateAddOnResponse, error)
+	// DestroyAddOn destroys an existing Add-on
+	DestroyAddOn(context.Context, *DestroyAddOnRequest) (*emptypb.Empty, error)
 	// ListAddOns returns all existing Add-ons
 	ListAddOns(context.Context, *ListAddOnsRequest) (*ListAddOnsResponse, error)
 	// GetTFRunStatus returns the status of the latest run of a Terraform
@@ -2667,11 +2681,14 @@ func (UnimplementedWaypointServer) DeleteAddOnDefinition(context.Context, *Delet
 func (UnimplementedWaypointServer) CreateAddOn(context.Context, *CreateAddOnRequest) (*CreateAddOnResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateAddOn not implemented")
 }
-func (UnimplementedWaypointServer) DestroyAddOn(context.Context, *DestroyAddOnRequest) (*emptypb.Empty, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method DestroyAddOn not implemented")
-}
 func (UnimplementedWaypointServer) GetAddOn(context.Context, *GetAddOnRequest) (*GetAddOnResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetAddOn not implemented")
+}
+func (UnimplementedWaypointServer) UpdateAddOn(context.Context, *UpdateAddOnRequest) (*UpdateAddOnResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateAddOn not implemented")
+}
+func (UnimplementedWaypointServer) DestroyAddOn(context.Context, *DestroyAddOnRequest) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DestroyAddOn not implemented")
 }
 func (UnimplementedWaypointServer) ListAddOns(context.Context, *ListAddOnsRequest) (*ListAddOnsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListAddOns not implemented")
@@ -4888,24 +4905,6 @@ func _Waypoint_CreateAddOn_Handler(srv interface{}, ctx context.Context, dec fun
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Waypoint_DestroyAddOn_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DestroyAddOnRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(WaypointServer).DestroyAddOn(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Waypoint_DestroyAddOn_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(WaypointServer).DestroyAddOn(ctx, req.(*DestroyAddOnRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _Waypoint_GetAddOn_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GetAddOnRequest)
 	if err := dec(in); err != nil {
@@ -4920,6 +4919,42 @@ func _Waypoint_GetAddOn_Handler(srv interface{}, ctx context.Context, dec func(i
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(WaypointServer).GetAddOn(ctx, req.(*GetAddOnRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Waypoint_UpdateAddOn_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateAddOnRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(WaypointServer).UpdateAddOn(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Waypoint_UpdateAddOn_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(WaypointServer).UpdateAddOn(ctx, req.(*UpdateAddOnRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Waypoint_DestroyAddOn_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DestroyAddOnRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(WaypointServer).DestroyAddOn(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Waypoint_DestroyAddOn_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(WaypointServer).DestroyAddOn(ctx, req.(*DestroyAddOnRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -5576,12 +5611,16 @@ var Waypoint_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Waypoint_CreateAddOn_Handler,
 		},
 		{
-			MethodName: "DestroyAddOn",
-			Handler:    _Waypoint_DestroyAddOn_Handler,
-		},
-		{
 			MethodName: "GetAddOn",
 			Handler:    _Waypoint_GetAddOn_Handler,
+		},
+		{
+			MethodName: "UpdateAddOn",
+			Handler:    _Waypoint_UpdateAddOn_Handler,
+		},
+		{
+			MethodName: "DestroyAddOn",
+			Handler:    _Waypoint_DestroyAddOn_Handler,
 		},
 		{
 			MethodName: "ListAddOns",

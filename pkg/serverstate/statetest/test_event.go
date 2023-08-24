@@ -204,7 +204,7 @@ My favorite add-on README.
 		require.NotNil(addOnDefinition)
 
 		testAddOn := &pb.AddOn{
-			Name: refProj.Project + "-" + "postgres" + "-1",
+			Name: "your friendly neighborhood add-on",
 			Project: &pb.Ref_Project{
 				Project: refProj.Project,
 			},
@@ -230,13 +230,15 @@ My favorite add-on README.
 			CreatedBy: "foo@bar.com",
 		}
 
+		// Create Add-on
 		addOn, err := s.AddOnPut(ctx, testAddOn)
 		require.NoError(err)
 		require.NotNil(addOn)
 
-		addOnCreatedDataSubset := &pb.UI_EventAddOnCreated{
-			AddOnId: addOn.Id,
-			Name:    addOn.Name,
+		addOnCreatedDataSubset := &pb.UI_EventAddOn{
+			AddOnId:        addOn.Id,
+			Name:           addOn.Name,
+			AddOnOperation: 0,
 		}
 
 		var addOnCreatedBytes []byte
@@ -252,15 +254,49 @@ My favorite add-on README.
 
 		require.NoError(s.EventPut(ctx, addOnCreatedEvent))
 
+		// Update Add-on
+		updatedAddOn, err := s.AddOnUpdate(ctx,
+			&pb.AddOn{
+				Name: "your friendly updated neighborhood add-on",
+			},
+			&pb.Ref_AddOn{
+				Identifier: &pb.Ref_AddOn_Name{
+					Name: testAddOn.Name,
+				},
+			},
+		)
+		require.NoError(err)
+		require.NotNil(updatedAddOn)
+
+		addOnUpdatedDataSubset := &pb.UI_EventAddOn{
+			AddOnId:        addOn.Id,
+			Name:           addOn.Name,
+			AddOnOperation: 2,
+		}
+		var addOnUpdatedBytes []byte
+		addOnUpdatedBytes, err = jsonpb.Marshal(addOnUpdatedDataSubset)
+		require.NoError(err)
+
+		addOnUpdatedEvent := &serverstate.Event{
+			EventType:      "add_on_updated",
+			Project:        refProj,
+			EventData:      addOnUpdatedBytes,
+			EventTimestamp: time.Now(),
+		}
+
+		require.NoError(s.EventPut(ctx, addOnUpdatedEvent))
+
+		// Destroy Add-on
 		require.NoError(s.AddOnDelete(ctx, &pb.Ref_AddOn{
 			Identifier: &pb.Ref_AddOn_Name{
 				Name: addOn.Name,
 			},
 		}))
 
-		addOnDestroyedDataSubset := &pb.UI_EventAddOnDestroyed{
-			AddOnId: addOn.Id,
-			Name:    addOn.Name,
+		addOnDestroyedDataSubset := &pb.UI_EventAddOn{
+			AddOnId:        addOn.Id,
+			Name:           addOn.Name,
+			AddOnOperation: 1,
 		}
 
 		var addOnDestroyedBytes []byte

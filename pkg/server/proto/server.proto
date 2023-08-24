@@ -519,11 +519,14 @@ service Waypoint {
   // CreateAddOn adds an Add-on to a project from an Add-on definition
   rpc CreateAddOn(CreateAddOnRequest) returns (CreateAddOnResponse);
 
-  // DestroyAddOn destroys an existing Add-on
-  rpc DestroyAddOn(DestroyAddOnRequest) returns (google.protobuf.Empty);
-
   // GetAddOn returns an existing Add-on
   rpc GetAddOn(GetAddOnRequest) returns (GetAddOnResponse);
+
+  // UpdateAddOn updates an existing Add-on
+  rpc UpdateAddOn(UpdateAddOnRequest) returns (UpdateAddOnResponse);
+
+  // DestroyAddOn destroys an existing Add-on
+  rpc DestroyAddOn(DestroyAddOnRequest) returns (google.protobuf.Empty);
 
   // ListAddOns returns all existing Add-ons
   rpc ListAddOns(ListAddOnsRequest) returns (ListAddOnsResponse);
@@ -610,7 +613,7 @@ message UI {
     repeated UI.PipelineBundle pipelines = 1;
     PaginationResponse pagination = 2;
   }
-  
+
   message ListPipelineRunsRequest {
     Ref.Pipeline pipeline = 1;
     PaginationRequest pagination = 2;
@@ -849,14 +852,15 @@ message UI {
     uint64 deployment_sequence = 6;
   }
 
-  message EventAddOnCreated {
+  message EventAddOn {
     string add_on_id = 1;
     string name = 2;
-  }
-
-  message EventAddOnDestroyed {
-    string add_on_id = 1;
-    string name = 2;
+    operation add_on_operation = 3;
+    enum operation {
+      CREATED = 0;
+      DESTROYED = 1;
+      MODIFIED = 2;
+    }
   }
 
 /* NOTE(Cassie): This should be implemented once pipeline_runs are app scoped
@@ -871,8 +875,7 @@ message UI {
     UI.EventBuild event_build_schema = 1;
     UI.EventDeployment event_deployment_schema = 2;
     UI.EventRelease event_release_schema = 3;
-    UI.EventAddOnCreated event_add_on_created_schema = 4;
-    UI.EventAddOnDestroyed event_add_on_destroyed_schema = 5;
+    UI.EventAddOn event_add_on_schema = 4;
     //UI.EventPipelineRun event_pipeline_run_schema = 4;
   }
 }
@@ -5622,6 +5625,21 @@ message GetAddOnRequest {
 
 // GetAddOnResponse is the response containing the just-requested existing Add-on
 message GetAddOnResponse {
+  AddOn add_on = 1;
+}
+
+// UpdateAddOnRequest is the request used to update an existing Add-on.
+message UpdateAddOnRequest {
+  // The add-on to be updated.
+  Ref.AddOn add_on = 1;
+
+  // The new name of the Add-on.
+  string name = 2;
+}
+
+// UpdateAddOnResponse is the response containing the just-updated Add-on.
+message UpdateAddOnResponse {
+  // The newly updated Add-on.
   AddOn add_on = 1;
 }
 

@@ -190,7 +190,7 @@ My favorite add-on README.
 		CreatedBy:      "foo@bar.com",
 	}
 
-	t.Run("Create, get, and delete Add-on", func(t *testing.T) {
+	t.Run("Create, get, update, and delete Add-on", func(t *testing.T) {
 		// Create an add-on definition
 		addOnDefinition, err := s.AddOnDefinitionPut(ctx, testAddOnDefinition)
 		require.NoError(err)
@@ -218,9 +218,24 @@ My favorite add-on README.
 		require.Equal(testAddOn.TerraformNocodeModule.Source, actualAddOn.TerraformNocodeModule.Source)
 		require.Equal(testAddOn.TerraformNocodeModule.Version, actualAddOn.TerraformNocodeModule.Version)
 
+		updatedAddOnName := "your updated friendly neighborhood add-on"
+		updatedAddOn, err := s.AddOnUpdate(ctx,
+			&pb.AddOn{
+				Name: updatedAddOnName,
+			},
+			&pb.Ref_AddOn{
+				Identifier: &pb.Ref_AddOn_Name{
+					Name: testAddOn.Name,
+				},
+			},
+		)
+		require.NoError(err)
+		require.NotNil(updatedAddOn)
+		require.Equal(updatedAddOnName, updatedAddOn.Name)
+
 		err = s.AddOnDelete(ctx, &pb.Ref_AddOn{
 			Identifier: &pb.Ref_AddOn_Name{
-				Name: testAddOn.Name,
+				Name: updatedAddOnName,
 			},
 		})
 		require.NoError(err)
@@ -228,7 +243,7 @@ My favorite add-on README.
 		// Verify Add-On is deleted
 		actualAddOn, err = s.AddOnGet(ctx, &pb.Ref_AddOn{
 			Identifier: &pb.Ref_AddOn_Name{
-				Name: testAddOn.Name,
+				Name: updatedAddOnName,
 			},
 		})
 		// expecting a not found error

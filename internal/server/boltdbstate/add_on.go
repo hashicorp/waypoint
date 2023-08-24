@@ -36,7 +36,7 @@ func (s *State) AddOnPut(ctx context.Context, addOn *pb.AddOn) (*pb.AddOn, error
 	return nil, status.Errorf(codes.Unimplemented, "Add On Unimplemented")
 }
 
-func (s *State) AddOnUpdate(ctx context.Context, addOn *pb.AddOn) (*pb.AddOn, error) {
+func (s *State) AddOnUpdate(ctx context.Context, addOn *pb.AddOn, existingAddOn *pb.Ref_AddOn) (*pb.AddOn, error) {
 	return nil, status.Errorf(codes.Unimplemented, "Add On Unimplemented")
 }
 
