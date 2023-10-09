@@ -6,6 +6,11 @@ IMPROVEMENTS:
 
 BUG FIXES:
 
+## October 11, 2023
+
+Waypoint Free Community product is no longer actively maintained. For additional information on the new vision of Waypoint, check out [this blog post](https://www.hashicorp.com/blog/a-new-vision-for-hcp-waypoint) and the [HCP Waypoint documentation](https://developer.hashicorp.com/hcp/docs/waypoint).
+
+
 ## 0.11.4 (August 9, 2023)
 
 IMPROVEMENTS:
