@@ -1,0 +1,173 @@
+---
+layout: docs
+page_title: Destroy the Deployment
+description: Remove your application deployment and clean up your workspace.
+---
+
+<Warning>
+
+This content is part of the legacy version of Waypoint that is no longer actively maintained. For additional information on the new vision of Waypoint, check out [this blog post](https://www.hashicorp.com/blog/a-new-vision-for-hcp-waypoint) and the [HCP Waypoint documentation](/hcp/docs/waypoint).
+
+</Warning>
+
+# Destroy the Deployment
+
+When you are ready to clean up, you can destroy the application in Waypoint and then uninstall the Waypoint components.
+
+## Destroy the application
+
+Remove your application from the cluster by running the `waypoint destroy` command. Respond `yes` when prompted to confirm the operation. This will destroy any active deployments and releases.
+
+```shell-session
+$ waypoint destroy
+Do you really want to destroy all resources for this app?
+Only 'yes' will be accepted to approve: yes
+```
+
+Waypoint will start the process and output the following.
+
+<CodeBlockConfig hideClipboard>
+
+```shell-session
+» Performing operation locally
+
+» Destroying releases for application 'example-nodejs'...
+✓ Running release destroy v2
+✓ Running release destroy v1
+
+» Destroying deployments for application 'example-nodejs'...
+✓ Running deployment destroy v2
+✓ Deleting container: af1753fbcb68a7cfa9d61a14bc4427b32ae13a3ba7b7040d648898e9a8300f9e
+✓ Running deployment destroy v1
+✓ Deleting container: 141b40f5fb82d5b92e12a660680e37fee38b300650a492fbf53ca88ab6df67b0
+Destroy successful!
+```
+
+</CodeBlockConfig>
+
+## Uninstall Waypoint
+
+<Tabs>
+
+<Tab heading="HCP Waypoint" group="hcp">
+
+There are no components to uninstall if you use HCP Waypoint.
+
+### Deactivate HCP Waypoint
+
+Deactivating HCP Waypoint is an optional step that disables Waypoint for your HCP project. This will not delete any runners or images that have been pushed to a registry.
+
+Click the **Manage** button on the top right of the page, and then click on the **Deactivate Waypoint** option.
+
+![HCP Waypoint UI with the Deactivate Waypoint button highlighted](/img/tutorials/get-started/hcp-ui-waypoint-deactivate.jpg)
+
+A dialog appears confirming that you want to deactivate Waypoint. Type `DEACTIVATE` in the field and click on the **Deactivate** button.
+
+![HCP Waypoint UI with the Deactivate Waypoint dialog present and Deactivate button highlighted](/img/tutorials/get-started/hcp-ui-waypoint-deactivate-confirmation.jpg)
+
+Another dialog appears to confirm that Waypoint has been deactivated.
+
+![HCP Waypoint UI a dialog showing that Waypoint has been deactivated](/img/tutorials/get-started/hcp-ui-waypoint-deactivation-complete.jpg)
+
+You can re-enable Waypoint by clicking on the **Activate Waypoint** button in the top right of the page.
+
+</Tab>
+
+<Tab heading="Local" group="local">
+
+Uninstall the server and client components. Respond `yes` when prompted to confirm the operation.
+
+Be sure to update the `--platform` flag value to match the platform where Waypoint is running. In this example, the platform is `docker`.
+
+```shell-session
+$ waypoint server uninstall --platform=docker            
+Do you really want to uninstall the Waypoint server? Only 'yes' will be accepted to approve: yes
+
+Uninstalling Waypoint server on platform "docker" with context "install-1684337734"
+✓ Snapshot "waypoint-server-snapshot-1684338267" generated
+
+✓ Waypoint Runner uninstalled
+✓ Docker container "waypoint-server" removed
+✓ Docker volume "waypoint-server" removed
+✓ Docker image "docker.io/hashicorp/waypoint" removed
+
+Waypoint server successfully uninstalled for docker platform
+```
+
+</Tab>
+
+</Tabs>
+
+## Optional Nomad cleanup
+
+If you were following the Nomad get started tutorial, you can now stop or destroy your cluster.
+
+<Tabs>
+
+<Tab heading="Local" group="local">
+
+Stop the Nomad cluster process in your terminal with `CTRL-C`.
+
+</Tab>
+
+<Tab heading="Cloud" group="cloud">
+
+Navigate back to your terminal session that contains the Terraform code for the cluster creation.
+
+Change to the appropriate cloud directory within the `nomad-cloud` directory.
+
+<Tabs>
+
+<Tab heading="AWS" group="aws">
+
+```shell-session
+$ cd ../aws
+```
+
+</Tab>
+
+<Tab heading="GCP" group="gcp">
+
+```shell-session
+$ cd ../gcp
+```
+
+</Tab>
+
+<Tab heading="Azure" group="azure">
+
+```shell-session
+$ cd ../azure
+```
+
+</Tab>
+
+</Tabs>
+
+Destroy the provisioned infrastructure. Respond `yes` to the prompt to confirm the operation.
+
+```shell-session
+$ terraform destroy
+# ...
+
+Destroy complete! Resources: 15 destroyed.
+```
+
+</Tab>
+
+</Tabs>
+
+## Next steps
+
+In this tutorial you learned how to destroy your application in Waypoint and uninstall Waypoint from your infrastructure.
+
+In this collection of tutorials you learned about the Waypoint workflow, installed Waypoint, initialized an application, built, deployed, released, and updated the application, destroyed the application, and uninstalled Waypoint.
+
+Continue your learning with the tutorials and documentation below.
+
+- Learn how to deploy an app to [AWS ECS](/waypoint/tutorials/deploy-aws/aws-ecs), [Azure Container Instance](/waypoint/tutorials/deploy-azure/azure-container-instance), and [Google Cloud Run](/waypoint/tutorials/deploy-google-cloud/google-cloud-run)
+- [Learn more about the `waypoint.hcl` file](/waypoint/docs/waypoint-hcl)
+- [Learn about Waypoint runner](/waypoint/docs/runner)
+- [Review the Waypoint CLI commands](/waypoint/commands)
+- [Read about the available plugins](/waypoint/integrations)
+- [View the troubleshooting guide](/waypoint/docs/troubleshooting)

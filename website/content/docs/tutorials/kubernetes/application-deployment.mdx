@@ -1,0 +1,1129 @@
+---
+layout: docs
+page_title: Deploy a Helm-based application automatically with GitOps
+description: >-
+  Deploy a Helm-based application to a Kubernetes cluster with Waypoint and GitOps. Connect your Git repository and have Waypoint automatically run when changes are pushed to the repository.
+---
+
+<Warning>
+
+This content is part of the legacy version of Waypoint that is no longer actively maintained. For additional information on the new vision of Waypoint, check out [this blog post](https://www.hashicorp.com/blog/a-new-vision-for-hcp-waypoint) and the [HCP Waypoint documentation](/hcp/docs/waypoint).
+
+</Warning>
+
+# Deploy a Helm-based application automatically with GitOps
+
+Kubernetes is a widely adopted platform for running containerized workloads which has become a standard in the industry. Operations teams that maintain a cluster of their own know that the orchestration functionality that Kubernetes provides means that once applications are deployed, they are reliable, highly available, and can be updated or rolled back without downtime.
+
+However, deploying applications to the cluster can be a difficult process, often involving the authoring of many manifest files depending on the complexity of the application. [Helm](https://helm.sh/) is a tool that helps teams manage these manifest files with either pre-made templates for deploying common applications or the ability to craft their own custom template.
+
+Users then deploy these templates with Helm from their local machines or a centralized continuous integration and deployment server. The local deployment scenario involves several manual steps while the CI server scenario is automatic but involves setting up and configuring the CI tool before the Helm application can be deployed at all.
+
+Waypoint helps simplify the deployment process with its [Helm plugin](/waypoint/plugins/helm) and does so automatically with its [Git integration](/waypoint/docs/projects/git) and [GitOps](https://www.gitops.tech/#what-is-gitops). Waypoint polls the Git repository for changes and performs the steps present in the `waypoint.hcl` file, including build, deploy, and release processes.
+
+In this tutorial, you will install Waypoint into an existing Kubernetes cluster, integrate a Git repository containing a Helm-based application with a Waypoint project, and have Waypoint deploy that application to the Kubernetes cluster with the Waypoint Helm plugin.
+
+## Prerequisites
+
+For this tutorial, you will need:
+
+- [Waypoint 0.6](/waypoint/downloads/) or later installed locally
+- An account on a hosted Git provider site (GitHub, GitLab, Bitbucket, etc.) and [Git](https://git-scm.com/downloads) installed locally
+- A running Kubernetes cluster (cloud-based or local)
+  - Learn guides for provisioning a cluster exist for [AWS](/terraform/tutorials/kubernetes/eks), [Azure](/terraform/tutorials/kubernetes/aks), and [Google Cloud](/terraform/tutorials/kubernetes/gke)
+  - Local cluster running with [minikube](https://minikube.sigs.k8s.io/docs/start/), [Kubernetes for Docker Desktop](https://docs.docker.com/desktop/kubernetes/), [kind](https://kind.sigs.k8s.io/), etc.
+- [Kubectl](https://kubernetes.io/docs/tasks/tools/#kubectl) installed locally and a [kubeconfig file](https://kubernetes.io/docs/concepts/configuration/organize-cluster-access-kubeconfig/) with access configured for the cluster above
+
+## Install the Waypoint Server to Kubernetes
+
+The Waypoint server is [officially supported](/waypoint/docs/server/install#officially-supported-server-platforms) to run on Kubernetes, Nomad, Amazon ECS, and Docker. The `waypoint install` command for Kubernetes creates the necessary Waypoint server resources, including a _Service_, _Statefulset_, _Deployment_, and _Replicaset_. The Waypoint server and its runner are set up by default to run as two separate pods. To learn more about runners visit the Waypoint runners [documentation page](/waypoint/docs/runner).
+
+First, make sure that `kubectl` is configured to interact with your Kubernetes cluster by viewing the cluster information, checking the kubeconfig, and getting the nodes.
+
+<Tabs>
+<Tab heading="minikube" group="minikube">
+
+
+```shell-session
+$ kubectl cluster-info
+Kubernetes control plane is running at https://127.0.0.1:50298
+CoreDNS is running at https://127.0.0.1:50298/api/v1/namespaces/kube-system/services/kube-dns:dns/proxy
+
+To further debug and diagnose cluster problems, use 'kubectl cluster-info dump'.
+```
+
+```shell-session
+$ kubectl config view
+apiVersion: v1
+clusters:
+- cluster:
+    certificate-authority: /Users/arusso/.minikube/ca.crt
+    extensions:
+    ##...
+      name: cluster_info
+    server: https://127.0.0.1:50878
+  name: minikube
+contexts:
+- context:
+    cluster: minikube
+    extensions:
+    ##...
+      name: context_info
+    namespace: default
+    user: minikube
+  name: minikube
+current-context: minikube
+kind: Config
+preferences: {}
+users:
+- name: minikube
+  user:
+    client-certificate: /Users/arusso/.minikube/profiles/minikube/client.crt
+    client-key: /Users/arusso/.minikube/profiles/minikube/client.key
+```
+
+```shell-session
+$ kubectl get nodes
+NAME       STATUS   ROLES                  AGE     VERSION
+minikube   Ready    control-plane,master   9m51s   v1.22.2
+```
+
+</Tab>
+<Tab heading="Docker Desktop" group="dockerdesktop">
+
+
+```shell-session
+$ kubectl cluster-info
+Kubernetes control plane is running at https://kubernetes.docker.internal:6443
+CoreDNS is running at https://kubernetes.docker.internal:6443/api/v1/namespaces/kube-system/services/kube-dns:dns/proxy
+
+To further debug and diagnose cluster problems, use 'kubectl cluster-info dump'.
+```
+
+```shell-session
+$ kubectl config view
+apiVersion: v1
+clusters:
+- cluster:
+    certificate-authority-data: DATA+OMITTED
+    server: https://kubernetes.docker.internal:6443
+  name: docker-desktop
+contexts:
+- context:
+    cluster: docker-desktop
+    user: docker-desktop
+  name: docker-desktop
+current-context: docker-desktop
+kind: Config
+preferences: {}
+users:
+- name: docker-desktop
+  user:
+    client-certificate-data: REDACTED
+    client-key-data: REDACTED
+```
+
+```shell-session
+$ kubectl get nodes
+NAME             STATUS   ROLES                  AGE   VERSION
+docker-desktop   Ready    control-plane,master   25m   v1.21.3
+```
+
+</Tab>
+<Tab heading="EKS" group="eks">
+
+
+```shell-session
+$ kubectl cluster-info
+Kubernetes control plane is running at https://841B7B6621C8FC0BF832A5E9BCB54F55.gr7.us-east-2.eks.amazonaws.com
+CoreDNS is running at https://841B7B6621C8FC0BF832A5E9BCB54F55.gr7.us-east-2.eks.amazonaws.com/api/v1/namespaces/kube-system/services/kube-dns:dns/proxy
+
+To further debug and diagnose cluster problems, use 'kubectl cluster-info dump'.
+```
+
+```shell-session
+$ kubectl config view
+apiVersion: v1
+clusters:
+- cluster:
+    certificate-authority-data: DATA+OMITTED
+    server: https://841B7B6621C8FC0BF832A5E9BCB54F55.gr7.us-east-2.eks.amazonaws.com
+  name: arn:aws:eks:us-east-2:561656980159:cluster/education-eks-CUOcFr9H
+contexts:
+- context:
+    cluster: arn:aws:eks:us-east-2:561656980159:cluster/education-eks-CUOcFr9H
+    user: arn:aws:eks:us-east-2:561656980159:cluster/education-eks-CUOcFr9H
+  name: arn:aws:eks:us-east-2:561656980159:cluster/education-eks-CUOcFr9H
+current-context: arn:aws:eks:us-east-2:561656980159:cluster/education-eks-CUOcFr9H
+kind: Config
+preferences: {}
+users:
+- name: arn:aws:eks:us-east-2:561656980159:cluster/education-eks-CUOcFr9H
+  user:
+    exec:
+      apiVersion: client.authentication.k8s.io/v1alpha1
+      args:
+      - --region
+      - us-east-2
+      - eks
+      - get-token
+      - --cluster-name
+      - education-eks-CUOcFr9H
+      command: aws
+      env: null
+      provideClusterInfo: false
+```
+
+```shell-session
+$ kubectl get nodes
+NAME                                       STATUS   ROLES    AGE   VERSION
+ip-10-0-3-118.us-east-2.compute.internal   Ready    <none>   19m   v1.20.11-eks-f17b81
+```
+
+</Tab>
+</Tabs>
+
+
+Then, install the Waypoint server.
+
+<Tip>
+
+ Waypoint can also be installed with the official Waypoint Helm chart as outlined [here](/waypoint/docs/kubernetes/install#installing-the-waypoint-server-with-helm) but this tutorial uses the `waypoint server install` command as it doesn't require Helm to be installed locally.
+
+</Tip>
+
+<Tabs>
+<Tab heading="minikube" group="minikube">
+
+
+Waypoint creates a _LoadBalancer_ resource as part of the Kubernetes install process. In order to complete this process in the minikube cluster, you must have a tunnel running in the background. This exposes the cluster and makes it available to any other services running on your local machine.
+
+In a separate terminal session, start the [minikube tunnel](https://minikube.sigs.k8s.io/docs/handbook/accessing/#using-minikube-tunnel) and enter your computer’s password when prompted. Do not close this session.
+
+```shell-session
+$ minikube tunnel
+```
+
+Navigate back to the original terminal session and run the install command. The [`-k8s-advertise-internal` flag](/waypoint/commands/install#k8s-advertise-internal) is required as there is no external address associated with the cluster. The [`-accept-tos` flag](/waypoint/commands/install#accept-tos) is to accept the Terms of Service and Privacy Policy of the [Waypoint URL Service](/waypoint/docs/url).
+
+```shell-session
+$ waypoint server install -platform=kubernetes -accept-tos -k8s-advertise-internal
+✓ Gathering information about the Kubernetes cluster...
+⠙ Initializing role bindings for on-demand runner...W1115 14:46:38.111812   29394 warnings.go:70] spec.template.spec.imagePullSecrets[0✓ Gathering information about the Kubernetes cluster...
+✓ Service account for on-demand runner initialized!
+✓ Creating Kubernetes resources...
+✓ Kubernetes StatefulSet reporting ready
+✓ Gathering information about the Kubernetes cluster...
+✓ Service account for on-demand runner initialized!
+✓ Creating Kubernetes resources...
+✓ Kubernetes StatefulSet reporting ready
+✓ Service "waypoint" is ready
+✓ Server installed and configured!
+✓ Installing runner...
+✓ Registered ondemand runner!
+✓ Creating Deployment for Runner
+✓ Kubernetes Deployment for Waypoint runner reporting ready
+Waypoint server successfully installed and configured!
+
+The CLI has been configured to connect to the server automatically. This
+connection information is saved in the CLI context named "install-1637005597".
+Use the "waypoint context" CLI to manage CLI contexts.
+
+The server has been configured to advertise the following address for
+entrypoint communications. This must be a reachable address for all your
+deployments. If this is incorrect, manually set it using the CLI command
+"waypoint server config-set".
+
+To launch and authenticate into the Web UI, run:
+waypoint ui -authenticate
+
+Advertise Address: waypoint:9701
+Web UI Address: https://127.0.0.1:9702
+```
+
+Authenticate with the Waypoint UI. This will open the web UI in your browser.
+
+```shell-session
+$ waypoint ui -authenticate
+» Creating invite token
+This invite token will be exchanged for an authentication
+token that your browser stores.
+
+» Opening browser
+```
+
+Your browser will prompt you that the connection is not private since Waypoint is using a self-signed certificate. Click through the warning page to proceed to the UI.
+
+</Tab>
+<Tab heading="Docker Desktop" group="dockerdesktop">
+
+
+Run the install command. The [`-k8s-advertise-internal` flag](/waypoint/commands/install#k8s-advertise-internal) is required as there is no external address associated with the cluster. The [`-accept-tos` flag](/waypoint/commands/install#accept-tos) is to accept the Terms of Service and Privacy Policy of the [Waypoint URL Service](/waypoint/docs/url).
+
+```shell-session
+$ waypoint server install -platform=kubernetes -accept-tos -k8s-advertise-internal
+✓ Gathering information about the Kubernetes cluster...
+✓ Service account for on-demand runner initialized!
+✓ Creating Kubernetes resources...
+✓ Kubernetes StatefulSet reporting ready
+✓ Service "waypoint" is ready
+✓ Server installed and configured!
+✓ Installing runner...
+✓ Registered ondemand runner!
+✓ Creating Deployment for Runner
+✓ Kubernetes Deployment for Waypoint runner reporting ready
+Waypoint server successfully installed and configured!
+
+The CLI has been configured to connect to the server automatically. This
+connection information is saved in the CLI context named "install-1637244735".
+Use the "waypoint context" CLI to manage CLI contexts.
+
+The server has been configured to advertise the following address for
+entrypoint communications. This must be a reachable address for all your
+deployments. If this is incorrect, manually set it using the CLI command
+"waypoint server config-set".
+
+To launch and authenticate into the Web UI, run:
+waypoint ui -authenticate
+
+Advertise Address: waypoint:9701
+Web UI Address: https://localhost:9702
+```
+
+Authenticate with the Waypoint UI. This will open the web UI in your browser.
+
+```shell-session
+$ waypoint ui -authenticate
+» Creating invite token
+This invite token will be exchanged for an authentication
+token that your browser stores.
+
+» Opening browser
+```
+
+Your browser will prompt you that the connection is not private since Waypoint is using a self-signed certificate. Click through the warning page to proceed to the UI.
+
+</Tab>
+<Tab heading="EKS" group="eks">
+
+
+Run the install command. The [`-accept-tos` flag](/waypoint/commands/install#accept-tos) is to accept the Terms of Service and Privacy Policy of the [Waypoint URL Service](/waypoint/docs/url).
+
+```shell-session
+$ waypoint server install -platform=kubernetes -accept-tos
+✓ Gathering information about the Kubernetes cluster...
+✓ Service account for on-demand runner initialized!
+✓ Creating Kubernetes resources...
+✓ Kubernetes StatefulSet reporting ready
+✓ Service "waypoint" is ready
+✓ Server installed and configured!
+✓ Installing runner...
+✓ Registered ondemand runner!
+✓ Creating Deployment for Runner
+✓ Kubernetes Deployment for Waypoint runner reporting ready
+Waypoint server successfully installed and configured!
+
+The CLI has been configured to connect to the server automatically. This
+connection information is saved in the CLI context named "install-1637262532".
+Use the "waypoint context" CLI to manage CLI contexts.
+
+The server has been configured to advertise the following address for
+entrypoint communications. This must be a reachable address for all your
+deployments. If this is incorrect, manually set it using the CLI command
+"waypoint server config-set".
+
+To launch and authenticate into the Web UI, run:
+waypoint ui -authenticate
+
+Advertise Address: a9c69174cb5f84148bbe2bcdc12e5e7f-740664333.us-east-2.elb.amazonaws.com:9701
+Web UI Address: https://a9c69174cb5f84148bbe2bcdc12e5e7f-740664333.us-east-2.elb.amazonaws.com:9702
+```
+
+Authenticate with the Waypoint UI. This will open the web UI in your browser.
+
+```shell-session
+$ waypoint ui -authenticate
+
+» Creating invite token
+This invite token will be exchanged for an authentication
+token that your browser stores.
+
+» Opening browser
+```
+
+Your browser will prompt you that the connection is not private since Waypoint is using a self-signed certificate. Click through the warning page to proceed to the UI.
+
+</Tab>
+</Tabs>
+
+
+## Clone the Example Repository
+
+The [example repository](https://github.com/hashicorp/learn-waypoint-helm-deploy) contains a Helm-based version of the HashiCups application. It includes Helm charts, values files, and templates for each of the microservices that make up HashiCups. It also contains `waypoint.hcl`, the Waypoint project configuration file and the `runner-configs.yaml` file, a Kubernetes manifest that adds additional permissions to the waypoint-runner service account.
+
+Clone the example repository and change into the _learn-waypoint-helm-deploy_ directory.
+
+```shell-session
+$ git clone https://github.com/hashicorp/learn-waypoint-helm-deploy
+Cloning into 'learn-waypoint-helm-deploy'...
+remote: Enumerating objects: 133, done.
+remote: Counting objects: 100% (133/133), done.
+remote: Compressing objects: 100% (54/54), done.
+remote: Total 133 (delta 51), reused 133 (delta 51), pack-reused 0
+Receiving objects: 100% (133/133), 14.92 KiB | 2.98 MiB/s, done.
+Resolving deltas: 100% (51/51), done.
+```
+
+```shell-session
+$ cd learn-waypoint-helm-deploy
+```
+
+Check out the `v0.1` tag of the repository as a local branch named `hashicups`.
+
+```shell-session
+$ git checkout v0.1 -b hashicups
+Switched to a new branch 'hashicups'
+```
+
+### Review Repository Contents
+
+There are five top-level directories, one for each microservice, that contain the Helm configuration files for that microservice. Navigate to the `frontend/helm` directory.
+
+```shell-session
+$ cd frontend/helm
+```
+
+This directory follows the [structure defined for a Helm chart](https://helm.sh/docs/topics/charts/#the-chart-file-structure) and contains a `Chart.yaml` file with metadata about the chart, a `values.yaml` file with application image information, and a `template` directory with the Kubernetes manifest for the frontend service.
+
+The `values.yaml` file refers to a pre-built HashiCups frontend image. Each of the services defined in the other directories follow the same convention.
+
+<CodeBlockConfig filename="frontend/helm/values.yaml" hideClipboard>
+
+
+```yaml
+image:
+  repository: 'hashicorpdemoapp/frontend'
+  tag: 'v0.0.5'
+  pullPolicy: IfNotPresent
+  pullSecrets: null
+```
+
+</CodeBlockConfig>
+
+
+Navigate to the `templates` directory.
+
+```shell-session
+$ cd templates
+```
+
+The `frontend.yaml` file here contains the resource definitions for deploying the frontend service to Kubernetes: a _Service_, a _ConfigMap_ with an Nginx configuration, and a _Deployment_ that uses the Nginx _ConfigMap_.
+
+Note that the _ConfigMap_ uses the [Kubernetes DNS](https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#namespaces-of-services) name for the `public-api` service that will be deployed.
+
+<CodeBlockConfig filename="frontend/helm/templates/frontend.yaml" hideClipboard lineNumbers highlight="17">
+
+
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-configmap
+data:
+  config: |
+    # /etc/nginx/conf.d/default.conf
+    server {
+        listen       80;
+        server_name  localhost;
+
+        ##...
+
+        # Proxy pass the api location to save CORS
+        # Use location exposed by Consul connect
+        location /api {
+            proxy_pass http://public-api.default.svc.cluster.local:8080;
+            ##...
+        }
+
+      ##...
+    }
+```
+
+</CodeBlockConfig>
+
+
+Navigate back to the root of the repository directory.
+
+```shell-session
+$ cd ../../../
+```
+
+The `runner-configs.yaml` file is a Kubernetes manifest file that adds a _ClusterRole_ with permissions to create namespaces and a _ClusterRoleBinding_ to connect it to the waypoint-runner service account.
+
+<CodeBlockConfig filename="runner-configs.yaml" hideClipboard>
+
+
+```yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: waypoint-runner
+  namespace: default
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  namespace: default
+  name: waypoint-runner-role
+rules:
+  - apiGroups: ['']
+    resources: ['namespaces']
+    verbs: ['create', 'get', 'watch', 'list']
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: waypoint-runner-clusterrolebinding
+subjects:
+  - kind: ServiceAccount
+    name: waypoint-runner
+    namespace: default
+roleRef:
+  kind: ClusterRole
+  name: waypoint-runner-role
+  apiGroup: ''
+```
+
+</CodeBlockConfig>
+
+
+Finally, the `waypoint_example_hcl` file shows an example configuration of HashiCups as a Waypoint project with the `public-api` service defined as a Waypoint application. The application is configured to use the [Helm deployment plugin](/waypoint/plugins/helm) and the contents of the `public-api/helm` directory.
+
+Note that the `build` block is using the [`docker-pull` plugin](/waypoint/plugins/docker#docker-pull-builder) which doesn’t build a Docker image but rather pulls a pre-built one. Waypoint can build a Docker image before continuing with the deploy and release phases with the [`docker` build plugin](/waypoint/plugins/docker#docker-builder) but this tutorial focuses on using pre-built images. More information about the build phase can be found [here](/waypoint/docs/lifecycle/build).
+
+By default, Waypoint enables the [public URL service](/waypoint/docs/url) functionality but setting the `auto_hostname` attribute to false in the `url` block disables it. The `public-api` below is accessed from the frontend service so a public URL is not necessary.
+
+Helm specific deployment values can also be defined with the [`set` block](/waypoint/plugins/helm#set) in the Helm plugin configuration.
+
+<CodeBlockConfig filename="waypoint.hcl" hideClipboard lineNumbers highlight="12,16,28-31">
+
+
+```hcl
+project = "hashicups"
+
+app "public-api" {
+  labels = {
+    "service" = "public-api",
+    "env"     = "dev"
+  }
+
+  url {
+    // Disable the Waypoint URL service from generating a name
+    // for this app
+    auto_hostname = false
+  }
+
+  build {
+    use "docker-pull" {
+      image = "hashicorpdemoapp/public-api"
+      tag   = "v0.0.5"
+      disable_entrypoint = true
+    }
+  }
+
+  deploy {
+    use "helm" {
+      name  = app.name
+      chart = "${path.app}/public-api/helm"
+
+      set {
+        name  = "deployment.name"
+        value = "public-api"
+      }
+
+      // We use a values file so we can set the entrypoint environment
+      // variables into a rich YAML structure. This is easier than --set
+      values = [
+        file(templatefile("${path.app}/public-api/helm/values.yaml")),
+      ]
+    }
+  }
+}
+```
+
+</CodeBlockConfig>
+
+
+## Setup a New Git Repository for Waypoint
+
+Create a new _empty_ public Git repository on a hosted Git platform like GitHub, GitLab, or Bitbucket. For this tutorial, a public repository is used but Waypoint does support [basic password and SSH authentication](/waypoint/commands/project-apply#git-auth-type) if you want to use a private repository.
+
+Create an environment variable named `MY_REPO_URL` and set the value to the URL of _your_ public git repository.
+
+<Warning>
+
+ If you are using a private repository, be sure to use the SSH repository URL instead of the http(s) one.
+
+</Warning>
+
+
+```shell-session
+$ export MY_REPO_URL=https://github.com/tunzor/wp-example.git
+```
+
+Then, navigate back to the example repository directory in your terminal and verify that the remote URL is set to the original example repository.
+
+```shell-session
+$ git remote -v
+origin	https://github.com/hashicorp/learn-waypoint-helm-deploy.git (fetch)
+origin	https://github.com/hashicorp/learn-waypoint-helm-deploy.git (push)
+```
+
+Set your new public Git repository as the remote repository.
+
+```shell-session
+$ git remote set-url origin $MY_REPO_URL
+```
+
+Create a `waypoint.hcl` file, add the configuration below to it, and save the file.
+
+<CodeBlockConfig filename="waypoint.hcl">
+
+
+```hcl
+project = "hashicups"
+
+app "public-api" {
+  labels = {
+    "service" = "public-api",
+    "env"     = "dev"
+  }
+
+  url {
+    // Disable the Waypoint URL service from generating a name
+    // for this app
+    auto_hostname = false
+  }
+
+  build {
+    use "docker-pull" {
+      image = "hashicorpdemoapp/public-api"
+      tag   = "v0.0.5"
+      disable_entrypoint = true
+    }
+  }
+
+  deploy {
+    use "helm" {
+      name  = app.name
+      chart = "${path.app}/public-api/helm"
+
+      // We use a values file so we can set the entrypoint environment
+      // variables into a rich YAML structure. This is easier than --set
+      values = [
+        file(templatefile("${path.app}/public-api/helm/values.yaml")),
+      ]
+    }
+  }
+}
+
+app "product-api-db" {
+  labels = {
+    "service" = "product-api-db",
+    "env"     = "dev"
+  }
+
+  url {
+    auto_hostname = false
+  }
+
+  build {
+    use "docker-pull" {
+      image = "hashicorpdemoapp/product-api-db"
+      tag   = "v0.0.19"
+      disable_entrypoint = true
+    }
+  }
+
+  deploy {
+    use "helm" {
+      name  = app.name
+      chart = "${path.app}/product-api-db/helm"
+
+      values = [
+        file(templatefile("${path.app}/product-api-db/helm/values.yaml")),
+      ]
+    }
+  }
+}
+
+app "product-api" {
+  labels = {
+    "service" = "product-api",
+    "env"     = "dev"
+  }
+
+  url {
+    auto_hostname = false
+  }
+
+  build {
+    use "docker-pull" {
+      image = "hashicorpdemoapp/product-api"
+      tag   = "v0.0.19"
+      disable_entrypoint = true
+    }
+  }
+
+  deploy {
+    use "helm" {
+      name  = app.name
+      chart = "${path.app}/product-api/helm"
+
+      values = [
+        file(templatefile("${path.app}/product-api/helm/values.yaml")),
+      ]
+    }
+  }
+}
+
+app "payments" {
+  labels = {
+    "service" = "payments",
+    "env"     = "dev"
+  }
+
+  url {
+    auto_hostname = false
+  }
+
+  build {
+    use "docker-pull" {
+      image = "hashicorpdemoapp/payments"
+      tag   = "v0.0.12"
+      disable_entrypoint = true
+    }
+  }
+
+  deploy {
+    use "helm" {
+      name  = app.name
+      chart = "${path.app}/payments/helm"
+
+      values = [
+        file(templatefile("${path.app}/payments/helm/values.yaml")),
+      ]
+    }
+  }
+}
+
+app "frontend" {
+  labels = {
+    "service" = "frontend",
+    "env"     = "dev"
+  }
+
+  build {
+    use "docker-pull" {
+      image = "hashicorpdemoapp/frontend"
+      tag   = "v0.0.5"
+      disable_entrypoint = true
+    }
+  }
+
+  deploy {
+    use "helm" {
+      name  = app.name
+      chart = "${path.app}/frontend/helm"
+
+      values = [
+        file(templatefile("${path.app}/frontend/helm/values.yaml")),
+      ]
+    }
+  }
+}
+```
+
+</CodeBlockConfig>
+
+
+Add and commit the updated Waypoint file.
+
+```shell-session
+$ git add waypoint.hcl && git commit -m "Created the waypoint.hcl configuration file."
+[main 5a1a049] Created the waypoint.hcl configuration file.
+ 1 file changed, 151 insertions(+)
+ create mode 100644 waypoint.hcl
+```
+
+Finally, push the contents to the `hashicups` branch of your public repository.
+
+<Warning>
+
+ If you created a new repository with a README or other template files, you may encounter an error that instructs you to fetch updates first. Run a `git fetch` to retrieve and merge the files locally or add the `--force` flag to the `git push` command if you want to overwrite any remote files.
+
+</Warning>
+
+
+```shell-session
+$ git push -u origin hashicups
+Enumerating objects: 157, done.
+Counting objects: 100% (157/157), done.
+Delta compression using up to 12 threads
+Compressing objects: 100% (63/63), done.
+Writing objects: 100% (157/157), 23.56 KiB | 23.56 MiB/s, done.
+Total 157 (delta 63), reused 156 (delta 63), pack-reused 0
+remote: Resolving deltas: 100% (63/63), done.
+To https://github.com/tunzor/wp-example.git
+ * [new branch]      hashicups -> hashicups
+Branch 'hashicups' set up to track remote branch 'hashicups' from 'origin'.
+```
+
+## Add a Waypoint Project and Configure Git Integration
+
+A Waypoint project can be configured with Git repository information through the CLI or web UI. Once configured, Waypoint polls the repository and automatically executes the steps defined in the `waypoint.hcl` file when changes are made to the repository, similar to running [`waypoint up`](/waypoint/commands/up).
+
+Before configuring the Git project integration, apply the `runner-config.yaml` manifest file from your terminal session.
+
+```shell-session
+$ kubectl apply -f runner-configs.yaml
+serviceaccount/waypoint-runner created
+clusterrole.rbac.authorization.k8s.io/waypoint-runner-role created
+clusterrolebinding.rbac.authorization.k8s.io/waypoint-runner-clusterrolebinding created
+```
+
+Next, configure the project.
+
+<Tabs>
+<Tab heading="CLI">
+
+
+<Note>
+
+ The apply command below uses the `MY_REPO_URL` environment variable from earlier so be sure to use the same shell or set the variable again.
+
+</Note>
+
+<Warning>
+
+ If you are using a private repository, you need to add the `-git-auth-type` flag and the associated flags depending on whether you're using basic or ssh authentication: `-git-username` and `-git-password` for basic auth or `-git-private-key-path` and optionally `-git-private-key-password` for ssh auth. See the [`waypoint project apply` docs page](/waypoint/commands/project-apply#command-options) for more information.
+
+</Warning>
+
+
+```shell-session
+$ waypoint project apply -data-source=git -git-url=$MY_REPO_URL -git-ref=hashicups -poll hashicups-git
+✓ Project "hashicups-git" created
+```
+
+Waypoint will execute the build, deploy, and release steps configured in the `waypoint.hcl` file after this initial project setup is complete. It will then periodically poll the repository for changes going forward and perform the same execution process when changes are detected.
+
+<Note>
+
+ If a project with the name used in the `apply` command doesn’t exist, a new one will be created and configured by Waypoint. If one does exist, Waypoint will update the project’s configurations.
+
+</Note>
+
+View the status of that initial execution. The context shown in the output may be different depending on where your cluster and Waypoint server are running.
+
+<Tip>
+
+ The [`-project` and `-app` flags can be passed](/waypoint/commands/status#global-options) to `waypoint status` if you want to see the status of a specific project and/or app within it.
+
+</Tip>
+
+```shell-session
+$ waypoint status -project=hashicups-git
+Current status for project "hashicups-git" in server context "127.0.0.1:9701".
+
+APP           	WORKSPACE	DEPLOYMENT STATUS	DEPLOYMENT CHECKED	RELEASE STATUS	RELEASE CHECKED
+public-api    	default  	✔ READY          	2 minutes ago     	N/A
+product-api-db	default  	✔ READY          	2 minutes ago     	N/A
+product-api   	default  	✔ READY          	2 minutes ago     	N/A
+payments      	default  	✔ READY          	2 minutes ago     	N/A
+frontend      	default  	✔ READY          	2 minutes ago     	N/A
+```
+
+Finally, view the new project’s configuration.
+
+```shell-session
+$ waypoint project inspect hashicups-git
+
+» Project Info:
+               Project Name: hashicups-git
+                 Workspaces: default
+             Remote Enabled: true
+                Data Source: Git
+                    Git URL: https://github.com/tunzor/wp-example.git
+                    Git Ref: hashicups
+   Data Source Poll Enabled: true
+  Data Source Poll Interval: 30s
+    App Status Poll Enabled: false
+```
+
+</Tab>
+<Tab heading="UI">
+
+
+Open the Waypoint UI in your browser from your terminal.
+
+```shell-session
+$ waypoint ui -authenticate
+» Opening browser
+```
+
+Click on the **+ New Project** button.
+
+![New Project button on the Project page in the Waypoint web UI](/img/tutorials/gitops-helm-deployment/empty_projects_page.png)
+
+Type `hashicups-git` as the project name, check the **Connect a repository to this Project** checkbox, and click **Create Project**.
+
+![Creating a new project in the Waypoint web UI](/img/tutorials/gitops-helm-deployment/new_project.png)
+
+On the Project Settings page, paste your Git repository URL in the **Git source URL** field, type in `hashicups` for the branch in the **Git ref** field, click on the **No authentication** radio button under the **Authentication** heading, and toggle the **Enable automated deployment on changes** switch on by clicking on it.
+
+![Configuring the git settings for a new project](/img/tutorials/gitops-helm-deployment/git_settings_new_project.png)
+
+Make sure that the **Project repository** radio button is selected under the **waypoint.hcl config location** subheading. This will instruct Waypoint to use the `waypoint.hcl` file present in the repository. Click the **Apply** button to complete the process.
+
+![Applying git settings on a new project](/img/tutorials/gitops-helm-deployment/applying_git_settings.png)
+
+Waypoint will execute the build, deploy, and release steps configured in the `waypoint.hcl` file after this initial project setup is complete. It will then periodically poll the repository for changes going forward and perform the same execution process when changes are detected.
+
+Wait a few seconds and then refresh the page to see the different HashiCups services listed as applications under the **hashicups-git** project heading.
+
+![List of applications for the new hashicups-git project](/img/tutorials/gitops-helm-deployment/applications_listing.png)
+
+You can see the status of builds, deployments, and releases for a specific application by clicking on it. Click on the **frontend** application link. Here you can see the latest deployment `v1` was successfully deployed recently.
+
+![Application details page with latest deployment highlighted](/img/tutorials/gitops-helm-deployment/application_details.png)
+
+</Tab>
+</Tabs>
+
+
+## Modify the Repository and Redeploy
+
+Changes pushed to the configured repository will be picked up by the Waypoint server when it polls next. The polling interval is set with the [`-poll-interval` configuration flag](/waypoint/commands/project-apply#poll-interval). If this is not set explicitly in a `project apply` command, it will default to 30 seconds.
+
+Update the frontend image version to `v0.0.7` in `waypoint.hcl`.
+
+<CodeBlockConfig filename="waypoint.hcl" hideClipboard lineNumbers highlight="5">
+
+
+```hcl
+app "frontend" {
+  build {
+    use "docker-pull" {
+      image = "hashicorpdemoapp/frontend"
+      tag = "v0.0.7"
+      disable_entrypoint = true
+    }
+  }
+}
+```
+
+</CodeBlockConfig>
+
+
+Then, update the Helm configuration to the same version in `frontend/helm/values.yaml`.
+
+<CodeBlockConfig filename="frontend/helm/values.yaml" hideClipboard lineNumbers highlight="3">
+
+
+```yaml
+image:
+  repository: 'hashicorpdemoapp/frontend'
+  tag: 'v0.0.7'
+  pullPolicy: IfNotPresent
+  pullSecrets: null
+```
+
+</CodeBlockConfig>
+
+
+<Note>
+
+ Updating the `waypoint.hcl` file with the new version isn’t strictly necessary as the build phase for this project isn’t building the image but instead pulling from a public repository. However, it’s a good idea to keep the `waypoint.hcl` file consistent with any changes made to the Helm deployment configurations.
+
+</Note>
+
+Add and commit these changes to your repository.
+
+```shell-session
+$ git add . && git commit -m "Updated the frontend image version."
+[main 34c3503] Updated the frontend image version.
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+```
+
+Then, push the changes. Waypoint will start the execution process soon after.
+
+```shell-session
+$ git push
+Enumerating objects: 21, done.
+Counting objects: 100% (21/21), done.
+Delta compression using up to 12 threads
+Compressing objects: 100% (12/12), done.
+Writing objects: 100% (16/16), 1.41 KiB | 1.41 MiB/s, done.
+Total 16 (delta 10), reused 7 (delta 3), pack-reused 0
+remote: Resolving deltas: 100% (4/4), completed with 4 local objects.
+To https://github.com/tunzor/wp-example.git
+   766a985..651b57e  hashicups -> hashicups
+```
+
+## Verify the Project and Application
+
+Check the status of the project to see that the changes have been applied and the `DEPLOYMENT CHECKED` field of the output has been updated with a more recent timestamp.
+
+```shell-session
+$ waypoint status -project=hashicups-git
+Current status for project "hashicups-git" in server context "127.0.0.1:9701".
+
+APP           	WORKSPACE	DEPLOYMENT STATUS	DEPLOYMENT CHECKED	RELEASE STATUS	RELEASE CHECKED
+public-api    	default  	✔ READY          	34 seconds ago    	N/A
+product-api-db	default  	✔ READY          	33 seconds ago    	N/A
+product-api   	default  	✔ READY          	35 seconds ago    	N/A
+payments      	default  	✔ READY          	35 seconds ago    	N/A
+frontend      	default  	✔ READY          	23 seconds ago    	N/A
+```
+
+Verify that the HashiCups app was deployed successfully.
+
+<Tabs>
+<Tab heading="minikube" group="minikube">
+
+
+In a separate shell tab, create a [port forwarding connection](https://kubernetes.io/docs/tasks/access-application-cluster/port-forward-access-application-cluster/#forward-a-local-port-to-a-port-on-the-pod) for the frontend service.
+
+```shell
+$ kubectl port-forward service/frontend 8080:80
+Forwarding from 127.0.0.1:8080 -> 80
+Forwarding from [::1]:8080 -> 80
+```
+
+Navigate to the HashiCups web UI in your browser at `http://localhost:8080`.
+
+</Tab>
+
+
+<Tab heading="Docker Desktop" group="dockerdesktop">
+
+
+In a separate shell tab, create a [port forwarding connection](https://kubernetes.io/docs/tasks/access-application-cluster/port-forward-access-application-cluster/#forward-a-local-port-to-a-port-on-the-pod) for the frontend service.
+
+```shell
+$ kubectl port-forward service/frontend 8080:80
+Forwarding from 127.0.0.1:8080 -> 80
+Forwarding from [::1]:8080 -> 80
+```
+
+Navigate to the HashiCups web UI in your browser at `http://localhost:8080`.
+
+</Tab>
+
+
+<Tab heading="EKS" group="eks">
+
+
+Expose the frontend service to allow external access.
+
+```shell-session
+$ kubectl expose deployment frontend --port=8080 --target-port=80 --name=frontend-ingress --type=LoadBalancer
+service/frontend-ingress exposed
+```
+
+Get the hostname of the `frontend-ingress` service.
+
+```shell-session
+$ kubectl get svc frontend-ingress --output jsonpath='{.status.loadBalancer.ingress[0].hostname}'
+a9c69174cb5f84148bbe2bcdc12e5e7f-740664333.us-east-2.elb.amazonaws.com
+```
+
+Navigate to the HashiCups web UI in your browser on port `8080` using the hostname of the `frontend-ingress` service: `http://{HOSTNAME}:8080`.
+
+</Tab>
+</Tabs>
+
+
+![The HashiCups application home page with the Waypoint drink](/img/tutorials/gitops-helm-deployment/hashicups_app_home_page.png)
+
+Click on the blue **Buy** button to see the payment page.
+
+![The HashiCups application payment page with example payment card details](/img/tutorials/gitops-helm-deployment/hashicups_app_payment_page.png)
+
+## Cleanup
+
+Destroy the HashiCups project in Waypoint to remove the Kubernetes resources created with the Helm deployment.
+
+```shell-session
+$ waypoint destroy -auto-approve
+» Destroying releases for application 'public-api'...
+
+» Destroying deployments for application 'public-api'...
+✓ Uninstalling Helm release...
+Destroy successful!
+
+» Destroying releases for application 'product-api-db'...
+
+» Destroying deployments for application 'product-api-db'...
+✓ Uninstalling Helm release...
+Destroy successful!
+
+» Destroying releases for application 'product-api'...
+
+» Destroying deployments for application 'product-api'...
+✓ Uninstalling Helm release...
+Destroy successful!
+
+» Destroying releases for application 'payments'...
+
+» Destroying deployments for application 'payments'...
+✓ Uninstalling Helm release...
+Destroy successful!
+
+» Destroying releases for application 'frontend'...
+
+» Destroying deployments for application 'frontend'...
+✓ Uninstalling Helm release...
+Destroy successful!
+```
+
+<Note>
+
+ The Waypoint UI will still display the applications on the hashicups project page even though all deployed resources have been destroyed. A feature request to address this has been created and can be tracked [here](https://github.com/hashicorp/waypoint/issues/1418).
+
+</Note>
+
+Then, uninstall the running Waypoint server. The CLI will read the current context and determine that the server is running in Kubernetes.
+
+```shell-session
+$ waypoint server uninstall -auto-approve
+Uninstalling Waypoint server on platform "kubernetes" with context "install-1637005597"
+✓ Snapshot "waypoint-server-snapshot-1637183155" generated
+
+✓ Runner deployment deleted
+✓ Statefulset and pods deleted
+✓ Persistent Volume Claim deleted
+✓ Service deleted
+
+Waypoint server successfully uninstalled for kubernetes platform
+```
+
+<Warning>
+
+ Remember to destroy your cloud-based Kubernetes cluster if you’ve created one for this tutorial so you don’t incur additional costs.
+
+</Warning>
+
+
+## Next Steps
+
+In this tutorial, you installed the Waypoint server to an existing Kubernetes cluster, configured a Waypoint project to integrate with a Git repository and automatically deploy changes, and used the Helm deployment plugin to deploy a Helm-based app to your existing Kubernetes cluster.
+
+Using the Helm plugin allows you to simplify your Kubernetes application deployment process and continue to leverage your existing Kubernetes deployment templates. Waypoint also supports integration with Git projects. This Git integration decreases the time it takes to deploy applications by leveraging automated GitOps workflows.
+
+For more information, check out the following resources.
+
+- Learn more about the [Helm deployment plugin](/waypoint/plugins/helm)
+- Read more about the Git integration on [the blog](https://www.hashicorp.com/blog/using-waypoint-runners-to-enable-gitops-workflows) and the [documentation page](/waypoint/docs/projects/git)
+- [Read more](https://www.hashicorp.com/blog/announcing-hashicorp-waypoint-0-6) about the Kubernetes-related features in Waypoint 0.6

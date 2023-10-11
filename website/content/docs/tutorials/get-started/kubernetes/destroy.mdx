@@ -1,0 +1,139 @@
+---
+layout: docs
+page_title: Destroy the Deployment from Kubernetes
+description: Remove your application from the cluster and clean up your workspace.
+---
+
+<Warning>
+
+This content is part of the legacy version of Waypoint that is no longer actively maintained. For additional information on the new vision of Waypoint, check out [this blog post](https://www.hashicorp.com/blog/a-new-vision-for-hcp-waypoint) and the [HCP Waypoint documentation](/hcp/docs/waypoint).
+
+</Warning>
+
+# Destroy the Deployment from Kubernetes
+
+When you are ready to clean up, you can destroy the application in Waypoint and uninstall any Waypoint components from the cluster before destroying the cluster itself.
+
+## Destroy the application
+
+Remove your application from the cluster by running the `destroy` command. Respond `yes` when prompted to confirm the operation. This will destroy any active deployments and releases.
+
+```shell-session
+$ waypoint destroy
+Do you really want to destroy all resources for this app? Only 'yes' will be accepted to approve: yes
+```
+
+Waypoint will start the process and output the following.
+
+```shell-session
+» Destroying releases for application 'kubernetes-nodejs-web'...
+✓ Running release destroy v2
+✓ Kubernetes client connected to https://885AB95F22BA8B45D6EBBE3A4A78C48E.sk1.us-east-2.eks.amazonaws.com with namespace default
+✓ Service deleted
+
+» Performing operation locally
+✓ Running release destroy v1
+✓ Kubernetes client connected to https://885AB95F22BA8B45D6EBBE3A4A78C48E.sk1.us-east-2.eks.amazonaws.com with namespace default
+✓ Service deleted
+
+» Destroying deployments for application 'kubernetes-nodejs-web'...
+✓ Running deployment destroy v2
+✓ Kubernetes client connected to https://885AB95F22BA8B45D6EBBE3A4A78C48E.sk1.us-east-2.eks.amazonaws.com with namespace default
+✓ Deployment deleted
+✓ Running deployment destroy v1
+✓ Kubernetes client connected to https://885AB95F22BA8B45D6EBBE3A4A78C48E.sk1.us-east-2.eks.amazonaws.com with namespace default
+✓ Deployment deleted
+Destroy successful!
+```
+
+## Uninstall Waypoint
+
+<Tabs>
+
+<Tab heading="HCP Waypoint" group="hcp">
+
+There are no components to uninstall if you use HCP Waypoint.
+
+### Deactivate HCP Waypoint
+
+Deactivating HCP Waypoint is an optional step that disables Waypoint for your HCP project. This will not delete any runners or images that have been pushed to a registry.
+
+Click the **Manage** button on the top right of the page, and then click on the **Deactivate Waypoint** option.
+
+![HCP Waypoint UI with the Deactivate Waypoint button highlighted](/img/tutorials/get-started/hcp-ui-waypoint-deactivate.jpg)
+
+A dialog appears confirming that you want to deactivate Waypoint. Type `DEACTIVATE` in the field and click on the **Deactivate** button.
+
+![HCP Waypoint UI with the Deactivate Waypoint dialog present and Deactivate button highlighted](/img/tutorials/get-started/hcp-ui-waypoint-deactivate-confirmation.jpg)
+
+Another dialog appears to confirm that Waypoint has been deactivated.
+
+![HCP Waypoint UI a dialog showing that Waypoint has been deactivated](/img/tutorials/get-started/hcp-ui-waypoint-deactivation-complete.jpg)
+
+You can re-enable Waypoint by clicking on the **Activate Waypoint** button in the top right of the page.
+
+</Tab>
+
+<Tab heading="Kubernetes" group="k8s">
+
+Uninstall the server and client components.
+
+```shell-session
+$ waypoint server uninstall --platform=kubernetes            
+Do you really want to uninstall the Waypoint server? Only 'yes' will be accepted to approve: yes
+
+Uninstalling Waypoint server on platform "kubernetes" with context "install-1679601674"
+✓ Snapshot "waypoint-server-snapshot-1679602911" generated
+
+✓ Runner "static" uninstalled
+✓ Persistent volume claims cleaned up
+✓ Waypoint uninstalled with Helm!
+✓ Persistent volume claims cleaned up
+
+Waypoint server successfully uninstalled for kubernetes platform
+```
+
+</Tab>
+
+</Tabs>
+
+## Destroy the cluster
+
+<Tabs>
+
+<Tab heading="Docker Desktop">
+
+Reset the Kubernetes cluster running on Docker Desktop by opening the Docker Desktop application, navigating to the Preferences screen, clicking on the **Kubernetes** option in the left navigation, and clicking the **Reset Kubernetes Cluster** button. This will take some time to destroy and recreate the cluster.
+
+![Resetting the Docker Desktop Kubernetes cluster](/img/tutorials/get-started/docker_desktop_reset_kubernetes.jpg)
+
+</Tab>
+
+<Tab heading="AWS EKS">
+
+Follow the clean up steps in the [Terraform EKS tutorial](/terraform/tutorials/kubernetes/eks#clean-up-your-workspace) to destroy the cluster on AWS.
+
+
+</Tab>
+<Tab heading="GCP GKE">
+
+Follow the clean up steps in the [Terraform GKE tutorial](/terraform/tutorials/kubernetes/gke#clean-up-your-workspace) to destroy the cluster on GCP.
+
+</Tab>
+</Tabs>
+
+## Next steps
+
+In this tutorial you learned how to destroy your application in Waypoint and uninstall Waypoint from your infrastructure.
+
+In this collection of tutorials you learned about the Waypoint workflow, installed Waypoint into a Kubernetes cluster, initialized an application, built, deployed, released, and updated the application, destroyed the application, and uninstalled Waypoint from a Kubernetes cluster.
+
+Continue your learning with the tutorials and documentation below.
+
+- Learn how to deploy applications to other platforms with Waypoint by checking out the [Docker](/waypoint/tutorials/get-started-docker/get-started-docker) and [Nomad](/waypoint/tutorials/get-started-nomad/get-started-nomad) tutorials
+- Learn how to deploy an app to [AWS ECS](/waypoint/tutorials/deploy-aws/aws-ecs), [Azure Container Instance](/waypoint/tutorials/deploy-azure/azure-container-instance), and [Google Cloud Run](/waypoint/tutorials/deploy-google-cloud/google-cloud-run)
+- [Learn more about the `waypoint.hcl` file](/waypoint/docs/waypoint-hcl)
+- [Learn about Waypoint runner](/waypoint/docs/runner)
+- [Review the Waypoint CLI commands](/waypoint/commands)
+- [Read about the available plugins](/waypoint/integrations)
+- [View the troubleshooting guide](/waypoint/docs/troubleshooting)

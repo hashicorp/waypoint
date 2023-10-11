@@ -1,0 +1,267 @@
+---
+layout: docs
+page_title: Deploy an Application to AWS Elastic Container Service
+description: >-
+    Run a NodeJS application onto AWS Elastic Container Service (ECS) with Waypoint.
+---
+
+<Warning>
+
+This content is part of the legacy version of Waypoint that is no longer actively maintained. For additional information on the new vision of Waypoint, check out [this blog post](https://www.hashicorp.com/blog/a-new-vision-for-hcp-waypoint) and the [HCP Waypoint documentation](/hcp/docs/waypoint).
+
+</Warning>
+
+# Deploy an Application to AWS Elastic Container Service
+
+With Waypoint, it is quick and easy to deploy and release applications on [AWS Elastic Container Service (ECS)](https://aws.amazon.com/ecs).
+
+In this tutorial, you will use Waypoint's [AWS ECS
+plugin](/waypoint/plugins/aws-ecs) to build a container image containing a NodeJS application, push it to a [Elastic Container Registry (ECR)](https://aws.amazon.com/ecr/) repository, then deploy and update the application to ECS.
+
+## Prerequisites
+
+You will need to install [`waypoint` binary locally](/waypoint/tutorials/get-started-docker/get-started-install), clone the examples repository (detailed in the next section), set up your AWS credentials, and create an Elastic Container Registry.
+
+You will be most comfortable if you have already used Waypoint to do a local deployment with our [Get Started](/waypoint/tutorials/get-started-docker) tutorials.
+
+**Optional**: Provision a Kubernetes cluster and install the Waypoint server to Kubernetes in order to unlock all Waypoint functionality (including application `logs`, `exec`, and `ui` access).
+
+### Clone the examples repository
+
+The code for this tutorial is in the `hashicorp/waypoint-examples` repository. Clone the repository with git.
+
+```shell-session
+$ git clone https://github.com/hashicorp/waypoint-examples.git
+```
+
+Change into the subdirectory for the AWS ECS project. This project uses NodeJS but the following instructions will work with any language that can be built with a cloud native buildpack.
+
+```shell-session
+$ cd waypoint-examples/aws/aws-ecs/nodejs
+```
+
+## Install the Waypoint server
+
+The Waypoint server must be installed. You may install it locally which requires fewer steps but limits the functionality of some Waypoint commands. Or, install to a remote Kubernetes cluster for full functionality (including the `logs`, `exec`, and `ui` commands).
+
+<Tabs>
+<Tab heading="Local">
+
+
+You can run the Waypoint server locally in Docker in order to achieve a minimal deployment of your applications on ECS.
+
+<Note>
+
+ A local server used with a remote deployment only supports limited functionality. The `logs`, `exec`, and other commands require a remote server with a remote deployment.
+
+</Note>
+
+Install the Waypoint server to your local Docker instance.
+
+```shell-session
+$ waypoint install --platform=docker -accept-tos
+```
+
+If you run into any errors, see the [troubleshooting](/waypoint/docs/troubleshooting#waypoint-server-in-docker) page which has instructions for resetting the Waypoint server in Docker.
+
+</Tab>
+<Tab heading="Remote">
+
+
+For full functionality, provision an [EKS](https://aws.amazon.com/eks/) cluster and install the Waypoint server.
+
+Follow the [EKS Terraform tutorial](/terraform/tutorials/kubernetes/eks) which includes a Terraform configuration for provisioning the cluster. You must also configure your local `kubectl` command to communicate to the remote cluster (instructions are included in the tutorial).
+
+Then, run the [install command](/waypoint/tutorials/get-started-kubernetes/get-started-kubernetes#install-the-waypoint-server) to deploy the Waypoint server to the cluster.
+
+```shell-session
+$ waypoint install --platform=kubernetes -accept-tos
+
+service/waypoint created
+statefulset.apps/waypoint-server created
+```
+
+Verify the installation by running `kubectl get all`. If the installation was successful you will observe that the single container in the `waypoint-server-0` pod is ready and the pod has a status of `Running`.
+
+```shell-session
+$ kubectl get all
+
+NAME                    READY   STATUS    RESTARTS   AGE
+pod/waypoint-server-0   1/1     Running   0          2m34s
+
+NAME                 TYPE           CLUSTER-IP      EXTERNAL-IP                                                               PORT(S)                         AGE
+service/kubernetes   ClusterIP      172.20.0.1      <none>                                                                    443/TCP                         71m
+service/waypoint     LoadBalancer   172.20.39.252   aaa.us-east-1.elb.amazonaws.com   9701:32038/TCP,9702:32208/TCP   2m35s
+
+NAME                               READY   AGE
+statefulset.apps/waypoint-server   1/1     2m35s
+```
+
+</Tab>
+</Tabs>
+
+
+## Explore `waypoint.hcl`
+
+Open the
+[`waypoint.hcl`](https://github.com/hashicorp/waypoint-examples/blob/main/aws/aws-ecs/nodejs/waypoint.hcl)
+file. In this section, you will explore the `build` and `deploy` steps for this
+project.
+
+The `waypoint.hcl` file uses the `aws-ecr` registry plugin during the `build` stage. The `aws-ecr` plugin uses your AWS credentials and internally builds the correct URL to the AWS API.
+
+It is also possible to configure this manually with the `docker` plugin. Other
+configuration options are listed in the [plugin
+documentation](/waypoint/plugins/aws-ecs#aws-ecr-registry).
+
+```hcl
+build {
+  use "pack" {}
+  registry {
+    use "aws-ecr" {
+      region     = "us-east-1"
+      repository = "waypoint-example"
+      tag        = "latest"
+    }
+  }
+}
+```
+
+Use the `aws-ecs` plugin for the `deploy` stage. You can specify the `region`, `memory`, and `cpu` as well as a `count` of how many instances to launch or a `log_group` to store the logs in a CloudWatch log group.
+
+See the [plugin documentation](/waypoint/plugins/aws-ecs#aws-ecs-platform) for other configuration options.
+
+```hcl
+deploy {
+  use "aws-ecs" {
+    region = "us-east-1"
+    memory = "512"
+  }
+}
+```
+
+<Note>
+
+ When using this configuration, Waypoint will automatically provision an ECS cluster that uses Fargate. Fargate instances are temporary and will only run while they are being actively used. Read the [plugin documentation](/waypoint/plugins/aws-ecs#aws-ecs-platform) if you prefer to use permanent EC2 instances in an existing ECS cluster instead.
+
+</Note>
+
+## Initialize Waypoint
+
+Initialize the project with the `init` command.
+
+```shell-session
+$ waypoint init
+
+✓ Configuration file appears valid
+✓ Connection to Waypoint server was successful
+✓ Project "example-nodejs" and all apps are registered with the server.
+✓ Plugins loaded and configured successfully
+
+Project initialized!
+
+You may now call 'waypoint up' to deploy your project or
+commands such as 'waypoint build' to perform steps individually.
+```
+
+Read the [troubleshooting](/waypoint/docs/troubleshooting#waypoint-server-in-docker) page if you run into any errors.
+
+## Build, deploy, and release the application
+
+Deploy the application with `up`.
+
+<Note>
+
+ This may take a few minutes to execute, especially if this is the first time that you push the image to the registry.
+
+</Note>
+
+```shell-session
+$ waypoint up
+
+Creating new buildpack-based image using builder: heroku/buildpacks:18
+✓ Creating pack client
+✓ Building image
+ │ [exporter] Adding layer 'launcher'
+ │ [exporter] Adding layer 'config'
+ │ [exporter] Adding label 'io.buildpacks.lifecycle.metadata'
+ │ [exporter] Adding label 'io.buildpacks.build.metadata'
+ │ [exporter] Adding label 'io.buildpacks.project.metadata'
+ │ [exporter] Saving index.docker.io/library/example-nodejs:latest...
+ │ [exporter] *** Images (112c224206f3):
+ │ [exporter]       index.docker.io/library/example-nodejs:latest
+ │ [exporter] Adding cache layer 'heroku/nodejs-engine:nodejs'
+ │ [exporter] Adding cache layer 'heroku/nodejs-engine:toolbox'
+✓ Injecting entrypoint binary to image
+
+Generated new Docker image: example-nodejs:latest
+✓ All services available.
+✓ Set ECR Repository name to 'waypoint-example'
+✓ Tagging Docker image: example-nodejs:latest => REDACTED.dkr.ecr.us-east-1.amazonaws.com/waypoint-example:latest
+✓ Pushing image...
+ │ 1b94c66ec97b: Pushed
+ │ eafa73f345f6: Pushed
+ │ 189eac09bed1: Pushed
+ │ 4458c5b0b0d0: Pushed
+ │ 08477604fc2a: Pushed
+ │ 6f15325cc380: Pushed
+ │ 1e77dd81f9fa: Pushed
+ │ 030309cad0ba: Pushed
+ │ latest: digest: sha256:cc45b97c76360c5d3c9a5b27a4f995913c4a5ed45c32b2a74b271a26e
+ │ 77522fb size: 2831
+Docker image pushed: REDACTED.dkr.ecr.us-east-1.amazonaws.com/waypoint-example:latest
+
+» Deploying...
+✓ Created new ECS cluster: waypoint
+✓ Found existing IAM role to use: ecr-example-nodejs
+✓ Using default subnets for Service networking
+✓ Created new ALB Listener
+✓ Configured security group: example-nodejs-inbound-internal
+✓ Created ECS Service (example-nodejs-01F2QVM90G9KX5CJC, cluster-name: waypoint)
+
+» Releasing...
+
+The deploy was successful! A Waypoint deployment URL is shown below. This
+can be used internally to check your deployment and is not meant for external
+traffic. You can manage this hostname using "waypoint hostname."
+
+   Release URL: http://waypoint-ecs-example-nodejs-1065146915.us-east-1.elb.amazonaws.com
+Deployment URL: https://barely-big-hen--v1.waypoint.run
+```
+
+Visit the Release URL or the Deployment URL to view the application running on ECS.
+
+![Web application](/img/tutorials/get-started/web-app.png)
+
+You can visit the [ECS console](https://console.aws.amazon.com/ecs/home?region=us-east-1#/clusters) to view the server side of the cluster.
+
+![ECS cluster](/img/tutorials/aws/aws-ecs-cluster.png)
+
+The cluster also lists individual tasks.
+
+![ECS tasks](/img/tutorials/aws/aws-ecs-task.png)
+
+## Destroy the instance
+
+To deprovision the container, run `destroy`.
+
+```shell-session
+$ waypoint destroy -auto-approve
+
+» Destroying releases for application 'example-nodejs'...
+
+» Destroying deployments for application 'example-nodejs'...
+Destroy successful!
+```
+
+If there is an error, try again after a few seconds.
+
+<Note>
+
+ The `destroy` command will not delete container images in the registry or the ECS cluster itself. Visit the [ECR console](https://us-east-1.console.aws.amazon.com/ecr/repositories?region=us-east-1) to manually delete the entire registry or individual container images.
+
+</Note>
+
+## Next steps
+
+Learn more about Waypoint by following along with the other [tutorials](/waypoint/tutorials/) for Azure, Google Cloud, and others, or read the documentation for other Waypoint [plugins](/waypoint/plugins/).
