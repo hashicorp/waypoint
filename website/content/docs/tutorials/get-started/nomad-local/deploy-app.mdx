@@ -1,0 +1,737 @@
+---
+layout: docs
+page_title: Deploy an Application to Nomad
+description: Release applications to a local Nomad cluster.
+---
+
+<Warning>
+
+This content is part of the legacy version of Waypoint that is no longer actively maintained. For additional information on the new vision of Waypoint, check out [this blog post](https://www.hashicorp.com/blog/a-new-vision-for-hcp-waypoint) and the [HCP Waypoint documentation](/hcp/docs/waypoint).
+
+</Warning>
+
+# Deploy an Application to Nomad
+
+In this tutorial, you will learn how Waypoint works by deploying and running an application on a Nomad cluster that's running on your local machine.
+
+If you want to try Waypoint on a Nomad cluster running on cloud infrastructure, complete the [get started with Nomad on the cloud tutorials](/waypoint/tutorials/get-started-nomad-cloud).
+
+## Prerequisites
+
+For this tutorial, you will need:
+
+- The [Waypoint CLI version 0.11.1 or later installed locally](/waypoint/tutorials/get-started-nomad/get-started-install)
+- The [Nomad CLI version 1.55.5 or later installed locally](/nomad/tutorials/get-started/gs-install)
+- (Optional) An [HCP Account](/hcp/docs/hcp/create-account) if you want to use HCP Waypoint
+
+## Create a Nomad environment
+
+Waypoint supports Nomad both as a location for running the Waypoint server and as a target for application deployments.
+
+Waypoint installation on Nomad supports persistent data storage with host or CSI volumes. In this tutorial, you use [host volumes](/nomad/tutorials/stateful-workloads/stateful-workloads) for persistent storage, and will set up one for both the server and client runner. While it is possible to have the server and runner share the same Nomad volume, we recommend having separate host volumes.
+
+### Create the Nomad client configuration
+
+Host volumes are configured in the Nomad client HCL file with the [`host_volume` block](/nomad/docs/configuration/client#host_volume-block). Waypoint uses these host volumes to write the data it needs for the server and client runner.
+
+<Note>
+
+The `$HOME` environment variable used in this tutorial is automatically set to the user's home directory on most systems. If it is not already set on your system, export the path to your home directory as `$HOME`.
+
+`export $HOME=/path/to/home/directory`
+
+</Note>
+
+Create a folder named `nomad` in your home directory. This will contain the host volume directories, the [data directory](/nomad/docs/configuration/server#data_dir) for the server, and the client configuration file.
+
+<CodeBlockConfig>
+
+```shell-session
+$ mkdir $HOME/nomad
+```
+
+</CodeBlockConfig>
+
+Create the data directory for the server.
+
+<CodeBlockConfig>
+
+```shell-session
+$ mkdir $HOME/nomad/datadir
+```
+
+</CodeBlockConfig>
+
+Then, create the host volume directories for the server and runner. The `-p` flag will create the parent `host-volumes` directory.
+
+<CodeBlockConfig>
+
+```shell-session
+$ mkdir -p $HOME/nomad/host-volumes/wp-server && mkdir $HOME/nomad/host-volumes/wp-runner
+```
+
+</CodeBlockConfig>
+
+Change to your home directory.
+
+<CodeBlockConfig>
+
+```shell-session
+$ cd $HOME
+```
+
+</CodeBlockConfig>
+
+Create a file named `nomad-client.hcl` and add the following configuration to it. Replace the `PATH_TO_HOME_DIR` placeholder text with the full path to your home directory. Save the file. Note that the data directory and host volume paths must be absolute.
+
+<CodeBlockConfig filename="nomad-client.hcl">
+
+```hcl
+bind_addr = "0.0.0.0"
+data_dir = "PATH_TO_HOME_DIR/nomad/datadir"
+server {
+  enabled = true
+  bootstrap_expect = 1
+}
+
+client {
+  enabled = true
+  host_volume "wp-server-vol" {
+    path = "PATH_TO_HOME_DIR/nomad/host-volumes/wp-server"
+    read_only = false
+  }
+  host_volume "wp-runner-vol" {
+    path = "PATH_TO_HOME_DIR/nomad/host-volumes/wp-runner"
+    read_only = false
+  }
+}
+```
+
+</CodeBlockConfig>
+
+Create the Nomad cluster. Note that the client configuration file is passed in with the `-config` flag. Nomad will start and begin to output data.
+
+Leave this terminal session open to keep Nomad running.
+
+```shell-session
+$ nomad agent -config=nomad-client.hcl
+==> WARNING: Bootstrap mode enabled! Potentially unsafe operation.
+==> Loaded configuration from nomad-client.hcl
+==> Starting Nomad agent...
+==> Nomad agent configuration:
+
+       Advertise Addrs: HTTP: 192.168.50.210:4646; RPC: 192.168.50.210:4647; Serf: 192.168.50.210:4648
+            Bind Addrs: HTTP: [0.0.0.0:4646]; RPC: 0.0.0.0:4647; Serf: 0.0.0.0:4648
+                Client: true
+             Log Level: INFO
+                Region: global (DC: dc1)
+                Server: true
+               Version: 1.5.2
+
+==> Nomad agent started! Log data will stream in below:
+
+    2023-03-29T15:59:28.862-0400 [INFO]  nomad: setting up raft bolt store: no_freelist_sync=false
+    2023-03-29T15:59:28.906-0400 [INFO]  nomad.raft: initial configuration: index=1 servers="[{Suffrage:Voter ID:6bb056e7-a71b-2328-9012-7d00668ea8c4 Address:192.168.50.210:4647}]"
+    # ...
+    2023-03-29T15:59:28.914-0400 [INFO]  client: using state directory: state_dir=/Users/edu/nomad/datadir/client
+    2023-03-29T15:59:28.915-0400 [INFO]  client: using alloc directory: alloc_dir=/Users/edu/nomad/datadir/alloc
+    #...
+    2023-03-29T15:59:35.146-0400 [INFO]  client: started client: node_id=feb6cf8a-e396-e006-6bab-02827001cb8c
+    2023-03-29T15:59:35.187-0400 [INFO]  client: node registration complete
+```
+
+In a new terminal session, export the cluster address to an environment variable.
+
+```shell-session
+$ export NOMAD_ADDR="http://localhost:4646"
+```
+
+The Nomad UI is available at [http://localhost:4646/ui](http://localhost:4646/ui).
+
+### Inspect the host volumes
+
+The host volumes for the Waypoint runner and server can be seen in the Nomad UI when inspecting the client. Open the Nomad UI, click on the **Clients** link from the left navigation, click on the client from the client list, and scroll down to the **Host Volumes** section.
+
+Note that there are two host volumes in the list, one for the Waypoint runner with the name `wp-runner-vol` and one for the Waypoint server with the name `wp-server-vol`.
+
+![Nomad UI showing the host volumes of a client](/img/tutorials/get-started/nomad-host-volumes.jpg)
+
+## Set up Waypoint
+
+[HCP Waypoint](/hcp/docs/waypoint) is a HashiCorp-managed service that helps you to manage your application lifecycle without maintaining a Waypoint server and associated infrastructure. It allows to you automate and simplify the process of deploying your web applications into your infrastructure.
+
+Waypoint runs as a server and a client, whether run on HCP Waypoint or locally. For this tutorial, you can choose to use HCP Waypoint for the server and your Nomad cluster for the client or run Waypoint entirely on the cluster.
+
+Both methods create a [Waypoint context](/waypoint/commands/context-list) that contains information about the server and authentication for connecting to it from the Waypoint CLI. This is how the CLI knows the address of the server when you run other Waypoint commands.
+
+<Tabs>
+
+<Tab heading="HCP Waypoint" group="hcp">
+
+### Set up an HCP organization and project
+
+[Sign in to your HCP account](https://portal.cloud.hashicorp.com/sign-in) and create an HCP organization by following the steps in the [Create an organization](/hcp/docs/hcp/admin/orgs#create-an-organization) page. Then, create an HCP project by following the steps in the [Create a project](/hcp/docs/hcp/admin/projects#create-a-project) page.
+
+### Enable HCP Waypoint
+
+Click on the **Waypoint** option from the left navigation.
+
+![HCP UI with the Waypoint option highlighted](/img/tutorials/get-started/hcp-ui-waypoint-option.jpg)
+
+Then, click on the **Activate Waypoint** button in the top right of the page.
+
+![HCP Waypoint UI with the Activate Waypoint button highlighted](/img/tutorials/get-started/hcp-ui-waypoint-activate.jpg)
+
+A dialog appears to confirm that Waypoint has been activated.
+
+![HCP Waypoint UI a dialog showing that Waypoint has been activated](/img/tutorials/get-started/hcp-ui-waypoint-activation-complete.jpg)
+
+### Set up HCP Waypoint context
+
+Click the **Manage** button on the top right of the page, click on the clipboard icon to copy the `waypoint context create` command, and run it in your terminal. Your Waypoint CLI can now communicate with HCP Waypoint.
+
+![HCP Waypoint UI with the Manage button clicked and copy button highlighted](/img/tutorials/get-started/hcp-ui-waypoint-manage.jpg)
+
+HCP Waypoint works with your local installation of the Waypoint CLI and does not require any additional runners as it uses the one that is [part of the CLI](/waypoint/docs/runner#cli-runner). Installing and connecting a [static runner](/waypoint/docs/runner#static-runner) to HCP Waypoint allows you to automate your workflow with GitOps and use [dynamic configuration sourcing](/waypoint/docs/app-config/dynamic) without requiring interaction with your CLI.
+
+This tutorial uses only the CLI runner and does not include runner installation. You can read more about the runner installation process on the [runner install page](/waypoint/commands/runner-install).
+
+</Tab>
+
+<Tab heading="Self-managed Nomad only" group="local">
+
+### Install Waypoint
+
+Install the server and client runner components into the cluster. The `-accept-tos` flag confirms that you accept the [terms of service](https://www.waypointproject.io/terms) for the Waypoint URL service. There is [additional information](#waypoint-url-service) about the URL service later in the tutorial.
+
+<Note>
+
+In this tutorial, you will disable Consul integration for simplicity and to keep the focus on Waypoint. However, we strongly recommend using [Consul](/nomad/docs/integrations/consul-integration) for networking support in Nomad when running Waypoint in any production setting.
+
+</Note>
+
+<Warning>
+
+If you are reinstalling Waypoint to the same Nomad cluster using the same host volumes, you may encounter an error stating `! Error attempting to authenticate to bootstrapped server`, and that a server has already been detected and bootstrapped. 
+
+You can solve this by deleting the data in your host volume folders and running the install command again.
+
+`rm r ~/nomad/host-volumes/wp-server/*`
+
+`rm r ~/nomad/host-volumes/wp-runner/*`
+
+</Warning>
+
+```shell-session
+$ waypoint install --platform=nomad -accept-tos \
+  -nomad-host-volume=wp-server-vol \
+  -nomad-runner-host-volume=wp-runner-vol \
+  -nomad-service-provider=none
+```
+
+Waypoint will start the install process and output the following.
+
+<CodeBlockConfig hideClipboard>
+
+```shell-session
+✓ Waypoint server ready
+Waypoint server running on Nomad is being accessed via its allocation IP and port.
+This could change in the future if Nomad creates a new allocation for the Waypoint server,
+which would break all existing Waypoint contexts.
+
+It is recommended to use Consul for determining Waypoint servers IP running on Nomad rather than
+relying on the static IP that is initially set up for this allocation.
+✓ Configured server connection
+✓ Successfully connected to Waypoint server in Nomad!
+✓ Server installed and configured!
+✓ Runner "static" installed
+✓ Registered ondemand runner!
+✓ Initializing Nomad client...
+✓ Waypoint runner installed
+✓ Runner "static" adopted successfully.
+Waypoint server successfully installed and configured!
+
+The CLI has been configured to connect to the server automatically. This
+connection information is saved in the CLI context named "install-1680194767".
+Use the "waypoint context" CLI to manage CLI contexts.
+
+The server has been configured to advertise the following address for
+entrypoint communications. This must be a reachable address for all your
+deployments. If this is incorrect, manually set it using the CLI command
+"waypoint server config-set".
+
+To launch and authenticate into the Web UI, run:
+waypoint ui -authenticate
+
+Advertise Address: 192.168.50.210:9701
+Web UI Address: https://192.168.50.210:9702
+```
+
+</CodeBlockConfig>
+
+Verify the installation by checking the running Nomad jobs. The install process creates one service job for the server and a second service job for the runner.
+
+```shell-session
+$ nomad job status
+ID                      Type     Priority  Status   Submit Date
+waypoint-server         service  50        running  2023-03-30T12:45:57-04:00
+waypoint-static-runner  service  50        running  2023-03-30T12:46:07-04:00
+```
+
+</Tab>
+
+</Tabs>
+
+## Clone the example repository
+
+The [example repository](https://github.com/hashicorp-education/learn-waypoint-get-started) contains application code and Waypoint configuration files for building, deploying, and releasing the application with Waypoint.
+
+Clone the example repository.
+
+```shell-session
+$ git clone https://github.com/hashicorp-education/learn-waypoint-get-started.git
+```
+
+Navigate to the `example-app` directory.
+
+```shell-session
+$ cd nomad-local/example-app
+```
+
+## Initialize Waypoint for the application
+
+You must initialize and configure Waypoint for your application before beginning the build, deploy, and release workflow.
+
+During the initialization process, Waypoint searches for a `waypoint.hcl` configuration file for the application in the current directory. This configuration file gives Waypoint instructions for how to build, deploy, and release your application. If Waypoint cannot find the configuration file when `waypoint init` is run, it will create a `waypoint.hcl` file that you can then customize for your application.
+
+### Review the `waypoint.hcl` file
+
+Open the `waypoint.hcl` file.
+
+<CodeBlockConfig filename="nomad-local/example-app/waypoint.hcl" hideClipboard>
+
+```hcl
+project = "nomad-nodejs"
+
+app "nomad-nodejs-web" {
+
+  build {
+    use "pack" {}
+    registry {
+      use "docker" {
+        image = "nomad-nodejs-web"
+        tag   = "1"
+        local = true
+      }
+    }
+  }
+
+  deploy {
+    use "nomad" {
+      datacenter = "dc1"
+      namespace  = "default"
+      service_provider = "nomad"
+    }
+  }
+}
+```
+
+</CodeBlockConfig>
+
+The [`use` option](/waypoint/docs/waypoint-hcl/use) within the `build`, `deploy`, and `release` blocks specifies which plugin to use during those specific phases of the workflow.
+
+The `build` block defines how Waypoint will [build the application](/waypoint/docs/lifecycle/build) and produce an artifact.
+- Since the `use "pack"` option in this example is empty, Waypoint uses the default configuration for the [Cloud Native Buildpacks plugin](/waypoint/plugins/pack), which selects the most relevant pack to build the application.
+- The `registry` option specifies image registry information. In this example, the Docker image name and tag are specified along with a `local` attribute set to `true`, which [instructs Waypoint to tag the image locally only](/waypoint/integrations/hashicorp/docker/latest/components/registry/docker-registry#parameters.local) and not push to a remote repository. If you are pushing to a remote repository, the [`image` attribute must include the fully qualified name](/waypoint/integrations/hashicorp/docker/latest/components/registry/docker-registry#parameters.image).
+
+The `deploy` block defines how Waypoint will deploy the application.
+- The `use "nomad"` option in this example tells Waypoint to use the [Nomad plugin](/waypoint/integrations/hashicorp/nomad/latest/components/platform/nomad-platform) to deploy the application to Nomad with any configurations defined in the block.
+- The [`service_provider` block](/waypoint/integrations/hashicorp/nomad/latest/components/platform/nomad-platform#parameters.service_provider) instructs Waypoint to use [Nomad's service discovery](/nomad/docs/networking/service-discovery) for service registration instead of Consul.
+
+### Waypoint URL service
+
+The [Waypoint URL service](/waypoint/docs/url) is a service hosted by HashiCorp that generates publically accessible URLs for your applications on Waypoint. The URLs are connected to your application and their deployment locations so the URLs will only resolve when the deployment is running.
+
+These preview URLs are optional and can be disabled in the [Waypoint server configuration](/waypoint/commands/server-run#url-enabled) when running a server manually with `waypoint server run`. You can also disable preview URLs on a per-app basis with the [`url` block](/waypoint/docs/waypoint-hcl/url) if the service is enabled on the server.
+
+<CodeBlockConfig heading="Disable the URL service for a specific app" hideClipboard highlight="4-6">
+
+```hcl
+project = "example-project"
+
+app "example-application" {
+  url {
+    auto_hostname = false
+  }
+  
+  # ...
+}
+```
+
+</CodeBlockConfig>
+
+### Initialize Waypoint
+
+Initialize Waypoint for the example application.
+
+```shell-session
+$ waypoint init
+✓ Configuration file appears valid
+✓ Connection to Waypoint server was successful
+✓ Project "nomad-nodejs" and all apps are registered with the server.
+✓ Project "nomad-nodejs" pipelines are registered with the server.
+
+Project initialized!
+
+You may now call 'waypoint up' to deploy your project or
+commands such as 'waypoint build' to perform steps individually.
+```
+
+## Build and deploy
+
+With the initialization complete, use the [`waypoint up` command](/waypoint/commands/up) to instruct Waypoint to build, deploy, and release your application. 
+
+### Run `waypoint up`
+
+Waypoint uses Cloud Native Buildpacks to [automatically detect](https://buildpacks.io/docs/app-journey/#auto-detection) the type of application and uses the applicable buildpack to create the build artifact.
+
+Once Waypoint completes the build, it stores the artifacts in a registry. The [`registry` block](/waypoint/docs/waypoint-hcl/registry) contains the configuration for where Waypoint should store those artifacts. By default, Waypoint stores Docker artifacts locally with Docker Desktop unless the `registry` block contains additional configuration.
+
+Start the Waypoint workflow.
+
+```shell-session
+$ waypoint up
+```
+
+Waypoint will start the process and output the following.
+
+<Tabs>
+
+<Tab heading="HCP Waypoint" group="hcp">
+
+<CodeBlockConfig hideClipboard>
+
+```shell-session
+» Building nomad-nodejs-web...
+⠙ Running build v1
+
+» Performing operation locally
+Creating new buildpack-based image using builder: heroku/buildpacks:20
+✓ Creating pack client
+✓ Building image
+ │ [exporter] Adding layer 'buildpacksio/lifecycle:process-types'
+ │ [exporter] Adding label 'io.buildpacks.lifecycle.metadata'
+ │ [exporter] Adding label 'io.buildpacks.build.metadata'
+ │ [exporter] Adding label 'io.buildpacks.project.metadata'
+ │ [exporter] Setting default process type 'web'
+ │ [exporter] Saving nomad-nodejs-web...
+ │ [exporter] *** Images (482b7fc8b561):
+ │ [exporter]       nomad-nodejs-web
+ │ [exporter] Adding cache layer 'heroku/nodejs-engine:dist'
+ │ [exporter] Reusing cache layer 'heroku/nodejs-npm:toolbox'
+✓ Injecting entrypoint binary to image
+
+Generated new Docker image: nomad-nodejs-web:latest
+✓ Running push build v1
+✓ Tagging Docker image: nomad-nodejs-web:latest => nomad-nodejs-web:1
+✓ Docker image pushed: nomad-nodejs-web:1
+
+» Deploying nomad-nodejs-web...
+✓ Running deploy v1
+✓ Job registration successful
+✓ Allocation "02157784-81fe-b488-d36d-5f8a7ea22e8c" created: node "feb6cf8a-e396-e006-6bab-02827001cb8c", group
+"nomad-nodejs-web-01gwsybfftps09nm9gd20vtzj7"
+✓ Evaluation status changed: "pending" -> "complete"
+✓ Evaluation "83f2b372-3bf2-994f-a205-3d198de0debd" finished with status "complete"
+✓ Deployment successfully rolled out!
+✓ Finished building report for Nomad platform
+✓ Job "nomad-nodejs-web-01gwsybfftps09nm9gd20vtzj7" is reporting ready!
+
+✓ Finished building report for Nomad platform
+✓ Job "nomad-nodejs-web-01gwsybfftps09nm9gd20vtzj7" is reporting ready!
+
+» Releasing nomad-nodejs-web...
+✓ Running release v1
+No release phase specified, skipping...
+
+» Variables used:
+  VARIABLE | VALUE | TYPE | SOURCE  
+-----------+-------+------+---------
+
+
+The deploy was successful!
+
+The release did not provide a URL and the URL service is disabled on the
+server, so no further URL information can be automatically provided. If
+this is unexpected, please ensure the Waypoint server has both the URL service
+enabled and advertise addresses set.
+```
+
+</CodeBlockConfig>
+
+Waypoint shows the progress of the build, deploy, and release steps in the output but does not contain deployment URLs as the [URL service](#waypoint-url-service) is disabled when using HCP Waypoint.
+
+View the application's URL by first finding the allocation ID of the job with the `nomad job status` command. The allocation ID is at the bottom of the output under **Allocations**. In this example the allocation ID is `b0a9be89`.
+
+```shell-session
+$ nomad job status nomad-nodejs
+[...]
+Allocations
+ID        Node ID   Task Group                                   Version  Desired  Status   Created   Modified
+b0a9be89  882f3098  nomad-nodejs-web-01gz47w8vq758dgn9grwk2d40s  0        run      running  3m7s ago  2m56s ago
+```
+
+Copy the allocation ID and get the status for the allocation. This command will filter the status output and display the allocation addresses. In this example, the address is `192.168.50.210:30298`. Open this address in your browser to see the application.
+
+```shell-session
+$ nomad alloc status b0a9be89 | grep -A 3 "Allocation Addresses"
+Allocation Addresses (mode = "host"):
+Label      Dynamic  Address
+*waypoint  yes      192.168.50.210:30298 -> 3000
+```
+
+</Tab>
+
+<Tab heading="Self-managed Nomad only" group="local">
+
+<CodeBlockConfig hideClipboard>
+
+```shell-session
+» Performing operation locally
+
+» Building nomad-nodejs-web...
+✓ Running build v1
+Creating new buildpack-based image using builder: heroku/buildpacks:20
+✓ Creating pack client
+✓ Building image
+ │ [exporter] Reusing layer 'buildpacksio/lifecycle:process-types'
+ │ [exporter] Adding label 'io.buildpacks.lifecycle.metadata'
+ │ [exporter] Adding label 'io.buildpacks.build.metadata'
+ │ [exporter] Adding label 'io.buildpacks.project.metadata'
+ │ [exporter] Setting default process type 'web'
+ │ [exporter] Saving nomad-nodejs-web...
+ │ [exporter] *** Images (fd61aa6d5531):
+ │ [exporter]       nomad-nodejs-web
+ │ [exporter] Reusing cache layer 'heroku/nodejs-engine:dist'
+ │ [exporter] Reusing cache layer 'heroku/nodejs-npm:toolbox'
+✓ Injecting entrypoint binary to image
+
+Generated new Docker image: nomad-nodejs-web:latest
+✓ Running push build v1
+✓ Tagging Docker image: nomad-nodejs-web:latest => nomad-nodejs-web:1
+✓ Docker image pushed: nomad-nodejs-web:1
+
+» Deploying nomad-nodejs-web...
+✓ Running deploy v1
+✓ Job registration successful
+✓ Allocation "7a2d86d7-bf8d-c97a-c401-3ed030a721b3" created: node "feb6cf8a-e396-e006-6bab-02827001cb8c", group
+"nomad-nodejs-web-01gwswx4dzanwnm4a2x1frbj6a"
+✓ Evaluation status changed: "pending" -> "complete"
+✓ Evaluation "2b7395d9-3752-5122-aa8e-db1295927d8d" finished with status "complete"
+✓ Deployment successfully rolled out!
+✓ Finished building report for Nomad platform
+✓ Job "nomad-nodejs-web-01gwswx4dzanwnm4a2x1frbj6a" is reporting ready!
+
+✓ Finished building report for Nomad platform
+✓ Job "nomad-nodejs-web-01gwswx4dzanwnm4a2x1frbj6a" is reporting ready!
+
+» Releasing nomad-nodejs-web...
+✓ Running release v1
+
+» Pruning old deployments...
+  Deployment: 01GWSWE6MM4AYNWZ4QYE8GZY1T (v1)
+✓ Running deployment destroy v1
+No release phase specified, skipping...
+
+# ...
+
+           URL: https://primarily-magical-panther.waypoint.run
+Deployment URL: https://primarily-magical-panther--v3.waypoint.run
+```
+
+</CodeBlockConfig>
+
+Waypoint shows the progress of the build, deploy, and release steps in the output. It creates preview URLs for your application with the URL service as part of the deployment workflow. The *Deployment URL* is unique to a specific deployment version while the *Release URL* points to any of the application's deployments that are still active.
+
+Open the deployment URL in your web browser.
+
+</Tab>
+
+</Tabs>
+
+![The example application showing deployment text](/img/tutorials/get-started/web-app.jpg)
+
+## Update and redeploy the app
+
+One of the most powerful parts of Waypoint is that it allows you to quickly iterate on and redeploy changes to your application.
+
+Open `index.ejs` in your text editor and update the deployment message in the `<h1>` tag. Save the file.
+
+<CodeBlockConfig filename="nomad-local/example-app/views/pages/index.ejs" highlight="5" hideClipboard>
+
+```html
+<section class="content">
+  <div class="language-icon">
+    <img src="/language.svg" alt="Node.js Icon" />
+  </div>
+  <h1>This Node.js app was updated and redeployed with Waypoint!</h1>
+  <p>
+    Try making a change to this text locally and run <code>waypoint up</code> again to see it.
+  </p>
+  <p>
+    Read the <a href="https://waypointproject.io/docs">documentation</a> for more about Waypoint.
+  </p>
+</section>
+```
+
+</CodeBlockConfig>
+
+Navigate back to your terminal and restart the workflow.
+
+```shell-session
+$ waypoint up
+```
+
+Waypoint will start the process and output the following.
+
+<Tabs>
+
+<Tab heading="HCP Waypoint" group="hcp">
+
+<CodeBlockConfig hideClipboard>
+
+```shell-session
+» Building nomad-nodejs-web...
+⠙ Running build v2
+
+» Performing operation locally
+Creating new buildpack-based image using builder: heroku/buildpacks:20
+✓ Creating pack client
+✓ Building image
+
+# ...
+
+Generated new Docker image: nomad-nodejs-web:latest
+✓ Running push build v2
+✓ Tagging Docker image: nomad-nodejs-web:latest => nomad-nodejs-web:1
+✓ Docker image pushed: nomad-nodejs-web:1
+
+» Deploying nomad-nodejs-web...
+✓ Running deploy v2
+✓ Job registration successful
+✓ Allocation "04518bc2-c940-c101-30e3-10e03149cf45" created: node "feb6cf8a-e396-e006-6bab-02827001cb8c", group
+"nomad-nodejs-web-01gwt040bta2j0364q8xhzrgxs"
+✓ Evaluation status changed: "pending" -> "complete"
+✓ Evaluation "cf7d7314-ee6b-6598-7879-31d5f61dc31d" finished with status "complete"
+✓ Deployment successfully rolled out!
+✓ Finished building report for Nomad platform
+✓ Job "nomad-nodejs-web-01gwt040bta2j0364q8xhzrgxs" is reporting ready!
+
+» Releasing nomad-nodejs-web...
+✓ Running release v2
+No release phase specified, skipping...
+
+# ...
+
+The deploy was successful!
+
+# ...
+```
+
+</CodeBlockConfig>
+
+Find the allocation ID of the job with the `nomad job status` command. In this example the allocation ID is `b0a9be89`.
+
+View the jobs that start with `nomad-nodejs`. Each deployment with Waypoint creates a new Nomad job so there are now two available jobs.
+
+```shell-session
+$ nomad job status nomad-nodejs
+ID                                           Type     Priority  Status   Submit Date
+nomad-nodejs-web-01gz49t5b2cnsf401fj6pw56q3  service  10        running  2023-04-28T12:05:50-04:00
+nomad-nodejs-web-01gz49x96wh23hdgawna1377j5  service  10        running  2023-04-28T12:07:32-04:00
+```
+
+The results are in order from oldest to newest. Copy the second job ID and get the job status for it. In this example, the job ID is `nomad-nodejs-web-01gz49x96wh23hdgawna1377j5`.
+
+```shell-session
+$ nomad job status nomad-nodejs-web-01gz49x96wh23hdgawna1377j5
+[...]
+Allocations
+ID        Node ID   Task Group                                   Version  Desired  Status   Created     Modified
+eb4524bc  feb6cf8a  nomad-nodejs-web-01gz49x96wh23hdgawna1377j5  0        run      running  6m59s ago  6m48s ago
+```
+
+Copy the allocation ID and get the status for the allocation. In this example, the address is not `192.168.50.210:29908`. Open this address in your browser.
+
+```shell-session
+$ nomad alloc status eb4524bc | grep -A 3 "Allocation Addresses"
+Allocation Addresses (mode = "host"):
+Label      Dynamic  Address
+*waypoint  yes      192.168.50.210:29908 -> 3000
+```
+</Tab>
+
+<Tab heading="Self-managed Nomad only" group="local">
+
+<CodeBlockConfig hideClipboard>
+
+```shell-session
+» Performing operation locally
+
+✓ Running build v2
+Creating new buildpack-based image using builder: heroku/buildpacks:20
+✓ Creating pack client
+✓ Building image
+
+# ...
+
+✓ Tagging Docker image: nomad-nodejs-web:latest => nomad-nodejs-web:1
+✓ Docker image pushed: nomad-nodejs-web:1
+
+» Deploying nomad-nodejs-web...
+✓ Running deploy v2
+✓ Job registration successful
+✓ Allocation "901f53ab-218e-76eb-1fd0-e43788a7aa43" created: node "feb6cf8a-e396-e006-6bab-02827001cb8c", group
+"nomad-nodejs-web-01gwsxa1dd21n2wzgfm4zqkjm5"
+✓ Evaluation status changed: "pending" -> "complete"
+✓ Evaluation "09068148-5e3f-caab-69c0-71ba9c896a93" finished with status "complete"
+✓ Deployment successfully rolled out!
+✓ Finished building report for Nomad platform
+✓ Job "nomad-nodejs-web-01gwsxa1dd21n2wzgfm4zqkjm5" is reporting ready!
+
+» Releasing nomad-nodejs-web...
+✓ Running release v2
+
+» Pruning old deployments...
+  Deployment: 01GWSWVC83SQYNQ8SE4FERW63Y (v2)
+✓ Running deployment destroy v2
+
+# ...
+
+The deploy was successful!
+
+# ...
+
+           URL: https://primarily-magical-panther.waypoint.run
+Deployment URL: https://primarily-magical-panther--v2.waypoint.run
+```
+
+</CodeBlockConfig>
+
+Note that the Deployment URL for the `v2` deployment is different from `v1` as Waypoint generates a new URL for each deployment. Open the deployment URL in your browser and verify that it shows the change to the deployment message.
+
+</Tab>
+
+</Tabs>
+
+![The updated example application with new text](/img/tutorials/get-started/web-app-updated.jpg)
+
+## Next steps
+
+In this tutorial, you learned about Waypoint and the application workflow, set up a Waypoint server and client on Nomad, and built, deployed, updated, and redeployed an application.
+
+Learn how to deploy applications to other platforms with Waypoint by checking out the [Docker](/waypoint/tutorials/get-started-docker/get-started-docker) and [Kubernetes](/waypoint/tutorials/get-started-kubernetes/get-started-kubernetes) tutorials.
+
+Continue on to the next tutorial by clicking on the **Next** button below. You will learn how to interact with a running application container and browse the Waypoint web UI.
+
+Be sure to follow the steps in the [Destroy the Deployment](/waypoint/tutorials/get-started-nomad/get-started-destroy) tutorial to uninstall the Waypoint components and clean up your Nomad cluster.
