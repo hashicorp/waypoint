@@ -1,0 +1,305 @@
+---
+layout: docs
+page_title: Input Variables
+description: |-
+  Use and change custom input variables in your application.
+---
+
+<Warning>
+
+This content is part of the legacy version of Waypoint that is no longer actively maintained. For additional information on the new vision of Waypoint, check out [this blog post](https://www.hashicorp.com/blog/a-new-vision-for-hcp-waypoint) and the [HCP Waypoint documentation](/hcp/docs/waypoint).
+
+</Warning>
+
+# Input Variables
+
+Input variables make your Waypoint configuration more flexible by defining
+values that your end users can assign to customize the configuration. They
+provide a consistent interface to change how a given configuration behaves.
+
+In this tutorial you will run an application and use custom input
+variables to parameterize the configuration. You can use input variables to
+serve as parameters for a Waypoint configuration, allowing aspects of the
+application lifecycle to be customized without altering the waypoint.hcl file.
+Waypoint input variables are also useful when you want to repeatedly reference
+a certain value throughout your waypoint.hcl file.
+
+## Prerequisites
+
+You should be familiar with the basics of running a Waypoint application using
+a Waypoint server. This tutorial shows an example using a server
+installed on Docker. Follow the [Waypoint on Docker tutorials](/waypoint/tutorials/get-started-docker) to get set up.
+
+Before starting this tutorial, ensure you have a running Waypoint server.
+
+### Clone the examples repository
+
+This tutorial shows how to add custom input variables to a Waypoint configuration
+for any application.
+
+Clone the Waypoint examples repository.
+
+```shell-session
+$ git clone https://github.com/hashicorp/waypoint-examples.git
+```
+
+Navigate to an application in the `docker` directory. This tutorial uses
+`waypoint-examples/docker/go' in the following steps.
+
+```shell-session
+$ cd waypoint-examples/docker/go
+```
+
+Open the `go` directory in a text editor.
+
+## Define custom input variables in your configuration
+
+Now that you have an application, you will:
+
+- Define variables within the waypoint.hcl
+- Deploy the application
+- Set new values for the variable
+- Deploy the application again
+
+### Examine the `waypoint.hcl` file
+
+```shell-session
+$ cat waypoint.hcl
+```
+
+The `waypoint.hcl` file contains a basic app configuration.
+
+```hcl
+project = "example-go"
+
+app "example-go" {
+  labels = {
+    "service" = "example-go",
+    "env"     = "dev"
+  }
+
+  build {
+    use "pack" {}
+  }
+
+  deploy {
+    use "docker" {}
+  }
+}
+```
+
+### Define variables
+
+Add the following variable definition blocks to the bottom of your config.
+
+```hcl
+variable "image" {
+	default     = "waypoint-test/example-go"
+	type        = string
+	description = "Image name for the built image in the Docker registry."
+}
+
+variable "tag" {
+	default     = "latest"
+	type        = string
+	description = "The tab for the built image in the Docker registry."
+}
+```
+
+Variable blocks have three optional arguments.
+
+- Default: The default value.
+- Type: The type of data contained in the variable.
+- Description: A short description to document the purpose of the variable.
+
+We recommend setting these for all variables, but they are all optional. To
+leave the `default` value unset, you must specify its value as `null`.
+
+You will see some of the ways to assign values to variables later in this
+tutorial. You must assign a value to a variable before Waypoint can evaluate the
+configuration. However, if a variable is used in a stage that your command
+does not run (for example, you are running `waypoint build` and the variable is only
+used in the `waypoint deploy` stage), you do not need to assign the value at
+run time.
+
+Variable values must be literal values and cannot use computed values like
+functions or other variables.
+
+To refer to a variable in your configuration, use `var.<variable_name>`. This step
+uses the `image` and `tag` variables that you added earlier as attributes for the
+`registry` block.
+
+Add a `registry` block to your `build` stage and set the `local` property to
+`true` to keep our image stored locally. Configure the `image` and `tag` properties to
+reference the variables you just defined:
+
+```diff hideClipboard
+...
+  build {
+    use "pack" {}
++   registry {
++     use "docker" {
++       image = var.image
++       tag   = var.tag
++       local = true
++     }
++   }
+  }
+...
+```
+
+The complete waypoint.hcl file should like this:
+
+<CodeBlockConfig hideClipboard>
+
+```plaintext hideClipboard
+project = "example-go"
+
+app "example-go" {
+  labels = {
+    "service" = "example-go",
+    "env"     = "dev"
+  }
+
+  build {
+    use "pack" {}
+    registry {
+      use "docker" {
+        image = var.image
+        tag   = var.tag
+        local = true
+      }
+    }
+  }
+
+  deploy {
+    use "docker" {}
+  }
+}
+
+variable "tag" {
+  default     = "latest"
+  type        = string
+  description = "The tab for the built image in the Docker registry."
+}
+
+variable "image" {
+  default     = "waypoint-test/example-go"
+  type        = string
+  description = "Image name for the built image in the Docker registry."
+}
+```
+
+</CodeBlockConfig>
+
+### Deploy the application
+
+Run the `waypoint init` command to initialize the application.
+
+```shell-session
+$ waypoint init
+```
+
+Run `waypoint up` to deploy the application to your local Docker instance.
+
+```shell-session
+$ waypoint up
+```
+
+Visit the URL shown in the output.
+
+```plaintext hideClipboard
+           URL: https://previously-ruling-elephant.waypoint.run
+Deployment URL: https://previously-ruling-elephant--v1.waypoint.run
+```
+
+### Verify variable values
+
+You can see the name and tag of your final image by viewing the output from
+the previous step. The end of the build stage output should read:
+
+```plaintext
+Generated new Docker image: example-go:latest
+✓ Tagging Docker image: example-go:latest => waypoint-test/example-go:latest
+✓ Docker image pushed: waypoint-test/example-go:latest
+```
+
+You can also view it by looking at your local Docker images:
+
+```shell-session
+$ docker image ls | grep waypoint-test/example-go
+```
+
+Now change the variable value. Set one value with a command line
+flag and one value via the UI.
+
+First, open the UI.
+
+```shell-session
+$ waypoint ui -authenticate
+```
+
+Select the `go-example` project and click on the `Manage Settings` button.
+You will see the following screen:
+
+![Waypoint UI Project List](/img/tutorials/input-variables/project_list.png)
+
+Click on the `Input Variables` tab. You will see a page indicating that there
+are currently no values assigned to defined variables:
+
+![Waypoint UI Input Variables Empty](/img/tutorials/input-variables/input_vars_empty_settings.png)
+
+Now add a value. Click on `+ Add variable`, and set the variable key to `image`
+and the value to `waypoint-dev/example-go`.
+
+![Waypoint UI Input Variables List](/img/tutorials/input-variables/input_vars_list.png)
+
+The UI is one way to assign values to variables that have been defined
+in the waypoint.hcl.
+
+Another way is through CLI arguments. All Waypoint stage commands accept both
+`var` and `var-file` flags to supply variable values. You will use
+the `var` flag in this tutorial to assign a new value to the `tag` variable.
+
+When you run `waypoint up`, both variables will receive new values -- `image`
+from the UI, and `tag` from the CLI flag.
+
+```shell-session
+$ waypoint up -var tag="0.0.1"
+```
+
+You should observe both new variable values in the terminal output:
+
+```plaintext
+Generated new Docker image: example-go:latest
+✓ Tagging Docker image: example-go:latest => waypoint-dev/example-go:0.0.1
+✓ Docker image pushed: waypoint-dev/example-go:0.0.1
+```
+
+Verify the image is in your local Docker registry.
+
+```shell-session
+$ docker image ls | grep waypoint-dev/example-go
+```
+
+## Destroy the application
+
+After you have completed this tutorial, destroy the deployment.
+
+```shell-session
+$ waypoint destroy -auto-approve
+```
+
+## Reference
+
+In this tutorial you learned to define custom input variables in the
+`waypoint.hcl` file, and supply values via different sources.
+
+To see a completed example of the configuration we built in this guide, go
+[here](https://github.com/hashicorp/waypoint-examples/blob/main/learn/input-variables/waypoint.hcl).
+
+Refer to the [documentation][input-variables] for other details on Waypoint input
+variables, including allowed variable types and other input value sources.
+
+[waypoint on docker collection]: /waypoint/tutorials/get-started-docker
+[input-variables]: /waypoint/docs/waypoint-hcl/variables/input

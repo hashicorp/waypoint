@@ -1,0 +1,402 @@
+---
+layout: docs
+page_title: Static Application Configuration
+description: |-
+  Use and change environment variables in your application.
+---
+
+<Warning>
+
+This content is part of the legacy version of Waypoint that is no longer actively maintained. For additional information on the new vision of Waypoint, check out [this blog post](https://www.hashicorp.com/blog/a-new-vision-for-hcp-waypoint) and the [HCP Waypoint documentation](/hcp/docs/waypoint).
+
+</Warning>
+
+# Static Application Configuration
+
+Modern cloud infrastructure is built of reusable components that can be modified
+at build or deploy time for a specific purpose. Waypoint can build applications
+with custom configuration and can even restart applications when configuration
+values change.
+
+## Challenge
+
+Applications might read configuration values from a database, from a shared
+key/value service, or from the immediate runtime environment. Waypoint can
+provide values to applications via a configuration file or from the command
+line.
+
+## Solution
+
+In this tutorial you will run a Go language application and configure it in two
+ways.
+
+- Write a configuration value in `waypoint.hcl`
+- Set a value from the command line with `waypoint config set`
+
+Both values will be displayed on a web page that is served by the Go application.
+
+<Note>
+
+ These techniques work for non-sensitive information. This tutorial
+does not demonstrate Waypoint's ability to sync values from Vault or Kubernetes.
+
+</Note>
+
+## Prerequisites
+
+You should be familiar with the basics of running a Waypoint application with
+the `waypoint` binary. Follow the [Waypoint on Docker tutorials][/collections/waypoint/get-started-docker] to learn the basics.
+
+You must also:
+
+- Clone the code examples repository
+- Install and run Docker or Docker Desktop
+
+### Clone the examples repository
+
+This tutorial uses a Go language application to display environment variables you
+set with Waypoint. You do not need to know how to write Go applications. We
+will show a few lines of code in multiple languages so you can become familiar
+with working with environment variables using Waypoint.
+
+Clone the Waypoint examples repository which contains the sample Go application.
+
+```shell-session
+$ git clone https://github.com/hashicorp/waypoint-examples.git
+```
+
+Navigate to the `waypoint-examples/learn/static-application-configuration` directory.
+
+```shell-session
+$ cd waypoint-examples/learn/static-application-configuration
+```
+
+Open the `static-application-configuration` directory in a text editor.
+
+### Install and run Docker Desktop
+
+Install the most recent stable version of Docker or [Docker
+Desktop](https://www.docker.com/products/docker-desktop).
+
+<Tabs>
+<Tab heading="Linux">
+
+
+Start the Docker daemon on Linux.
+
+```shell-session
+$ sudo service docker start
+```
+
+</Tab>
+<Tab heading="macOS">
+
+
+Open Docker on macOS in order to run it.
+
+```shell-session
+$ open -a Docker
+```
+
+</Tab>
+</Tabs>
+
+
+### Set up the Waypoint server
+
+Waypoint runs as a server and a client, even if only run locally. For this tutorial, you'll run the server in Docker or Docker Desktop.
+
+#### Install the Waypoint Server
+
+Install the Waypoint server to Docker or Docker Desktop on your computer. This allows you
+to view the user interface, collaborate on deployments, and more.
+
+Run the following command to install the Waypoint server. The `-accept-tos` flag
+confirms that you accept the terms of service for our [application URL
+service](https://www.waypointproject.io/terms).
+
+```shell-session
+$ waypoint install -platform=docker -accept-tos
+```
+
+## Examine the Go code
+
+The [main.go][] file defines a Go application that serves a minimal web page
+which displays information about a sale. You can configure the discount (10%,
+20%, 50%) and the day that the sale ends on (Monday, Wednesday, Friday).
+
+This code will:
+
+- Read one or more environment variables
+- Use the value of the variables to modify the behavior of the application
+
+In order to read environment variables, you must import the `os` module.
+
+```go
+import (
+	"fmt"
+	"log"
+	"net/http"
+	"os"
+)
+```
+
+The `main` function defines a `saleViewHandler` which will render an HTML string
+that displays the sale percentage and the day on which the sale ends.
+
+```go
+func main() {
+	http.HandleFunc("/", saleViewHandler)
+
+	fmt.Printf("Starting server at: http://localhost:3000\n")
+	if err := http.ListenAndServe(":3000", nil); err != nil {
+		log.Fatal(err)
+	}
+}
+```
+
+Go and other languages are built with support for reading environment variables.
+
+<Tabs>
+<Tab heading="Go">
+
+
+```go
+salePercent := os.Getenv("SALE_PERCENT")
+```
+
+</Tab>
+<Tab heading="JavaScript">
+
+
+```javascript
+salePercent = process.env.SALE_PERCENT
+```
+
+</Tab>
+<Tab heading="Python">
+
+
+```python
+import os
+
+salePercent = os.getenv('SALE_PERCENT')
+```
+
+</Tab>
+<Tab heading="Java">
+
+
+```java
+String sale_percent = System.getenv("SALE_PERCENT");
+```
+
+</Tab>
+<Tab heading="Ruby">
+
+
+```ruby
+sale_percent = ENV["SALE_PERCENT"]
+```
+
+</Tab>
+<Tab heading="C#">
+
+
+```csharp
+var salePercent = Environment.GetEnvironmentVariable("SALE_PERCENT");
+```
+
+</Tab>
+</Tabs>
+
+
+The `saleViewHandler` function uses `os.Getenv` to read the values of
+`SALE_PERCENT` and `SALE_ENDS_ON` from the environment.
+
+The `Fprintf` line builds an HTML string to display these values. In a
+production scenario, you would use a templating language such as [Go
+templates][] to define an HTML document with variables.
+
+```go
+func saleViewHandler(w http.ResponseWriter, r *http.Request) {
+	salePercent := os.Getenv("SALE_PERCENT")
+	saleEndsOn := os.Getenv("SALE_ENDS_ON")
+
+	fmt.Fprintf(w, `
+	<style>body { font-size: 3em; }</style>
+	<h1>Today&#8217;s Sale</h1>
+	<div>Save %s!</div>
+	<div>Until %s</div>
+	`,
+		salePercent,
+		saleEndsOn)
+}
+```
+
+## Use a hard-coded static configuration value
+
+Now that you have a Go application that can display values, you will:
+
+- Write a `waypoint.hcl` to populate the `SALE_PERCENT` variable
+- Deploy the application
+- Set a value with `waypoint config set`
+- View the updated application in your web browser
+
+### Examine the `waypoint.hcl` file
+
+We've provided a `waypoint.hcl` file that sets a hard coded value for `SALE_PERCENT`.
+
+```shell-session
+$ cat waypoint.hcl
+```
+
+Configuration can be set at the project level or at the application level. For
+this project, define an application-level variable in the `config` section under
+`env`. You will only set the `SALE_PERCENT` value in this way.
+
+```hcl
+project = "example-go"
+
+app "example-go" {
+  labels = {
+    "service" = "example-go",
+    "env"     = "dev"
+  }
+
+  config {
+    env = {
+       SALE_PERCENT = "50%"
+    }
+  }
+
+  build {
+    use "pack" {}
+  }
+
+  deploy {
+    use "docker" {}
+  }
+}
+```
+
+### Deploy the application
+
+You can debug or run the Go application locally with the `go run` command. For
+this tutorial, we will continue on to deploying the application with Waypoint.
+
+```shell-session
+$ go run main.go
+```
+
+Run the `init` command to initialize the application.
+
+```shell-session
+$ waypoint init
+```
+
+Run `waypoint up` to deploy the application to your local Docker instance.
+Waypoint will compile the Go application inside a container and then deploy it
+to Docker.
+
+```shell-session
+$ waypoint up
+```
+
+Visit the URL shown in the output.
+
+```plaintext hideClipboard
+           URL: https://mostly-massive-alien.waypoint.run
+Deployment URL: https://mostly-massive-alien--v1.waypoint.run
+```
+
+You will see an application that displays the `SALE_PERCENT`.
+
+![Web Application with Sale Percent](/img/tutorials/static-application-configuration/static_config_percent.png)
+
+## Set a configuration value on an existing application
+
+The page looks incomplete since there is no value after "Until."
+
+In the code for the Go application, we read a value for `SALE_ENDS_ON`, but that
+value has not been set. Let's set it from the command line. The sale will end on
+Monday.
+
+```shell-session
+$ waypoint config set SALE_ENDS_ON=Monday
+```
+
+Waypoint will instantly restart the container with the new value. You must
+manually refresh the web page to view it.
+
+![Web Application with Sale Ends On](/img/tutorials/static-application-configuration/static_config_ends_on.png)
+
+You can also verify that the change occurred by opening the Waypoint admin
+console and looking at the logs.
+
+```shell-session
+$ waypoint ui -authenticate
+```
+
+You will observe lines that indicate Waypoint noticed a change in an
+environment variable.
+
+```plaintext hideClipboard
+[INFO] entrypoint.config.watcher: env vars changed, sending new child command
+[INFO] entrypoint.child: terminating current child process for restart
+[WARN] entrypoint.child: subprocess exited: args=[/cnb/lifecycle/launcher] cmd=/cnb/lifecycle/launcher err="signal: terminated"
+[INFO] entrypoint.child: child process exited: pid=15 wait_err=<nil>
+[INFO] entrypoint.child: starting child process: args=[/cnb/lifecycle/launcher] cmd=/cnb/lifecycle/launcher
+Starting server at: http://localhost:3000
+```
+
+![Waypoint Admin UI](/img/tutorials/static-application-configuration/web_admin_static_config.png)
+
+## Destroy the application
+
+After you have completed this tutorial, destroy the deployment.
+
+```shell-session
+$ waypoint destroy -auto-approve
+```
+
+## Next steps
+
+Hard-coded configuration values in `waypoint.hcl` are useful for values that do
+not change often but that do change between scenarios. They can also be used if
+you want to deploy a pre-built container with custom configuration.
+
+For example, you could use Waypoint to deploy the generic [MySQL Docker][]
+container with a random password and a database named "education."
+
+```hcl hideClipboard
+# Minimal MySQL configuration example
+config {
+	env = {
+		MYSQL_DATABASE = "education"
+		MYSQL_RANDOM_ROOT_PASSWORD = "1"
+	}
+}
+```
+
+When the container is deployed, the Waypoint logs will display the generated
+password and the name of the database that was created on startup. This can be
+achieved with an existing MySQL container and a few environment variables
+specified with Waypoint.
+
+```plaintext hideClipboard
+[Note] [Entrypoint]: GENERATED ROOT PASSWORD: eesahph9chiesooth0theL7ooso4cen7
+[Note] [Entrypoint]: Creating database education
+```
+
+## Reference
+
+In this tutorial you learned to define Waypoint configuration values in the
+`waypoint.hcl` file or on the command line with `waypoint config set`.
+
+Refer to the [documentation][app-config] for other details on Waypoint configuration.
+
+[main.go]: https://github.com/hashicorp/waypoint-examples/blob/main/learn/static-application-configuration/main.go
+[go templates]: /nomad/tutorials/templates/go-template-syntax
+[mysql docker]: https://hub.docker.com/_/mysql/
+[app-config]: /waypoint/docs/app-config

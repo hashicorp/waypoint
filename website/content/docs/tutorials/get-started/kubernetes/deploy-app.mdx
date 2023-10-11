@@ -1,0 +1,680 @@
+---
+layout: docs
+page_title: Deploy an Application to Kubernetes
+description: Release applications to a local or cloud hosted Kubernetes cluster.
+---
+
+<Warning>
+
+This content is part of the legacy version of Waypoint that is no longer actively maintained. For additional information on the new vision of Waypoint, check out [this blog post](https://www.hashicorp.com/blog/a-new-vision-for-hcp-waypoint) and the [HCP Waypoint documentation](/hcp/docs/waypoint).
+
+</Warning>
+
+# Deploy an Application to Kubernetes
+
+In this tutorial, you will learn how Waypoint works by deploying and running an application on Kubernetes.
+
+## Prerequisites
+
+For this tutorial, you will need:
+
+- The [Waypoint CLI version 0.11.1 or later installed locally](/waypoint/tutorials/get-started-kubernetes/get-started-install)
+- [`kubectl`](https://kubernetes.io/docs/tasks/tools/#kubectl) installed locally
+- A free [DockerHub personal account](https://docs.docker.com/docker-id/) for storing and accessing images
+- (Optional) An [HCP Account](/hcp/docs/hcp/create-account) if you want to use HCP Waypoint
+
+You will create a Kubernetes cluster in this tutorial and depending on where you want to run it, you'll also need one of the following:
+- Docker Desktop installed to use [Kubernetes on Docker Desktop](https://docs.docker.com/desktop/kubernetes/)
+- An AWS account and [Terraform installed](/terraform/tutorials/aws-get-started/install-cli) if you want to run Waypoint on a Kubernetes cluster on AWS
+- A GCP account, the [`gcloud` CLI tool installed](https://cloud.google.com/sdk/docs/install), and [Terraform installed](/terraform/tutorials/aws-get-started/install-cli) if you want to run Waypoint on a Kubernetes cluster on GCP
+
+## Clone the example repository
+
+The [example repository](https://github.com/hashicorp-education/learn-waypoint-get-started) contains application code and Waypoint configuration files for building, deploying, and releasing the application with Waypoint.
+
+Clone the example repository.
+
+```shell-session
+$ git clone https://github.com/hashicorp-education/learn-waypoint-get-started.git
+```
+
+Navigate to the `example-app` directory.
+
+```shell-session
+$ cd kubernetes/example-app
+```
+
+## Set up DockerHub configuration
+
+When running Waypoint on non-local infrastructure, an external image repository is necessary for storing and retrieving built images. In this tutorial, you will use DockerHub as an external image repository but other ones work as long as you properly configure authentication through the [`auth` configuration](/waypoint/integrations/hashicorp/docker/latest/components/registry/docker-registry#parameters.auth) of the registry block in the Docker plugin.
+
+To access DockerHub for pushing and pulling images, Waypoint requires authentication credentials. It supports credential definitions in the `waypoint.hcl` file and ["out of band" authentication](/waypoint/docs/lifecycle/build#out-of-band-authentication) by reading configurations set locally by a `docker login` either through the Docker CLI or Docker Desktop. In this tutorial, you will be providing DockerHub token credentials through environment variables.
+
+Navigate to DockerHub, log in, and create an access token by visiting the [security settings page](https://hub.docker.com/settings/security) and clicking the **New Access Token** button. Give the token a description, select the **Read, Write, Delete** permission option from the dropdown, and click the **Generate** button.
+
+![Create an access token on DockerHub](/img/tutorials/hcp-runners/dockerhub-token-creation.jpg)
+
+Copy the token value and export it as an environment variable.
+
+```shell-session
+$ export REGISTRY_PASSWORD=<YOUR_TOKEN>
+```
+
+Then, export your DockerHub username.
+
+```shell-session
+$ export REGISTRY_USERNAME=<YOUR_USERNAME>
+```
+
+## Create a Kubernetes environment
+
+Waypoint can run on any Kubernetes cluster including locally with Docker Desktop and major cloud provider distributions like Amazon EKS (Elastic Kubernetes Service) and Google GKE (Google Kubernetes Engine).
+
+<Tabs>
+<Tab heading="Docker Desktop" group="Docker">
+
+[Docker Desktop](https://www.docker.com/products/docker-desktop) has a built-in feature for running a local Kubernetes cluster.
+
+To enable Kubernetes on your local machine, open the Docker Desktop application, navigate to the Preferences screen, click on the **Kubernetes** option in the left navigation, check the **Enable Kubernetes** check box, and click the **Apply & Restart** button.
+
+![Docker Desktop application on MacOS](/img/tutorials/get-started/docker_desktop_enable_kubernetes_macos.jpg)
+
+![Docker Desktop application on Windows](/img/tutorials/get-started/docker_desktop_enable_kubernetes_windows.jpg)
+
+After a few moments, Docker Desktop will restart with an active Kubernetes cluster. The `kubectl` context will be set as part of the process.
+
+Verify connectivity and that the correct context is set.
+
+```shell-session
+$  kubectl cluster-info
+Kubernetes control plane is running at https://kubernetes.docker.internal:6443
+CoreDNS is running at https://kubernetes.docker.internal:6443/api/v1/namespaces/kube-system/services/kube-dns:dns/proxy
+
+To further debug and diagnose cluster problems, use 'kubectl cluster-info dump'.
+```
+
+</Tab>
+
+<Tab heading="AWS EKS" group="EKS">
+
+Complete the [Terraform EKS tutorial](/terraform/tutorials/kubernetes/eks) to create an Kubernetes cluster on AWS and set the `kubectl` context as part of the process. Once your cluster is ready, return to this tutorial.
+
+Verify connectivity and that the correct context is set.
+
+```shell-session
+$ kubectl cluster-info
+Kubernetes control plane is running at https://1EE4EA08547D96E3D83A8DE7D35CD935.gr7.us-east-2.eks.amazonaws.com
+CoreDNS is running at https://1EE4EA08547D96E3D83A8DE7D35CD935.gr7.us-east-2.eks.amazonaws.com/api/v1/namespaces/kube-system/services/kube-dns:dns/proxy
+
+To further debug and diagnose cluster problems, use 'kubectl cluster-info dump'.
+```
+
+</Tab>
+<Tab heading="GCP GKE" group="GKE">
+
+Complete the [Terraform GKE tutorial](/terraform/tutorials/kubernetes/gke) to create an Kubernetes cluster on GCP and set the `kubectl` context as part of the process. Once your cluster is ready, return to this tutorial.
+
+Verify connectivity and that the correct context is set.
+
+```shell-session
+$ kubectl cluster-info
+Kubernetes control plane is running at https://34.73.162.164
+GLBCDefaultBackend is running at https://34.73.162.164/api/v1/namespaces/kube-system/services/default-http-backend:http/proxy
+KubeDNS is running at https://34.73.162.164/api/v1/namespaces/kube-system/services/kube-dns:dns/proxy
+KubeDNSUpstream is running at https://34.73.162.164/api/v1/namespaces/kube-system/services/kube-dns-upstream:dns/proxy
+Metrics-server is running at https://34.73.162.164/api/v1/namespaces/kube-system/services/https:metrics-server:/proxy
+
+To further debug and diagnose cluster problems, use 'kubectl cluster-info dump'.
+```
+
+</Tab>
+</Tabs>
+
+## Set up Waypoint
+
+[HCP Waypoint](/hcp/docs/waypoint) is a HashiCorp-managed service that helps you to manage your application lifecycle without maintaining a Waypoint server and associated infrastructure. It allows to you automate and simplify the process of deploying your web applications into your infrastructure.
+
+Waypoint runs as a server and a client, whether run on HCP Waypoint or locally. For this tutorial, you can choose to use HCP Waypoint for the server and your Kubernetes cluster for the client or run Waypoint entirely on your cluster.
+
+Both methods create a [Waypoint context](/waypoint/commands/context-list) that contains information about the server and authentication for connecting to it from the Waypoint CLI. This is how the CLI knows the address of the server when you run other Waypoint commands.
+
+<Tip>
+
+Since Waypoint can run on any Kubernetes cluster, you can use the same install command regardless of whether your cluster is on AWS, GCP, Docker Desktop, or elsewhere. However, note that some of the output from the commands in this tutorial may differ from yours depending on the location of your cluster.
+
+</Tip>
+
+<Tabs>
+
+<Tab heading="HCP Waypoint" group="hcp">
+
+### Set up an HCP organization and project
+
+[Sign in to your HCP account](https://portal.cloud.hashicorp.com/sign-in) and create an HCP organization by following the steps in the [Create an organization](/hcp/docs/hcp/admin/orgs#create-an-organization) page. Then, create an HCP project by following the steps in the [Create a project](/hcp/docs/hcp/admin/projects#create-a-project) page.
+
+### Enable HCP Waypoint
+
+Click on the **Waypoint** option from the left navigation.
+
+![HCP UI with the Waypoint option highlighted](/img/tutorials/get-started/hcp-ui-waypoint-option.jpg)
+
+Then, click on the **Activate Waypoint** button in the top right of the page.
+
+![HCP Waypoint UI with the Activate Waypoint button highlighted](/img/tutorials/get-started/hcp-ui-waypoint-activate.jpg)
+
+A dialog appears to confirm that Waypoint has been activated.
+
+![HCP Waypoint UI a dialog showing that Waypoint has been activated](/img/tutorials/get-started/hcp-ui-waypoint-activation-complete.jpg)
+
+### Set up HCP Waypoint context
+
+Click the **Manage** button on the top right of the page, click on the clipboard icon to copy the `waypoint context create` command, and run it in your terminal. Your Waypoint CLI can now communicate with HCP Waypoint.
+
+![HCP Waypoint UI with the Manage button clicked and copy button highlighted](/img/tutorials/get-started/hcp-ui-waypoint-manage.jpg)
+
+HCP Waypoint works with your local installation of the Waypoint CLI and does not require any additional runners as it uses the one that is [part of the CLI](/waypoint/docs/runner#cli-runner). Installing and connecting a [static runner](/waypoint/docs/runner#static-runner) to HCP Waypoint allows you to automate your workflow with GitOps and use [dynamic configuration sourcing](/waypoint/docs/app-config/dynamic) without requiring interaction with your CLI.
+
+This tutorial uses only the CLI runner and does not include runner installation. You can read more about the runner installation process on the [runner install page](/waypoint/commands/runner-install).
+
+</Tab>
+
+<Tab heading="Kubernetes only" group="k8s">
+
+### Install Waypoint
+
+Install the server and client runner components into the cluster. The `-accept-tos` flag confirms that you accept the [terms of service](https://www.waypointproject.io/terms) for the Waypoint URL service. There is [additional information](#waypoint-url-service) about the URL service later in the tutorial.
+
+```shell-session
+$ waypoint install --platform=kubernetes -accept-tos
+✓ Service "waypoint" is ready
+✓ Server bootstrap complete!
+✓ Waypoint server installed with Helm!
+✓ Configured server connection
+✓ Successfully connected to Waypoint server in Kubernetes!
+✓ Server installed and configured!
+✓ Runner "static" installed
+✓ Waypoint runner installed with Helm!
+✓ Runner "static" adopted successfully.
+Waypoint server successfully installed and configured!
+
+The CLI has been configured to connect to the server automatically. This
+connection information is saved in the CLI context named "install-1679676263".
+Use the "waypoint context" CLI to manage CLI contexts.
+
+The server has been configured to advertise the following address for
+entrypoint communications. This must be a reachable address for all your
+deployments. If this is incorrect, manually set it using the CLI command
+"waypoint server config-set".
+
+To launch and authenticate into the Web UI, run:
+waypoint ui -authenticate
+
+Advertise Address: waypoint-server:9701
+Web UI Address: https://localhost:9702
+```
+
+Verify the installation by listing the cluster resources. The install process creates several components that make up the Waypoint application including Pods and StatefulSets for the server and runner client, services for the server and UI, and bootstrapping resources that are part of the installation process.
+
+```shell-session
+$ kubectl get all
+NAME                                         READY   STATUS      RESTARTS   AGE
+pod/waypoint-bootstrap-latest-escjdc-6rq47   0/1     Completed   0          3m47s
+pod/waypoint-server-0                        1/1     Running     0          3m47s
+pod/waypoint-static-runner-0                 1/1     Running     0          3m2s
+
+NAME                      TYPE           CLUSTER-IP       EXTERNAL-IP   PORT(S)                                                    AGE
+service/kubernetes        ClusterIP      10.96.0.1        <none>        443/TCP                                                    67m
+service/waypoint-server   ClusterIP      None             <none>        9702/TCP,9701/TCP                                          3m47s
+service/waypoint-ui       LoadBalancer   10.104.106.238   localhost     80:30010/TCP,443:31290/TCP,9701:31868/TCP,9702:30461/TCP   3m47s
+
+NAME                                      READY   AGE
+statefulset.apps/waypoint-server          1/1     3m47s
+statefulset.apps/waypoint-static-runner   1/1     3m2s
+
+NAME                                         COMPLETIONS   DURATION   AGE
+job.batch/waypoint-bootstrap-latest-escjdc   1/1           43s        3m47s
+```
+
+</Tab>
+
+</Tabs>
+
+## Initialize Waypoint for the Application
+
+You must initialize and configure Waypoint for your application before beginning the build, deploy, and release workflow.
+
+During the initialization process, Waypoint searches for a `waypoint.hcl` configuration file for the application in the current directory. This configuration file gives Waypoint instructions for how to build, deploy, and release your application. If Waypoint cannot find the configuration file when `waypoint init` is run, it will create a `waypoint.hcl` file that you can then customize for your application.
+
+### Review the `waypoint.hcl` file
+
+Open the `waypoint.hcl` file.
+
+<CodeBlockConfig filename="kubernetes/example-app/waypoint.hcl" hideClipboard>
+
+```hcl
+variable "registry_username" {
+  type = string
+  default = ""
+  env = ["REGISTRY_USERNAME"]
+}
+
+variable "registry_password" {
+  type = string
+  sensitive = true
+  default = ""
+  env = ["REGISTRY_PASSWORD"]
+}
+
+project = "kubernetes-nodejs"
+
+app "kubernetes-nodejs-web" {
+  labels = {
+    "service" = "kubernetes-nodejs-web",
+    "env"     = "dev"
+  }
+
+  build {
+    use "pack" {}
+    registry {
+       use "docker" {
+        image = "${var.registry_username}/kubernetes-nodejs-web"
+        tag   = "1"
+        local = false
+        auth {
+          username = var.registry_username
+          password = var.registry_password
+        }
+      }
+    }
+  }
+
+  deploy {
+    use "kubernetes" {
+      probe_path = "/"
+    }
+  }
+
+  release {
+    use "kubernetes" {
+      // Sets up a load balancer to access released application
+      load_balancer = true
+      port          = 3000
+    }
+  }
+}
+```
+
+</CodeBlockConfig>
+
+The `variable` blocks define the Docker registry username and password environment variables set earlier.
+
+The `app` block defines the name of the application in Waypoint and contains the `build`, `deploy`, and `release` configuration blocks.
+
+The `labels` block defines [labels](/waypoint/docs/lifecycle/labels) for the application. These are intended to contain information such as organizational or process data useful to the user but not directly interpreted by Waypoint.
+
+The [`use` option](/waypoint/docs/waypoint-hcl/use) within the `build`, `deploy`, and `release` blocks specifies which plugin to use during those specific phases of the workflow.
+
+The `build` block defines how Waypoint will [build the application](/waypoint/docs/lifecycle/build) and produce an artifact.
+- Since the `use "pack"` option in this example is empty, Waypoint uses the default configuration for the [Cloud Native Buildpacks plugin](/waypoint/plugins/pack), which selects the most relevant pack to build the application.
+- The `registry` option specifies image registry information. In this example, the image contains the username for DockerHub and an `auth` block with credentials for pushing to that registry. The [`image` attribute must include the fully qualified name](/waypoint/integrations/hashicorp/docker/latest/components/registry/docker-registry#parameters.image) unless you are using DockerHub.
+
+The `deploy` block defines how Waypoint will deploy the application.
+- In this example, the [`probe_path` attribute](/waypoint/integrations/hashicorp/docker/latest/components/registry/docker-registry#parameters.probe_path) of the Kubernetes plugin instructs Waypoint to run a health check on the application at the path `/`.
+
+The `release` block defines how Waypoint releases the application. In this example, the release block uses the Kubernetes plugin and creates a load balancer that listens on port `3000`.
+
+### Waypoint URL service
+
+The [Waypoint URL service](/waypoint/docs/url) is a service hosted by HashiCorp that generates publically accessible URLs for your applications on Waypoint. The URLs are connected to your application and their deployment locations so the URLs will only resolve when the deployment is running.
+
+These preview URLs are optional and can be disabled in the [Waypoint server configuration](/waypoint/commands/server-run#url-enabled) when running a server manually with `waypoint server run`. You can also disable preview URLs on a per-app basis with the [`url` block](/waypoint/docs/waypoint-hcl/url) if the service is enabled on the server.
+
+<CodeBlockConfig heading="Disable the URL service for a specific app" hideClipboard highlight="4-6">
+
+```hcl
+project = "example-project"
+
+app "example-application" {
+  url {
+    auto_hostname = false
+  }
+  
+  # ...
+}
+```
+
+</CodeBlockConfig>
+
+### Initialize Waypoint
+
+Initialize Waypoint for the example application.
+
+```shell-session
+$ waypoint init
+✓ Configuration file appears valid
+✓ Connection to Waypoint server was successful
+✓ Project "kubernetes-nodejs" and all apps are registered with the server.
+✓ Project "kubernetes-nodejs" pipelines are registered with the server.
+
+Project initialized!
+
+You may now call 'waypoint up' to deploy your project or
+commands such as 'waypoint build' to perform steps individually.
+```
+
+## Build and Deploy
+
+With the initialization complete, use the [`waypoint up` command](/waypoint/commands/up) to instruct Waypoint to build, deploy, and release your application. 
+
+### Run `waypoint up`
+
+Waypoint uses Cloud Native Buildpacks to [automatically detect](https://buildpacks.io/docs/app-journey/#auto-detection) the type of application and uses the applicable buildpack to create the build artifact.
+
+Once Waypoint completes the build, it stores the artifacts in a registry. The [`registry` block](/waypoint/docs/waypoint-hcl/registry) contains the configuration for where Waypoint should store those artifacts. By default, Waypoint stores Docker artifacts locally with Docker Desktop unless the `registry` block contains additional configuration.
+
+Start the Waypoint workflow.
+
+```shell-session
+$ waypoint up
+```
+
+Waypoint will start the process and output the following.
+
+<Tabs>
+
+<Tab heading="HCP Waypoint" group="hcp">
+
+<CodeBlockConfig hideClipboard>
+
+```shell-session
+✓ Running build v1
+Creating new buildpack-based image using builder: heroku/buildpacks:20
+✓ Creating pack client
+✓ Building image
+ │ [exporter] Reusing layer 'buildpacksio/lifecycle:process-types'
+ │ [exporter] Adding label 'io.buildpacks.lifecycle.metadata'
+ │ [exporter] Adding label 'io.buildpacks.build.metadata'
+ │ [exporter] Adding label 'io.buildpacks.project.metadata'
+ │ [exporter] Setting default process type 'web'
+ │ [exporter] Saving kubernetes-nodejs-web...
+ │ [exporter] *** Images (18a50cd83fe5):
+ │ [exporter]       kubernetes-nodejs-web
+ │ [exporter] Reusing cache layer 'heroku/nodejs-engine:dist'
+ │ [exporter] Reusing cache layer 'heroku/nodejs-npm:toolbox'
+✓ Injecting entrypoint binary to image
+
+» Performing operation locally
+
+Generated new Docker image: kubernetes-nodejs-web:latest
+✓ Running push build v1
+✓ Tagging Docker image: kubernetes-nodejs-web:latest => kubernetes-nodejs-web:1.0.0
+✓ Docker image pushed: kubernetes-nodejs-web:1.0.0
+
+» Deploying kubernetes-nodejs-web...
+✓ Running deploy v1
+✓ Kubernetes client connected to https://kubernetes.docker.internal:6443 with namespace default
+✓ Creating deployment...
+✓ Expected "http" port "3000" for app "kubernetes-nodejs-web-v1"
+✓ Deployment successfully rolled out!
+✓ Finished building report for Kubernetes platform
+✓ Finished building report for Kubernetes deployment resource
+✓ Deployment "kubernetes-nodejs-web-v1" is reporting ready!
+
+✓ Finished building report for Kubernetes platform
+✓ Finished building report for Kubernetes deployment resource
+✓ Deployment "kubernetes-nodejs-web-v1" is reporting ready!
+
+» Releasing kubernetes-nodejs-web...
+✓ Running release v1
+✓ Kubernetes client connected to https://kubernetes.docker.internal:6443 with namespace default
+✓ Creating service...
+✓ Service is ready!
+✓ Finished building report for Kubernetes platform
+✓ Finished building report for Kubernetes service resource
+
+✓ Finished building report for Kubernetes platform
+✓ Finished building report for Kubernetes service resource
+
+» Variables used:
+  VARIABLE | VALUE | TYPE | SOURCE  
+-----------+-------+------+---------
+
+
+The deploy was successful! This deploy was done in-place so the deployment
+URL may match a previous deployment.
+
+   Release URL: http://localhost
+```
+
+</CodeBlockConfig>
+
+Waypoint shows the progress of the build, deploy, and release steps in the output but does not contain deployment URLs as the [URL service](#waypoint-url-service) is disabled when using HCP Waypoint.
+
+Open the release URL in your web browser.
+
+</Tab>
+
+<Tab heading="Kubernetes only" group="k8s">
+
+<CodeBlockConfig hideClipboard>
+
+```shell-session
+» Performing operation locally
+
+Building kubernetes-nodejs-web...
+✓ Running build v1
+Creating new buildpack-based image using builder: heroku/buildpacks:20
+✓ Creating pack client
+✓ Building image
+ │ [exporter] Reusing layer 'buildpacksio/lifecycle:process-types'
+ │ [exporter] Adding label 'io.buildpacks.lifecycle.metadata'
+ │ [exporter] Adding label 'io.buildpacks.build.metadata'
+ │ [exporter] Adding label 'io.buildpacks.project.metadata'
+ │ [exporter] Setting default process type 'web'
+ │ [exporter] Saving kubernetes-nodejs-web...
+ │ [exporter] *** Images (d98f78ed8e05):
+ │ [exporter]       kubernetes-nodejs-web
+ │ [exporter] Reusing cache layer 'heroku/nodejs-engine:dist'
+ │ [exporter] Reusing cache layer 'heroku/nodejs-npm:toolbox'
+✓ Injecting entrypoint binary to image
+
+Generated new Docker image: kubernetes-nodejs-web:latest
+✓ Running push build v1
+✓ Tagging Docker image: kubernetes-nodejs-web:latest => kubernetes-nodejs-web:1
+✓ Docker image pushed: kubernetes-nodejs-web:1
+
+» Deploying kubernetes-nodejs-web...
+✓ Running deploy v1
+✓ Kubernetes client connected to https://kubernetes.docker.internal:6443 with namespace default
+✓ Creating deployment...
+✓ Expected "http" port "3000" for app "kubernetes-nodejs-web-v1"
+✓ Deployment successfully rolled out!
+✓ Finished building report for Kubernetes platform
+✓ Finished building report for Kubernetes deployment resource
+✓ Deployment "kubernetes-nodejs-web-v1" is reporting ready!
+
+✓ Finished building report for Kubernetes platform
+✓ Finished building report for Kubernetes deployment resource
+✓ Deployment "kubernetes-nodejs-web-v1" is reporting ready!
+
+» Releasing kubernetes-nodejs-web...
+✓ Running release v1
+✓ Kubernetes client connected to https://kubernetes.docker.internal:6443 with namespace default
+✓ Updating existing service...
+✓ Service is ready!
+
+✓ Finished building report for Kubernetes platform
+✓ Finished building report for Kubernetes service resource
+
+✓ Finished building report for Kubernetes platform
+✓ Finished building report for Kubernetes service resource
+
+» Variables used:
+  VARIABLE | VALUE | TYPE | SOURCE  
+-----------+-------+------+---------
+
+
+The deploy was successful! A Waypoint deployment URL is shown below. This
+can be used internally to check your deployment and is not meant for external
+traffic. You can manage this hostname using "waypoint hostname."
+
+   Release URL: http://10.109.17.195:80
+Deployment URL: https://instantly-comic-monster--v1.waypoint.run
+```
+
+</CodeBlockConfig>
+
+Waypoint shows the progress of the build, deploy, and release steps in the output. It creates preview URLs for your application with the URL service as part of the deployment workflow. The *Deployment URL* is unique to a specific deployment version while the *Release URL* points to any of the application's deployments that are still active.
+
+Open the deployment URL in your web browser.
+
+</Tab>
+
+</Tabs>
+
+![The example application showing deployment text](/img/tutorials/get-started/web-app.jpg)
+
+## Update and Redeploy the App
+
+One of the most powerful parts of Waypoint is that it allows you to quickly iterate on and redeploy changes to your application.
+
+Open `index.ejs` in your text editor and update the deployment message in the `<h1>` tag. Save the file.
+
+<CodeBlockConfig filename="kubernetes/example-app/views/pages/index.ejs" highlight="5" hideClipboard>
+
+```html
+<section class="content">
+  <div class="language-icon">
+    <img src="/language.svg" alt="Node.js Icon" />
+  </div>
+  <h1>This Node.js app was updated and redeployed with Waypoint!</h1>
+  <p>
+    Try making a change to this text locally and run <code>waypoint up</code> again to see it.
+  </p>
+  <p>
+    Read the <a href="https://waypointproject.io/docs">documentation</a> for more about Waypoint.
+  </p>
+</section>
+```
+
+</CodeBlockConfig>
+
+Navigate back to your terminal and restart the workflow.
+
+```shell-session
+$ waypoint up
+```
+
+Waypoint will start the process and output the following.
+
+<Tabs>
+
+<Tab heading="HCP Waypoint" group="hcp">
+
+<CodeBlockConfig hideClipboard>
+
+```shell-session
+» Building kubernetes-nodejs-web...
+⠦ Running build v2
+Creating new buildpack-based image using builder: heroku/buildpacks:20
+✓ Creating pack client
+✓ Building image
+
+# ...
+
+Generated new Docker image: kubernetes-nodejs-web:latest
+✓ Running push build v2
+✓ Tagging Docker image: kubernetes-nodejs-web:latest => kubernetes-nodejs-web:1.0.0
+✓ Docker image pushed: kubernetes-nodejs-web:1.0.0
+
+# ...
+
+✓ Docker image pushed: 561656980159.dkr.ecr.us-east-2.amazonaws.com/waypoint-example:latest
+
+» Deploying kubernetes-nodejs-web...
+✓ Running deploy v2
+
+# ...
+
+✓ Deployment "kubernetes-nodejs-web-v2" is reporting ready!
+
+» Releasing kubernetes-nodejs-web...
+✓ Running release v2
+
+# ...
+
+The deploy was successful! This deploy was done in-place so the deployment
+URL may match a previous deployment.
+
+   Release URL: http://localhost
+```
+
+</CodeBlockConfig>
+
+Open the deployment's release URL in your web browser. In this example, the release URL for `v2` is the same as the `v1` deployment but the URL now points to the `v2` deployment.
+
+</Tab>
+
+<Tab heading="Kubernetes only" group="k8s">
+
+<CodeBlockConfig hideClipboard>
+
+```shell-session
+» Performing operation locally
+
+Building kubernetes-nodejs-web...
+✓ Running build v2
+Creating new buildpack-based image using builder: heroku/buildpacks:20
+✓ Creating pack client
+✓ Building image
+
+# ...
+
+✓ Tagging Docker image: kubernetes-nodejs-web:latest => kubernetes-nodejs-web:1
+✓ Docker image pushed: kubernetes-nodejs-web:1
+
+» Deploying kubernetes-nodejs-web...
+✓ Running deploy v2
+✓ Kubernetes client connected to https://kubernetes.docker.internal:6443 with namespace default
+
+# ...
+
+✓ Deployment "kubernetes-nodejs-web-v2" is reporting ready!
+
+# ...
+
+» Releasing kubernetes-nodejs-web...
+✓ Running release v2
+✓ Kubernetes client connected to https://kubernetes.docker.internal:6443 with namespace default
+✓ Updating existing service...
+✓ Service is ready!
+
+# ...
+
+The deploy was successful! A Waypoint deployment URL is shown below. This
+can be used internally to check your deployment and is not meant for external
+traffic. You can manage this hostname using "waypoint hostname."
+
+   Release URL: http://10.109.17.195:80
+Deployment URL: https://instantly-comic-monster--v2.waypoint.run
+```
+
+</CodeBlockConfig>
+
+Note that the Deployment URL for the `v2` deployment is different from `v1` as Waypoint generates a new URL for each deployment. Open the deployment URL in your browser and verify that it shows the change to the deployment message.
+
+</Tab>
+
+</Tabs>
+
+![The updated example application with new text](/img/tutorials/get-started/web-app-updated.jpg)
+
+## Next Steps
+
+In this tutorial, you learned about Waypoint and the application workflow, set up a Waypoint server and client on Kubernetes, and built, deployed, updated, and redeployed an application.
+
+Learn how to deploy applications to other platforms with Waypoint by checking out the [Docker](/waypoint/tutorials/get-started-docker/get-started-docker) and [Nomad](/waypoint/tutorials/get-started-nomad/get-started-nomad) tutorials.
+
+Continue on to the next tutorial by clicking on the **Next** button below. You will learn how to interact with a running application container and browse the Waypoint web UI.
+
+Be sure to follow the steps in the [Destroy the Deployment from Kubernetes](/waypoint/tutorials/get-started-kubernetes/get-started-kubernetes-destroy) tutorial when you are ready to uninstall the Waypoint components and clean up your Kubernetes cluster. It comes after the next tutorial about using the Waypoint web UI.
