@@ -87,7 +87,7 @@
     "path": "config-set"
   },
   {
-    "title": "config delete test",
+    "title": "config delete",
     "path": "config-delete"
   },
   {
