@@ -1,0 +1,244 @@
+---
+layout: docs
+page_title: Deploy an application onto an Azure Container Instance
+description: Deploy an application onto an Azure Container Instance with Waypoint.
+---
+
+<Warning>
+
+This content is part of the legacy version of Waypoint that is no longer actively maintained. For additional information on the new vision of Waypoint, check out [this blog post](https://www.hashicorp.com/blog/a-new-vision-for-hcp-waypoint) and the [HCP Waypoint documentation](/hcp/docs/waypoint).
+
+</Warning>
+
+# Deploy an application onto an Azure Container Instance
+
+Waypoint's [Azure Container Instances (ACI)
+plugin](/waypoint/plugins/azure-container-instance) works
+with [Azure Container
+Instances](https://azure.microsoft.com/en-us/services/container-instances/) to
+run containers on Azure's cloud infrastructure. In this tutorial, you will
+deploy build, deploy and release a sample project to ACI.
+
+## Prerequisites
+
+You'll need to install the [`waypoint` binary locally](/waypoint/tutorials/get-started-docker/get-started-install),
+clone the examples repository (detailed in the next section), login to Azure, create a container registry,
+and set a few environment variables.
+
+### Clone the examples repository
+
+The code for this tutorial is in the `hashicorp/waypoint-examples` repository. Clone the repository with git.
+
+```shell-session
+$ git clone https://github.com/hashicorp/waypoint-examples.git
+```
+
+Navigate to the subdirectory for the Azure Container Instance project. This
+project uses NodeJS but the following instructions will work with any language
+that can be built with a cloud native buildpack.
+
+```shell-session
+$ cd waypoint-examples/azure/azure-container-instance/nodejs
+```
+
+### Login to Azure locally
+
+Install the [Azure CLI](https://docs.microsoft.com/en-us/cli/azure/) and login. Your web browser will open to the Azure website.
+
+```shell-session
+$ az login
+```
+
+### Create an Azure Container Registry
+
+You'll need to create an Azure Container Registry to store your Docker images.
+
+Visit the [Azure Container Registry
+page](https://portal.azure.com/#blade/HubsExtension/BrowseResourceBlade/resourceType/Microsoft.ContainerRegistry%2Fregistries).
+Click the "Add" button and fill out the form to create a new registry. You can
+use the default resource group or any that is available to you. Use the name
+`waypointregistry` or any alphanumeric name that has not been taken.
+
+Leave this window open so you can reference it later.
+
+![Azure Container Registry](/img/tutorials/azure/container-registry-created.png)
+
+Two more steps are needed. Run the `acr update` command to update the permissions on the registry.
+
+```shell-session
+$ az acr update -n waypointregistry --admin-enabled true
+```
+
+Now, login to the Azure Container Registry.
+
+```shell-session
+$ az acr login --name waypointregistry
+```
+
+### Set environment variables
+
+You must set three environment variables to successfully push a Docker image to the registry and deploy an application that uses it.
+
+The first is your `AZURE_SUBSCRIPTION_ID`.
+
+```shell-session
+$ export AZURE_SUBSCRIPTION_ID="aaaa-aaaa-aaaa-aaaa-aaaa"
+```
+
+The next two are a name and password for the Container Registry. Return to the container registry screen from the previous section. Find the "Access Keys" menu item. On the configuration screen is a username and two passwords.
+
+![Registry access keys](/img/tutorials/azure/registry-keys.png)
+
+Copy the username to your clipboard. Set a local environment variable named `REGISTRY_USERNAME`. This is an environment variable defined by the Waypoint ACI plugin.
+
+```shell-session
+$ export REGISTRY_USERNAME="waypointuser"
+```
+
+Then, copy either password (there are two). Set a local environment variable named `REGISTRY_PASSWORD`.
+
+```shell-session
+$ export REGISTRY_PASSWORD="aaaaaa"
+```
+
+You have now completed the configuration needed to continue to the other steps in this tutorial.
+
+## Install the local Waypoint server
+
+Install the Waypoint server to your local Docker instance. It will not run on ACI so you can run it locally on Docker.
+
+```shell-session
+$ waypoint install --platform=docker -accept-tos
+```
+
+If you run into any errors, refer to the
+[troubleshooting](/waypoint/docs/troubleshooting#waypoint-server-in-docker)
+page which has instructions for resetting the Waypoint server in Docker.
+
+## Configure waypoint
+
+The `waypoint-examples` git repository you cloned earlier contains a
+`waypoint.hcl` file with configuration details for ACI.
+
+Here are a few snippets that relate to Azure. The full configuration is
+displayed further down.
+
+In the `build` section, use the standard `docker` plugin but specify the URL to
+your Azure registry and the `example-nodejs` Docker image. Edit this to match
+the name of the Azure Container Registry you created earlier.
+
+```hcl
+use "docker" {
+  image = "waypointregistry.azurecr.io/example-nodejs"
+  tag   = "latest"
+}
+```
+
+The second relevant section is the `deploy` stanza. In addition to defining the
+`resource_group` and `location`, there is a section for the `capacity` of the
+compute instance.
+
+Other arguments are possible, including those for mounting a disk `volume` or
+passing `static_environment` variables to the application. Refer to the [ACI
+plugin
+documentation](/waypoint/plugins/azure-container-instance)
+for a list of other arguments.
+
+```hcl
+deploy {
+  use "azure-container-instance" {
+    resource_group = "DefaultResourceGroup-EUS"
+    location       = "eastus"
+    ports          = [8080]
+
+    capacity {
+      memory    = "512"
+      cpu_count = 1
+    }
+
+  }
+}
+```
+
+The entire `waypoint.hcl` looks like this.
+
+```hcl
+project = "example-nodejs"
+
+app "example-nodejs" {
+  labels = {
+    "service" = "example-nodejs",
+    "env"     = "dev"
+  }
+
+  build {
+    use "pack" {}
+    registry {
+      use "docker" {
+        image = "waypointregistry.azurecr.io/example-nodejs"
+        tag   = "latest"
+      }
+    }
+  }
+
+  deploy {
+    use "azure-container-instance" {
+      resource_group = "DefaultResourceGroup-EUS"
+      location       = "eastus"
+      ports          = [8080]
+
+      capacity {
+        memory    = "512"
+        cpu_count = 1
+      }
+
+    }
+  }
+
+}
+```
+
+## Initialize Waypoint
+
+Once you have written the `waypoint.hcl` configuration file, initialize the Waypoint context.
+
+```shell-session
+$ waypoint init
+```
+
+## Run waypoint up
+
+Now, build, deploy, and release the application with `up`.
+
+```shell-session
+$ waypoint up
+```
+
+It make take a few minutes to copy the Docker images to the server. When it
+completes, the output will display a URL to your web application.
+
+![Web application](/img/tutorials/get-started/web-app.png)
+
+You can also verify the server side by visiting the [Azure portal](https://portal.azure.com/). Search for "Azure Container Instance." You will see the `example-nodejs` instance with a CPU usage chart and other details.
+
+![Container is running](/img/tutorials/azure/container-running.png)
+
+## Destroy the deployment
+
+After you have completed this tutorial, you can `destroy` the container instance.
+
+```shell-session
+$ waypoint destroy -auto-approve
+```
+
+<Note>
+
+ This will not destroy the container registry or the disk images that were published to it.
+
+</Note>
+
+## Next steps
+
+Read the [plugin API documentation](/waypoint/plugins/azure-container-instance) for more details.
+
+Learn more about Waypoint by following along with the other [tutorials](/waypoint/tutorials/) for AWS, Azure, and others, or read the documentation for other Waypoint [plugins](/waypoint/plugins/).

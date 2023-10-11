@@ -136,6 +136,200 @@
     "divider": true
   },
   {
+    "title": "Tutorials",
+    "routes": [
+      {
+        "title": "Important Notes",
+        "path": "tutorials",
+        "hidden": true
+      },
+      {
+        "title": "Get Started",
+        "routes": [
+          {
+            "title": "Docker",
+            "routes": [
+              {
+                "title": "Introduction",
+                "path": "tutorials/get-started/docker/intro"
+              },
+              {
+                "title": "Install Waypoint",
+                "path": "tutorials/get-started/docker/install"
+              },
+              {
+                "title": "Use Waypoint with Docker",
+                "path": "tutorials/get-started/docker/use-waypoint-with-docker"
+              },
+              {
+                "title": "Debug the App and View the UI",
+                "path": "tutorials/get-started/docker/debug-and-ui"
+              },
+              {
+                "title": "Destroy the Deployment",
+                "path": "tutorials/get-started/docker/destroy"
+              }
+            ]
+          },
+          {
+            "title": "Kubernetes",
+            "routes": [
+              {
+                "title": "Introduction",
+                "path": "tutorials/get-started/kubernetes/intro"
+              },
+              {
+                "title": "Install Waypoint",
+                "path": "tutorials/get-started/kubernetes/install"
+              },
+              {
+                "title": "Deploy an Application to Kubernetes",
+                "path": "tutorials/get-started/kubernetes/deploy-app"
+              },
+              {
+                "title": "Debug the App and View the UI",
+                "path": "tutorials/get-started/kubernetes/debug-and-ui"
+              },
+              {
+                "title": "Destroy the Deployment",
+                "path": "tutorials/get-started/kubernetes/destroy"
+              }
+            ]
+          },
+          {
+            "title": "Nomad Cloud",
+            "routes": [
+              {
+                "title": "Introduction",
+                "path": "tutorials/get-started/nomad-cloud/intro"
+              },
+              {
+                "title": "Install Waypoint",
+                "path": "tutorials/get-started/nomad-cloud/install"
+              },
+              {
+                "title": "Deploy an Application to Nomad",
+                "path": "tutorials/get-started/nomad-cloud/deploy-app"
+              },
+              {
+                "title": "Debug the App and View the UI",
+                "path": "tutorials/get-started/nomad-cloud/debug-and-ui"
+              },
+              {
+                "title": "Destroy the Deployment",
+                "path": "tutorials/get-started/nomad-cloud/destroy"
+              }
+            ]
+          },
+          {
+            "title": "Nomad Local",
+            "routes": [
+              {
+                "title": "Introduction",
+                "path": "tutorials/get-started/nomad-local/intro"
+              },
+              {
+                "title": "Install Waypoint",
+                "path": "tutorials/get-started/nomad-local/install"
+              },
+              {
+                "title": "Deploy an Application to Nomad",
+                "path": "tutorials/get-started/nomad-local/deploy-app"
+              },
+              {
+                "title": "Debug the App and View the UI",
+                "path": "tutorials/get-started/nomad-local/debug-and-ui"
+              },
+              {
+                "title": "Destroy the Deployment",
+                "path": "tutorials/get-started/nomad-local/destroy"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "title": "Fundamentals",
+        "routes": [
+          {
+            "title": "Configuration",
+            "routes": [
+              {
+                "title": "Static App Configuration",
+                "path": "tutorials/fundamentals/configuration/static-app-config"
+              },
+              {
+                "title": "Input Variables",
+                "path": "tutorials/fundamentals/configuration/input-variables"
+              }
+            ]
+          },
+          {
+            "title": "Runners",
+            "routes": [
+              {
+                "title": "Using HCP with Your Infrastructure",
+                "path": "tutorials/fundamentals/runners/hcp-on-your-infra"
+              },
+              {
+                "title": "Enabling ODRs with Kubernetes",
+                "path": "tutorials/fundamentals/runners/on-demand-runners"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "title": "Integrations",
+        "routes": [
+          {
+            "title": "AWS",
+            "routes": [
+              {
+                "title": "Deploy an App to AWS ECS",
+                "path": "tutorials/integrations/aws/deploy-app-to-ecs"
+              },
+              {
+                "title": "Deploy an App onto AWS Lambda",
+                "path": "tutorials/integrations/aws/deploy-app-to-lambda"
+              }
+            ]
+          },
+          {
+            "title": "Azure",
+            "routes": [
+              {
+                "title": "Deploy an App to ACI",
+                "path": "tutorials/integrations/azure/deploy-app-to-aci"
+              }
+            ]
+          },
+          {
+            "title": "Google Cloud",
+            "routes": [
+              {
+                "title": "Deploy an application to Google Cloud Run",
+                "path": "tutorials/integrations/gcp/deploy-app-to-cloud-run"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "title": "Kubernetes",
+        "routes": [
+          {
+            "title": "Application Deployment",
+            "path": "tutorials/kubernetes/application-deployment"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "divider": true
+  },
+  {
     "title": "Platforms",
     "routes": [
       {
