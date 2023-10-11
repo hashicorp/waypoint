@@ -1,0 +1,239 @@
+---
+layout: docs
+page_title: Install Waypoint
+description: |-
+  Install the Waypoint binary locally on MacOS, Linux, or Windows, manually or with a package manager.
+---
+
+<Warning>
+
+This content is part of the legacy version of Waypoint that is no longer actively maintained. For additional information on the new vision of Waypoint, check out [this blog post](https://www.hashicorp.com/blog/a-new-vision-for-hcp-waypoint) and the [HCP Waypoint documentation](/hcp/docs/waypoint).
+
+</Warning>
+
+# Install Waypoint
+
+Waypoint uses both a client and a server to build, deploy, and release
+applications. This functionality is all available from a single binary.
+
+Whether you use an HCP Waypoint managed server, or choose to run your own
+self-managed server, you will need the Waypoint client.
+
+<Tabs>
+<Tab heading="Manual installation">
+
+Get Waypoint by downloading a pre-compiled `waypoint` binary or compiling it from source.
+
+To install Waypoint, find the [appropriate package](/waypoint/downloads/) for your system and download it as a zip archive.
+
+After downloading Waypoint, unzip the package. Waypoint runs as a single
+binary named `waypoint`. Any other files in the package can be safely removed
+and Waypoint will still function.
+
+Finally, make sure that the `waypoint` binary is available on your `PATH`. This process will differ depending on your operating system.
+
+<Tabs>
+<Tab heading="Mac or Linux">
+
+Print a colon-separated list of locations in your `PATH`.
+
+```shell-session
+$ echo $PATH
+```
+
+Move the Waypoint binary to one of the listed locations. This command assumes that the binary is currently in your downloads folder and that your `PATH` includes `/usr/local/bin`, but you can customize it if your locations are different.
+
+```shell-session
+$ mv ~/Downloads/waypoint /usr/local/bin/
+```
+
+For more detail about adding binaries to your path, see [this Stack Overflow article](https://stackoverflow.com/questions/14637979/how-to-permanently-set-path-on-linux).
+
+</Tab>
+<Tab heading="Windows">
+
+[This Stack Overflow article](https://stackoverflow.com/questions/1618280/where-can-i-set-path-to-make-exe-on-windows)
+contains instructions for setting the PATH on Windows through the user interface.
+
+</Tab>
+</Tabs>
+</Tab>
+<Tab heading="Homebrew on OS X">
+
+[Homebrew](https://brew.sh) is a free and open-source package management system
+for Mac OS X. Install the official [Waypoint
+formula](https://github.com/hashicorp/homebrew-tap) from the terminal.
+
+Register the HashiCorp tap as a source.
+
+```shell-session
+$ brew tap hashicorp/tap
+```
+
+Then install Waypoint.
+
+```shell-session
+$ brew install hashicorp/tap/waypoint
+```
+
+<Note>
+
+ This installs a signed binary and is automatically updated with
+every new official release.
+
+</Note>
+
+To update to the latest, run
+
+```shell-session
+$ brew upgrade hashicorp/tap/waypoint
+```
+
+</Tab>
+<Tab heading="Scoop on Windows">
+
+[Scoop](https://scoop.sh/) is a free and open-source package management system
+for Windows. Install Waypoint from the command-line.
+
+```shell-session
+$ scoop install waypoint
+```
+
+<Note>
+
+ The [Scoop main bucket
+repository](https://github.com/ScoopInstaller/Main/blob/master/bucket/waypoint.json)
+is **NOT** maintained by HashiCorp. The latest version of Waypoint is always
+available by manual installation.
+
+</Note>
+
+</Tab>
+<Tab heading="Linux">
+
+HashiCorp officially maintains and signs packages for the following Linux distributions.
+
+<Tabs>
+<Tab heading="Ubuntu/Debian">
+
+Add the HashiCorp [GPG key][gpg-key].
+
+```shell-session
+$ curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
+```
+
+Add the official HashiCorp Linux repository.
+
+```shell-session
+$ sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
+```
+
+Update and install.
+
+```shell-session
+$ sudo apt-get update && sudo apt-get install waypoint
+```
+
+</Tab>
+<Tab heading="CentOS/RHEL">
+
+Install `yum-config-manager` to manage your repositories.
+
+```shell-session
+$ sudo yum install -y yum-utils
+```
+
+Use `yum-config-manager` to add the official HashiCorp Linux repository.
+
+```shell-session
+$ sudo yum-config-manager --add-repo https://rpm.releases.hashicorp.com/RHEL/hashicorp.repo
+```
+
+Install.
+
+```shell-session
+$ sudo yum -y install waypoint
+```
+
+</Tab>
+<Tab heading="Fedora">
+
+Install `dnf config-manager` to manage your repositories.
+
+```shell-session
+$ sudo dnf install -y dnf-plugins-core
+```
+
+Use `dnf config-manager` to add the official HashiCorp Linux repository.
+
+```shell-session
+$ sudo dnf config-manager --add-repo https://rpm.releases.hashicorp.com/fedora/hashicorp.repo
+```
+
+Install.
+
+```shell-session
+$ sudo dnf -y install waypoint
+```
+
+</Tab>
+<Tab heading="Amazon Linux">
+
+Install `yum-config-manager` to manage your repositories.
+
+```shell-session
+$ sudo yum install -y yum-utils
+```
+
+Use `yum-config-manager` to add the official HashiCorp Linux repository.
+
+```shell-session
+$ sudo yum-config-manager --add-repo https://rpm.releases.hashicorp.com/AmazonLinux/hashicorp.repo
+```
+
+Install.
+
+```shell-session
+$ sudo yum -y install waypoint
+```
+
+</Tab>
+</Tabs>
+
+<Tip>
+
+ Now that you have added the HashiCorp repository, you can install
+[Terraform](/terraform/tutorials/aws-get-started/install-cli),
+[Vault](/vault/tutorials/getting-started/getting-started-install),
+[Consul](/consul/tutorials/get-started-vms/virtual-machine-gs-deploy),
+[Nomad](/nomad/tutorials/get-started/get-started-install) and
+[Packer](/packer/tutorials/docker-get-started/get-started-install-cli) with the same command.
+
+</Tip>
+
+</Tab>
+</Tabs>
+
+## Validate the installation
+
+Validate the installation by running the `waypoint` command.
+
+```
+$ waypoint
+Welcome to Waypoint
+Docs: https://waypointproject.io
+Version: v0.11.1
+
+Usage: waypoint [-version] [-help] [-autocomplete-(un)install] <command> [args]
+
+Common commands
+  login        Log in to a Waypoint server
+  build        Build a new versioned artifact from source
+  deploy       Deploy a pushed artifact
+  release      Release a deployment
+  status       List and refresh application statuses.
+  up           Perform the build, deploy, and release steps
+...
+```
+
+[gpg-key]: https://apt.releases.hashicorp.com/gpg 'HashiCorp GPG key'

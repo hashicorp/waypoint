@@ -1,0 +1,375 @@
+---
+layout: docs
+page_title: Deploy an Application onto AWS Lambda
+description: Deploy a Ruby application onto AWS Lambda with Waypoint.
+---
+
+<Warning>
+
+This content is part of the legacy version of Waypoint that is no longer actively maintained. For additional information on the new vision of Waypoint, check out [this blog post](https://www.hashicorp.com/blog/a-new-vision-for-hcp-waypoint) and the [HCP Waypoint documentation](/hcp/docs/waypoint).
+
+</Warning>
+
+# Deploy an Application onto AWS Lambda
+
+With Waypoint, it is quick and easy to deploy and release applications on [AWS Lambda](https://aws.amazon.com/lambda).
+
+In this tutorial, you will use Waypoint's [AWS Lambda
+plugin](/waypoint/plugins/aws-lambda) to build a Docker image containing a Ruby application, push it to a [Elastic Container Registry (ECR)](https://aws.amazon.com/ecr/) repository, then deploy the image to Lambda. Afterwards, you will update the application and deploy the updated application.
+
+## Prerequisites
+
+You'll need to install [`waypoint` 0.3.0 or greater locally](/waypoint/tutorials/get-started-docker/get-started-install), clone the example repository (detailed in the next section), set up your AWS credentials, and create an Elastic Container Registry.
+
+You'll be most comfortable if you have already used Waypoint to do a local deployment with our [Get Started](/waypoint/tutorials/get-started-docker) collection.
+
+**Optional**: Provision a Kubernetes cluster and install the Waypoint server to Kubernetes in order to unlock all Waypoint functionality (including application `logs`, `exec`, and `ui` access).
+
+### Clone the examples repository
+
+The code for this tutorial is in the `hashicorp/waypoint-examples` repository. Clone the repository with git.
+
+```shell-session
+$ git clone https://github.com/hashicorp/waypoint-examples.git
+```
+
+Change into the cloned repository. This project uses Ruby but the following instructions will work with any language that can be built with a cloud native buildpack.
+
+```shell-session
+$ cd aws/lambda/ruby
+```
+
+## Install the Waypoint server
+
+The Waypoint server must be installed. You may install it locally which requires fewer steps but limits the functionality of some Waypoint commands. Or, install to a Kubernetes or Nomad cluster for full functionality (including the `logs`, `exec`, and `ui` commands).
+
+<Tabs>
+<Tab heading="Local">
+
+
+You can run the Waypoint server locally in Docker in order to achieve a minimal deployment of your applications on ECS.
+
+<Note>
+
+ A local server used with a remote deployment only supports limited functionality. The `logs`, `exec`, and other commands require a remote server with a remote deployment.
+
+</Note>
+
+Install the Waypoint server to your local Docker instance.
+
+```shell-session
+$ waypoint install --platform=docker -accept-tos
+```
+
+If you run into any errors, see the [troubleshooting](/waypoint/docs/troubleshooting#waypoint-server-in-docker) page which has instructions for resetting the Waypoint server in Docker.
+
+</Tab>
+<Tab heading="Remote">
+
+
+For full functionality, provision an [EKS](https://aws.amazon.com/eks/) cluster and install the Waypoint server.
+
+Follow the [EKS Terraform tutorial](/terraform/tutorials/kubernetes/eks) which includes a Terraform configuration for provisioning the cluster. You must also configure your local `kubectl` command to communicate to the remote cluster (instructions are included in the tutorial).
+
+Then, run the [install command](/waypoint/tutorials/get-started-kubernetes/get-started-kubernetes#install-the-waypoint-server) to deploy the Waypoint server to the cluster.
+
+```shell-session
+$ waypoint install --platform=kubernetes -accept-tos
+
+service/waypoint created
+statefulset.apps/waypoint-server created
+```
+
+Verify the installation by running `kubectl get all`. If the installation was successful you will observe that the single container in the `waypoint-server-0` pod is ready and the pod has a status of `Running`.
+
+```shell-session
+$ kubectl get all
+
+NAME                    READY   STATUS    RESTARTS   AGE
+pod/waypoint-server-0   1/1     Running   0          2m34s
+
+NAME                 TYPE           CLUSTER-IP      EXTERNAL-IP                                                               PORT(S)                         AGE
+service/kubernetes   ClusterIP      172.20.0.1      <none>                                                                    443/TCP                         71m
+service/waypoint     LoadBalancer   172.20.39.252   aaa.us-west-2.elb.amazonaws.com   9701:32038/TCP,9702:32208/TCP   2m35s
+
+NAME                               READY   AGE
+statefulset.apps/waypoint-server   1/1     2m35s
+```
+
+</Tab>
+</Tabs>
+
+
+## Explore `waypoint.hcl`
+
+Open the
+[`waypoint.hcl`](https://github.com/hashicorp/waypoint-examples/tree/main/aws/lambda/ruby/waypoint.hcl)
+file. In this section, you will explore the `build`, `deploy`, and `release` steps for this
+project.
+
+- The `waypoint.hcl` file uses the `aws-ecr` registry plugin during the `build` stage. The `aws-ecr` plugin uses your AWS credentials and internally builds the correct URL to the AWS API.
+
+  It is also possible to configure this manually with the `docker` plugin. Other configuration options are listed in the [plugin documentation](/waypoint/plugins/aws-ecs#aws-ecr-registry).
+
+  ```hcl
+  build {
+    use "pack" {}
+    registry {
+      use "aws-ecr" {
+        region     = "us-west-2"
+        repository = "learn-waypoint-lambda"
+        tag = "howdy-waypoint-lambda"
+      }
+    }
+  }
+  ```
+
+- Use the `aws-lambda` plugin for the `deploy` stage. The `region` parameter is required, but you can specify the `iam_role`, `memory` and `timeout` for your Lambda function. See the [plugin documentation](/waypoint/plugins/aws-lambda#aws-lambda-platform) for other configuration options.
+
+  ```hcl
+  deploy {
+    use "aws-lambda" {
+      region = "us-west-2"
+    }
+  }
+  ```
+
+- Finally, Waypoint will release your application using the `aws-alb` plugin, which will provision an Application Load Balancer (ALB) to serve traffic to your Lambda endpoint.
+
+  ```hcl
+  release {
+    use "aws-alb" {
+    }
+  }
+  ```
+
+## Initialize Waypoint
+
+Initialize the project with the `init` command.
+
+```shell-session
+$ waypoint init
+
+✓ Configuration file appears valid
+✓ Connection to Waypoint server was successful
+✓ Project "learn-waypoint-lambda" and all apps are registered with the server.
+✓ Plugins loaded and configured successfully
+
+Project initialized!
+
+You may now call 'waypoint up' to deploy your project or
+commands such as 'waypoint build' to perform steps individually.
+```
+
+Read the [troubleshooting](/waypoint/docs/troubleshooting#waypoint-server-in-docker) page if you run into any errors.
+
+## Build, deploy, and release the application
+
+Deploy the application with `up`. Waypoint will error the first time when attempting to provision Lambda. This is expected behavior and will be resolved in a future release.
+
+<Tip>
+
+ This may take a few minutes to execute, especially if this is the first time that you push the image to the registry.
+
+</Tip>
+
+```shell-session
+$ waypoint up
+
+» Building...
+✓ Initializing Docker client...
+✓ Building image...
+ │ Step 1/3 : FROM public.ecr.aws/lambda/ruby:2.7
+ │  ---> bf1ae62b40c7
+ │ Step 2/3 : COPY handler.rb /var/task
+ │  ---> Using cache
+ │  ---> 449fcc61fefb
+ │ Step 3/3 : CMD [ "handler.handler" ]
+ │  ---> Using cache
+ │  ---> c9f49c4cda3d
+ │ Successfully built c9f49c4cda3d
+ │ Successfully tagged waypoint.local/learn-waypoint-lambda:latest
+✓ Injecting Waypoint Entrypoint...
+✓ All services available.
+✓ Set ECR Repository name to 'learn-waypoint-lambda'
+✓ Tagging Docker image: waypoint.local/learn-waypoint-lambda:latest =>
+REDACTED.dkr.ecr.us-west-2.amazonaws.com/learn-waypoint-lambda:howdy-waypoint-lamb
+✓ Pushing image...
+ │ 05446996bee6: Layer already exists
+ │ 6e41f142768a: Layer already exists
+ │ 3907e39be0d6: Layer already exists
+ │ 3557feb0c34d: Layer already exists
+ │ d6fa53d6caa6: Layer already exists
+ │ a4da7ecab4a8: Layer already exists
+ │ 1a75a887b22d: Layer already exists
+ │ 647149dcba32: Layer already exists
+ │ howdy-waypoint-lambda: digest: sha256:1c0b5e3f6aa11c1e9e3615c315940ed39323678ffe
+ │ c55e4bf4676f06e93339c0 size: 2000
+Docker image pushed:
+REDACTED.dkr.ecr.us-west-2.amazonaws.com/learn-waypoint-lambda:howdy-waypoint-lamb
+
+» Deploying...
+✓ Connecting to AWS
+❌ Creating new Lambda function
+! InvalidParameterValueException: The role defined for the function cannot be
+  assumed by Lambda.
+  {
+    RespMetadata: {
+      StatusCode: 400,
+      RequestID: "87c1babd-51d3-41b6-8d3d-2fe3b0100714"
+    },
+    Message_: "The role defined for the function cannot be assumed by Lambda.",
+    Type: "User"
+  }
+```
+
+Rerun `waypoint up` to deploy Lambda and the ALB.
+
+```
+$ waypoint up
+
+## ...
+
+» Deploying...
+✓ Connecting to AWS
+✓ Creating new Lambda function
+✓ Published Lambda function: arn:aws:lambda:us-west-2:REDACTED:function:learn-waypoint-lambda:8 (8)
+✓ Creating TargetGroup for Lambda version
+
+» Releasing...
+
+The deploy was successful! A Waypoint deployment URL is shown below. This
+can be used internally to check your deployment and is not meant for external
+traffic. You can manage this hostname using "waypoint hostname."
+
+   Release URL: http://waypoint-learn-waypoint-lambda-380235335.us-west-2.elb.amazonaws.com
+Deployment URL: https://evenly-ethical-kid--v2.waypoint.run
+```
+
+Visit the Release URL or the Deployment URL to view the application running on Lambda.
+
+![Web application](/img/tutorials/aws/lambda-web-app.png)
+
+Try appending `?name=Turing` to the Release or Deployment URL (for example: `http://waypoint-learn-waypoint-lambda-1827600373.us-west-2.elb.amazonaws.com/?name=Turing`). The service will return a welcome message with the name you inserted.
+
+![Web application](/img/tutorials/aws/lambda-web-app-turing.png)
+
+You can visit the [Lambda console](https://us-west-2.console.aws.amazon.com/lambda/home?region=us-west-2#/functions?f0=true&n0=false&op=and&v0=learn-waypoint-lambda) to verify the deployed Lambda function.
+
+![Lambda Console showing deployed Lambda function](/img/tutorials/aws/lambda-console.png)
+
+## Update Lambda function
+
+You can schedule a new application deployment through Waypoint.
+
+First, update the welcome message in `handler.rb`.
+
+```diff hideClipboard
+require 'json'
+
+def handler(event:, context:)
+    # ..
+    {
+         # ..
+-        "body": "<html><body><h1>Howdy #{name} from Lambda!</h1></html></body>"
++        "body": "<html><body><h1>Hello #{name} from Lambda!</h1></html></body>"
+    }
+end
+```
+
+Then, redeploy your application with the `up` command.
+
+```shell-session
+$ waypoint up
+
+✓ Initializing Docker client...
+✓ Building image...
+ │ Step 1/3 : FROM public.ecr.aws/lambda/ruby:2.7
+ │  ---> bf1ae62b40c7
+ │ Step 2/3 : COPY handler.rb /var/task
+ │  ---> Using cache
+ │  ---> 449fcc61fefb
+ │ Step 3/3 : CMD [ "handler.handler" ]
+ │  ---> Using cache
+ │  ---> c9f49c4cda3d
+ │ Successfully built c9f49c4cda3d
+ │ Successfully tagged waypoint.local/learn-waypoint-lambda:latest
+✓ Injecting Waypoint Entrypoint...
+✓ All services available.
+✓ Set ECR Repository name to 'learn-waypoint-lambda'
+✓ Tagging Docker image: waypoint.local/learn-waypoint-lambda:latest => REDACTED.dkr.ecr.us-west-2.amazonaws.com/learn-waypoint-lambda:howdy-waypoint-lambda
+✓ Pushing image...
+ │ 05446996bee6: Layer already exists
+ │ 6e41f142768a: Pushed
+ │ 3907e39be0d6: Layer already exists
+ │ 3557feb0c34d: Layer already exists
+ │ d6fa53d6caa6: Layer already exists
+ │ a4da7ecab4a8: Layer already exists
+ │ 1a75a887b22d: Layer already exists
+ │ 647149dcba32: Layer already exists
+ │ howdy-waypoint-lambda: digest: sha256:0868aec4c9d5c3512227c165653b2f260b2ed0e264
+ │ 7eebe28972e0675a94dc7b size: 2000
+Docker image pushed: REDACTED.dkr.ecr.us-west-2.amazonaws.com/learn-waypoint-lambda:howdy-waypoint-lambda
+
+» Deploying...
+✓ Connecting to AWS
+✓ Updating Lambda function with new code
+✓ Published Lambda function: arn:aws:lambda:us-west-2:REDACTED:function:learn-waypoint-lambda:9 (9)
+✓ Creating TargetGroup for Lambda version
+
+» Releasing...
+
+» Pruning old deployments...
+  Deployment: 01F2QSDA65SVZBA9RSM3NVQKKT
+
+The deploy was successful! A Waypoint deployment URL is shown below. This
+can be used internally to check your deployment and is not meant for external
+traffic. You can manage this hostname using "waypoint hostname."
+
+   Release URL: http://waypoint-learn-waypoint-lambda-380235335.us-west-2.elb.amazonaws.com
+Deployment URL: https://evenly-ethical-kid--v3.waypoint.run
+```
+
+Visit the Release URL or the Deployment URL to view the application running on Lambda.
+
+<Tip>
+
+ It might take a couple of minutes for the Lambda function to warm up.
+
+</Tip>
+
+![Web application](/img/tutorials/aws/updated-lambda-web-app.png)
+
+Notice that Lambda is returning the updated welcome message.
+
+## Destroy the instance
+
+To deprovision the container, run `destroy`.
+
+```shell-session
+$ waypoint destroy
+
+» Destroying shared deploy resources for application 'learn-waypoint-lambda'...
+✓ Connecting to AWS
+✓ Deleting Lambda function
+✓ IAM role deleted
+Destroy successful!
+```
+
+If there is an error, try again after a few seconds.
+
+<Note>
+
+ The `destroy` command will not delete container images in the registry or the ECS cluster itself. Visit the [ECR console](https://us-west-2.console.aws.amazon.com/ecr/repositories?region=us-west-2) to manually delete the entire registry or individual container images.
+
+</Note>
+
+## Next steps
+
+In this tutorial, you deployed a web application with Waypoint.
+
+AWS Lambda can also be used to deploy an API Gateway or schedule periodic tasks as with `cron`.
+
+Experiment with omitting the `aws-alb` releaser if you want to use Waypoint to build and deploy a container but use other AWS features with your deployed container.
+
+Learn more about Waypoint by following along with the other [tutorials](/waypoint/tutorials/) for Azure, Google Cloud, and others, or read the documentation for other Waypoint [plugins](/waypoint/plugins/).

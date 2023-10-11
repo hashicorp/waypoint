@@ -1,0 +1,150 @@
+---
+layout: docs
+page_title: Debug the Application and View the Waypoint UI
+description: Connect to the application container, view logs, and use the Waypoint web UI.
+---
+
+<Warning>
+
+This content is part of the legacy version of Waypoint that is no longer actively maintained. For additional information on the new vision of Waypoint, check out [this blog post](https://www.hashicorp.com/blog/a-new-vision-for-hcp-waypoint) and the [HCP Waypoint documentation](/hcp/docs/waypoint).
+
+</Warning>
+
+# Debug the Application and View the Waypoint UI
+
+Waypoint includes several commands to support debugging and monitoring your application through the CLI as well as viewing information about projects and applications in the web UI.
+
+In this tutorial, you will learn how to interact with your applications, view logs, and access the Waypoint UI.
+
+## Connect to the application container
+
+You can use `waypoint exec` to run commands in the context of the most recent deployment. This command is helpful in diagnosing tasks like database migrations and general debugging but you can use it for any purpose.
+
+<Warning>
+
+HCP Waypoint does not currently support the `exec` functionality. It is only available when running self-managed Waypoint servers.
+
+</Warning>
+
+Open a shell prompt to the application's container. Waypoint is aware that a `waypoint.hcl` file exists in the current directory and automatically executes against the currently deployed application defined in this configuration file. Your terminal prompt will change to show that you are in the application's container. In this example, the prompt is `heroku@77399d60b8f2`.
+
+```shell-session
+$ waypoint exec /bin/bash
+Connected to deployment v1
+heroku@77399d60b8f2:/workspace$ 
+```
+
+Validate that this is the correct application deployment by listing out the directory hosting the application's compiled files. Note that the output contains the file structure for the current deployment.
+
+```shell-session
+$ cd / && ls
+alloc  bin   cnb  etc	layers	lib32  libx32  media  opt   root  sbin	   srv	tmp  var		  workspace
+app    boot  dev  home	lib	lib64  local   mnt    proc  run   secrets  sys	usr  waypoint-entrypoint
+```
+
+Next, list the processes that are running in the container. Note that `node` is running the `index.js` for the example application.
+
+```shell-session
+$ ps aux
+USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+heroku       1  0.3  1.0 4987960 68688 ?       Ssl  20:10   0:00 /waypoint-entrypoint /cnb/process/web
+heroku      18  0.3  0.6 720652 40708 ?        Sl   20:10   0:00 npm
+heroku      35  0.0  0.0   2620   596 ?        S    20:10   0:00 sh -c node index.js
+heroku      36  0.2  0.5 555288 37692 ?        Sl   20:10   0:00 node index.js
+heroku      43  0.0  0.0   4248  3516 pts/0    Ss   20:11   0:00 /bin/bash
+heroku      46  0.0  0.0   5900  2856 pts/0    R+   20:12   0:00 ps aux
+```
+
+Finally, exit the interactive Docker session.
+
+```shell-session
+$ exit
+```
+
+## View application logs
+
+In the application's directory, view the logs for the running deployment.
+
+```shell-session
+$ waypoint logs
+# ...
+2023-04-19T20:10:50.173Z 0G500W: [INFO]  entrypoint.child: starting child process: args=["/cnb/process/web"] cmd=/cnb/process/web
+2023-04-19T20:10:50.435Z 0G500W: 
+2023-04-19T20:10:50.435Z 0G500W: > node-js-getting-started@0.3.0 start /workspace
+2023-04-19T20:10:50.435Z 0G500W: > node index.js
+2023-04-19T20:10:50.435Z 0G500W: 
+2023-04-19T20:10:50.575Z 0G500W: Listening on 3000
+```
+
+Press `Ctrl-C` to stop viewing the logs.
+
+## Access the Waypoint web UI
+
+The Waypoint server includes a web-based user interface that you can use to view
+builds, deployments, and releases for projects and applications.
+
+<Tabs>
+
+<Tab heading="HCP Waypoint" group="hcp">
+
+The web UI is accessible via HashiCorp Cloud Platorm.
+
+Visit [HCP Waypoint](https://portal.cloud.hashicorp.com/services/waypoint) in your browser.
+
+</Tab>
+
+<Tab heading="Waypoint only" group="waypoint-only">
+
+The web UI requires authentication. Run the command to automatically open your browser and authenticate your session. Note that this command will only work if a graphical web browser is available on the machine where the command is being run.
+
+<Note>
+
+Waypoint currently uses self-signed certificates for TLS. Your web
+browser will require you to bypass a certificate warning to access the UI.
+
+</Note>
+
+```shell-session
+$ waypoint ui -authenticate
+» Creating invite token
+This invite token will be exchanged for an authentication 
+token that your browser stores.
+
+» Opening browser
+```
+
+If you are running commands on a remote server or within a virtual environment
+like WSL2 for Windows, you must generate a token that can be used to
+authenticate to the Waypoint web UI.
+
+<Note>
+
+The token is approximately 100 characters long and will not wrap if
+your terminal window is smaller than the length of the token. If authentication
+fails, expand your terminal window until you can view the entire token.
+
+</Note>
+
+```shell-session
+$ waypoint user token
+rHhYzVXQBcK3foTeqyWveDxFVJ3vxnSt[...]
+```
+
+Visit the Waypoint UI at port `9702` on the URL of the machine where you are
+running the Waypoint server. Click on the **Authenticate** button, paste the token into the token field, and click on the **Authenticate with token** button.
+
+![Waypoint UI displaying the authetication page](/img/tutorials/get-started/ui_auth_page.jpg)
+
+</Tab>
+
+</Tabs>
+
+Review information about the application and associated operations in your browser by clicking on the project name, and then the application name. The navigation bar below the application name includes views for builds, deployments, logs, releases and an in-browser shell that replicates the `exec` command.
+
+![Waypoint UI](/img/tutorials/get-started/admin-ui.jpg)
+
+## Next steps
+
+In this tutorial, you learned about the `waypoint exec` command and browsed the Waypoint web UI.
+
+Continue on to the [Destroy the Deployment](/waypoint/tutorials/get-started-nomad/get-started-destroy) tutorial to uninstall the Waypoint components.
