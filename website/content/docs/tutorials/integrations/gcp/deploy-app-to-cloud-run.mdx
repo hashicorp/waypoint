@@ -1,0 +1,262 @@
+---
+layout: docs
+page_title: Deploy an app to Google Cloud Run
+description: Run an application on Google Cloud Run with Waypoint.
+---
+
+<Warning>
+
+This content is part of the legacy version of Waypoint that is no longer actively maintained. For additional information on the new vision of Waypoint, check out [this blog post](https://www.hashicorp.com/blog/a-new-vision-for-hcp-waypoint) and the [HCP Waypoint documentation](/hcp/docs/waypoint).
+
+</Warning>
+
+# Deploy an app to Google Cloud Run
+
+In addition to [Kubernetes](/waypoint/tutorials/get-started-kubernetes), Waypoint provides a [plugin](/waypoint/plugins/google-cloud-run) that works with [Google Cloud Run](https://cloud.google.com/run). This is a way to run containers on Google's cloud infrastructure.
+
+## Prerequisites
+
+You'll need to install the [`waypoint` binary locally](/waypoint/tutorials/get-started-docker/get-started-install),
+clone the examples repository (detailed in the next section). In addition, you may need to signup for Google Cloud, create a project, install the `gcloud` command, prepare your Google credentials, and enable Google Cloud Run.
+
+You must also be running Docker Desktop locally.
+
+### Clone the examples repository
+
+The code for this tutorial is in the `hashicorp/waypoint-examples` repository. Clone the repository with git.
+
+```shell-session
+$ git clone https://github.com/hashicorp/waypoint-examples.git
+```
+
+Navigate to the subdirectory for the Google Cloud Run project. This project uses
+NodeJS but the following instructions will work with any language that can be
+built with a cloud native buildpack.
+
+```shell-session
+$ cd waypoint-examples/gcp/google-cloud-run/nodejs
+```
+
+### Sign up
+
+Visit [Google Cloud](https://cloud.google.com/gcp) and sign up for an account. You must create a project under which your service accounts and cloud resources will be organized.
+
+In this tutorial, we will refer to `waypoint-project-id` as the project ID.
+
+### Install gcloud command
+
+Follow Google's instructions for installing the [Google Cloud SDK](https://cloud.google.com/sdk/docs/install). This will install a command on your system named `gcloud`.
+
+### Enable Google Cloud Run
+
+You must enable Google Cloud Run for your project. Visit [Google Cloud Run](https://console.developers.google.com/apis/library/run.googleapis.com) and click "Enable" to add it to your project.
+
+You must also enable Google Cloud Run for the user or service account you will use for this tutorial. Go to the [IAM & Admin console](https://console.cloud.google.com/iam-admin/iam). Find the account you want to use and click the pencil icon for "Edit Member". Add the "Cloud Run Admin" (or similar) role to the account you will use for this tutorial.
+
+![IAM Role](/img/tutorials/google-cloud/google-cloud-run-role.png)
+
+### Authenticate to Google Cloud
+
+Waypoint will use your locally configured Google Cloud credentials to deploy your application.
+
+Login to Google Cloud from your machine.
+
+```shell-session
+$ gcloud auth application-default login
+```
+
+Find your Google Cloud project ID. Use the value under `PROJECT_ID`.
+
+```shell-session
+$ gcloud projects list
+
+PROJECT_ID                     NAME                            PROJECT_NUMBER
+production-project             Production Environment          11111111111
+development-project            Development Environment         22222222222
+waypoint-project-id            Waypoint Project                33333333333
+```
+
+Set your project ID (replace `waypoint-project-id` with your Google Cloud project's ID).
+
+```shell-session
+$ gcloud config set project waypoint-project-id
+```
+
+In order to communicate between your local Docker instance, the remote container registry, and Google Cloud Run, you must configure Docker for Google Cloud. Run the `auth configure-docker` command.
+
+```shell-session
+$ gcloud auth configure-docker
+```
+
+## Install the Waypoint server
+
+You're now ready to configure and run Waypoint.
+
+The Waypoint server can be run locally or on a remote server. The local installation requires fewer steps to setup. A remote installation will enable the full functionality of Waypoint, including `logs`, `exec`, and other commands.
+
+<Tabs>
+<Tab heading="Local">
+
+Install the Waypoint server to your local Docker instance. In this scenario, Google Cloud Run does not run the Waypoint server, so you can run it locally.
+
+```shell-session
+$ waypoint install --platform=docker -accept-tos
+```
+
+If you run into any errors, see the [troubleshooting](/waypoint/docs/troubleshooting#waypoint-server-in-docker) page which has instructions for resetting the Waypoint server in Docker.
+
+<Note>
+
+ The `logs`, `exec`, and other commands will not work with a local server and a remote deployment.
+
+</Note>
+
+</Tab>
+<Tab heading="Remote">
+
+For the full Waypoint functionality, run a Waypoint server in GKE.
+
+Follow the [GKE installation tutorial](/terraform/tutorials/kubernetes/gke) to provision a GKE cluster. This will also involve configuring your local environment so you can run `kubectl` commands against the cluster.
+
+~> You will need the permissions included in the [Kubernetes Engine Admin](https://cloud.google.com/iam/docs/understanding-roles?hl=en#kubernetes-engine-roles)
+role to install the Waypoint server.
+Install the Waypoint server to the cluster.
+
+```shell-session
+$ waypoint install --platform=kubernetes -accept-tos
+
+service/waypoint created
+statefulset.apps/waypoint-server created
+```
+
+</Tab>
+</Tabs>
+
+## Configure waypoint
+
+Edit `waypoint.hcl` to specify your Google Cloud project ID instead of `waypoint-project-id`. Let's examine a few relevant snippets first.
+
+In the `build` section, this configuration uses the standard `docker` plugin to find the Docker repository. In this case, the URL to `gcr.io` with your Google Cloud project ID and the name of this Waypoint application are all that's needed. There is no GCR-specific plugin for Waypoint since this URL is all that's needed.
+
+```hcl
+build {
+  use "pack" {}
+
+  registry {
+    use "docker" {
+      image = "gcr.io/waypoint-project-id/example-nodejs"
+      tag   = "latest"
+    }
+  }
+}
+```
+
+In the `deploy` section, you can specify the project and location. There are many other options for `memory`, `cpu_count`, and machine-specific configuration. See the [Google Cloud Run plugin documentation](/waypoint/plugins/google-cloud-run) for other arguments.
+
+```hcl
+deploy {
+  use "google-cloud-run" {
+    project  = "waypoint-project-id"
+    location = "us-east1"
+    // ...
+
+    capacity {
+      memory                     = 128
+      cpu_count                  = 1
+      // ...
+    }
+  }
+}
+```
+
+Here is the full configuration found in `waypoint.hcl`.
+
+```hcl
+project = "example-nodejs"
+
+app "example-nodejs" {
+  labels = {
+    "service" = "example-nodejs",
+    "env"     = "dev"
+  }
+
+  build {
+    use "pack" {}
+
+    registry {
+      use "docker" {
+        image = "gcr.io/waypoint-project-id/example-nodejs"
+        tag   = "latest"
+      }
+    }
+  }
+
+  deploy {
+    use "google-cloud-run" {
+      project  = "waypoint-project-id"
+      location = "us-east1"
+
+      port = 5000
+
+      static_environment = {
+        "NAME" = "World"
+      }
+
+      capacity {
+        memory                     = 128
+        cpu_count                  = 1
+        max_requests_per_container = 10
+        request_timeout            = 300
+      }
+
+      auto_scaling {
+        max = 2
+      }
+    }
+  }
+
+  release {
+    use "google-cloud-run" {}
+  }
+}
+```
+
+## Initialize waypoint
+
+Now, let's run initialize and run Waypoint.
+
+```shell-session
+$ waypoint init
+```
+
+You'll see messages indicating that the configuration is valid and the project was correctly set up.
+
+## Run waypoint up
+
+Deploy the application to Google Cloud Run with `up`.
+
+```shell-session
+$ waypoint up
+```
+
+This may take a few minutes to run since it needs to copy the Docker image to the Google Container Registry.
+
+Visit either URL shown in the output to see the running application.
+
+![Web application](/img/tutorials/get-started/web-app.png)
+
+## Destroy the deployment
+
+When you are done, destroy the deployment.
+
+```shell-session
+$ waypoint destroy -auto-approve
+```
+
+If you see an error message, it may be that the container is completing another task. To solve this, wait a minute or two and run `destroy` again.
+
+## Next steps
+
+Read the [plugin API documentation](/waypoint/plugins/google-cloud-run) for more details.
+
+Learn more about Waypoint by following along with the other [tutorials](/waypoint/tutorials/) for AWS, Azure, and others, or read the documentation for other Waypoint [plugins](/waypoint/plugins/).

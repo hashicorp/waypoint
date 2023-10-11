@@ -1,0 +1,52 @@
+---
+layout: docs
+page_title: Introduction to Waypoint
+description: |-
+  Waypoint enables you to publish any application to any platform with a single file and command. Build, deploy, and release applications programmatically using HashiCorp Configuration Language.
+---
+
+<Warning>
+
+This content is part of the legacy version of Waypoint that is no longer actively maintained. For additional information on the new vision of Waypoint, check out [this blog post](https://www.hashicorp.com/blog/a-new-vision-for-hcp-waypoint) and the [HCP Waypoint documentation](/hcp/docs/waypoint).
+
+</Warning>
+
+# Introduction to Waypoint
+
+<div></div>
+
+~> Interested in talking with HashiCorp about your experience building, deploying,
+or managing your applications? [Set up a time to chat!](https://forms.gle/2tAmxJbyPbcL2nRW9)
+
+Deploying applications in the DevOps landscape can be confusing with so many services, configuration files, and workflows to decode. As a developer, you just want to deploy your service. Waypoint can help with that.
+
+## What is Waypoint?
+
+Waypoint lets you publish any application to any platform with a single file and a single command: `waypoint up`. This page describes how Waypoint works. When you are ready to try out Waypoint, follow the next tutorials to install, set up, and run Waypoint.
+
+Waypoint works with JavaScript, Python, PHP, Java, Ruby, and any other language that you can build with [Cloud Native Buildpacks](https://buildpacks.io/).
+
+## The Waypoint workflow
+
+The standard Waypoint workflow involves one file, `waypoint.hcl`, and two commands, `waypoint init` and `waypoint up`.
+
+The `waypoint.hcl` file is a small configuration file that tells Waypoint how to build and release your application. You will write the configuration file in HCL syntax, which you might be familiar with if you use other HashiCorp products like Terraform.
+
+`waypoint init` uses the configuration file and sets up your project in Waypoint. If you do not already have a `waypoint.hcl` file for your application, Waypoint will automatically generate one with reasonable defaults as part of the initialization process.
+
+`waypoint up` [builds](/waypoint/docs/lifecycle/build) your application, [deploys](/waypoint/docs/lifecycle/deploy) it to your favorite cloud platform, and [releases](/waypoint/docs/lifecycle/release) it to the public.
+
+A typical build, deploy, and release workflow requires many configuration files such as Dockerfiles, artifact publishing shell scripts, YAML resource files, and ingress configuration files.
+You _can_ create these files and use them with Waypoint, but it's not necessary as a single `waypoint.hcl` file can provide the same functionality to dynamically package your application, publish it to a public or private container registry, configure application schedulers like Kubernetes or Nomad, and release your application to a public URL with HTTPS included.
+
+![Files](/img/tutorials/get-started/intro-files.png)
+
+## Waypoint integrations
+
+Waypoint includes [hooks](/waypoint/docs/lifecycle/hooks) that allow you to extend its core functionality and a powerful [plugin system](/waypoint/docs/plugins) to connect you to cloud platforms.
+
+Waypoint also fits well into your continuous deployment workflow, whether it's running via [GitHub Actions](/waypoint/docs/automating-execution/github-actions), [CircleCI](/waypoint/docs/automating-execution/circle-ci), or [Jenkins](/waypoint/docs/automating-execution/jenkins).
+
+## Next steps
+
+Continue on to the installation tutorial by clicking on the **Next** button below and learn how to install the Waypoint CLI.

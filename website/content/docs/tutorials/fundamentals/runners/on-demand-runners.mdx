@@ -1,0 +1,1246 @@
+---
+layout: docs
+page_title: Enabling On-Demand Runners Using Kubernetes
+description: >-
+  Create and configure Waypoint runner profiles to allow dynamic creation of on-demand runners and targeted operations in Kubernetes clusters.
+---
+
+<Warning>
+
+This content is part of the legacy version of Waypoint that is no longer actively maintained. For additional information on the new vision of Waypoint, check out [this blog post](https://www.hashicorp.com/blog/a-new-vision-for-hcp-waypoint) and the [HCP Waypoint documentation](/hcp/docs/waypoint).
+
+</Warning>
+
+# Enabling On-Demand Runners Using Kubernetes
+
+A Waypoint [runner](/waypoint/docs/runner) executes each build, deployment, and release operation that Waypoint performs. The runner accepts jobs from the server, executes the necessary [operations](/waypoint/docs/internals/execution), and then either waits for additional jobs to be queued or exits. Runners that are long-lived and execute many jobs over time are known as static runners, while those that are created per-job and exit upon completion are known as on-demand runners (ODRs).
+
+![On-demand runners overview process](/img/tutorials/odrs-with-kubernetes/odr_overview.jpg)
+
+On-demand runners are ephemeral, short-lived container instances that exist only for as long as they are needed to complete the operations assigned to them. A few key benefits of on-demand runners over static runners are that they can perform container builds without privileged access, offer more isolation between operations, and allow Waypoint to scale further dynamically.
+
+In this tutorial, you will install static runners into Kubernetes and use runner profiles that allow those static runners to create on-demand runners for executing Waypoint operations in response to changes you will make to a remote Git repository.
+
+## Scenario and runner overview
+
+There are two Kubernetes clusters that you will create as part of this tutorial: the first will contain the Waypoint server and be a default app deployment environment while the second will be an environment specific to a team and their desire to restrict Waypoint operations to their own isolated cluster.
+
+A static runner in each cluster that is registered with the Waypoint server is responsible for managing the on-demand runners in their respective cluster.
+
+<Tip>
+
+ The following commands are examples - you do not need to run any of them.
+
+</Tip>
+
+The runner configuration that is part of the installation process includes key-value labels that describe or identify the runner. These labels are user-generated strings and can be attributes such as cluster location, environment level, or other identifying values.
+
+<CodeBlockConfig hideClipboard heading="Example helm install command with runner label">
+
+```shell-session
+$ helm install --set 'runner.agentArgs={-label=environment=staging}' waypoint hashicorp/waypoint
+```
+
+</CodeBlockConfig>
+
+A runner profile uses these labels to target specific runners during the execution of the Waypoint operations through the `-target-runner-label` flag.
+
+<CodeBlockConfig hideClipboard heading="Targeting a runner with a runner profile">
+
+```shell-session
+$ waypoint runner profile set \
+  -name=staging-runner \
+  -plugin-type=kubernetes \
+  -target-runner-label=environment=staging
+```
+
+</CodeBlockConfig>
+
+Once the runners are set up, you can target a runner by adding the `runner` block with a profile name to the `waypoint.hcl` file.
+
+<CodeBlockConfig hideClipboard heading="Example waypoint.hcl snippet with runner block">
+
+```hcl
+runner {
+  profile = "staging-runner"
+}
+
+project = "example-project"
+
+app "example-nodejs" {...}
+```
+
+</CodeBlockConfig>
+
+The on-demand runners in this tutorial use the [Kubernetes task plugin](/waypoint/plugins/kubernetes#kubernetes-task). ODR functionality is plugin-based so additional cloud providers or environment plugins can be created by users in the event that a plugin is not already available. Waypoint currently supports several [plugins](/waypoint/plugins) including Kubernetes, [HashiCorp Nomad](/waypoint/plugins/nomad#nomad-task), AWS [ECS](/waypoint/plugins/aws-ecs#aws-ecs-task), and [Docker](/waypoint/plugins/docker#docker-task) by default.
+
+## Prerequisites
+
+For this tutorial, you will need:
+- [Waypoint v0.10.2](/waypoint/downloads) or later installed locally
+- [Terraform v1.0.7](/terraform/downloads) or later installed locally
+- An account on a hosted Git provider site (GitHub, GitLab, Bitbucket, etc.) and [Git](https://git-scm.com/downloads) installed locally
+- An [AWS account](https://aws.amazon.com/account) with credentials set as local environment variables and the [AWS CLI](https://aws.amazon.com/cli/) installed
+- A [DockerHub account](https://hub.docker.com/signup)
+- [Kubectl](https://kubernetes.io/docs/tasks/tools/#kubectl) installed locally
+- (Optional) [Helm](https://helm.sh/docs/intro/install/#through-package-managers) installed locally
+
+<Note>
+
+ This tutorial creates AWS resources that may not qualify as part of the [AWS free tier](https://aws.amazon.com/free). Be sure to follow the [Cleanup process](#cleanup) at the end so you don't incur any additional unnecessary charges.
+
+</Note>
+
+## Set up the container registry
+
+This tutorial uses DockerHub as the image registry but you can use other registry services. The visibility of the DockerHub repository is public so that the Waypoint runners in Kubernetes can pull these images without additional authentication.
+
+### Create the access token
+Create a new DockerHub access token by navigating to the [security settings page](https://hub.docker.com/settings/security) and clicking on the blue **New Access Token** button. Type `waypoint` in the **Access Token Description** field, select **Read, Write, Delete** from the **Access permissions** dropdown, and click **Generate**.
+
+![Creating a new access token on DockerHub](/img/tutorials/odrs-with-kubernetes/dockerhub_token_page.jpg)
+
+Copy the token value and export it as a local environment variable.
+
+```shell-session
+$ export DOCKERHUB_TOKEN=
+```
+
+Click on the **Copy and Close** button to close the dialog box.
+
+Export your DockerHub username as a local environment variable.
+
+```shell-session
+$ export DOCKERHUB_USER=
+```
+
+## Clone the example repository
+The [example repository](https://github.com/hashicorp/learn-waypoint-odr) includes the Terraform configuration to create the two Kubernetes clusters and the supporting infrastructure including networking and IAM resources. It also contains an example NodeJS application from the [Waypoint examples repository](https://github.com/hashicorp/waypoint-examples) located in the `app` directory.
+
+Clone the example repository.
+
+```shell-session
+$ git clone https://github.com/hashicorp/learn-waypoint-odr.git
+```
+
+Change into the learn-waypoint-odr directory.
+
+```shell-session
+$ cd learn-waypoint-odr
+```
+
+## Create infrastructure
+
+
+First, initialize your Terraform configuration.
+
+```shell-session
+$ terraform init
+```
+
+Apply the configuration to create the Kubernetes clusters and supporting infrastructure. This process will take a few minutes to complete.
+
+<Tip>
+
+ Resources will be created in the `us-east-2` region by default. If you would like to create them in another region, update the `aws_region` and `availability_zones` variables in the `variables.tf` file.
+
+</Tip>
+
+```shell-session
+$ terraform apply
+# ...
+Plan: 53 to add, 0 to change, 0 to destroy.
+
+Do you want to perform these actions?
+  Terraform will perform the actions described above.
+  Only 'yes' will be accepted to approve.
+
+  Enter a value: yes
+
+# ...
+module.secondary_kubernetes.aws_eks_addon.ebs_csi_addon: Creation complete after 1m16s [id=wp-odr-secondary:aws-ebs-csi-driver]
+module.primary_kubernetes.aws_eks_addon.ebs_csi_addon: Still creating... [1m10s elapsed]
+module.primary_kubernetes.aws_eks_addon.ebs_csi_addon: Creation complete after 1m17s [id=wp-odr-primary:aws-ebs-csi-driver]
+
+Apply complete! Resources: 53 added, 0 changed, 0 destroyed.
+```
+
+Update your local kubeconfig file with the primary EKS cluster information.
+
+```shell-session
+$ aws eks update-kubeconfig \
+  --region $(terraform output -raw region) \
+  --name $(terraform output -raw primary_cluster_name) \
+  --alias primary
+```
+
+<CodeBlockConfig hideClipboard>
+
+```shell-session
+Added new context primary to ~/.kube/config
+```
+
+</CodeBlockConfig>
+
+Then, update your local kubeconfig file with the secondary EKS cluster information.
+
+```shell-session
+$ aws eks update-kubeconfig \
+  --region $(terraform output -raw region) \
+  --name $(terraform output -raw secondary_cluster_name) \
+  --alias secondary
+```
+
+<CodeBlockConfig hideClipboard>
+
+```shell-session
+Added new context secondary to ~/.kube/config
+```
+
+</CodeBlockConfig>
+
+## Install Waypoint
+
+### Install server in primary cluster
+
+Install the Waypoint server and runner into the primary cluster.
+
+```shell-session
+$ waypoint server install -platform=kubernetes -k8s-context=primary -accept-tos
+✓ Service "waypoint" is ready
+✓ Server bootstrap complete!
+✓ Waypoint server installed with Helm!
+✓ Configured server connection
+✓ Successfully connected to Waypoint server in Kubernetes!
+✓ Server installed and configured!
+✓ Runner "static" installed
+✓ Waypoint runner installed with Helm!
+✓ Runner "static" adopted successfully.
+Waypoint server successfully installed and configured!
+
+The CLI has been configured to connect to the server automatically. This
+connection information is saved in the CLI context named "install-1666292159".
+Use the "waypoint context" CLI to manage CLI contexts.
+
+The server has been configured to advertise the following address for
+entrypoint communications. This must be a reachable address for all your
+deployments. If this is incorrect, manually set it using the CLI command
+"waypoint server config-set".
+
+To launch and authenticate into the Web UI, run:
+waypoint ui -authenticate
+
+Advertise Address: ae032cf056de041839dc9a7f5e0cba8a-1096492474.us-east-2.elb.amazonaws.com:9701
+Web UI Address: https://ae032cf056de041839dc9a7f5e0cba8a-1096492474.us-east-2.elb.amazonaws.com:9702
+```
+
+Authenticate to the Waypoint UI.
+
+<Note>
+
+ Your browser may warn you that the site is not secure, this is because Waypoint [uses a self-signed certificate by default](/waypoint/docs/server/run/production#tls) but TLS is still enabled.
+
+</Note>
+
+```shell-session
+$ waypoint ui -authenticate
+» Creating invite token
+This invite token will be exchanged for an authentication
+token that your browser stores.
+
+» Opening browser
+```
+
+### Install runner in primary cluster
+
+Runners can be installed with either the `waypoint runner install` CLI command or Helm.
+
+With the `waypoint runner install` method, Waypoint automatically adopts the runner and creates a runner profile for it. You can skip this automatic adoption and profile creation by including the `-skip-adopt` flag but you will then need to manually [adopt the runner](/waypoint/commands/runner-adopt) and [create a profile](/waypoint/commands/runner-profile-set).
+
+The Helm install requires additional configuration steps to adopt the runner, set up the runner profile, and modify the runner service account in Kubernetes.
+
+<Tip>
+
+ We recommend installing runners with `waypoint runner install` as it simplifies the process and does not require the Helm CLI.
+
+</Tip>
+
+Get the hostname of the primary cluster from the `kubectl` output and save it as an environment variable.
+
+```shell-session
+$ export WP_PRIMARY_ADDR=$(kubectl get services waypoint-ui --context=primary --output jsonpath='{.status.loadBalancer.ingress[0].hostname}'):9701
+```
+
+<Tabs>
+
+<Tab heading="Waypoint install" group="wp-install">
+
+Install the runner by providing the server cookie and hostname of the primary cluster. Note the runner label being added with the `-label` flag as well as the `-k8s-context` flag specifying the context for the primary cluster.
+
+```shell-session
+$ waypoint runner install \
+  -id=primary-cluster-runner \
+  -k8s-context=primary \
+  -server-addr=${WP_PRIMARY_ADDR} \
+  -server-tls-skip-verify \
+  -- -label=cluster=primary
+```
+
+<CodeBlockConfig hideClipboard>
+
+```shell-session
+✓ Finished connecting to: ae032cf056de041839dc9a7f5e0cba8a-1096492474.us-east-2.elb.amazonaws.com:9701
+✓ Runner "primary-cluster-runner" installed successfully to kubernetes
+✓ Runner profile "kubernetes-PRIMARY-CLUSTER-RUNNER" created successfully.
+✓ Waypoint runner installed with Helm!
+✓ Runner "primary-cluster-runner" adopted successfully.
+```
+
+</CodeBlockConfig>
+
+Verify that the runner exists.
+
+<Tip>
+
+ The runner with the `static` ID is automatically installed during the Waypoint server installation process.
+
+</Tip>
+
+```shell-session
+$ waypoint runner list
+            ID           |  STATE  |  KIND  |      LABELS      | LAST REGISTERED
+-------------------------+---------+--------+------------------+------------------
+  static                 | adopted | remote |                  | 2 minutes ago
+  primary-cluster-runner | adopted | remote | cluster:primary  | 47 seconds ago
+```
+
+Verify that the runner profile exists for the new runner.
+
+```shell-session
+$ waypoint runner profile list
+Runner profiles
+                NAME                | PLUGIN TYPE |                 OCI URL                 |         TARGET RUNNER         | DEFAULT
+------------------------------------+-------------+-----------------------------------------+-------------------------------+----------
+  01GFVBZ23B2HMQSB37NG0D2295        | kubernetes  | docker.io/hashicorp/waypoint-odr:latest | *                             | yes
+  kubernetes-PRIMARY-CLUSTER-RUNNER | kubernetes  | hashicorp/waypoint-odr:latest           | labels: {"cluster":"primary"} |
+```
+
+</Tab>
+
+<Tab heading="Helm install" group="helm-install">
+
+The [server cookie](/waypoint/commands/server-cookie) is a method of ensuring that the runner is communicating with the proper Waypoint server. It is not a security mechanism but prevents unnecessary API calls to the Waypoint server and should be kept secret.
+
+Get the server cookie and save it as an environment variable.
+
+```shell-session
+$ export WP_SERVER_COOKIE=$(waypoint server cookie)
+```
+
+Add the HashiCorp Helm repo.
+
+```shell-session
+$ helm repo add hashicorp https://helm.releases.hashicorp.com
+"hashicorp" has been added to your repositories
+```
+
+<Note>
+
+ Be sure to use the latest version of the Waypoint Helm chart by updating your local HashiCorp Helm repo with `helm repo update` if you have an older version of the chart.
+
+</Note>
+
+Install the runner into the primary cluster and provide the server cookie and hostname of the primary cluster. Note the runner label being added with the `runner.agentArgs` configuration.
+
+```shell-session
+$ helm install \
+  --version 0.1.14 \
+  --kube-context primary \
+  --set runner.id=primary-cluster-runner \
+  --set server.enabled=false \
+  --set runner.server.addr=${WP_PRIMARY_ADDR} \
+  --set runner.server.cookie=${WP_SERVER_COOKIE} \
+  --set 'runner.agentArgs={-label=cluster=primary}' \
+  waypoint-runner-primary hashicorp/waypoint
+```
+
+<CodeBlockConfig hideClipboard>
+
+```shell-session
+NAME: waypoint-runner-primary
+LAST DEPLOYED: Tue Oct 18 13:30:51 2022
+NAMESPACE: default
+STATUS: deployed
+REVISION: 1
+TEST SUITE: None
+NOTES:
+You've successfully installed a HashiCorp Waypoint runner!
+
+The runner should start in a few minutes. You can look for the runner to register
+with the server using the "waypoint runner list" command. If you did not supply
+a runner token ahead of time, you may have to adopt the runner using the
+UI or the "waypoint runner adopt" command.
+
+If the runner does not show up in the runner list output, you can debug it
+by looking at the logs for the runner pod that was just launched.
+```
+
+</CodeBlockConfig>
+
+View the available runners. The new pending runner may take a few seconds to show up in the output. If you don’t see it right away, wait a few seconds and try the command again.
+
+```shell-session
+$ waypoint runner list
+            ID           |  STATE  |  KIND  |      LABELS      | LAST REGISTERED
+-------------------------+---------+--------+------------------+------------------
+  static                 | adopted | remote |                  | 57 minutes ago
+  primary-cluster-runner | pending | remote | cluster:primary  | 7 seconds ago
+```
+
+Note that the runner with the `adopted` state is the static runner in the primary cluster created as part of the Waypoint server install. The runner with the `pending` state is the one in the primary cluster created by the Helm install.
+
+
+Before runners can perform any operations, they need to be "adopted" by the Waypoint server.
+
+Adopt the runner in the primary cluster with the `pending` state using its ID from the `waypoint runner list` command. This command will select the runner that is in a pending state and provide the ID to the adopt command, automatically adopting it.
+
+```shell-session
+$ waypoint runner adopt $(waypoint runner list | grep -i pending | awk -F ' ' '{print $1}')
+Runner "primary-cluster-runner" adopted.
+```
+
+<Note>
+
+ To automate the adoption process, you can generate a runner token with  `waypoint runner token` and provide it to the Helm install command instead of the server cookie. However, we do not recommend it as it requires more security around the transferring of the token value. Additional information about the command can be found [here](/waypoint/commands/runner-token).
+
+</Note>
+
+### Apply the runner config file
+
+The runner service account requires additional permissions to operate. Apply the `runner-config.yml` manifest file to the primary cluster.
+
+```shell-session
+$ kubectl apply -f runner-config.yml --context primary
+serviceaccount/waypoint-runner configured
+serviceaccount/waypoint-runner-odr created
+clusterrole.rbac.authorization.k8s.io/waypoint-runner-role created
+clusterrolebinding.rbac.authorization.k8s.io/waypoint-runner-clusterrolebinding created
+```
+
+Then, apply the same `runner-config.yml` file to the secondary cluster.
+
+```shell-session
+$ kubectl apply -f runner-config.yml --context secondary
+serviceaccount/waypoint-runner configured
+serviceaccount/waypoint-runner-odr created
+clusterrole.rbac.authorization.k8s.io/waypoint-runner-role created
+clusterrolebinding.rbac.authorization.k8s.io/waypoint-runner-clusterrolebinding created
+```
+
+### Create the runner profile
+
+The runner that was just adopted in the previous section creates on-demand runners in the primary cluster and does so with [runner profiles](/waypoint/docs/runner/profiles). A default runner profile for Kubernetes exists as part of the runner installation and uses the [Kubernetes plugin](/waypoint/plugins/kubernetes#kubernetes-task) but another profile is necessary to create and target on-demand runners in the primary cluster specifically.
+
+To target the primary cluster’s static runner, set the `-target-runner` flag when creating the profile. Submit the runner profile to Waypoint.
+
+```shell-session
+$ waypoint runner profile set \
+  -name=kubernetes-PRIMARY-CLUSTER-RUNNER \
+  -plugin-type=kubernetes \
+  -target-runner-label=cluster=primary
+```
+
+<CodeBlockConfig hideClipboard>
+
+```shell-session
+✓ Runner profile created
+```
+
+</CodeBlockConfig>
+
+View the available runner profiles.
+
+```shell-session
+$ waypoint runner profile list
+Runner profiles
+                NAME                | PLUGIN TYPE |                 OCI URL                 |         TARGET RUNNER         | DEFAULT
+------------------------------------+-------------+-----------------------------------------+-------------------------------+----------
+  01GFS0GVDDPAAMM0WZN8HS9W83        | kubernetes  | docker.io/hashicorp/waypoint-odr:latest | *                             | yes
+  kubernetes-PRIMARY-CLUSTER-RUNNER | kubernetes  | hashicorp/waypoint-odr:latest           | labels: {"cluster":"primary"} |
+```
+
+Note that the `kubernetes-PRIMARY-CLUSTER-RUNNER` runner profile lists the label `cluster:primary` under the `TARGET RUNNER` section which means that any operation using a runner profile targeting this label will run on any runner that has the `cluster` label set to `primary`.
+
+</Tab>
+
+</Tabs>
+
+### Install runner in secondary cluster
+
+The installation process for the runner in the secondary cluster is the same as the one for the runner in the primary cluster.
+
+<Note>
+
+ Make sure you have followed the steps from the [Install runner in primary cluster](#install-runner-in-primary-cluster) section above before continuing with the secondary cluster runner installation.
+
+</Note>
+
+<Tabs>
+
+<Tab heading="Waypoint install" group="wp-install">
+
+Install the runner.
+
+```shell-session
+$ waypoint runner install \
+  -id=secondary-cluster-runner \
+  -k8s-context=secondary \
+  -server-addr=${WP_PRIMARY_ADDR} \
+  -server-tls-skip-verify \
+  -- -label=cluster=secondary
+```
+
+<CodeBlockConfig hideClipboard>
+
+```shell-session
+✓ Finished connecting to: ae032cf056de041839dc9a7f5e0cba8a-1096492474.us-east-2.elb.amazonaws.com:9701
+✓ Runner "secondary-cluster-runner" installed successfully to kubernetes
+✓ Runner profile "kubernetes-SECONDARY-CLUSTER-RUNNER" created successfully.
+✓ Waypoint runner installed with Helm!
+✓ Runner "secondary-cluster-runner" adopted successfully.
+```
+
+</CodeBlockConfig>
+
+Verify that the runner exists.
+
+```shell-session
+$ waypoint runner list
+             ID            |  STATE  |  KIND  |       LABELS       | LAST REGISTERED
+---------------------------+---------+--------+--------------------+------------------
+  static                   | adopted | remote |                    | 3 minutes ago
+  secondary-cluster-runner | adopted | remote | cluster:secondary  | 29 seconds ago
+  primary-cluster-runner   | adopted | remote | cluster:primary    | 2 minutes ago
+```
+
+Verify that the runner profile exists for the new runner.
+
+```shell-session
+$ waypoint runner profile list
+Runner profiles
+                 NAME                 | PLUGIN TYPE |                 OCI URL                 |          TARGET RUNNER          |
+DEFAULT
+--------------------------------------+-------------+-----------------------------------------+---------------------------------+------
+  01GFVBZ23B2HMQSB37NG0D2295          | kubernetes  | docker.io/hashicorp/waypoint-odr:latest | *                               | yes  kubernetes-PRIMARY-CLUSTER-RUNNER   | kubernetes  | hashicorp/waypoint-odr:latest           | labels: {"cluster":"primary"}   |  kubernetes-SECONDARY-CLUSTER-RUNNER | kubernetes  | hashicorp/waypoint-odr:latest           | labels: {"cluster":"secondary"} |
+```
+
+</Tab>
+
+<Tab heading="Helm install" group="helm-install">
+
+Install the runner into the secondary cluster.
+
+```shell-session
+$ helm install \
+  --version 0.1.14 \
+  --kube-context secondary \
+  --set runner.id=secondary-cluster-runner \
+  --set server.enabled=false \
+  --set runner.server.addr=${WP_PRIMARY_ADDR} \
+  --set runner.server.cookie=${WP_SERVER_COOKIE} \
+  --set 'runner.agentArgs={-label=cluster=secondary}' \
+  waypoint-runner-secondary hashicorp/waypoint
+```
+
+<CodeBlockConfig hideClipboard>
+
+```shell-session
+NAME: waypoint-runner-secondary
+LAST DEPLOYED: Tue Oct 18 13:35:47 2022
+NAMESPACE: default
+STATUS: deployed
+REVISION: 1
+TEST SUITE: None
+NOTES:
+You've successfully installed a HashiCorp Waypoint runner!
+
+The runner should start in a few minutes. You can look for the runner to register
+with the server using the "waypoint runner list" command. If you did not supply
+a runner token ahead of time, you may have to adopt the runner using the
+UI or the "waypoint runner adopt" command.
+
+If the runner does not show up in the runner list output, you can debug it
+by looking at the logs for the runner pod that was just launched.
+```
+
+</CodeBlockConfig>
+
+View the available runners. The new pending runner may take a few seconds to show up in the output. If you don’t see it right away, wait a few seconds and try the command again.
+
+```shell-session
+$ waypoint runner list
+             ID            |  STATE  |  KIND  |       LABELS       | LAST REGISTERED
+---------------------------+---------+--------+--------------------+------------------
+  static                   | adopted | remote |                    | 1 hour ago
+  secondary-cluster-runner | pending | remote | cluster:secondary  | 2 minutes ago
+  primary-cluster-runner   | adopted | remote | cluster:primary    | 6 minutes ago
+```
+
+Adopt the runner in the secondary cluster with the `pending` state using its ID from the `waypoint runner list` command.
+
+```shell-session
+$ waypoint runner adopt $(waypoint runner list | grep -i pending | awk -F ' ' '{print $1}')
+Runner "secondary-cluster-runner" adopted.
+```
+
+### Create the runner profile
+
+Submit the runner profile to Waypoint.
+
+```shell-session
+$ waypoint runner profile set \
+  -name=kubernetes-SECONDARY-CLUSTER-RUNNER \
+  -plugin-type=kubernetes \
+  -target-runner-label=cluster=secondary
+```
+
+<CodeBlockConfig hideClipboard>
+
+```shell-session
+✓ Runner profile created
+```
+
+</CodeBlockConfig>
+
+View the available runner profiles.
+
+```shell-session
+$ waypoint runner profile list
+Runner profiles
+                 NAME                 | PLUGIN TYPE |                 OCI URL                 |          TARGET RUNNER          | DEFAULT
+--------------------------------------+-------------+-----------------------------------------+---------------------------------+----------
+  01GFS0GVDDPAAMM0WZN8HS9W83          | kubernetes  | docker.io/hashicorp/waypoint-odr:latest | *                               | yes
+  kubernetes-PRIMARY-CLUSTER-RUNNER   | kubernetes  | hashicorp/waypoint-odr:latest           | labels: {"cluster":"primary"}   |
+  kubernetes-SECONDARY-CLUSTER-RUNNER | kubernetes  | hashicorp/waypoint-odr:latest           | labels: {"cluster":"secondary"} |
+```
+
+</Tab>
+
+</Tabs>
+
+## Prepare the project repository
+
+Create a new, empty public Git repository on a hosted Git platform like GitHub, GitLab, or Bitbucket. For this tutorial, the repository is public but Waypoint does support [basic password and SSH authentication](/waypoint/commands/project-apply#git-auth-type) if you want to use a private repository.
+
+Create an environment variable named `MY_REPO_URL` and set the value to the URL of your public git repository.
+
+```shell-session
+$ export MY_REPO_URL=
+```
+
+Change to the `app` directory of the example repository.
+
+```shell-session
+$ cd app
+```
+
+Initialize a new git project.
+
+```shell-session
+$ git init
+Initialized empty Git repository in ~/learn-waypoint-odr/app/.git/
+```
+
+Create and switch to a new branch named `main`.
+
+```shell-session
+$ git checkout -b main
+Switched to a new branch 'main'
+```
+
+Add your new public Git repository as the remote repository URL.
+
+```shell-session
+$ git remote add origin $MY_REPO_URL
+```
+
+Add the `runner` block to the `waypoint.hcl` file inside the `app` block and save the file.
+
+<CodeBlockConfig filename="waypoint.hcl" hideClipboard lineNumbers highlight="4-6">
+
+```hcl
+project = "nodejs-example"
+
+app "nodejs-example" {
+  runner {
+    profile = "kubernetes-PRIMARY-CLUSTER-RUNNER"
+  }
+
+  labels = {
+    "service" = "example-nodejs",
+    "env"     = "dev"
+  }
+# …
+}
+```
+
+</CodeBlockConfig>
+
+Add and commit all of the files in the directory.
+
+```shell-session
+$ git add . && git commit -m "Initial commit with updated waypoint file."
+[main (root-commit) 2b337a2] Initial commit with updated waypoint file.
+ 11 files changed, 727 insertions(+)
+ create mode 100644 index.js
+ create mode 100644 package.json
+ create mode 100644 public/hashi.svg
+ create mode 100644 public/language.svg
+ create mode 100644 public/logo.svg
+ create mode 100644 public/pattern-br.svg
+ create mode 100644 public/pattern-tl.svg
+ create mode 100644 public/stylesheets/main.css
+ create mode 100644 views/pages/index.ejs
+ create mode 100644 views/partials/header.ejs
+ create mode 100644 waypoint.hcl
+```
+
+Finally, push the contents to the main branch of your repository.
+
+```shell-session
+$ git push -u origin main
+Enumerating objects: 18, done.
+Counting objects: 100% (18/18), done.
+Delta compression using up to 12 threads
+Compressing objects: 100% (15/15), done.
+Writing objects: 100% (18/18), 8.81 KiB | 2.94 MiB/s, done.
+Total 18 (delta 1), reused 0 (delta 0), pack-reused 0
+remote: Resolving deltas: 100% (1/1), done.
+To https://github.com/hashicorp/waypoint-odr-example.git
+ * [new branch]      main -> main
+Branch 'main' set up to track remote branch 'main' from 'origin'.
+```
+
+<Note>
+
+ If your repository has a README or other template file, you may encounter an error that instructs you to fetch updates first. Run a `git fetch` to retrieve and merge the files locally or add the `--force` flag to the `git push` command if you want to overwrite any remote files.
+
+</Note>
+
+## Create project with runner profile
+
+Create the Waypoint project.
+
+```shell-session
+$ waypoint project apply nodejs-example
+✓ Project "nodejs-example" created
+```
+
+Add configurations for image name, registry username, and registry password at the Waypoint project level. Note that the `-runner` flag is added to make these available as environment variables to on-demand runners used by the project.
+
+<Tip>
+
+ These `waypoint config set` commands will not print any output when they complete.
+
+</Tip>
+
+Set the image name.
+
+```shell session
+$ waypoint config set -runner -project=nodejs-example REGISTRY_IMAGENAME=wp-nodejs
+```
+
+Then, set your registry username.
+
+```shell session
+$ waypoint config set -runner -project=nodejs-example REGISTRY_USERNAME=${DOCKERHUB_USER}
+```
+
+Finally, set your registry password.
+```shell session
+$ waypoint config set -runner -project=nodejs-example REGISTRY_PASSWORD=${DOCKERHUB_TOKEN}
+```
+
+<Warning>
+
+ These values are stored in the Waypoint server. Setting the registry configurations here are done so for development and illustration purposes.
+
+</Warning>
+
+
+View the configurations for the runners used by the project.
+
+```shell-session
+$ waypoint config get -runner -project=nodejs-example
+   SCOPE  |        NAME        |                VALUE                 | WORKSPACE | LABELS
+----------+--------------------+--------------------------------------+-----------+---------
+  project | REGISTRY_IMAGENAME | wp-nodejs                            |           |
+  project | REGISTRY_PASSWORD  | [REDACTED]                           |           |
+  project | REGISTRY_USERNAME  | [DOCKERHUB_USER]                     |           |
+```
+
+Modify the Waypoint project to add a reference to the Git repository and enable [GitOps](/waypoint/docs/projects/git).
+
+```shell-session
+$ waypoint project apply \
+  -data-source=git \
+  -git-url=${MY_REPO_URL} \
+  -git-ref=main \
+  -poll \
+  nodejs-example
+```
+
+<CodeBlockConfig hideClipboard>
+
+```shell-session
+✓ Project "nodejs-example" created
+```
+
+</CodeBlockConfig>
+
+Waypoint will begin the initial build, deploy, and release operations for the project and then each time a change to the repository is made. These initial operations will happen on the primary cluster as the `waypoint.hcl` file contains the `kubernetes-PRIMARY-CLUSTER-RUNNER` profile.
+
+Verify that the application is running on the correct cluster by listing the pods in the primary cluster. The application pod will take some time to deploy and change to the `running` state. Note the pod with the application name and `v1` - in this case `nodejs-example-v1-94f77f4dd-w4pf7`.
+
+```shell-session
+$ kubectl get pods --context=primary
+NAME                                             READY   STATUS      RESTARTS   AGE
+nodejs-example-v1-94f77f4dd-w4pf7                1/1     Running     0          36s
+waypoint-primary-cluster-runner-runner-0         1/1     Running     0          6m47s
+waypoint-server-0                                1/1     Running     0          9m45s
+waypoint-static-runner-0                         1/1     Running     0          8m5s
+[...]
+```
+
+## Modify repository code
+
+Open the `views/pages/index.ejs` file, add a new `H2` heading with text, and save the file.
+
+<CodeBlockConfig filename="views/pages/index.ejs" hideClipboard highlight="13">
+
+```html
+<!DOCTYPE html>
+<html>
+  <head>
+    <% include ../partials/header.ejs %>
+  </head>
+
+  <body>
+    <div class="container">
+     ##…
+      <section class="content">
+        ##…
+        <h1>This Node.js app was deployed with Waypoint.</h1>
+        <h2>Hello from the secondary cluster!</h2>
+##…
+      </section>
+      ##…
+    </div>
+  </body>
+</html>
+```
+
+</CodeBlockConfig>
+
+Open the `waypoint.hcl` file, update the runner profile to use the one for the secondary cluster runner, and save the file.
+
+<CodeBlockConfig filename="app/waypoint.hcl" hideClipboard highlight="3">
+
+```hcl
+app "nodejs-example" {
+  runner {
+    profile = "kubernetes-SECONDARY-CLUSTER-RUNNER"
+  }
+  labels = {
+    "service" = "example-nodejs",
+    "env"     = "dev"
+  }
+  # ...
+}
+```
+
+</CodeBlockConfig>
+
+Add and commit the updated files.
+
+```shell-session
+$ git add . && git commit -m "Updated the app main page and runner profile."
+[main 8333d1f] Updated the app main page and runner profile.
+ 2 files changed, 3 insertions(+), 2 deletions(-)
+```
+
+Then, push the contents to the main branch of your public repository.
+
+```shell-session
+$ git push -u origin main
+Enumerating objects: 11, done.
+Counting objects: 100% (11/11), done.
+Delta compression using up to 12 threads
+Compressing objects: 100% (5/5), done.
+Writing objects: 100% (6/6), 560 bytes | 560.00 KiB/s, done.
+Total 6 (delta 3), reused 0 (delta 0), pack-reused 0
+remote: Resolving deltas: 100% (3/3), completed with 3 local objects.
+To https://github.com/hashicorp/waypoint-odr-example.git
+   4eb5b74..8333d1f  main -> main
+```
+
+Waypoint will detect the changes made to the repository and run the build, deploy, and release operations. This may take some time. Once complete, view the updated app from the deployments page in the Waypoint UI by clicking on the gray button with the `waypoint.run` generated URL. You can also use the Kubernetes load balancer release URL by clicking the blue button in the top right of the page.
+
+![nodejs-example deployments page in the Waypoint UI with deployment URL buttons highlighted](/img/tutorials/odrs-with-kubernetes/project_deployments_page.jpg)
+
+![Example nodejs-example application running on the secondary cluster](/img/tutorials/odrs-with-kubernetes/app_deployed_to_secondary_cluster.jpg)
+
+Verify that the application is running on the correct cluster by listing the pods in the secondary cluster. Note the pod with the application name and `v2` - in this case `nodejs-example-v2-ffc77446d-t69sv`.
+
+```shell-session
+$ kubectl get pods --context=secondary
+NAME                                             READY   STATUS      RESTARTS   AGE
+nodejs-example-v2-ffc77446d-t69sv                1/1     Running     0          96s
+waypoint-secondary-cluster-runner-runner-0       1/1     Running     0          118m
+[...]
+```
+
+## Trigger the remote runner locally
+
+You can trigger projects with a remote Git configuration from your local machine with the Waypoint CLI by adding `-local=false` to the `waypoint up` command.
+
+<Warning>
+
+ When running `waypoint up` locally, the CLI will read the runner profile from the local `waypoint.hcl` file, not the one in the remote Git repository. However if you want to change any of your app configurations, they must be committed into the remote Git repository, as Waypoint will read app configurations from the remote `waypoint.hcl` file.
+
+</Warning>
+
+
+Update the runner profile in `waypoint.hcl` to use the runner in the primary cluster and save the file.
+
+<CodeBlockConfig filename="app/waypoint.hcl" hideClipboard highlight="3">
+
+```hcl
+app "nodejs-example" {
+  runner {
+    profile = "kubernetes-PRIMARY-CLUSTER-RUNNER"
+  }
+
+  labels = {
+    "service" = "example-nodejs",
+    "env"     = "dev"
+  }
+  # ...
+}
+```
+
+</CodeBlockConfig>
+
+Then run `waypoint up` with the `-local=false` flag.
+
+<Tip>
+
+ Waypoint reads the project name from the `waypoint.hcl` file present in the current directory if it is not explicitly set it with the [`-project` global flag](/waypoint/commands/up#project).
+
+</Tip>
+
+<CodeBlockConfig>
+
+```shell-session
+$ waypoint up -local=false
+  Performing operation on "kubernetes" with runner profile "kubernetes-PRIMARY-CLUSTER-RUNNER"
+
+» Cloning data from Git
+  URL: https://github.com/hashicorp/waypoint-odr-example.git
+  Ref: main
+
+» Downloading from Git
+  Git Commit: a14f273cf2bdf73c0bc82e264ad49b7cd53ef19d
+   Timestamp: 2022-10-20 19:05:55 +0000 UTC
+     Message: Updated the app main page and runner profile.
+
+
+» Building nodejs-example...
+⠦ Running build v3
+✓ Building Buildpack with kaniko...
+✓ Repository is available and ready: [DOCKERHUB_USER]/wp-nodejs:a14f273cf2bdf73c0bc82e264ad49b7cd53ef19d
+⠦ Executing kaniko...
+ │ Saving localhost:45599/[DOCKERHUB_USER]/wp-nodejs:a14f273cf2bdf73c0bc82e264ad49b7cd53
+ │ ef19d...
+ │ *** Images (sha256:00218e2c71a3a924d5d482ed1ee5d9c577b4a02e8ca508232050574d538ce
+ │ cf5):
+ │       localhost:45599/[DOCKERHUB_USER]/wp-nodejs:a14f273cf2bdf73c0bc82e264ad49b7cd53e
+ │ f19d
+ │ Adding cache layer 'heroku/nodejs-engine:dist'
+ │ Adding cache layer 'heroku/nodejs-npm:toolbox'
+ │ INFO[0043] Taking snapshot of full filesystem...
+ │ INFO[0051] Skipping push to container registry due to --no-push flag
+✓ Image pushed to '[DOCKERHUB_USER]/wp-nodejs:a14f273cf2bdf73c0bc82e264ad49b7cd53ef19d'
+✓ Running push build v3
+
+» Deploying nodejs-example...
+✓ Running deploy v3
+✓ Kubernetes client connected to https://172.20.0.1:443 with namespace default
+✓ Creating deployment...
+✓ Expected "http" port "3000" for app "nodejs-example-v3"
+✓ Deployment successfully rolled out!
+
+✓ Finished building report for Kubernetes platform
+✓ Finished building report for Kubernetes deployment resource
+
+» Releasing nodejs-example...
+✓ Running release v3
+✓ Kubernetes client connected to https://172.20.0.1:443 with namespace default
+✓ Updating existing service...
+✓ Service is ready!
+
+» Pruning old deployments...
+  Deployment: 01GFVCF2X5Y15XM442T8W48XAQ (v1)
+✓ Running deployment destroy v1
+✓ Kubernetes client connected to https://172.20.0.1:443 with namespace default
+✓ Deployment deleted
+
+» Pruning old releases...
+  Release: 01GFVCG26VA64D5N4X4KD8TSN0 (v1)
+✓ Running release destroy v1
+✓ Kubernetes client connected to https://172.20.0.1:443 with namespace default
+✓ Service deleted
+
+✓ Finished building report for Kubernetes platform
+✓ Finished building report for Kubernetes service resource
+
+» Variables used:
+       VARIABLE      |                     VALUE                     |   TYPE    | SOURCE
+---------------------+-----------------------------------------------+-----------+---------
+  registry_password  | 6fa1f8eae7859edbdf63eb262fa4fa94ab473b9cb9af5 | sensitive | env
+                     | 1e0d0e6eb4f2a3153d0                           |           |
+  registry_username  | [DOCKERHUB_USER]                              | string    | env
+  registry_imagename | wp-nodejs                                     | string    | env
+
+
+The deploy was successful! A Waypoint deployment URL is shown below. This
+can be used internally to check your deployment and is not meant for external
+traffic. You can manage this hostname using "waypoint hostname."
+
+   Release URL: http://a9c79a5e043564586aefb882ce181e79-233775817.us-east-2.elb.amazonaws.com:3000
+Deployment URL: https://promptly-wise-lizard--v3.waypoint.run
+```
+
+</CodeBlockConfig>
+
+Verify that `v3` of the application is running in the primary cluster.
+
+```shell-session
+$ kubectl get pods --context=primary
+nodejs-example-v1-94f77f4dd-w4pf7                1/1     Running     0          3m30s
+nodejs-example-v3-77777d7866-l4hcj               1/1     Running     0          48s
+waypoint-primary-cluster-runner-runner-0         1/1     Running     0          13m
+waypoint-server-0                                1/1     Running     0          16m
+waypoint-static-runner-0                         1/1     Running     0          14m
+```
+
+## Cleanup
+
+There are two ways of cleaning up once you are finished with Waypoint. The first involves destroying the Waypoint project resources, then the runners and runner profiles, and finally the underlying infrastructure. The second involves using Terraform to destroy the infrastructure and, at the same time, all of the Waypoint project resources.
+
+We recommend the first method as it helps you become more familiar with the resources involved in using Waypoint.
+
+<Tabs>
+
+<Tab heading="Waypoint and Terraform cleanup">
+
+Delete the project and all of the resources associated with it. This includes deployents and releases.
+
+```shell-session
+$ waypoint project destroy
+Do you really want to destroy project "nodejs-example" and its resources? Only 'yes' will be accepted to approve: yes
+
+  Performing operation on "kubernetes" with runner profile "01GFVBZ23B2HMQSB37NG0D2295"
+
+» Cloning data from Git
+  URL: https://github.com/hashicorp/waypoint-odr-example.git
+  Ref: main
+
+» Downloading from Git
+  Git Commit: a14f273cf2bdf73c0bc82e264ad49b7cd53ef19d
+   Timestamp: 2022-10-20 19:05:55 +0000 UTC
+     Message: Updated the app main page and runner profile.
+
+
+» Destroying releases for application 'nodejs-example'...
+✓ Running release destroy v3
+✓ Kubernetes client connected to https://10.100.0.1:443 with namespace default
+✓ Service deleted
+✓ Running release destroy v2
+✓ Kubernetes client connected to https://10.100.0.1:443 with namespace default
+✓ Service deleted
+
+» Destroying deployments for application 'nodejs-example'...
+✓ Running deployment destroy v3
+✓ Kubernetes client connected to https://10.100.0.1:443 with namespace default
+✓ Deployment deleted
+✓ Running deployment destroy v2
+✓ Kubernetes client connected to https://10.100.0.1:443 with namespace default
+✓ Deployment deleted
+Project "nodejs-example" destroyed!
+```
+
+Uninstall the runners.
+
+<Tabs>
+<Tab heading="Waypoint installed runners" group="wp-install">
+
+First, the runner in the primary cluster.
+
+```shell-session
+$ waypoint runner uninstall \
+  -platform=kubernetes \
+  -id=primary-cluster-runner \
+  -k8s-context=primary
+```
+
+<CodeBlockConfig hideClipboard>
+
+```shell-session
+✓ Runner "primary-cluster-runner" uninstalled successfully
+✓ Runner "primary-cluster-runner" forgotten on server
+✓ Runner "primary-cluster-runner" uninstalled
+✓ Persistent volume claims cleaned up
+```
+
+</CodeBlockConfig>
+
+Then, the runner in the secondary cluster.
+
+```shell-session
+$ waypoint runner uninstall \
+  -platform=kubernetes \
+  -id=secondary-cluster-runner \
+  -k8s-context=secondary
+```
+
+<CodeBlockConfig hideClipboard>
+
+```shell-session
+✓ Runner "secondary-cluster-runner" uninstalled successfully
+✓ Runner "secondary-cluster-runner" forgotten on server
+✓ Runner "secondary-cluster-runner" uninstalled
+✓ Persistent volume claims cleaned up
+```
+
+</CodeBlockConfig>
+
+</Tab>
+
+<Tab heading="Helm installed runners" group="helm-install">
+
+First, the runner in the primary cluster.
+
+```shell-session
+$ helm uninstall \
+  --kube-context=primary \
+  waypoint-runner-primary
+```
+
+<CodeBlockConfig hideClipboard>
+
+```shell-session
+release "waypoint-runner-primary" uninstalled
+```
+
+</CodeBlockConfig>
+
+Then, the runner in the secondary cluster.
+
+```shell-session
+$ helm uninstall \
+  --kube-context=secondary \
+  waypoint-runner-secondary
+```
+
+<CodeBlockConfig hideClipboard>
+
+```shell-session
+release "waypoint-runner-secondary" uninstalled
+```
+
+</CodeBlockConfig>
+
+</Tab>
+</Tabs>
+
+Move back up to the root directory of the repository.
+
+```shell-session
+$ cd ../
+```
+
+Clean up your provisioned infrastructure. Respond `yes` to the prompt to confirm the operation.
+
+```shell-session
+$ terraform destroy
+# ...
+Plan: 0 to add, 0 to change, 53 to destroy.
+
+Changes to Outputs:
+  - primary_cluster_name   = "wp-odr-primary" -> null
+  - region                 = "us-east-2" -> null
+  - secondary_cluster_name = "wp-odr-secondary" -> null
+
+Do you really want to destroy all resources?
+  Terraform will destroy all your managed infrastructure, as shown above.
+  There is no undo. Only 'yes' will be accepted to confirm.
+
+  Enter a value: yes
+
+# ...
+
+Destroy complete! Resources: 0 added, 0 changed, 53 destroyed.
+```
+
+</Tab>
+
+<Tab heading="Terraform only cleanup">
+
+Move back up to the root directory of the repository.
+
+```shell-session
+$ cd ../
+```
+
+Clean up your provisioned infrastructure. Respond `yes` to the prompt to confirm the operation.
+
+```shell-session
+$ terraform destroy
+# ...
+Plan: 0 to add, 0 to change, 53 to destroy.
+
+Changes to Outputs:
+  - primary_cluster_name   = "wp-odr-primary" -> null
+  - region                 = "us-east-2" -> null
+  - secondary_cluster_name = "wp-odr-secondary" -> null
+
+Do you really want to destroy all resources?
+  Terraform will destroy all your managed infrastructure, as shown above.
+  There is no undo. Only 'yes' will be accepted to confirm.
+
+  Enter a value: yes
+
+# ...
+
+Destroy complete! Resources: 0 added, 0 changed, 53 destroyed.
+```
+
+</Tab>
+
+</Tabs>
+
+<Note>
+
+ The load balancers created by Kubernetes as part of the release operation are not managed by Terraform but there is a cleanup module that takes care of deleting them. In the event that it doesn’t work the first time, re-run `terraform destroy`. If that still does not work, you may need to navigate to the [load balancers section](https://us-east-2.console.aws.amazon.com/ec2/home?region=us-east-2#LoadBalancers:sort=loadBalancerName) of the AWS console and delete them manually.
+
+</Note>
+
+## Next Steps
+In this tutorial, you installed static runners into separate Kubernetes clusters, created and associated runner profiles to them, and then used those profiles to get Waypoint to dynamically create and use on-demand runners when you made changes to your `waypoint.hcl` file from your remote Git repository.
+
+For more information, check out the following resources.
+- Read more about [on-demand runners](/waypoint/docs/runner/on-demand-runner)
+- Learn how to [use HCP Waypoint with your own infrastructure](/waypoint/tutorials/runners/hcp-runners-on-your-infra)
+- Learn how to [deploy a Helm-based application with GitOps](/waypoint/tutorials/application-deployment/gitops-helm-deployment)
+- Learn how to extend Waypoint by [creating a plugin](/waypoint/docs/extending-waypoint/creating-plugins)
