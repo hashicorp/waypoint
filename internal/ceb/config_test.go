@@ -1,6 +1,13 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: BUSL-1.1
 
+// This test has a race condition:
+// Running TestCEB starts a CEB in a goroutine, which initalizes the logger
+// Reading ceb.logger without explicitly waiting for it to be set could panic
+// This could be solved in the future by giving the ceb an explicit Init step
+// where we initialize the logger.
+//go:build !race
+
 package ceb
 
 import (

@@ -26,8 +26,6 @@ import (
 // ceb is exiting. Once this returns, users should ALWAYS check if an exit
 // condition was triggered to avoid nil panics.
 func (ceb *CEB) waitClient() pb.WaypointClient {
-	ceb.clientMu.Lock()
-	defer ceb.clientMu.Unlock()
 
 	for ceb.client == nil {
 		ceb.clientCond.Wait()
@@ -124,7 +122,9 @@ func (ceb *CEB) dialServer(ctx context.Context, cfg *config, isRetry bool) error
 	defer func() {
 		if conn != nil {
 			conn.Close()
+			ceb.clientMu.Lock()
 			ceb.client = nil
+			ceb.clientMu.Unlock()
 		}
 	}()
 
