@@ -133,7 +133,7 @@
     "@types/google-protobuf": "^3.15.6",
     "api-common-protos": "link:./lib/api-common-protos",
     "ember-cli-typescript-blueprints": "^3.0.0",
-    "google-protobuf": "^3.21.0",
+    "google-protobuf": "^3.21.2",
     "grpc-web": "link:./lib/grpc-web",
     "opaqueany": "link:./lib/opaqueany",
     "waypoint-client": "link:./lib/waypoint-client",
