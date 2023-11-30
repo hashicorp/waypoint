@@ -107,7 +107,7 @@ func (cs *ConfigSourcer) read(
 			result.Result = &pb.ConfigSource_Value_Error{
 				Error: status.New(codes.Aborted, err.Error()).Proto(),
 			}
-			return nil, err
+			continue
 		}
 		channelParams.BucketSlug = packerConfig.Bucket
 		channelParams.Slug = packerConfig.Channel
@@ -115,7 +115,10 @@ func (cs *ConfigSourcer) read(
 		// An HCP Packer channel points to a single iteration of a bucket.
 		channel, err := hcpPackerClient.PackerServiceGetChannel(channelParams, nil)
 		if err != nil {
-			return nil, err
+			result.Result = &pb.ConfigSource_Value_Error{
+				Error: status.New(codes.Internal, err.Error()).Proto(),
+			}
+			continue
 		}
 		log.Debug("retrieved HCP Packer channel", "channel", channel.Payload.Channel.Slug)
 		iteration := channel.Payload.Channel.Iteration
