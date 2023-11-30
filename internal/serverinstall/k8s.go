@@ -161,13 +161,13 @@ func (i *K8sInstaller) Install(
 	client.WaitForJobs = false
 	client.Devel = true
 	client.DependencyUpdate = false
-	client.Timeout = 300 * time.Second
+	client.Timeout = time.Duration(i.Config.Timeout) * time.Second
 	client.Namespace = i.Config.Namespace
 	client.ReleaseName = "waypoint"
 	client.GenerateName = false
 	client.NameTemplate = ""
 	client.OutputDir = ""
-	client.Atomic = false
+	client.Atomic = i.Config.Atomic
 	client.SkipCRDs = false
 	client.SubNotes = true
 	client.DisableOpenAPIValidation = false
@@ -471,9 +471,9 @@ func (i *K8sInstaller) Upgrade(
 	client.WaitForJobs = false
 	client.Devel = true
 	client.DependencyUpdate = false
-	client.Timeout = 300 * time.Second
+	client.Timeout = time.Duration(i.Config.Timeout) * time.Second
 	client.Namespace = i.Config.Namespace
-	client.Atomic = false
+	client.Atomic = i.Config.Atomic
 	client.SkipCRDs = false
 	client.SubNotes = true
 	client.DisableOpenAPIValidation = false
@@ -959,6 +959,20 @@ func (i *K8sInstaller) InstallFlags(set *flag.Set) {
 			"The required version number format is: 'vX.Y.Z'.",
 	})
 
+	set.IntVar(&flag.IntVar{
+		Name:    "k8s-helm-timeout",
+		Target:  &i.Config.Timeout,
+		Default: 300,
+		Usage:   "Time to wait in seconds for the Helm operation.",
+	})
+
+	set.BoolVar(&flag.BoolVar{
+		Name:    "k8s-helm-atomic",
+		Target:  &i.Config.Atomic,
+		Default: false,
+		Usage:   "Make the Helm operation atomic.",
+	})
+
 	set.StringVar(&flag.StringVar{
 		Name:    "k8s-cpu-request",
 		Target:  &i.Config.CpuRequest,
@@ -1056,6 +1070,20 @@ func (i *K8sInstaller) InstallFlags(set *flag.Set) {
 }
 
 func (i *K8sInstaller) UpgradeFlags(set *flag.Set) {
+	set.IntVar(&flag.IntVar{
+		Name:    "k8s-helm-timeout",
+		Target:  &i.Config.Timeout,
+		Default: 300,
+		Usage:   "Time to wait in seconds for the Helm operation.",
+	})
+
+	set.BoolVar(&flag.BoolVar{
+		Name:    "k8s-helm-atomic",
+		Target:  &i.Config.Atomic,
+		Default: false,
+		Usage:   "Make the Helm operation atomic.",
+	})
+
 	set.BoolVar(&flag.BoolVar{
 		Name:   "k8s-advertise-internal",
 		Target: &i.Config.AdvertiseInternal,
