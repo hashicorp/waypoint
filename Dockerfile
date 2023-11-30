@@ -82,5 +82,6 @@ USER waypoint
 ENV USER waypoint
 ENV HOME /home/waypoint
 ENV XDG_RUNTIME_DIR=/run/user/100
+WORKDIR $HOME
 
 ENTRYPOINT ["/usr/bin/waypoint"]
