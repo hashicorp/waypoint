@@ -1590,7 +1590,7 @@ func (p *Platform) resourceTaskDefinitionCreate(
 		}
 
 		c := &ecs.ContainerDefinition{
-			Essential: aws.Bool(false),
+			Essential: aws.Bool(container.Essential),
 			Name:      aws.String(container.Name),
 			Image:     aws.String(container.Image),
 			PortMappings: []*ecs.PortMapping{
@@ -2866,6 +2866,11 @@ type ContainerConfig struct {
 	// The container health check command
 	HealthCheck *HealthCheckConfig `hcl:"health_check,block"`
 
+	// If the essential parameter of a container is marked as true, and that container fails
+	// or stops for any reason, all other containers that are part of the task are stopped.
+	// Note: Contrary to the container definition API, this defaults to false.
+	Essential bool `hcl:"essential,optional"`
+
 	// The environment variables to pass to a container
 	Environment map[string]string `hcl:"static_environment,optional"`
 
@@ -3299,6 +3304,11 @@ deploy {
 			doc.SetField(
 				"protocol",
 				"The protocol used for port mapping.",
+			)
+
+			doc.SetField(
+				"essential",
+				"If true, and the container stops for any reason, all other containers are stopped",
 			)
 
 			doc.SetField(
