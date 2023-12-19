@@ -26,7 +26,7 @@ jobs:
             ui/lib/node_modules
             ui/dist/
 
-      - uses: actions/setup-node@e33196f7422957bea03ed53f6fbb155025ffc7b8 # v3.7.0
+      - uses: actions/setup-node@b39b52d1213e96004bfcb1c61a8a6fa8ab84f3e8 # v4.0.1
         if: steps.ui-cache.outputs.cache-hit == false
         with:
           node-version: 14
